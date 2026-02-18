@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+    <color name="blue">#33CCCC</color>
+    <color name="selected_view">#cc99ff</color>
+    <color name="colorOnSurface">#3F51B5</color>
+
+    <!-- Primary Brand Colors -->
+    <color name="primary_blue">#3F51B5</color>
+    <color name="primary_blue_dark">#303F9F</color>
+    <color name="primary_blue_light">#C5CAE9</color>
+
+    <!-- Secondary Colors -->
+    <color name="accent_orange">#FF9800</color>
+    <color name="accent_orange_dark">#F57C00</color>
+    <color name="accent_orange_light">#FFE0B2</color>
+
+    <!-- Widget Colors -->
+    <color name="widget_doop_primary">#3F51B5</color>
+    <color name="widget_belydenis_primary">#4CAF50</color>
+    <color name="widget_huwelik_primary">#FF9800</color>
+    <color name="widget_sterf_primary">#607D8B</color>
+
+    <!-- Background Colors -->
+    <color name="background_light">#FAFAFA</color>
+    <color name="background_dark">#121212</color>
+    <color name="surface_light">#FFFFFF</color>
+    <color name="surface_dark">#1E1E1E</color>
+
+    <!-- Text Colors -->
+    <color name="text_primary_light">#212121</color>
+    <color name="text_primary_dark">#FFFFFF</color>
+    <color name="text_secondary_light">#757575</color>
+    <color name="text_secondary_dark">#B3FFFFFF</color>
+
+    <!-- Status Colors -->
+    <color name="success_green">#4CAF50</color>
+    <color name="warning_amber">#FFC107</color>
+    <color name="error_red">#F44336</color>
+    <color name="info_blue">#2196F3</color>
+
+    <!-- Semi-transparent Overlays -->
+    <color name="overlay_light">#80000000</color>
+    <color name="overlay_dark">#80FFFFFF</color>
+
+    <!-- Default Gemeente Colors -->
+    <color name="default_gemeente_1">#3F51B5</color>
+    <color name="default_gemeente_2">#4CAF50</color>
+    <color name="default_gemeente_3">#FF9800</color>
+
+</resources>

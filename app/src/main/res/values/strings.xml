@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2016 The Android Open Source Project
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+          http://www.apache.org/licenses/LICENSE-2.0
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+<resources>
+    <!-- Widget Titles -->
+    <string name="widget_doop_title">Doop</string>
+    <string name="widget_doop_title_short">Doop</string>
+    <string name="widget_belydenis_title">Belydenis</string>
+    <string name="widget_belydenis_title_short">Belydenis</string>
+    <string name="widget_huwelik_title">Huwelik</string>
+    <string name="widget_huwelik_title_short">Huwelik</string>
+    <string name="widget_sterf_title">Sterf</string>
+    <string name="widget_sterf_title_short">Sterf</string>
+
+    <!-- Widget Loading States -->
+    <string name="widget_doop_loading">Loading baptism info...</string>
+    <string name="widget_belydenis_loading">Loading confession info...</string>
+    <string name="widget_huwelik_loading">Loading marriage info...</string>
+    <string name="widget_sterf_loading">Loading death info...</string>
+
+    <!-- Widget Content Descriptions -->
+    <string name="widget_doop_content_desc">Baptism information content</string>
+    <string name="widget_belydenis_content_desc">Confession information content</string>
+    <string name="widget_huwelik_content_desc">Marriage information content</string>
+    <string name="widget_sterf_content_desc">Death information content</string>
+
+    <!-- Common Widget Strings -->
+    <string name="widget_last_updated">Updated: %1$s</string>
+    <string name="widget_no_data">No data available</string>
+    <string name="widget_error">Error loading data</string>
+    <string name="widget_tap_to_refresh">Tap to refresh</string>
+
+    <!-- Permission Strings -->
+    <string name="permission_phone_rationale">Phone permission is needed to monitor calls and display caller information.</string>
+    <string name="permission_calendar_rationale">Calendar permission is needed to sync member information with your calendar.</string>
+    <string name="permission_notifications_rationale">Notification permission is needed to show call monitoring alerts.</string>
+
+    <!-- Error Messages -->
+    <string name="error_generic">An unexpected error occurred. Please try again.</string>
+    <string name="error_network">Network error. Please check your internet connection.</string>
+    <string name="error_permission_denied">Permission was denied. Some features may not work properly.</string>
+    <string name="error_settings_save">Failed to save settings. Please try again.</string>
+
+    <!-- Success Messages -->
+    <string name="success_settings_saved">Settings saved successfully</string>
+    <string name="success_data_exported">Data exported successfully</string>
+    <string name="success_data_imported">Data imported successfully</string>
+
+    <!-- Button Labels -->
+    <string name="button_save">Save</string>
+    <string name="button_cancel">Cancel</string>
+    <string name="button_ok">OK</string>
+    <string name="button_retry">Retry</string>
+    <string name="button_settings">Settings</string>
+    <string name="button_export">Export</string>
+    <string name="button_import">Import</string>
+
+    <!-- Settings Categories -->
+    <string name="settings_category_display">Display Settings</string>
+    <string name="settings_category_functions">Function Settings</string>
+    <string name="settings_category_widgets">Widget Settings</string>
+    <string name="settings_category_colors">Color Settings</string>
+
+    <!-- Settings Descriptions -->
+    <string name="setting_foto_desc">Show member photos in lists</string>
+    <string name="setting_epos_desc">Show email addresses in member details</string>
+    <string name="setting_whatsapp_desc">Show WhatsApp numbers for quick messaging</string>
+    <string name="setting_verjaarsdag_desc">Display birthday information</string>
+    <string name="setting_ouderdom_desc">Show age calculations</string>
+    <string name="setting_huweliksdag_desc">Display wedding anniversaries</string>
+    <string name="setting_wyk_desc">Show district/area information</string>
+    <string name="setting_selfoon_desc">Display mobile phone numbers</string>
+    <string name="setting_telefoon_desc">Display landline phone numbers</string>
+
+    <!-- Function Settings -->
+    <string name="setting_call_monitor_desc">Monitor incoming calls and show member information</string>
+    <string name="setting_layout_desc">Choose default layout for member lists</string>
+    <string name="setting_whatsapp1_desc">Enable first WhatsApp integration</string>
+    <string name="setting_whatsapp2_desc">Enable second WhatsApp integration</string>
+    <string name="setting_whatsapp3_desc">Enable third WhatsApp integration</string>
+    <string name="setting_html_email_desc">Use HTML formatting in emails</string>
+
+    <!-- Widget Settings -->
+    <string name="setting_widget_doop_desc">Show baptism information in home screen widget</string>
+    <string name="setting_widget_belydenis_desc">Show confession information in widget</string>
+    <string name="setting_widget_huwelik_desc">Show marriage information in widget</string>
+    <string name="setting_widget_sterf_desc">Show death information in widget</string>
+
+    <!-- Color Settings -->
+    <string name="setting_gemeente1_color_desc">Choose color for first gemeente</string>
+    <string name="setting_gemeente2_color_desc">Choose color for second gemeente</string>
+    <string name="setting_gemeente3_color_desc">Choose color for third gemeente</string>
+
+    <!-- Accessibility Strings -->
+    <string name="accessibility_settings_button">Open settings</string>
+    <string name="accessibility_color_picker_button">Choose color</string>
+    <string name="accessibility_spinner_selection">Select option from dropdown</string>
+
+    <!-- Validation Messages -->
+    <string name="validation_at_least_one_display">At least one display option must be enabled</string>
+    <string name="validation_invalid_calendar">Please select a valid calendar</string>
+    <string name="validation_invalid_layout">Please select a valid layout option</string>
+    <string name="validation_color_contrast_warning">Selected color may have poor contrast</string>
+    <!-- Widget Loading States -->
+    <string name="widget_loading">Loading events...</string>
+    <string name="widget_error_loading">Unable to load events</string>
+
+    <!-- Widget Error Messages -->
+    <string name="widget_database_error">Database connection failed</string>
+    <string name="widget_permission_error">Calendar permission required</string>
+    <string name="widget_network_error">Network unavailable</string>
+
+
+    <!-- Widget descriptions -->
+    <string name="widget_doop_name">Doop Information</string>
+    <string name="widget_doop_description">Shows baptism information</string>
+    <string name="widget_belydenis_name">Belydenis Information</string>
+    <string name="widget_belydenis_description">Shows confession information</string>
+    <string name="widget_huwelik_name">Huwelik Information</string>
+    <string name="widget_huwelik_description">Shows marriage information</string>
+    <string name="widget_sterf_name">Sterf Information</string>
+    <string name="widget_sterf_description">Shows death information</string>
+
+    <!-- Shortcut labels -->
+    <string name="shortcut_settings_short">Settings</string>
+    <string name="shortcut_settings_long">Open WinkerkReader Settings</string>
+    <string name="shortcut_monitor_short">Monitor</string>
+    <string name="shortcut_monitor_long">Toggle Call Monitoring</string>
+
+    <!-- Settings -->
+    <string name="settings_title">WinkerkReader Settings</string>
+
+    <!-- Notification channels -->
+    <string name="notification_channel_call_monitoring">Call Monitoring</string>
+    <string name="notification_channel_call_monitoring_desc">Notifications for call monitoring service</string>
+    <string name="notification_channel_widget_updates">Widget Updates</string>
+    <string name="notification_channel_widget_updates_desc">Notifications for widget data updates</string>
+    <string name="notification_channel_general">General</string>
+    <string name="notification_channel_general_desc">General app notifications</string>
+
+    <!-- Accessibility -->
+    <string name="accessibility_color_picker">Color picker for %1$s</string>
+    <string name="accessibility_checkbox_enabled">%1$s is enabled</string>
+    <string name="accessibility_checkbox_disabled">%1$s is disabled</string>
+    <string name="cancel">Cancel</string>
+    <string name="app_name">WinkerkReader</string>
+    <string name="LidmateV">Lidmate</string>
+    <string name="Soek">Soek Resultate</string>
+    <string name="stoor">Stoor</string>
+    <string name="wysig">Wysig</string>
+    <string name="lyscount">%1$d\nsms\'e</string>
+    <string name="mylpaal_gemeente">%1$s\n</string>
+    <string name="list_naam">Naam</string>
+    <string name="list_van">Van</string>
+    <string name="list_selfoon">Selfoon</string>
+    <string name="list_telefoon">Telefoon</string>
+    <string name="list_wyk">Wyk</string>
+    <string name="list_voorname">Voorname</string>
+    <string name="list_geboortedatum">Geboortedatum</string>
+    <string name="list_verjaar">dd-mm</string>
+    <string name="ongereg">"Ongeregistreerd ~ Ongeregistreerd ~ Ongeregistreerd ~ Ongeregistreerd ~ Ongeregistreerd ~ Ongeregistreerd ~ "</string>
+    <string name="dankie">Dankie vir registrasie</string>
+    <string name="oproep_titel">Inkomende oproep</string>
+
+    <string name="argief_naam">Naam</string>
+    <string name="argief_van">Van</string>
+    <string name="argief_geboorte">Geboorte datum</string>
+    <string name="argief_vertrek">Vertrek datum</string>
+    <string name="argief_rede">Rede</string>
+    <string name="argief_bestemming">Bestemming</string>
+
+
+
+    <string name="gallery">Foto van gallery</string>
+    <string name="kamera">Foto van kamera</string>
+
+    <string name="registreer_titel">Gebruiker inligting:</string>
+    <string name="registreer_naam">Naam:</string>
+    <string name="registreer_van">Van:</string>
+    <string name="registreer_gemeente">Gemeente:</string>
+    <string name="registreer_gemeente_epos">Gem epos:</string>
+    <string name="registreer_epos">E-pos:</string>
+    <string name="registreer_selfoon">Sel no:</string>
+    <string name="registreer_opdateer">Opdateer inligting</string>
+    <string name="registreer_status">Ongeregistreerd</string>
+    <string name="registreer_via">Vra kode aan per:</string>
+    <string name="registreer_voerin">Voer kode in wat jy ontvang het:</string>
+    <string name="redistreer_kode">Kode</string>
+    <string name="redistreer_kode2">##</string>
+
+    <string name="submenu_wis">Wis als</string>
+
+    <string name="meelewingLysTitel">Meelewing</string>
+    <string name="gawesLysTitel">Gawes</string>
+    <string name="passiesLysTitel">Passies</string>
+
+    <string name="groepLysTitel">Lys van Groepe</string>
+    <string name="groupwinkerk_text">Winkerk Groepe</string>
+    <string name="groupwkr_text">Eie Groepe</string>
+    <string name="VoegInGroepTitel">Voeg in groep:</string>
+    <string name="VoegInGroep">Almal</string>
+    <string name="SelectedInGroep">Geselekteerdes</string>
+    <string name="NuweGroepNaam">Groepnaam:</string>
+    <string name="NuweGroepTipe">Tipe:</string>
+    <string name="NuweGroepAdres">Adres:</string>
+    <string name="nGroepButtonStoor">Stoor</string>
+    <string name="nGroepButtonSkep">Skep nuwe</string>
+    <string name="StuurSmsTitel">Stuur sms na:</string>
+
+    <string name="groep_Wysig_Button_Text">Wysig</string>
+    <string name="groep_Wysig_Button_Text2">Opdateer</string>
+    <string name="groep_Wis_Button_Text">Wis Uit</string>
+
+
+
+    <string name="sms_groep_telling">0\nSms\'e</string>
+    <string name="sms_groep_letters">160</string>
+    <string name="sms_list_naam">Naam</string>
+    <string name="sms_list_van">Van</string>
+    <string name="sms_list_nommer">Nommer</string>
+    <string name="smstiptext">&lt;&lt;&lt;naam&gt;&gt;&gt; om naam outomaties in te voeg</string>
+
+    <string name="verjaar_letters">160</string>
+    <string name="verjaar_info">&lt;&lt;&lt;naam&gt;&gt;&gt; om naam outomaties in te voeg \n Kies lidmate om sms na te stuur deur lank te druk</string>
+    <string name="verjaar_steltyd">Stel tyd</string>
+    <string name="verjaar_herinner">Herinner</string>
+    <string name="verjaar_autosms">Auto sms</string>
+
+    <string name="detail_straatadres">Woon Adres</string>
+    <string name="detail_posadres">Posadres</string>
+    <string name="detail_gesin">Gesin</string>
+    <string name="detail_meelewing">Meelewing</string>
+    <string name="detail_passie">Passie</string>
+    <string name="detail_gawes">Gawes</string>
+    <string name="detail_naam">Naam</string>
+    <string name="detail_van">Van</string>
+    <string name="detail_vollename">Vollename</string>
+    <string name="detail_selfoon">Selfoon</string>
+    <string name="detail_epos">E-pos</string>
+    <string name="detail_gebore">Gebore</string>
+    <string name="detail_landlyn">Landlyn</string>
+    <string name="detail_wyk">Wyk</string>
+    <string name="detail_Nooiensvan">Nooiensvan</string>
+    <string name="detail_mylpale">Mylpale</string>
+    <string name="detail_gemeente">Gemeente</string>
+    <string name="detail_noemnaam">Noemnaam</string>
+    <string name="detail_lidmaatskap">Lidmaatskap</string>
+    <string name="detail_beroep">Beroep</string>
+    <string name="detail_werkgewer">Werkgewer</string>
+    <string name="detail_wysig">Wysig</string>
+    <string name="action_search">Soek Lidmaat</string>
+    <string name="detail_groepe">Groepe</string>
+
+
+    <string name="main_soek">Soek</string>
+    <string name="main_gemeentenaam">Gemeente: Onbekend</string>
+    <string name="main_sortorder">Sort</string>
+
+    <string name="filter_epos">E-pos</string>
+    <string name="filter_lidmaatskap">Lidmaatskap</string>
+    <string name="filter_gesinshoof">Gesinshoof</string>
+    <string name="filter_wyk">Wyk</string>
+    <string name="filter_selfoon">Selfoon</string>
+    <string name="filter_landlyn">Landlyn</string>
+    <string name="filter_ouderdom">Ouderdom</string>
+    <string name="filter_geslag">Geslag</string>
+    <string name="filter_huwelikstatus">Huwelikstatus</string>
+    <string name="filter_van">Van</string>
+    <string name="filter_nooiensvan">Nooiensvan</string>
+    <string name="filter_noemnaam">Noemnaam</string>
+    <string name="filter_en">EN</string>
+
+    <string name="laai_datum">Databasis datum</string>
+    <string name="laai_titel">Laai nuwe databasis</string>
+    <string name="laai_radio">Wis \'DATABASIS\' uit na dit gelaai is</string>
+    <string name="laai_button">Laai databasis\nuit foon</string>
+    <string name="dbLink">Paste Link</string>
+    <string name="dbLinkButtonText">Laai databasis van\nInternet Skakel</string>
+    <string name="updateAppButtonText">Opdateer\nApp</string>
+
+    <string name="Groepfunksie_sms_selected">SMS geslekteerdes</string>
+    <string name="Groepfunksie_sms_groep">SMS subgroep</string>
+
+    <string name="lidmaatlistmenu_detail">Detail</string>
+    <string name="lidmaatlistmenu_skakel">Skakel</string>
+    <string name="lidmaatlistmenu_bel_selfoon">Selfoon</string>
+    <string name="lidmaatlistmenu_bel_landlyn">Landlyn</string>
+    <string name="lidmaatlistmenu_teks">Stuur Teks</string>
+    <string name="lidmaatlistmenu_stuur_sms">Sms</string>
+    <string name="lidmaatlistmenu_stuur_whatsapp">Whatsapp</string>
+    <string name="lidmaatlistmenu_stuur_whatsapp2">Whatsapp2</string>
+    <string name="lidmaatlistmenu_stuur_whatsapp3">Whatsapp3</string>
+    <string name="lidmaatlistmenu_stuur_epos">E-pos</string>
+    <string name="lidmaatlistmenu_ander">Ander</string>
+    <string name="lidmaatlistmenu_copy_to_clipboard">Kopieër na klipbord</string>
+    <string name="lidmaatlistmenu_copy_to_contacts">Laai as Android kontak</string>
+    <string name="lidmaatlistmenu_nota">Kalender inskrywing</string>
+
+    <string name="mainmenu_soek">Soek</string>
+    <string name="mainmenu_tagged">Wys Geselekteerdes</string>
+    <string name="mainmenu_untagged">Geen Geselekteerdes</string>
+    <string name="mainmenu_taggedtitle">Geselekteerdes</string>
+    <string name="mainmenu_soek_opsies">Soek Opsies</string>
+    <string name="mainmenu_filter">Filter</string>
+    <string name="mainmenu_groepelys">Groepe</string>
+    <string name="mainmenu_sorteer">Sorteer</string>
+    <string name="mainmenu_sort_wyk">Wyk</string>
+    <string name="mainmenu_sort_van">Van</string>
+    <string name="mainmenu_sort_ouderdom">Ouderdom</string>
+    <string name="mainmenu_adres">Adres</string>
+    <string name="mainmenu_verjaar">Sort Verjaarsdag</string>
+    <string name="mainmenu_gesin">Gesin</string>
+    <string name="mainmenu_huwelik">Huwelik</string>
+    <string name="mainmenu_admin">Admin</string>
+    <string name="mainmenu_laai">Laai nuwe databasis</string>
+    <string name="mainmenu_fotos">Sync fotos</string>
+    <string name="mainmenu_registreer">Gebruiker Info</string>
+    <string name="mainmenu_sms_verjaar">Stuur verjaar sms\'e</string>
+    <string name="mainmenu_argief">Argief</string>
+    <string name="mainmenu_uitleg">Uitleg</string>
+    <string name="opdateerApp">App Opdatering ?</string>
+    <string-array name="filterouderdomoptions">
+        <item>gelyk</item>
+        <item>kleiner as</item>
+        <item>groter as</item>
+        <item>tussen</item>
+    </string-array>
+    <string-array name="filtertextoptions">
+        <item>gelyk aan</item>
+        <item>nie gelyk aan</item>
+        <item>begin met</item>
+        <item>eindig met</item>
+        <item>leeg</item>
+    </string-array>
+    <string-array name="filtergeslagoptions">
+        <item>manlik</item>
+        <item>vroulik</item>
+    </string-array>
+    <string-array name="filterhetoptions">
+        <item>Het</item>
+        <item>Het nie</item>
+    </string-array>
+    <string-array name="filterlidmaatsakpstatusoptions">
+        <item>Belydend</item>
+        <item>Doop</item>
+        <item>Onbekend</item>
+    </string-array>
+    <string-array name="filterhuwelikstatusoptions">
+        <item>Getroud</item>
+        <item>Ongetroud</item>
+        <item>Weduskap</item>
+        <item>Geskei</item>
+    </string-array>
+    <string-array name="layoutoptions">
+        <item>ADRES</item>
+        <item>GESINNE</item>
+        <item>HUWELIK</item>
+        <item>OUDERDOM</item>
+        <item>VAN</item>
+        <item>VERJAARSDAG</item>
+        <item>WYK</item>
+    </string-array>
+    <string-array name="weeksdag">
+        <item>Maandag</item>
+        <item>Dinsdag</item>
+        <item>Woensdag</item>
+        <item>Donderdag</item>
+        <item>Vrydag</item>
+        <item>Saterdag</item>
+        <item>Sondag</item>
+    </string-array>
+
+    <string name="missed_call_pref">Missed Call From</string>
+    <string name="incoming_call_pref">Call From</string>
+    <string name="outgoing_call_pref">Call To</string>
+    <string name="oproep_track_pref">calltrack_enabled_preference</string>
+    <string name="kalender_pref_dialog_titel">Calendar</string>
+    <string name="kalender_pref_key">calendar_preference_key</string>
+    <string name="kalender_pref_titel">Calendar</string>
+    <string name="kalender_pref_opsomming">Select the calendar for logging calls</string>
+
+    <string name="log_outgoing_preference_key">log_outgoing_preference_key</string>
+    <string name="log_incoming_preference_key">log_incoming_preference_key</string>
+    <string name="log_missed_preference_key">log_missed_preference_key</string>
+    <string name="log_outgoing_preference_title">Log Outgoing Calls</string>
+    <string name="log_incoming_preference_title">Log Incoming Calls</string>
+    <string name="log_missed_preference_title">Log Missed Calls</string>
+    <string name="log_preference_group_key">log_preference_group_key</string>
+    <string name="log_preference_group_title">Call Logging</string>
+    <string name="install_update">Installeer updatering</string>
+    <string name="update_info">Opdatering info</string>
+    <string name="download_update">Laai opdatering af</string>
+    <string name="check_for_updates">Toets vir opdatering</string>
+    <string name="tap_check_for_updates">Opdatering beskikbaar?</string>
+    <string name="app_icon">WinkerkReader</string>
+</resources>
+

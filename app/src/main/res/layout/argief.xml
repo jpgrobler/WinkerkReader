@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <RadioGroup
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/argief_sort"
+            android:orientation="horizontal">
+            <RadioButton
+                android:id="@+id/argief_sort_van"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Van"></RadioButton>
+            <RadioButton
+                android:id="@+id/argief_sort_datum"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="datum"></RadioButton>
+            <RadioButton
+                android:id="@+id/argief_sort_rede"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Rede"></RadioButton>
+        </RadioGroup>
+    </LinearLayout>
+    <ListView
+        android:id="@+id/argief_list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+</LinearLayout>

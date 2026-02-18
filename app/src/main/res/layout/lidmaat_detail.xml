@@ -1,0 +1,478 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/detail_naam_van"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+        <ProgressBar
+            android:id="@+id/detail_indeterminateBar"
+            android:focusedByDefault="true"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="visible" />
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_toStartOf="@+id/buttonWysig"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/detail_gemeentenaam"
+                android:textColor="@android:color/black"
+                android:textAlignment="center"
+                android:layout_centerVertical="true"
+                android:text="@string/detail_gemeente"
+                android:maxLines="1"
+                android:ellipsize="marquee"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:visibility="visible"
+                android:gravity="center_vertical"/>
+            <Button
+                android:layout_alignParentEnd="true"
+                android:id="@+id/buttonWysig"
+                android:layout_width="wrap_content"
+                android:layout_height="35dp"
+
+                android:background="@drawable/buttonshape"
+                android:textColor="@android:color/white"
+                android:scaleX=".9"
+                android:scaleY=".75"
+                android:text="@string/detail_wysig" />
+        </RelativeLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scrollbarSize="12dp"
+        android:scrollbars="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <ImageView
+                android:id="@+id/detail_kontak_foto"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_gravity="center_horizontal"
+                android:scaleType="centerInside"
+                android:src="@drawable/kontak"
+                android:tag="default"
+                android:visibility="visible" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <!-- Label -->
+                <TextView
+                    style="@style/CategoryStyle"
+                    android:text="@string/detail_naam" />
+                <!-- Label -->
+                <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+
+                    android:id="@+id/detail_noemnaam"
+                    style="@style/EditorFieldStyle"
+                    android:text="@string/detail_noemnaam"
+                    android:textIsSelectable="true" />
+
+                <Spinner
+                    android:id="@+id/geslag"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <Spinner
+                    android:id="@+id/huwelikstatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <!-- Label -->
+                <TextView
+                    style="@style/CategoryStyle"
+                    android:text="@string/detail_vollename" />
+                <!-- Label -->
+                <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+
+                    android:id="@+id/detail_vollename"
+                    style="@style/EditorFieldStyle"
+                    android:text="@string/detail_vollename"
+                    android:textIsSelectable="true" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <!-- Label -->
+                <TextView
+                    style="@style/CategoryStyle"
+                    android:text="@string/detail_van" />
+                <!-- Label -->
+                <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+
+                    android:id="@+id/detail_van"
+                    style="@style/EditorFieldStyle"
+                    android:text="@string/detail_van"
+                    android:textIsSelectable="true" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/detail_nooiensvanBlock"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <!-- Label -->
+                <TextView
+                    style="@style/CategoryStyle"
+                    android:text="@string/detail_Nooiensvan" />
+                <!-- Label -->
+                <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+                    android:id="@+id/detail_nooiensvan"
+                    style="@style/EditorFieldStyle"
+                    android:text="@string/detail_Nooiensvan"
+                    android:textIsSelectable="true" />
+            </LinearLayout>
+
+            <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+
+                android:id="@+id/detail_Werkgewer"
+                style="@style/EditorFieldStyle"
+                android:textIsSelectable="true"
+                tools:text="@string/detail_werkgewer" />
+
+            <LinearLayout
+                android:id="@+id/detail_lidmaatstatusBlock"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <!-- Label -->
+                <TextView
+                    style="@style/CategoryStyle"
+                    android:text="@string/detail_lidmaatskap" />
+                <!-- Label -->
+                <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+                    android:id="@+id/detail_Lidmaatstatus"
+                    style="@style/EditorFieldStyle"
+                    android:text="@string/detail_lidmaatskap"
+                    android:textIsSelectable="true" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <!-- Label -->
+                <TextView
+                    style="@style/CategoryStyle"
+                    android:text="@string/detail_gebore" />
+                <!-- Label -->
+                <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+
+                    android:id="@+id/detail_geboortedatum"
+                    style="@style/EditorFieldStyle"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:text="@string/detail_gebore"
+                    android:textIsSelectable="true" />
+
+                <TextView
+                    android:id="@+id/detail_jareoud"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginStart="4dp"
+                    android:text="" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/detail_selfoonBlock"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <!-- Label -->
+                <TextView
+                    style="@style/CategoryStyle"
+                    android:text="@string/detail_selfoon" />
+                <!-- Label -->
+                <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+
+                    android:id="@+id/detail_selfoon"
+                    style="@style/EditorFieldStyle"
+                    android:text="@string/detail_selfoon"
+                    android:textIsSelectable="true" />
+
+                <ImageView
+                    android:id="@+id/detail_whatsapp_icon"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="16dp"
+                    android:scaleType="fitXY"
+                    android:src="@drawable/whatsapp" />
+
+                <ImageView
+                    android:id="@+id/detail_sms_icon"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="16dp"
+                    android:src="@drawable/sms2" />
+
+                <ImageView
+                    android:id="@+id/detail_selfoon_icon"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="8dp"
+                    android:src="@drawable/cell3" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/detail_telefoonBlock"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <!-- Label -->
+                <TextView
+                    style="@style/CategoryStyle"
+                    android:text="@string/detail_landlyn" />
+                <!-- Label -->
+                <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+
+                    android:id="@+id/detail_telefoon"
+                    style="@style/EditorFieldStyle"
+                    android:text="@string/detail_landlyn"
+                    android:textIsSelectable="true" />
+
+                <ImageView
+                    android:id="@+id/detail_landlyn_icon"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="8dp"
+                    android:src="@drawable/oldphone" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/detail_eposBlock"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <!-- Label -->
+                <TextView
+                    style="@style/CategoryStyle"
+                    android:text="@string/detail_epos" />
+                <!-- Label -->
+                <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+
+                    android:id="@+id/detail_epos"
+                    style="@style/EditorFieldStyle"
+                    android:text="@string/detail_epos"
+                    android:textIsSelectable="true" />
+
+                <ImageView
+
+                    android:id="@+id/detail_email_icon"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="8dp"
+                    android:src="@drawable/email2" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/detail_BeroepBlock"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <!-- Label -->
+                <TextView
+                    style="@style/CategoryStyle"
+                    android:text="@string/detail_beroep" />
+
+                <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+
+                    android:id="@+id/detail_Beroep"
+                    style="@style/EditorFieldStyle"
+                    android:textIsSelectable="true"
+                    tools:text="@string/detail_beroep" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/detail_WerkgewerBlock"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <!-- Label -->
+                <TextView
+                    style="@style/CategoryStyle"
+                    android:text="@string/detail_werkgewer" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/detail_wykBlock"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <!-- Label -->
+                <TextView
+                    style="@style/CategoryStyle"
+                    android:text="@string/detail_wyk" />
+
+                <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+
+                    android:id="@+id/detail_wyk"
+                    style="@style/EditorFieldStyle"
+                    android:textIsSelectable="true"
+                    tools:text="@string/detail_wyk" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/detail_straatadresBlock"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <!-- Label -->
+                <TextView
+                    style="@style/CategoryStyle"
+                    android:text="@string/detail_straatadres" />
+
+                <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+
+                    android:id="@+id/detail_straatadres"
+                    style="@style/EditorFieldStyle"
+                    android:layout_height="wrap_content"
+                    android:textIsSelectable="true"
+                    tools:text="@string/detail_straatadres" />
+
+                <ImageView
+                    android:id="@+id/detail_straat_icon"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="8dp"
+                    android:src="@drawable/location" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/detail_posadresBlock"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <!-- Label -->
+                <TextView
+                    style="@style/CategoryStyle"
+                    android:text="@string/detail_posadres" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/detail_mylpaleBlock2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <!-- Label -->
+                <TextView
+                    style="@style/CategoryStyle"
+                    android:layout_gravity="top"
+                    android:paddingEnd="8dp"
+                    android:text="@string/detail_mylpale" />
+
+                <LinearLayout
+                    android:id="@+id/detail_mylpaleBlock"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/detail_gesinBlock"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+                <!-- Label -->
+                <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+
+                    android:id="@+id/detail_posadres"
+                    style="@style/EditorFieldStyle"
+                    android:layout_height="wrap_content"
+                    android:textIsSelectable="true"
+                    tools:text="@string/detail_posadres" />
+
+                <TextView
+                    style="@style/CategoryStyle"
+                    android:layout_width="wrap_content"
+                    android:text="@string/detail_gesin" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/detail_groepBlockm"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+                <!-- Label -->
+                <TextView
+                    style="@style/CategoryStyle"
+                    android:layout_width="wrap_content"
+                    android:text="@string/detail_groepe" />
+
+                <LinearLayout
+                    android:id="@+id/detail_groepBlock"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+                </LinearLayout>
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/detail_meelewingBlock"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+                <!-- Label -->
+                <TextView
+                    style="@style/CategoryStyle"
+                    android:layout_width="wrap_content"
+                    android:text="@string/detail_meelewing" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/detail_gawesBlock"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+                <!-- Label -->
+                <TextView
+                    style="@style/CategoryStyle"
+                    android:layout_width="wrap_content"
+                    android:text="@string/detail_gawes" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/detail_passieBlock"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+                <!-- Label -->
+                <TextView
+                    style="@style/CategoryStyle"
+                    android:layout_width="wrap_content"
+                    android:text="@string/detail_passie" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+
+    <ProgressBar
+            android:id="@+id/detail_indeterminateBar2"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:focusedByDefault="true"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="visible" />
+</LinearLayout>
+

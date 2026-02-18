@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <RelativeLayout
+        android:id="@+id/meelewing_titelblok"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <LinearLayout
+            android:id="@+id/buttonspanel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <RadioGroup
+                android:id="@+id/radiogroup1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/groepenuut"
+                android:gravity="center_horizontal"
+                android:orientation="horizontal">
+
+                <RadioButton
+                    android:id="@+id/meelewing_button"
+                    android:paddingRight="20dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:checked="true"
+                    android:text="@string/meelewingLysTitel" />
+
+                <RadioButton
+                    android:id="@+id/gawes_button"
+                    android:paddingRight="20dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:text="@string/gawesLysTitel" />
+
+                <RadioButton
+                    android:id="@+id/passies_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:text="@string/passiesLysTitel" />
+            </RadioGroup>
+        </LinearLayout>
+        <ImageView
+            android:id="@+id/meelewing_sms"
+            android:layout_alignParentTop="true"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_alignParentEnd="true"
+            android:layout_marginRight="24dp"
+            android:src="@drawable/sms2" />
+        <TextView
+            android:id="@+id/MeelewingTitel"
+            android:layout_below="@+id/buttonspanel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_toLeftOf="@id/meelewing_sms"
+            android:text="@string/meelewingLysTitel"
+            android:textColor="#0B3466"
+            android:textAppearance="?android:textAppearanceLarge" />
+        <ListView
+            android:layout_below="@+id/MeelewingTitel"
+            android:id="@+id/list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </RelativeLayout>
+
+</LinearLayout>

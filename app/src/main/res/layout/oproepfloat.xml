@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp"
+    app:cardBackgroundColor="@android:color/white"
+    app:cardUseCompatPadding="true"
+    app:contentPadding="5dp"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/oproepfloaterbase"
+    android:orientation="horizontal"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@drawable/border"
+    android:layout_centerHorizontal="true"
+    android:padding="5dp"
+    >
+<ImageView
+    android:id="@+id/floatericon"
+    android:layout_width="40dp"
+    android:layout_height="40dp"
+    android:src="@drawable/ic_launcher_round"
+    android:layout_marginEnd="16dp"/>
+    <TextView
+        android:clickable="true"
+        android:layout_gravity="center_vertical"
+        android:id="@+id/oproepnommer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:textAppearanceMedium"
+        android:textColor="#2B3D4D"
+        android:textStyle="bold"
+        android:text="@string/oproep_titel" />
+    <!--Close button-->
+    <ImageView
+        android:id="@+id/close_btn"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_marginStart="10dp"
+        android:src="@drawable/ic_close"
+        tools:ignore="ContentDescription"/>
+</LinearLayout>
+
+</androidx.cardview.widget.CardView>

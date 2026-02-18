@@ -1,0 +1,35 @@
+*.jks
+*.keystore
+.gradle/
+build/
+
+# Archives and compressed files
+*.7z
+*.zip
+*.gz
+*.rar
+*.tar
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Duplicate files
+* - Copy.*
+* - kopie.*
+*copy*
+
+# IDE files (optional - uncomment if you want to ignore these)
+.idea/
+*.iml
+*.iws
+
+.gradle
+/local.properties
+/.idea/workspace.xml
+/.idea/libraries
+.DS_Store
+/build
+/captures
+.externalNativeBuild

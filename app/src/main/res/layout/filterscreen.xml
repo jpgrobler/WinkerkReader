@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+<RelativeLayout
+
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:layout_gravity="center_horizontal"
+    android:gravity="center_vertical">
+
+    <Button
+        android:id="@+id/run_filter2"
+        android:layout_height="50dp"
+        android:layout_width="50dp"
+        android:background="@drawable/run"
+        android:layout_centerHorizontal="true"/>
+    <Button
+        android:id="@+id/cancel_filter2"
+        android:layout_height="30dp"
+        android:layout_width="30dp"
+        android:background="@drawable/ic_close"
+        android:layout_alignParentEnd="true"
+        android:gravity="center_vertical"
+        android:layout_centerVertical="true"/>
+</RelativeLayout>
+<ScrollView
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <CheckBox
+            android:id="@+id/filter_selfoon"
+            android:layout_width="110dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:text="@string/filter_selfoon" />
+        <CheckBox
+            android:layout_toEndOf="@+id/filter_selfoon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/filter_geslag_check"
+            android:text="@string/filter_geslag"/>
+        <Spinner
+            android:layout_toEndOf="@+id/filter_geslag_check"
+            android:layout_alignParentEnd="true"
+            android:layout_above="@+id/filter_huwelikstatus_opsies"
+            android:id="@+id/filter_geslag_opsies"
+            android:entries="@array/filtergeslagoptions"
+            android:textAlignment="textEnd"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+        </Spinner>
+
+        <CheckBox
+            android:id="@+id/filter_landlyn"
+            android:layout_width="110dp"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/filter_selfoon"
+            android:text="@string/filter_landlyn" />
+        <CheckBox
+            android:layout_toEndOf="@+id/filter_landlyn"
+            android:layout_below="@+id/filter_selfoon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/filter_huwelikstatus_check"
+            android:text="@string/filter_huwelikstatus"/>
+        <Spinner
+            android:layout_toEndOf="@+id/filter_huwelikstatus_check"
+            android:layout_below="@+id/filter_selfoon"
+            android:layout_above="@+id/filter_lidmaatsakp_opsies"
+            android:id="@+id/filter_huwelikstatus_opsies"
+            android:entries="@array/filterhuwelikstatusoptions"
+            android:textAlignment="textEnd"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+        </Spinner>
+
+        <CheckBox
+            android:id="@+id/filter_epos"
+            android:layout_width="110dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_below="@+id/filter_landlyn"
+            android:text="@string/filter_epos" />
+        <CheckBox
+            android:layout_toEndOf="@+id/filter_epos"
+            android:layout_below="@+id/filter_landlyn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/filter_lidmaatsakapstatus_check"
+            android:text="@string/filter_lidmaatskap"/>
+        <Spinner
+            android:layout_alignParentEnd="true"
+            android:layout_toEndOf="@+id/filter_lidmaatsakapstatus_check"
+            android:layout_below="@+id/filter_landlyn"
+            android:layout_above="@+id/filter_wyk_opsies"
+            android:id="@+id/filter_lidmaatsakp_opsies"
+            android:entries="@array/filterlidmaatsakpstatusoptions"
+            android:textAlignment="textEnd"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+        </Spinner>
+        <CheckBox
+            android:id="@+id/filter_gesinshoof"
+            android:layout_alignParentStart="true"
+            android:layout_below="@+id/filter_epos"
+            android:layout_width="110dp"
+            android:layout_height="wrap_content"
+            android:text="@string/filter_gesinshoof" />
+        <CheckBox
+            android:layout_below="@+id/filter_epos"
+            android:layout_toEndOf="@+id/filter_gesinshoof"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/filter_wyk_check"
+            android:text="@string/filter_wyk"/>
+        <Spinner
+            android:layout_below="@+id/filter_epos"
+            android:layout_toEndOf="@+id/filter_wyk_check"
+            android:layout_alignParentEnd="true"
+            android:layout_above="@+id/filter_wyk"
+            android:textAlignment="textEnd"
+            android:id="@+id/filter_wyk_opsies"
+            android:entries="@array/filtertextoptions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+        </Spinner>
+        <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+            android:layout_below="@+id/filter_wyk_check"
+            android:layout_alignParentEnd="true"
+            android:id="@+id/filter_wyk"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@+id/filter_wyk_check" />
+        <CheckBox
+            android:layout_alignParentStart="true"
+            android:layout_below="@+id/filter_wyk"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/filter_ouderdom_check"
+            android:text="@string/filter_ouderdom"/>
+        <Spinner
+            android:layout_below="@+id/filter_wyk"
+            android:layout_above="@+id/en"
+            android:layout_toEndOf="@+id/filter_ouderdom_check"
+            android:id="@+id/filter_ouderdom_opsies"
+            android:textAlignment="textEnd"
+            android:entries="@array/filterouderdomoptions"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+        </Spinner>
+        <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+            android:layout_below="@+id/filter_ouderdom_check"
+            android:layout_alignParentStart="true"
+            android:layout_toStartOf="@+id/en"
+            android:id="@+id/filter_ouderdom1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+        <TextView
+            android:id="@+id/en"
+            android:layout_below="@+id/filter_ouderdom_check"
+            android:layout_above="@+id/filter_van_opsies"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:gravity="center_vertical"
+            android:text=" EN "/>
+        <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+            android:layout_below="@+id/filter_ouderdom_check"
+            android:layout_alignParentEnd="true"
+            android:layout_toEndOf="@+id/en"
+            android:id="@+id/filter_ouderdom2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+        <CheckBox
+            android:layout_below="@id/filter_ouderdom1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/filter_van_check"
+            android:text="@string/filter_van"/>
+        <Spinner
+            android:layout_below="@id/filter_ouderdom1"
+            android:layout_above="@+id/filter_van"
+            android:layout_toEndOf="@+id/filter_van_check"
+            android:textAlignment="textEnd"
+            android:id="@+id/filter_van_opsies"
+            android:entries="@array/filtertextoptions"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+        </Spinner>
+        <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+            android:layout_below= "@+id/filter_van_check"
+            android:id="@+id/filter_van"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+        <CheckBox
+            android:layout_below="@+id/filter_van"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/filter_noemnaam_check"
+            android:text="@string/filter_noemnaam"/>
+        <Spinner
+            android:layout_below="@+id/filter_van"
+            android:layout_above="@+id/filter_noemnaam"
+            android:layout_toEndOf="@+id/filter_noemnaam_check"
+            android:layout_centerHorizontal="true"
+            android:id="@+id/filter_noemnaam_opsies"
+            android:textAlignment="textEnd"
+            android:entries="@array/filtertextoptions"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+        </Spinner>
+        <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+            android:layout_below="@+id/filter_noemnaam_check"
+            android:id="@+id/filter_noemnaam"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+        <CheckBox
+            android:layout_below="@id/filter_noemnaam"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/filter_nooiensvan_check"
+            android:text="@string/filter_nooiensvan"/>
+        <Spinner
+            android:layout_below="@id/filter_noemnaam"
+            android:layout_above="@+id/filter_nooiensvan"
+            android:layout_toEndOf="@+id/filter_nooiensvan_check"
+            android:textAlignment="textEnd"
+            android:id="@+id/filter_nooiensvan_opsies"
+            android:entries="@array/filtertextoptions"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+        </Spinner>
+        <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+            android:layout_below= "@+id/filter_nooiensvan_check"
+            android:id="@+id/filter_nooiensvan"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </RelativeLayout>
+</ScrollView>
+</LinearLayout>

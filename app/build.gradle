@@ -1,0 +1,139 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdk 35
+    defaultConfig {
+        applicationId "za.co.jpsoft.winkerkreader"
+        minSdk 26
+        versionCode 67
+        versionName "3.5"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        targetSdk 34
+        // Enable vector drawable support for older Android versions
+        vectorDrawables.useSupportLibrary = true
+        // Enable view binding (recommended over findViewById)
+        viewBinding {
+            enabled = true
+        }
+    }
+    signingConfigs {
+        release {
+            storeFile file("android.jks")
+            storePassword "cobie3225"
+            keyAlias "WinkerkReader"
+            keyPassword "cobie3225"
+        }
+    }
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            jniDebuggable true
+            renderscriptDebuggable true 
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+        // Enable desugaring for older Android versions
+        coreLibraryDesugaringEnabled true
+    }
+    ndkVersion '21.4.7075529'
+    packagingOptions {
+        jniLibs {
+            excludes += ['META-INF/*', 'META-INF/licenses/*']
+        }
+        resources {
+            excludes += ['META-INF/DEPENDENCIES', 'META-INF/LICENSE', 'META-INF/LICENSE.txt', 'META-INF/NOTICE', 'META-INF/NOTICE.txt']
+        }
+    }
+
+    productFlavors {
+    }
+    namespace 'za.co.jpsoft.winkerkreader'
+    dependenciesInfo {
+        includeInApk true
+        includeInBundle true
+
+    }
+    lint {
+        disable 'ExpiredTargetSdkVersion'
+    }
+}
+
+
+dependencies {
+    // ========== CORE ANDROID LIBRARIES ==========
+    implementation 'androidx.core:core:1.12.0'
+    implementation 'androidx.appcompat:appcompat:1.7.1'
+    implementation 'com.google.android.material:material:1.11.0'
+    implementation 'androidx.activity:activity:1.8.2'
+    implementation 'androidx.fragment:fragment:1.6.2'
+    implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
+
+    // ========== LIFECYCLE COMPONENTS ==========
+    implementation 'androidx.lifecycle:lifecycle-viewmodel:2.9.4'
+    implementation 'androidx.lifecycle:lifecycle-livedata:2.9.4'
+    implementation 'androidx.lifecycle:lifecycle-runtime:2.7.0'
+    implementation 'androidx.lifecycle:lifecycle-common-java8:2.7.0'
+    implementation 'androidx.lifecycle:lifecycle-service:2.7.0'
+
+    // ========== NAVIGATION COMPONENTS ==========
+    implementation 'androidx.navigation:navigation-fragment:2.7.6'
+    implementation 'androidx.navigation:navigation-ui:2.7.6'
+
+    // ========== RECYCLER VIEW ==========
+    implementation 'androidx.recyclerview:recyclerview:1.4.0'
+
+    // ========== ROOM DATABASE ==========
+    def room_version = "2.6.1"
+    implementation "androidx.room:room-runtime:$room_version"
+    annotationProcessor "androidx.room:room-compiler:$room_version"
+    implementation "androidx.room:room-rxjava2:$room_version"
+
+    // ========== WORK MANAGER ==========
+    implementation 'androidx.work:work-runtime:2.10.5'
+
+    // ========== PREFERENCES ==========
+    implementation 'androidx.preference:preference:1.2.1'
+
+    // ========== SECURITY ==========
+    implementation 'androidx.security:security-crypto:1.1.0-alpha06'
+
+    // ========== THIRD PARTY LIBRARIES ==========
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'com.readystatesoftware.sqliteasset:sqliteassethelper:2.0.1'
+    implementation 'com.github.yukuku:ambilwarna:2.0.1'
+    implementation 'com.googlecode.ez-vcard:ez-vcard:0.12.1'
+    implementation 'com.github.bumptech.glide:glide:4.16.0'
+    annotationProcessor 'com.github.bumptech.glide:compiler:4.16.0'
+    implementation 'com.google.code.gson:gson:2.10.1'
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+    implementation 'pub.devrel:easypermissions:3.0.0'
+
+    // ========== DEBUG ==========
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.14'
+
+    // ========== TESTING ==========
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.mockito:mockito-core:5.8.0'
+    testImplementation 'androidx.arch.core:core-testing:2.2.0'
+    testImplementation "androidx.room:room-testing:$room_version"
+
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-intents:3.5.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-accessibility:3.5.1'
+    androidTestImplementation 'androidx.work:work-testing:2.10.5'
+    androidTestImplementation 'androidx.test:rules:1.5.0'
+    androidTestImplementation 'androidx.test:runner:1.5.2'
+    androidTestImplementation 'androidx.test.uiautomator:uiautomator:2.2.0'
+
+    // ========== DESUGARING ==========
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
+}

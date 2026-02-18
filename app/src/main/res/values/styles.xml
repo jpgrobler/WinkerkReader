@@ -1,0 +1,415 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Theme.AppCompat.NoActionBar" parent="Theme.AppCompat.Light">
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+    <style name="SplashTheme" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowBackground">@drawable/splash</item>
+    </style>
+    <!-- ========== BASE APPLICATION THEMES ========== -->
+
+    <!-- Base Application Theme -->
+    <style name="Theme.WinkerkReader" parent="Theme.Material3.DayNight">
+        <!-- Primary brand color -->
+        <item name="colorPrimary">@color/primary_blue</item>
+        <item name="colorPrimaryVariant">@color/primary_blue_dark</item>
+        <item name="colorOnPrimary">@android:color/white</item>
+
+        <!-- Secondary brand color -->
+        <item name="colorSecondary">@color/accent_orange</item>
+        <item name="colorSecondaryVariant">@color/accent_orange_dark</item>
+        <item name="colorOnSecondary">@android:color/black</item>
+
+        <!-- Background colors -->
+        <item name="android:colorBackground">@color/background_light</item>
+        <item name="colorSurface">@color/surface_light</item>
+        <item name="colorOnBackground">@color/text_primary_light</item>
+        <item name="colorOnSurface">@color/text_primary_light</item>
+
+        <!-- Status bar -->
+        <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
+
+        <!-- Enable window insets handling -->
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:windowLayoutInDisplayCutoutMode" tools:targetApi="p">shortEdges</item>
+
+        <!-- Set custom styles as default -->
+        <item name="android:buttonStyle">@style/Widget.WinkerkReader.Button</item>
+        <item name="android:checkboxStyle">@style/Widget.WinkerkReader.CheckBox</item>
+        <item name="materialButtonStyle">@style/Widget.WinkerkReader.Button.Primary</item>
+    </style>
+
+    <!-- Settings Activity Theme -->
+    <style name="Theme.WinkerkReader.Settings">
+        <item name="preferenceTheme">@style/PreferenceThemeOverlay.v14.Material</item>
+        <item name="android:windowBackground">?attr/colorSurface</item>
+    </style>
+
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+    <style name="AppTheme.ActionBarStyle" parent="android:style/Widget.Holo.Light.ActionBar">
+        <item name="android:icon">@mipmap/family_roof</item>
+    </style>
+    <style name="alphabetTextView">
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_width">wrap_content</item>
+    </style>
+    <!-- Style for a category in the editor -->
+    <style name="CategoryStyle">
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_width">88dp</item>
+        <item name="android:paddingTop">16dp</item>
+        <item name="android:textColor">@android:color/holo_blue_light</item>
+        <item name="android:textAppearance">?android:textAppearanceSmall</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+    <!-- Style for an EditText field in the editor -->
+    <style name="EditorFieldStyle">
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_weight">3</item>
+        <item name="android:fontFamily">sans-serif-light</item>
+        <item name="android:textAppearance">?android:textAppearanceMedium</item>
+        <item name="android:focusable">true</item>
+        <item name="android:focusableInTouchMode">true</item>
+        <item name="android:clickable">true</item>
+        <item name="android:inputType">text</item>
+        <item name="android:textColor">@color/colorPrimaryDark</item>
+    </style>
+
+    <!-- Style for the measurement units for an EditText field in the editor -->
+    <style name="EditorUnitsStyle">
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_weight">3</item>
+        <item name="android:layout_alignParentRight">true</item>
+        <item name="android:paddingRight">16dp</item>
+        <item name="android:paddingTop">16dp</item>
+        <item name="android:textAppearance">?android:textAppearanceSmall</item>
+    </style>
+
+
+    <!-- ========== WIDGET STYLES ========== -->
+
+    <!-- Base Widget Style -->
+    <style name="Widget.WinkerkReader" parent=""/>
+
+    <!-- App Widget Container Style -->
+    <style name="Widget.WinkerkReader.AppWidget">
+        <item name="android:background">@drawable/widget_background</item>
+        <item name="android:padding">@dimen/widget_padding</item>
+        <item name="android:layout_margin">@dimen/margin_small</item>
+    </style>
+
+    <!-- Individual Widget Styles -->
+    <style name="Widget.WinkerkReader.AppWidget.Doop" parent="Widget.WinkerkReader.AppWidget">
+        <item name="android:background">@drawable/widget_doop_background</item>
+    </style>
+
+    <style name="Widget.WinkerkReader.AppWidget.Belydenis" parent="Widget.WinkerkReader.AppWidget">
+        <item name="android:background">@drawable/widget_belydenis_background</item>
+    </style>
+
+    <style name="Widget.WinkerkReader.AppWidget.Huwelik" parent="Widget.WinkerkReader.AppWidget">
+        <item name="android:background">@drawable/widget_huwelik_background</item>
+    </style>
+
+    <style name="Widget.WinkerkReader.AppWidget.Sterf" parent="Widget.WinkerkReader.AppWidget">
+        <item name="android:background">@drawable/widget_sterf_background</item>
+    </style>
+
+    <!-- ========== BUTTON STYLES ========== -->
+
+    <!-- Base Button Style -->
+    <style name="Widget.WinkerkReader.Button" parent="Widget.Material3.Button">
+        <item name="android:minHeight">@dimen/touch_target_recommended</item>
+        <item name="android:minWidth">@dimen/touch_target_recommended</item>
+        <item name="android:paddingStart">@dimen/margin_medium</item>
+        <item name="android:paddingEnd">@dimen/margin_medium</item>
+        <item name="android:paddingTop">@dimen/margin_small</item>
+        <item name="android:paddingBottom">@dimen/margin_small</item>
+        <item name="cornerRadius">@dimen/card_corner_radius</item>
+        <item name="android:textSize">@dimen/text_size_normal</item>
+        <item name="android:layout_margin">@dimen/margin_small</item>
+        <item name="rippleColor">?attr/colorOnPrimary</item>
+        <item name="android:stateListAnimator">@null</item>
+        <item name="android:elevation">@dimen/elevation_card</item>
+    </style>
+
+    <!-- Primary Button Style -->
+    <style name="Widget.WinkerkReader.Button.Primary">
+        <item name="backgroundTint">?attr/colorPrimary</item>
+        <item name="android:textColor">?attr/colorOnPrimary</item>
+        <item name="rippleColor">?attr/colorOnPrimary</item>
+    </style>
+
+    <!-- Secondary Button Style -->
+    <style name="Widget.WinkerkReader.Button.Secondary" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:minHeight">@dimen/touch_target_recommended</item>
+        <item name="android:minWidth">@dimen/touch_target_recommended</item>
+        <item name="android:paddingStart">@dimen/margin_medium</item>
+        <item name="android:paddingEnd">@dimen/margin_medium</item>
+        <item name="strokeColor">?attr/colorPrimary</item>
+        <item name="android:textColor">?attr/colorPrimary</item>
+        <item name="cornerRadius">@dimen/card_corner_radius</item>
+        <item name="rippleColor">?attr/colorPrimary</item>
+    </style>
+
+    <!-- Text Button Style -->
+    <style name="Widget.WinkerkReader.Button.Text" parent="Widget.Material3.Button.TextButton">
+        <item name="android:minHeight">@dimen/touch_target_recommended</item>
+        <item name="android:textColor">?attr/colorPrimary</item>
+        <item name="rippleColor">?attr/colorPrimary</item>
+    </style>
+
+    <!-- FAB Style -->
+    <style name="Widget.WinkerkReader.FloatingActionButton" parent="Widget.Material3.FloatingActionButton.Primary">
+        <item name="backgroundTint">?attr/colorSecondary</item>
+        <item name="tint">?attr/colorOnSecondary</item>
+        <item name="android:elevation">@dimen/elevation_fab</item>
+    </style>
+
+    <!-- ========== CHECKBOX STYLES ========== -->
+
+    <!-- Custom CheckBox Style -->
+    <style name="Widget.WinkerkReader.CheckBox" parent="Widget.Material3.CompoundButton.CheckBox">
+        <item name="android:minHeight">@dimen/touch_target_recommended</item>
+        <item name="android:paddingStart">@dimen/margin_small</item>
+        <item name="android:paddingEnd">@dimen/margin_small</item>
+        <item name="android:paddingTop">@dimen/margin_small</item>
+        <item name="android:paddingBottom">@dimen/margin_small</item>
+        <item name="android:button">@drawable/selector_checkbox</item>
+        <item name="android:textSize">@dimen/text_size_normal</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="buttonTint">?attr/colorPrimary</item>
+    </style>
+
+    <!-- Settings CheckBox Style -->
+    <style name="Widget.WinkerkReader.CheckBox.Settings">
+        <item name="android:layout_marginStart">@dimen/margin_medium</item>
+        <item name="android:layout_marginEnd">@dimen/margin_medium</item>
+        <item name="android:layout_marginTop">@dimen/margin_small</item>
+        <item name="android:layout_marginBottom">@dimen/margin_small</item>
+        <item name="android:background">?attr/selectableItemBackground</item>
+    </style>
+
+    <!-- ========== SPINNER STYLES ========== -->
+
+    <!-- Custom Spinner Style -->
+    <style name="Widget.WinkerkReader.Spinner" parent="Widget.Material3.MaterialTimePicker.Display">
+        <item name="android:minHeight">@dimen/touch_target_recommended</item>
+        <item name="android:padding">@dimen/margin_small</item>
+        <item name="android:layout_margin">@dimen/margin_small</item>
+        <item name="android:background">@drawable/spinner_background</item>
+        <item name="android:popupBackground">@drawable/spinner_popup_background</item>
+    </style>
+
+    <!-- ========== TEXT VIEW STYLES ========== -->
+
+    <!-- Title Styles -->
+    <style name="TextAppearance.WinkerkReader" parent="TextAppearance.Material3.DisplayMedium"/>
+
+    <style name="TextAppearance.WinkerkReader.Title" parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:textSize">@dimen/text_size_title</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:layout_marginBottom">@dimen/margin_medium</item>
+    </style>
+
+    <style name="TextAppearance.WinkerkReader.Subtitle" parent="TextAppearance.Material3.TitleMedium">
+        <item name="android:textSize">@dimen/text_size_large</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:layout_marginBottom">@dimen/margin_small</item>
+    </style>
+
+    <!-- Body Text Styles -->
+    <style name="TextAppearance.WinkerkReader.Body" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:textSize">@dimen/text_size_normal</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:lineSpacingExtra">2dp</item>
+    </style>
+
+    <style name="TextAppearance.WinkerkReader.Body.Secondary">
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <!-- Caption Style -->
+    <style name="TextAppearance.WinkerkReader.Caption" parent="TextAppearance.Material3.BodySmall">
+        <item name="android:textSize">@dimen/text_size_small</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:alpha">0.7</item>
+    </style>
+
+    <!-- Widget Text Styles -->
+    <style name="TextAppearance.WinkerkReader.Widget" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textSize">@dimen/text_size_small</item>
+    </style>
+
+    <style name="TextAppearance.WinkerkReader.Widget.Title">
+        <item name="android:textSize">@dimen/text_size_normal</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- ========== COLOR PICKER STYLES ========== -->
+
+    <!-- Color Picker Button Style -->
+    <style name="Widget.WinkerkReader.ColorPicker">
+        <item name="android:layout_width">@dimen/touch_target_recommended</item>
+        <item name="android:layout_height">@dimen/touch_target_recommended</item>
+        <item name="android:layout_margin">@dimen/margin_small</item>
+        <item name="android:background">@drawable/selector_color_picker</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:elevation">@dimen/elevation_card</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
+
+    <!-- Color Picker with Label Style -->
+    <style name="Widget.WinkerkReader.ColorPickerWithLabel">
+        <item name="android:orientation">vertical</item>
+        <item name="android:gravity">center</item>
+        <item name="android:padding">@dimen/margin_small</item>
+    </style>
+
+    <!-- ========== CARD STYLES ========== -->
+
+    <!-- Base Card Style -->
+    <style name="Widget.WinkerkReader.Card" parent="Widget.Material3.CardView.Elevated">
+        <item name="cardCornerRadius">@dimen/card_corner_radius</item>
+        <item name="cardElevation">@dimen/elevation_card</item>
+        <item name="android:layout_margin">@dimen/margin_small</item>
+        <item name="cardBackgroundColor">?attr/colorSurface</item>
+        <item name="contentPadding">@dimen/margin_medium</item>
+    </style>
+
+    <!-- Settings Card Style -->
+    <style name="Widget.WinkerkReader.Card.Settings">
+        <item name="android:layout_marginStart">@dimen/margin_medium</item>
+        <item name="android:layout_marginEnd">@dimen/margin_medium</item>
+        <item name="android:layout_marginTop">@dimen/margin_small</item>
+        <item name="android:layout_marginBottom">@dimen/margin_small</item>
+    </style>
+
+    <!-- ========== DIALOG STYLES ========== -->
+
+    <!-- Custom Dialog Style -->
+    <style name="Widget.WinkerkReader.Dialog" parent="ThemeOverlay.Material3.Dialog">
+        <item name="android:windowBackground">@drawable/dialog_background</item>
+        <item name="android:backgroundDimAmount">0.5</item>
+        <item name="android:windowElevation">@dimen/elevation_dialog</item>
+        <item name="dialogCornerRadius">@dimen/dialog_corner_radius</item>
+    </style>
+
+    <!-- Alert Dialog Style -->
+    <style name="Widget.WinkerkReader.Dialog.Alert" parent="ThemeOverlay.Material3.Dialog.Alert">
+        <item name="dialogCornerRadius">@dimen/dialog_corner_radius</item>
+        <item name="buttonBarPositiveButtonStyle">@style/Widget.WinkerkReader.Button.Primary</item>
+        <item name="buttonBarNegativeButtonStyle">@style/Widget.WinkerkReader.Button.Text</item>
+    </style>
+
+    <!-- Progress Dialog Style -->
+    <style name="Widget.WinkerkReader.Dialog.Progress">
+        <item name="android:indeterminateTint">?attr/colorPrimary</item>
+        <item name="android:layout_margin">@dimen/margin_large</item>
+    </style>
+
+    <!-- ========== TOOLBAR STYLES ========== -->
+
+    <!-- Custom Toolbar Style -->
+    <style name="Widget.WinkerkReader.Toolbar" parent="Widget.Material3.Toolbar">
+        <item name="android:background">?attr/colorPrimary</item>
+        <item name="android:theme">@style/ThemeOverlay.Material3.Dark.ActionBar</item>
+        <item name="popupTheme">@style/ThemeOverlay.Material3.Light</item>
+        <item name="titleTextColor">?attr/colorOnPrimary</item>
+        <item name="android:elevation">@dimen/elevation_card</item>
+    </style>
+
+    <!-- ========== DIVIDER STYLES ========== -->
+
+    <!-- Custom Divider Style -->
+    <style name="Widget.WinkerkReader.Divider">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">1dp</item>
+        <item name="android:background">?attr/colorOutlineVariant</item>
+        <item name="android:layout_marginStart">@dimen/margin_medium</item>
+        <item name="android:layout_marginEnd">@dimen/margin_medium</item>
+        <item name="android:layout_marginTop">@dimen/margin_small</item>
+        <item name="android:layout_marginBottom">@dimen/margin_small</item>
+    </style>
+
+    <!-- ========== LIST ITEM STYLES ========== -->
+
+    <!-- List Item Style -->
+    <style name="Widget.WinkerkReader.ListItem">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minHeight">@dimen/touch_target_recommended</item>
+        <item name="android:paddingStart">@dimen/margin_medium</item>
+        <item name="android:paddingEnd">@dimen/margin_medium</item>
+        <item name="android:paddingTop">@dimen/margin_small</item>
+        <item name="android:paddingBottom">@dimen/margin_small</item>
+        <item name="android:background">?attr/selectableItemBackground</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
+
+    <!-- Settings List Item Style -->
+    <style name="Widget.WinkerkReader.ListItem.Settings">
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:orientation">horizontal</item>
+    </style>
+
+    <!-- ========== SWITCH STYLES ========== -->
+
+    <!-- Custom Switch Style -->
+    <style name="Widget.WinkerkReader.Switch" parent="Widget.Material3.CompoundButton.MaterialSwitch">
+        <item name="thumbTint">?attr/colorPrimary</item>
+        <item name="trackTint">?attr/colorPrimaryContainer</item>
+        <item name="android:minHeight">@dimen/touch_target_recommended</item>
+    </style>
+
+    <!-- ========== INPUT STYLES ========== -->
+
+    <!-- Text Input Layout Style -->
+    <style name="Widget.WinkerkReader.TextInputLayout" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="boxCornerRadiusTopStart">@dimen/card_corner_radius</item>
+        <item name="boxCornerRadiusTopEnd">@dimen/card_corner_radius</item>
+        <item name="boxCornerRadiusBottomStart">@dimen/card_corner_radius</item>
+        <item name="boxCornerRadiusBottomEnd">@dimen/card_corner_radius</item>
+        <item name="boxStrokeColor">?attr/colorPrimary</item>
+        <item name="hintTextColor">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <!-- ========== BOTTOM SHEET STYLES ========== -->
+
+    <!-- Bottom Sheet Dialog Style -->
+    <style name="Widget.WinkerkReader.BottomSheetDialog" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/Widget.WinkerkReader.BottomSheet</item>
+    </style>
+
+    <style name="Widget.WinkerkReader.BottomSheet" parent="Widget.Material3.BottomSheet">
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.WinkerkReader.BottomSheet</item>
+        <item name="backgroundTint">?attr/colorSurface</item>
+    </style>
+
+    <!-- ========== SHAPE APPEARANCES ========== -->
+
+    <!-- Bottom Sheet Shape -->
+    <style name="ShapeAppearanceOverlay.WinkerkReader.BottomSheet" parent="">
+        <item name="cornerSizeTopLeft">@dimen/card_corner_radius</item>
+        <item name="cornerSizeTopRight">@dimen/card_corner_radius</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+        <item name="cornerSizeBottomRight">0dp</item>
+    </style>
+
+    <!-- ========== ANIMATION STYLES ========== -->
+
+
+</resources>

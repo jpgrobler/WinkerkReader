@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <RelativeLayout
+            android:id="@+id/groep_titelblok"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+        <TextView
+            android:id="@+id/GroepeTitel"
+            android:layout_alignParentTop="true"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:text="@string/groepLysTitel"
+            android:textColor="#0B3466"
+            android:textAppearance="?android:textAppearanceLarge" />
+            <TextView
+                android:id="@+id/GroepeTipe"
+                android:layout_below="@+id/GroepeTitel"
+                android:layout_alignParentLeft="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:text="@string/groepLysTitel"
+                android:textColor="#0B3466"
+                android:textAppearance="?android:textAppearanceMedium" />
+            <TextView
+                android:id="@+id/GroepeAdres"
+                android:layout_below="@+id/GroepeTitel"
+                android:layout_alignParentRight="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/groepLysTitel"
+                android:textAppearance="?android:textAppearanceMedium" />
+        </RelativeLayout>
+        <ImageView
+            android:id="@+id/groepelys_sms"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_alignParentEnd="true"
+            android:layout_marginRight="24dp"
+            android:src="@drawable/sms2" />
+
+        <RelativeLayout
+            android:id="@+id/groepenuut"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="4dp"
+            android:layout_below="@+id/groep_titelblok"
+            android:layout_alignParentStart="true">
+
+            <TextView
+                android:id="@+id/NuweGroepNaamTitel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:text="@string/NuweGroepNaam"
+                android:textAppearance="?android:textAppearanceSmall"
+                android:paddingTop="6dp"/>
+            <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+                android:id="@+id/Nuwe_groep_naam"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_toRightOf="@+id/NuweGroepNaamTitel" />
+            <TextView
+                android:id="@+id/NuweGroepTipeTitel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_below="@+id/Nuwe_groep_naam"
+                android:text="@string/NuweGroepTipe"
+                android:textAppearance="?android:textAppearanceSmall"
+                android:paddingTop="6dp"/>
+            <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+                android:id="@+id/Nuwe_groep_tipe"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/Nuwe_groep_naam"
+                android:layout_toRightOf="@+id/NuweGroepNaamTitel" />
+            <TextView
+                android:id="@+id/NuweGroepAdresTitel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_below="@+id/Nuwe_groep_tipe"
+                android:text="@string/NuweGroepAdres"
+                android:textAppearance="?android:textAppearanceSmall"
+                android:paddingTop="6dp"/>
+            <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+                android:id="@+id/Nuwe_groep_adres"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/Nuwe_groep_tipe"
+                android:layout_toRightOf="@+id/NuweGroepNaamTitel"
+                />
+
+        </RelativeLayout>
+
+        <RadioGroup
+            android:id="@+id/radiogroup1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/groepenuut"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal">
+
+            <RadioButton
+                android:id="@+id/group_winkerk"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:checked="true"
+                android:text="@string/groupwinkerk_text" />
+
+            <RadioButton
+                android:id="@+id/group_wkr"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:text="@string/groupwkr_text" />
+
+            <Button
+                android:layout_centerVertical="true"
+                android:id="@+id/groepeInvoegButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_marginRight="24dp"
+
+                android:background="@drawable/buttonshape"
+                android:textColor="@android:color/white"
+                android:text="@string/nGroepButtonSkep"
+                android:src="@drawable/yes"
+                android:visibility="gone"
+                android:layout_marginLeft="8dp"/>
+        </RadioGroup>
+        <RelativeLayout
+            android:id="@+id/GroepFunksies"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/groepenuut">
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:id="@+id/groep_Wis_Button"
+                android:background="@drawable/buttonshape"
+                android:textColor="@android:color/white"
+                android:text="@string/groep_Wis_Button_Text"/>
+            <Button
+                android:layout_centerVertical="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/groep_Wysig_Button"
+                android:layout_alignParentEnd="true"
+                android:textColor="@android:color/white"
+                android:background="@drawable/buttonshape"
+                android:text="@string/groep_Wysig_Button_Text"/>
+        </RelativeLayout>
+    </RelativeLayout>
+
+    <ListView
+        android:id="@+id/list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+</LinearLayout>

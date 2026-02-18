@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/smsmenu"
+        android:icon="@drawable/sms2"
+        android:title="@string/StuurSmsTitel">
+        <menu>
+            <item
+                android:id="@+id/sms_groep"
+                android:icon="@drawable/sms2"
+                android:title="@string/Groepfunksie_sms_groep" />
+            <item
+                android:id="@+id/sms_selected"
+                android:icon="@drawable/sms2"
+                android:title="@string/Groepfunksie_sms_selected" />
+        </menu>
+    </item>
+    <item
+        android:id="@+id/groepemenu"
+        android:title="@string/VoegInGroepTitel"
+        android:icon="@drawable/groep3s">
+        <menu>
+            <item
+                android:id="@+id/almal_in_groep"
+                android:icon="@drawable/groep3s"
+                android:title="@string/VoegInGroep" />
+            <item
+                android:id="@+id/selected_in_groep"
+                android:icon="@drawable/groep3s"
+                android:title="@string/SelectedInGroep" />
+        </menu>
+    </item>
+</menu>

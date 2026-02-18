@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="8dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:paddingEnd="4dp"
+                android:paddingRight="4dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAlignment="center"
+                    android:text="Uitleg + Icons"
+                    android:textStyle="bold"
+                    android:textSize="20sp"
+                    android:paddingBottom="8dp" />
+
+                <Button
+                    android:id="@+id/uitleg_stoor"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="Stoor"
+                    android:textColor="#FFFF"
+                    android:background="@drawable/buttonshape"
+                    android:layout_marginBottom="8dp" />
+
+                <CheckBox
+                    android:id="@+id/uitleg_foto"
+                    android:text="Foto"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <CheckBox
+                    android:id="@+id/uitleg_epos"
+                    android:text="Epos"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <CheckBox
+                    android:id="@+id/uitleg_whatsap"
+                    android:text="Whatsapp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <CheckBox
+                    android:id="@+id/uitleg_verjaarsdag"
+                    android:text="Verjaarsdag"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <CheckBox
+                    android:id="@+id/uitleg_ouderdom"
+                    android:text="Ouderdom"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <CheckBox
+                    android:id="@+id/uitleg_Huweliksdag"
+                    android:text="Huweliksdatum"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <CheckBox
+                    android:id="@+id/uitleg_wyk"
+                    android:text="Wyk"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <CheckBox
+                    android:id="@+id/uitleg_selfoon"
+                    android:text="Selfoon"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <CheckBox
+                    android:id="@+id/uitleg_telefoon"
+                    android:text="Telefoon"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <!-- Widget Section -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAlignment="center"
+                    android:text="Widget"
+                    android:textStyle="bold"
+                    android:textSize="20sp"
+                    android:paddingTop="16dp"
+                    android:paddingBottom="8dp" />
+
+                <Button
+                    android:id="@+id/save_widget"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="Stoor"
+                    android:textColor="#FFFF"
+                    android:background="@drawable/buttonshape"
+                    android:layout_marginBottom="8dp" />
+
+                <CheckBox
+                    android:id="@+id/widget_Doop_select"
+                    android:text="Doopdatum"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <CheckBox
+                    android:id="@+id/widget_Belydenis_select"
+                    android:text="Belydenisdatum"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <CheckBox
+                    android:id="@+id/widget_Huwelik_select"
+                    android:text="Huweliksdatum"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <CheckBox
+                    android:id="@+id/widget_Sterf"
+                    android:text="Sterfdatum"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:paddingStart="4dp"
+                android:paddingLeft="4dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAlignment="center"
+                    android:text="Funksies"
+                    android:textStyle="bold"
+                    android:textSize="20sp"
+                    android:paddingBottom="8dp" />
+
+                <Button
+                    android:id="@+id/funksoie_Stoor"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="Stoor"
+                    android:textColor="#FFFF"
+                    android:background="@drawable/buttonshape"
+                    android:layout_marginBottom="8dp" />
+
+                <CheckBox
+                    android:id="@+id/autoStartSwitch"
+                    android:text="Begin outomaties\n\tmonitor &amp; log"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <CheckBox
+                    android:id="@+id/uitleg_Monitor_Oproepe"
+                    android:text="Monitor Oproepe"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <CheckBox
+                    android:id="@+id/uitleg_Log_Oproepe"
+                    android:text="Log Tel Oproepe"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <CheckBox
+                    android:id="@+id/uitleg_Log_VOIP"
+                    android:text="Log VOIP Oproepe"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Kies 📅 kalender:"
+                    android:textSize="14sp"
+                    android:textColor="#666666"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp" />
+
+                <Spinner
+                    android:id="@+id/calendarSpinner"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    android:minHeight="48dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Def Uitleg:"
+                    android:textSize="16sp"
+                    android:paddingTop="8dp" />
+
+                <Spinner
+                    android:id="@+id/layoutOpsies"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:entries="@array/layoutoptions"
+                    android:minHeight="48dp"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Whatsapp:"
+                    android:textSize="16sp"
+                    android:paddingTop="8dp" />
+
+                <CheckBox
+                    android:id="@+id/uitleg_w1"
+                    android:text="Whatsapp Metode 1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <CheckBox
+                    android:id="@+id/uitleg_w2"
+                    android:text="Whatsapp Metode 2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <CheckBox
+                    android:id="@+id/uitleg_w3"
+                    android:text="Whatsapp Metode 3"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Epos:"
+                    android:textSize="16sp"
+                    android:paddingTop="8dp" />
+
+                <CheckBox
+                    android:id="@+id/uitleg_html"
+                    android:text="HTML Epos"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <Button
+                    android:id="@+id/saveColor"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="Stoor Kleur"
+                    android:textColor="#FFFF"
+                    android:background="@drawable/buttonshape"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:id="@+id/gem1"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:text="Gemeente 1"
+                    android:textSize="16sp"
+                    android:gravity="center"
+                    android:layout_marginBottom="8dp"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <TextView
+                    android:id="@+id/gem2"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:text="Gemeente 2"
+                    android:textSize="16sp"
+                    android:gravity="center"
+                    android:layout_marginBottom="8dp"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <TextView
+                    android:id="@+id/gem3"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:text="Gemeente 3"
+                    android:textSize="16sp"
+                    android:gravity="center"
+                    android:layout_marginBottom="8dp"
+                    android:clickable="true"
+                    android:focusable="true" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

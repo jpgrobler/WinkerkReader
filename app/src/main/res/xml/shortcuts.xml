@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/ic_settings"
+        android:shortcutId="settings"
+        android:shortcutLongLabel="@string/shortcut_settings_long"
+        android:shortcutShortLabel="@string/shortcut_settings_short">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetClass="za.co.jpsoft.winkerkreader.UitlegActivity"
+            android:targetPackage="za.co.jpsoft.winkerkreader" />
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/ic_phone"
+        android:shortcutId="call_monitor"
+        android:shortcutLongLabel="@string/shortcut_monitor_long"
+        android:shortcutShortLabel="@string/shortcut_monitor_short">
+        <intent
+            android:action="za.co.jpsoft.winkerkreader.TOGGLE_MONITOR"
+            android:targetClass="za.co.jpsoft.winkerkreader.MainActivity2"
+            android:targetPackage="za.co.jpsoft.winkerkreader" />
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+</shortcuts>

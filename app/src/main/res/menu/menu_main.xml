@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Options menu for the CatalogActivity -->
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".ui.home.activities.TransactionSearchActivity">
+    <item
+                android:id="@+id/action_search"
+                android:icon="@drawable/searchmenu2"
+                android:title="@string/mainmenu_soek"
+                app:showAsAction="collapseActionView"
+                app:actionViewClass="androidx.appcompat.widget.SearchView"
+                 />
+    <item android:id="@+id/select_options"
+        android:icon="@android:drawable/ic_search_category_default"
+        android:title="@string/mainmenu_soek_opsies">
+    </item>
+    <item
+        android:id="@+id/filter_options"
+        android:icon="@drawable/filter3s"
+        android:title="@string/mainmenu_filter">
+    </item>
+    <item
+        android:title="@string/mainmenu_taggedtitle"
+        android:icon="@drawable/selectedb">
+        <menu>
+        <item
+            android:id="@+id/tagged"
+            android:icon="@drawable/selected"
+            android:title="@string/mainmenu_tagged">
+        </item>
+        <item
+            android:id="@+id/deselect"
+            android:title="@string/mainmenu_untagged"
+            android:icon="@drawable/selectednone"
+            app:showAsAction="never"
+            />
+        </menu>
+    </item>
+    <item
+        android:title="@string/mainmenu_sorteer"
+        android:icon="@android:drawable/ic_menu_sort_by_size">
+        <menu >
+            <item
+                android:id="@+id/sort_wyk"
+                android:icon="@android:drawable/ic_menu_sort_alphabetically"
+                android:title="@string/mainmenu_sort_wyk"
+                app:showAsAction="never" />
+            <item
+                android:id="@+id/sort_van"
+                android:title="@string/mainmenu_sort_van"
+                android:icon="@android:drawable/ic_menu_sort_alphabetically"
+                app:showAsAction="never" />
+            <item
+                android:id="@+id/sort_ouderdom"
+                android:title="@string/mainmenu_sort_ouderdom"
+                android:icon="@android:drawable/ic_menu_sort_by_size"
+                app:showAsAction="never" />
+            <item
+                android:id="@+id/sort_adres"
+                android:title="@string/mainmenu_adres"
+                android:icon="@drawable/construction"
+                app:showAsAction="never"
+                />
+            <item
+                android:id="@+id/verjaar"
+                android:title="@string/mainmenu_verjaar"
+                android:icon="@drawable/bdayw"
+                app:showAsAction="never"
+                />
+            <item
+                android:id="@+id/sort_gesin"
+                android:title="@string/mainmenu_gesin"
+                android:icon="@drawable/ic_family"
+                android:visible="true"
+                app:showAsAction="never"
+                />
+        </menu>
+    </item>
+    <item
+    android:title="@string/mainmenu_admin"
+    android:icon="@drawable/admin">
+        <menu>
+            <item
+                android:id="@+id/laai"
+                android:title="@string/mainmenu_laai"
+                app:showAsAction="never"
+                android:icon="@drawable/downs"
+                />
+            <item
+                android:id="@+id/fotos"
+                android:title="@string/mainmenu_fotos"
+                app:showAsAction="never"
+                android:icon="@drawable/kontaks"
+                />
+            <item
+                android:id="@+id/registreer"
+                android:title="@string/mainmenu_registreer"
+                app:showAsAction="never"
+                android:icon="@drawable/indexs"
+                />
+            <item
+                android:id="@+id/uitleg"
+                android:title="Uitleg + Funksies"
+                app:showAsAction="never"
+                android:icon="@drawable/uitleg"
+                />
+            <item
+                android:id="@+id/menu_permissions"
+                android:title="Manage Permissions"
+                android:icon="@android:drawable/ic_lock_lock"
+                app:showAsAction="never" />
+
+            <item
+                android:id="@+id/menu_permission_settings"
+                android:title="Permission Settings"
+                android:icon="@android:drawable/ic_menu_preferences"
+                app:showAsAction="never" />
+            <item
+                android:id="@+id/opdateerApp"
+                android:title="@string/opdateerApp"
+                app:showAsAction="never"
+                android:icon="@drawable/webups"
+                />
+
+        </menu>
+    </item>
+    <item
+        android:id="@+id/sms_verjaar"
+        android:title="@string/mainmenu_sms_verjaar"
+        app:showAsAction="never"
+        android:icon="@drawable/bdaysmss"
+        />
+    <item
+        android:id="@+id/argief"
+        android:title="@string/mainmenu_argief"
+        app:showAsAction="never"
+        android:icon="@drawable/argiefs"
+        />
+    <item
+        android:id="@+id/action_view_call_log"
+        android:title="View Call Log"
+        android:icon="@android:drawable/ic_menu_recent_history"
+        app:showAsAction="never"
+        />
+</menu>

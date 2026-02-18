@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Internal storage files -->
+    <files-path name="internal_files" path="." />
+
+    <!-- Cache directory -->
+    <cache-path name="cache_files" path="." />
+
+    <!-- External files directory -->
+    <external-files-path name="external_files" path="." />
+
+    <!-- External cache directory -->
+    <external-cache-path name="external_cache" path="." />
+
+    <!-- Downloads directory (for exported settings) -->
+    <external-files-path name="downloads" path="Downloads/" />
+
+    <!-- Pictures directory (for member photos) -->
+    <external-files-path name="pictures" path="Pictures/" />
+
+    <!-- Internal storage updates directory -->
+    <files-path
+        name="updates"
+        path="updates/" />
+
+    <!-- Cache directory (if needed) -->
+    <cache-path
+        name="cache"
+        path="/" />
+
+</paths>

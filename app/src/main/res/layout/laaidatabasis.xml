@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+<ScrollView
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <ProgressBar
+        android:id="@+id/laai_indeterminateBar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:focusedByDefault="true"
+        android:visibility="visible" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/laai_titel"
+        android:textSize="30sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/datadate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/laai_datum"
+        android:textSize="15sp"
+        android:textStyle="bold" />
+
+    <ProgressBar
+        android:id="@+id/laai_indeterminateBar2"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:focusedByDefault="true"
+        android:visibility="visible" />
+
+    <RadioGroup
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <RadioButton
+            android:id="@+id/laai_wisuit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/laai_radio" />
+    </RadioGroup>
+
+    <ProgressBar
+        android:id="@+id/laai_indeterminateBar3"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:focusedByDefault="true"
+        android:visibility="visible" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <EditText
+            android:id="@+id/db_link"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_toLeftOf="@id/dbLinkButton"
+            android:selectAllOnFocus="true"
+            android:text="@string/dbLink"
+            android:textSize="15dp" />
+
+        <Button
+            android:id="@+id/dbLinkButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:background="@drawable/buttonshape"
+            android:text="@string/dbLinkButtonText"
+            android:textColor="@android:color/white"
+            android:textSize="10dp" />
+
+        <TextView
+
+            android:id="@+id/textTyd"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/db_link"
+            android:layout_alignBottom="@+id/tydText"
+            android:layout_alignParentLeft="true"
+            android:paddingTop="5dp"
+            android:text="Tyd:"
+            android:textSize="18dp"
+            android:textStyle="bold" />
+
+        <EditText
+
+            android:id="@+id/tydText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/db_link"
+            android:layout_toRightOf="@+id/textTyd"
+            android:ems="5" />
+
+        <TextView
+
+            android:id="@+id/textDag"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/db_link"
+            android:layout_toRightOf="@+id/tydText"
+            android:paddingTop="5dp"
+            android:text="Dag:"
+            android:textSize="18dp"
+            android:textStyle="bold" />
+
+        <Spinner
+
+            android:id="@+id/weeksdag"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/db_link"
+            android:layout_toRightOf="@+id/textDag"
+            android:paddingTop="5dp" />
+
+        <CheckBox
+
+            android:id="@+id/alDropBox"
+            android:layout_width="104dp"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/db_link"
+            android:layout_alignParentRight="true"
+            android:paddingTop="5dp"
+            android:text="Auto dl\nInternet" />
+
+        <Button
+            android:id="@+id/button1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/db_link"
+            android:layout_toRightOf="@+id/weeksdag"
+            android:text="Opdateer\nTyd"
+            android:visibility="gone" />
+    </RelativeLayout>
+
+    <ProgressBar
+        android:id="@+id/laai_indeterminateBar4"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:focusedByDefault="true"
+        android:visibility="visible" />
+
+    <LinearLayout
+        android:id="@+id/laai_local"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/laai_laai"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/buttonshape"
+                android:text="@string/laai_button"
+                android:textColor="@android:color/white"
+                tools:visibility="gone"
+                android:layout_marginRight="5dp"/>
+
+            <Button
+                android:id="@+id/laai_picker"
+                android:layout_width="70dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/buttonshape"
+                android:text="Kies self"
+                android:textColor="@android:color/white"
+                android:layout_marginRight="5dp"/>
+            <Button
+                android:id="@+id/laai_socket"
+                android:layout_width="70dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/buttonshape"
+                android:text="WiFi"
+                android:textColor="@android:color/white"
+                android:layout_marginRight="5dp"/>
+
+            <Button
+                android:id="@+id/laai_USB"
+                android:layout_width="70dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/buttonshape"
+                android:text="USB"
+                android:textColor="@android:color/white" />
+        </LinearLayout>
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <RadioGroup
+                android:id="@+id/laai_filelist"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"></RadioGroup>
+        </ScrollView>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
+            <TextView
+                android:id="@+id/ip_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="IP van PC:  "
+                android:textAlignment="center"
+                android:textColor="@color/colorPrimary"
+                android:textSize="20dp" />
+            <EditText
+                android:id="@+id/server_ip"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_toLeftOf="@id/dbLinkButton"
+                android:selectAllOnFocus="true"
+                android:text="###.###.###.###"
+                android:textSize="15dp" />
+        </LinearLayout>
+        <ProgressBar
+            android:id="@+id/laai_status"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:focusedByDefault="true"
+            android:visibility="visible" />
+        <TextView
+            android:id="@+id/laai_boodskap"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAlignment="center"
+            android:textColor="@color/colorAccent"
+            android:textSize="30dp" />
+    </LinearLayout>
+</LinearLayout>
+
+</ScrollView>
+</LinearLayout>

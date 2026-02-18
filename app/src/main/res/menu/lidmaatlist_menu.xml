@@ -1,0 +1,74 @@
+
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="za.co.jpsoft.winkerkreader.MainActivity2">
+    <item
+        android:id="@+id/kyk_lidmaat_detail"
+        android:icon="@drawable/clipboards"
+        android:title="@string/lidmaatlistmenu_detail" />
+    <item
+        android:title="@string/lidmaatlistmenu_skakel"
+        android:icon="@drawable/bels"
+        android:id="@+id/submenu_bel">
+        <menu>
+            <group android:id="@+id/bel_sel_group">
+            <item
+                android:id="@+id/bel_selfoon"
+                android:icon="@drawable/cell3s"
+                android:title="@string/lidmaatlistmenu_bel_selfoon" />
+            </group>
+            <item
+                android:id="@+id/bel_landlyn"
+                android:icon="@drawable/oldphones"
+                android:title="@string/lidmaatlistmenu_bel_landlyn" />
+        </menu>
+    </item>
+    <item
+        android:title="@string/lidmaatlistmenu_teks"
+        android:icon="@drawable/texts"
+        android:id="@+id/submenu_teks">
+        <menu>
+            <group android:id="@+id/sel_group">
+                <item
+                    android:id="@+id/stuur_sms"
+                    android:icon="@drawable/sms2s"
+                    android:title="@string/lidmaatlistmenu_stuur_sms" />
+                <item
+                    android:id="@+id/stuur_whatsapp"
+                    android:icon="@drawable/whatsapps"
+                    android:title="@string/lidmaatlistmenu_stuur_whatsapp" />
+                <item
+                    android:id="@+id/stuur_whatsapp2"
+                    android:icon="@drawable/whatsapps"
+                    android:title="@string/lidmaatlistmenu_stuur_whatsapp2" />
+                <item
+                    android:id="@+id/stuur_whatsapp3"
+                    android:icon="@drawable/whatsapps"
+                    android:title="@string/lidmaatlistmenu_stuur_whatsapp3" />
+            </group>
+            <item
+                android:id="@+id/stuur_epos"
+                android:icon="@drawable/email2s"
+                android:title="@string/lidmaatlistmenu_stuur_epos" />
+        </menu>
+    </item>
+    <item
+        android:title="@string/lidmaatlistmenu_ander"
+        android:id="@+id/submenu_ander">
+        <menu>
+            <item
+                android:id="@+id/kopieer"
+                android:icon="@drawable/copy2s"
+                android:title="@string/lidmaatlistmenu_copy_to_clipboard" />
+            <item
+                android:id="@+id/copy_to_contacts"
+                android:icon="@drawable/kontaks"
+                android:title="@string/lidmaatlistmenu_copy_to_contacts" />
+            <item
+                android:id="@+id/nota"
+                android:icon="@drawable/kalenders"
+                android:title="@string/lidmaatlistmenu_nota" />
+        </menu>
+    </item>
+
+</menu>
