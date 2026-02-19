@@ -53,12 +53,6 @@ public class argief_List extends AppCompatActivity
     private Menu mMenu;
 
     @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-    }
-
-
-    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:

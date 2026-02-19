@@ -330,7 +330,7 @@ public class PermissionsActivity extends AppCompatActivity {
 
     @Override
     public boolean onSupportNavigateUp() {
-        onBackPressed();
+        //onBackPressed();
         return true;
     }
 

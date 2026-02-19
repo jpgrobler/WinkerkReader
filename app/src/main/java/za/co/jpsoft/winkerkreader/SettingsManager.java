@@ -155,7 +155,7 @@ public class SettingsManager {    private static final String TAG = "SettingsMan
         try {
             SharedPreferences.Editor editor = prefs.edit();
             editor.putBoolean(key, value);
-            boolean success = editor.commit(); // Use commit() for immediate feedback
+            boolean success = editor.commit();  // Use commit() for immediate feedback
             
             if (!success) {
                 Log.e(TAG, "Failed to save boolean preference: " + key + " = " + value);

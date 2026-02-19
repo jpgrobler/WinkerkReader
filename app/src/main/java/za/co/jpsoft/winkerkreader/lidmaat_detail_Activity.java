@@ -145,6 +145,7 @@ import static za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.WKR_G
 import static za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.WKR_GROEPE_NAAM;
 import static za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.WKR_LIDMATE2GROEPE_GROEPROL;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.LinearLayoutCompat;
 import androidx.appcompat.widget.PopupMenu;
@@ -228,14 +229,14 @@ public class lidmaat_detail_Activity extends AppCompatActivity implements
     private String mGeslagB = "";
     private String mHuwelikstatus = "Ongetroud";
 
-    @Override
-    public void onBackPressed() {
-        for (int lo = 0; lo < 9; lo++) {
-            getLoaderManager().destroyLoader(lo);
-        }
-        finish();
-        super.onBackPressed();
-    }
+//    @Override
+//    public void onBackPressed() {
+//        for (int lo = 0; lo < 9; lo++) {
+//            getLoaderManager().destroyLoader(lo);
+//        }
+//        finish();
+//        super.onBackPressed();
+//    }onBackPressed
 
 
     @Override
@@ -453,6 +454,16 @@ public class lidmaat_detail_Activity extends AppCompatActivity implements
 
             }
         });
+        OnBackPressedCallback callback = new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                for (int lo = 0; lo < 9; lo++) {
+                    getLoaderManager().destroyLoader(lo);
+                }
+                finish();
+            }
+        };
+        getOnBackPressedDispatcher().addCallback(this, callback);
     }
 
     @Override

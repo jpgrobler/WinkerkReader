@@ -1,35 +1,53 @@
-*.jks
-*.keystore
-.gradle/
+# Java/Gradle/IDE Specific
+*.class
+*.jar
+*.war
+*.ear
+*.db
+*.log
+*.iml
+.idea/
+out/
 build/
+bin/
+# Gradle Specific
+.gradle/
+/build/
+local.properties
+.gradle-wrapper.jar
+.gradle-wrapper.properties
+# Android Specific
+*.apk
+*.ap_ 
+*.dex
+*.class
+*.so
+*.log
+app/.idea/
+app/gradle.properties
 
-# Archives and compressed files
-*.7z
-*.zip
-*.gz
-*.rar
-*.tar
+# Local configuration file (SDK path, etc)
+local.properties
 
-# Backup files
-*.bak
-*.backup
-*.old
-
-# Duplicate files
-* - Copy.*
-* - kopie.*
-*copy*
-
-# IDE files (optional - uncomment if you want to ignore these)
+# Android Studio
 .idea/
 *.iml
-*.iws
+*.hprof
 
-.gradle
-/local.properties
-/.idea/workspace.xml
-/.idea/libraries
+# IntelliJ
+out/
+
+# Package Files
+*.7z
+*.tar.z
+*.zip
+*.tar
+*.gz
+# OS generated files
 .DS_Store
-/build
-/captures
-.externalNativeBuild
+Thumbs.db
+ehthumbs.db
+Icon?*
+# Backup Files
+*~
+*.bak

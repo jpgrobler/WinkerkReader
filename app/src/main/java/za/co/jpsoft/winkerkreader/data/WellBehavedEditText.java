@@ -42,7 +42,7 @@ public class WellBehavedEditText extends AppCompatEditText {
             @Override
             public void onGlobalLayout() {
                 if(showKeyboard) {
-                    showKeyboard = !(inputMethodManager.showSoftInput(editText, InputMethodManager.SHOW_FORCED));
+                    showKeyboard = !(inputMethodManager.showSoftInput(editText, 0)); //InputMethodManager.SHOW_FORCED
                 }
             }
         });
@@ -62,7 +62,7 @@ public class WellBehavedEditText extends AppCompatEditText {
         this.post(new Runnable() {
             @Override
             public void run() {
-                showKeyboard = !(inputMethodManager.showSoftInput(self, InputMethodManager.SHOW_FORCED));
+                showKeyboard = !(inputMethodManager.showSoftInput(self, 0));//
             }
         });
         return result;

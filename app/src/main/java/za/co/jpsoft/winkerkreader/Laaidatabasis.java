@@ -693,11 +693,12 @@ public class Laaidatabasis extends AppCompatActivity implements
                              "JOIN Denominations ON (quote(MyCongregationInfo.DenominationGUID) = quote(Denominations.DenominationGUID))",
                      null)) {
 
-            if (cursor != null && cursor.getCount() > 0) {
-                cursor.moveToFirst();
+            // Check if cursor is valid and has data
+            if (cursor != null && cursor.moveToFirst()) {
                 int abbrevIndex = cursor.getColumnIndex("Abbreviation");
-                int nameIndex = cursor.getColumnIndex("GemeenteNaam");
+                int nameIndex = cursor.getColumnIndex("Name"); // Changed to match SELECT statement
 
+                // Verify indices are valid before accessing
                 if (abbrevIndex >= 0 && nameIndex >= 0) {
                     String abbreviation = cursor.getString(abbrevIndex);
                     String gemeenteNaam = cursor.getString(nameIndex);
@@ -707,6 +708,7 @@ public class Laaidatabasis extends AppCompatActivity implements
         } catch (Exception e) {
             Log.e("WinkerkReader Laaidatabasis", "Error reading database info: " + e);
         }
+
         return data;
     }
 

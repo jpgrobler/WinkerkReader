@@ -56,6 +56,7 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.core.app.ActivityCompat;
@@ -142,18 +143,18 @@ public class VerjaarSMS2 extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    public void onBackPressed(){
-        super.onBackPressed();
-        getLoaderManager().destroyLoader(10);
-        mCursorAdapter.swapCursor(null);
-        ContentValues values = new ContentValues();
-        WinkerkContract.winkerkEntry.SORTORDER = "VERJAAR";
-        values.put(LIDMATE_TAG, 0);
-        int rowsAffected = getContentResolver().update(WinkerkContract.winkerkEntry.CONTENT_URI, values, null, null);
-        // startActivity(intent);
-        finish();
-    }
+//    @Override
+//    public void onBackPressed(){
+//        super.onBackPressed();
+//        getLoaderManager().destroyLoader(10);
+//        mCursorAdapter.swapCursor(null);
+//        ContentValues values = new ContentValues();
+//        WinkerkContract.winkerkEntry.SORTORDER = "VERJAAR";
+//        values.put(LIDMATE_TAG, 0);
+//        int rowsAffected = getContentResolver().update(WinkerkContract.winkerkEntry.CONTENT_URI, values, null, null);
+//        // startActivity(intent);
+//        finish();
+//    }
 
     @Override
     protected void onDestroy(){
@@ -193,6 +194,19 @@ public class VerjaarSMS2 extends AppCompatActivity {
         WinkerkContract.winkerkEntry.SORTORDER = "VERJAAR";
 
         initializeComponents();  // Single method call with proper order
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                getLoaderManager().destroyLoader(10);
+                mCursorAdapter.swapCursor(null);
+                ContentValues values = new ContentValues();
+                WinkerkContract.winkerkEntry.SORTORDER = "VERJAAR";
+                values.put(LIDMATE_TAG, 0);
+                int rowsAffected = getContentResolver().update(WinkerkContract.winkerkEntry.CONTENT_URI, values, null, null);
+                // startActivity(intent);
+                finish();
+            }
+        });
     }
 
     private void initializeViewModel() {

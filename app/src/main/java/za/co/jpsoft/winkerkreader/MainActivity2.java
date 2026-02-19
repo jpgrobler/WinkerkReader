@@ -47,6 +47,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
@@ -239,6 +240,13 @@ public class MainActivity2 extends AppCompatActivity {
         if (!(notificationEnabled != null && notificationEnabled.contains(packageName))){
             openNotificationSettings();
         }
+        OnBackPressedCallback callback = new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                finish();
+            }
+        };
+        getOnBackPressedDispatcher().addCallback(this, callback);
     }
 
     private void checkAndRequestPermissions() {
@@ -1686,11 +1694,7 @@ public class MainActivity2 extends AppCompatActivity {
         // Handle permission results if needed
     }
 
-    @Override
-    public void onBackPressed() {
-        finish();
-        super.onBackPressed();
-    }
+
 
     @Override
     protected void onDestroy() {

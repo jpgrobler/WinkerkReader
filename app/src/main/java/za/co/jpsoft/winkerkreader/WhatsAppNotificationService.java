@@ -166,7 +166,7 @@ public class WhatsAppNotificationService extends NotificationListenerService {
     }
 
     private boolean isIncomingCall(String title, String text, String bigText, String subText) {
-        String combinedText = (title + " " + text + " " + bigText + " " + subText).toLowerCase();
+        String combinedText = (title + " " + text + " " + bigText + " " + subText).toLowerCase(Locale.ROOT);
 
         // Strong incoming indicators - these are very specific
         String[] strongIncoming = {
@@ -202,7 +202,7 @@ public class WhatsAppNotificationService extends NotificationListenerService {
 
     // Improved isPossibleOutgoingCall - more restrictive
     private boolean isPossibleOutgoingCall(String title, String text, String bigText, String subText) {
-        String combinedText = (title + " " + text + " " + bigText + " " + subText).toLowerCase();
+        String combinedText = (title + " " + text + " " + bigText + " " + subText).toLowerCase(Locale.ROOT);
 
         // Very strong outgoing indicators only
         String[] strongOutgoing = {
@@ -236,7 +236,7 @@ public class WhatsAppNotificationService extends NotificationListenerService {
                 "call lasted", "hung up", "disconnected", "call time"
         };
 
-        String combinedText = (title + " " + text + " " + bigText + " " + subText).toLowerCase();
+        String combinedText = (title + " " + text + " " + bigText + " " + subText).toLowerCase(Locale.ROOT);
 
         for (String keyword : endedKeywords) {
             if (combinedText.contains(keyword.toLowerCase())) {
@@ -252,7 +252,7 @@ public class WhatsAppNotificationService extends NotificationListenerService {
                 "unanswered", "didn't answer", "no answer"
         };
 
-        String combinedText = (title + " " + text + " " + bigText + " " + subText).toLowerCase();
+        String combinedText = (title + " " + text + " " + bigText + " " + subText).toLowerCase(Locale.ROOT);
 
         for (String keyword : missedKeywords) {
             if (combinedText.contains(keyword.toLowerCase())) {
@@ -441,7 +441,7 @@ public class WhatsAppNotificationService extends NotificationListenerService {
                 "call", "video", "voice", "missed", "incoming", "ended"
         };
 
-        String lowerText = text.toLowerCase();
+        String lowerText = text.toLowerCase(Locale.ROOT);
         for (String keyword : appKeywords) {
             if (lowerText.contains(keyword)) {
                 return true;

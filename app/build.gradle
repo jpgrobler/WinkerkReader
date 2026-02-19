@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
 
 android {
     compileSdk 35
@@ -32,16 +33,26 @@ android {
         }
         debug {
             jniDebuggable true
-            renderscriptDebuggable true 
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
         // Enable desugaring for older Android versions
         coreLibraryDesugaringEnabled true
     }
-    ndkVersion '21.4.7075529'
+    tasks.withType(JavaCompile) {
+        options.compilerArgs << "-Xlint:deprecation"
+    }
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(17)
+        }
+    }
+//    ndkVersion '21.4.7075529'
     packagingOptions {
         jniLibs {
             excludes += ['META-INF/*', 'META-INF/licenses/*']
@@ -95,7 +106,8 @@ dependencies {
     implementation "androidx.room:room-rxjava2:$room_version"
 
     // ========== WORK MANAGER ==========
-    implementation 'androidx.work:work-runtime:2.10.5'
+    implementation 'androidx.work:work-runtime:2.11.1'
+    implementation 'androidx.work:work-runtime-ktx:2.11.1'
 
     // ========== PREFERENCES ==========
     implementation 'androidx.preference:preference:1.2.1'

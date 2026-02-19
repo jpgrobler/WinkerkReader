@@ -9,6 +9,7 @@
     <uses-feature
         android:name="android.hardware.telephony"
         android:required="false" />
+
     <!-- For Android 12+ (API 31+) exact alarms -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
@@ -18,7 +19,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
     <!-- Notification permissions -->
-    <uses-permission android:name="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" />
+    <!-- uses-permission android:name="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" /-->
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
@@ -41,13 +42,17 @@
     <uses-permission android:name="android.permission.WRITE_CALENDAR" />
 
     <!-- Media access permissions -->
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
-    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
 
-    <!-- File storage permissions -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <!-- Android 13+ media permissions - ADD THESE for newer devices -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
 
     <!-- System overlay and alert permissions -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
@@ -60,11 +65,10 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
     <uses-permission android:name="android.permission.MANAGE_OWN_CALLS" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <!-- Package management permissions -->
-    <uses-permission android:name="android.permission.INSTALL_PACKAGES"/>
+    <!-- uses-permission android:name="android.permission.INSTALL_PACKAGES"/ -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" tools:ignore="QueryAllPackagesPermission" />
 
@@ -217,8 +221,8 @@
         <service
             android:name="androidx.work.impl.foreground.SystemForegroundService"
             android:foregroundServiceType="dataSync"
-            tools:replace="android:foregroundServiceType"
             tools:node="merge" />
+
         <service
             android:name="za.co.jpsoft.winkerkreader.WhatsAppNotificationService"
             android:exported="false"
@@ -286,7 +290,8 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
-        <!-- WorkManager initialization (optional if using default) -->
+
+
         <provider
             android:name="androidx.startup.InitializationProvider"
             android:authorities="${applicationId}.androidx-startup"
@@ -294,7 +299,8 @@
             tools:node="merge">
             <meta-data
                 android:name="androidx.work.WorkManagerInitializer"
-                android:value="androidx.startup" />
+                android:value="androidx.startup"
+                tools:node="remove" />
         </provider>
 
     </application>

@@ -34,7 +34,7 @@ public class MyService extends Service {
 					if (incomingNumber != null) {
 						editor.putString("CallerNumber", incomingNumber);} else {
 						editor.putString("CallerNumber", "Unknown");}
-					editor.commit();
+					editor.apply();
 					startService(new Intent(getApplicationContext(), oproepdetail.class));
 				} else if (oproepdetail.isOn) {
 					final Handler handler = new Handler();

@@ -95,61 +95,30 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getReadableDatabase();
         
         String query = "SELECT * FROM " + TABLE_CALL_LOGS + " ORDER BY " + COLUMN_TIMESTAMP + " DESC";
-        Cursor cursor = db.rawQuery(query, null);
+        Cursor cursor = null;
+        try {
+            cursor = db.rawQuery(query, null);
 
-        if (cursor.moveToFirst()) {
-            do {
-                long id = getSafeLong(cursor, COLUMN_ID, -1L);
-                String callerInfo = getSafeString(cursor, COLUMN_CALLER_INFO, "");
-                long timestamp = getSafeLong(cursor, COLUMN_TIMESTAMP, 0L);
-                String dateTime = getSafeString(cursor, COLUMN_DATE_TIME, "");
+            if (cursor.moveToFirst()) {
+                do {
+                    long id = getSafeLong(cursor, COLUMN_ID, -1L);
+                    String callerInfo = getSafeString(cursor, COLUMN_CALLER_INFO, "");
+                    long timestamp = getSafeLong(cursor, COLUMN_TIMESTAMP, 0L);
+                    String dateTime = getSafeString(cursor, COLUMN_DATE_TIME, "");
 
-                // Handle both old and new database schema with defaults
-                String callType = getSafeString(cursor, COLUMN_CALL_TYPE, "INCOMING");
-                String source = getSafeString(cursor, COLUMN_SOURCE, "WhatsApp");
-                long duration = getSafeLong(cursor, COLUMN_DURATION, 0L);
+                    // Handle both old and new database schema with defaults
+                    String callType = getSafeString(cursor, COLUMN_CALL_TYPE, "INCOMING");
+                    String source = getSafeString(cursor, COLUMN_SOURCE, "WhatsApp");
+                    long duration = getSafeLong(cursor, COLUMN_DURATION, 0L);
 
-                callLogs.add(new CallLog(id, callerInfo, timestamp, dateTime, callType, source, duration));
-            } while (cursor.moveToNext());
+                    callLogs.add(new CallLog(id, callerInfo, timestamp, dateTime, callType, source, duration));
+                } while (cursor.moveToNext());
+            }
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
         }
-//        if (cursor.moveToFirst()) {
-//            do {
-//                long id = cursor.getLong(cursor.getColumnIndex(COLUMN_ID));
-//                String callerInfo = cursor.getString(cursor.getColumnIndex(COLUMN_CALLER_INFO));
-//                long timestamp = cursor.getLong(cursor.getColumnIndex(COLUMN_TIMESTAMP));
-//                String dateTime = cursor.getString(cursor.getColumnIndex(COLUMN_DATE_TIME));
-//
-//                // Handle both old and new database schema
-//                String callType;
-//                try {
-//                    callType = cursor.getString(cursor.getColumnIndex(COLUMN_CALL_TYPE));
-//                    if (callType == null) callType = "INCOMING";
-//                } catch (Exception e) {
-//                    callType = "INCOMING";
-//                }
-//
-//                String source;
-//                try {
-//                    source = cursor.getString(cursor.getColumnIndex(COLUMN_SOURCE));
-//                    if (source == null) source = "WhatsApp";
-//                } catch (Exception e) {
-//                    source = "WhatsApp";
-//                }
-//
-//                long duration;
-//                try {
-//                    duration = cursor.getLong(cursor.getColumnIndex(COLUMN_DURATION));
-//                } catch (Exception e) {
-//                    duration = 0L;
-//                }
-//
-//                callLogs.add(new CallLog(id, callerInfo, timestamp, dateTime, callType, source, duration));
-//            } while (cursor.moveToNext());
-//        }
-        
-        cursor.close();
-        db.close();
-        
         return callLogs;
     }
     
@@ -169,16 +138,20 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     
     public int getCallLogsCount() {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + TABLE_CALL_LOGS, null);
+        Cursor cursor = null;
         int count = 0;
-        
-        if (cursor.moveToFirst()) {
-            count = cursor.getInt(0);
+        try {
+            cursor = db.rawQuery("SELECT COUNT(*) FROM " + TABLE_CALL_LOGS, null);
+                if (cursor.moveToFirst()) {
+                    count = cursor.getInt(0);
+                }
+
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
         }
-        
-        cursor.close();
-        db.close();
-        
+
         return count;
     }
     
@@ -189,58 +162,28 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         long cutoffTime = currentTime - timeWindowMs;
         
         String query = "SELECT * FROM " + TABLE_CALL_LOGS + " WHERE " + COLUMN_TIMESTAMP + " > ? ORDER BY " + COLUMN_TIMESTAMP + " DESC";
-        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(cutoffTime)});
+        Cursor cursor = null;
+        try {
+            cursor = db.rawQuery(query, new String[]{String.valueOf(cutoffTime)});
 
-        if (cursor.moveToFirst()) {
-            do {
-                long id = CursorDataExtractor.getSafeLong(cursor, COLUMN_ID, -1L);
-                String callerInfo = CursorDataExtractor.getSafeString(cursor, COLUMN_CALLER_INFO, "");
-                long timestamp = CursorDataExtractor.getSafeLong(cursor, COLUMN_TIMESTAMP, 0L);
-                String dateTime = CursorDataExtractor.getSafeString(cursor, COLUMN_DATE_TIME, "");
-                String callType = CursorDataExtractor.getSafeString(cursor, COLUMN_CALL_TYPE, "INCOMING");
-                String source = CursorDataExtractor.getSafeString(cursor, COLUMN_SOURCE, "WhatsApp");
-                long duration = CursorDataExtractor.getSafeLong(cursor, COLUMN_DURATION, 0L);
+            if (cursor.moveToFirst()) {
+                do {
+                    long id = CursorDataExtractor.getSafeLong(cursor, COLUMN_ID, -1L);
+                    String callerInfo = CursorDataExtractor.getSafeString(cursor, COLUMN_CALLER_INFO, "");
+                    long timestamp = CursorDataExtractor.getSafeLong(cursor, COLUMN_TIMESTAMP, 0L);
+                    String dateTime = CursorDataExtractor.getSafeString(cursor, COLUMN_DATE_TIME, "");
+                    String callType = CursorDataExtractor.getSafeString(cursor, COLUMN_CALL_TYPE, "INCOMING");
+                    String source = CursorDataExtractor.getSafeString(cursor, COLUMN_SOURCE, "WhatsApp");
+                    long duration = CursorDataExtractor.getSafeLong(cursor, COLUMN_DURATION, 0L);
 
-                recentCalls.add(new CallLog(id, callerInfo, timestamp, dateTime, callType, source, duration));
-            } while (cursor.moveToNext());
+                    recentCalls.add(new CallLog(id, callerInfo, timestamp, dateTime, callType, source, duration));
+                } while (cursor.moveToNext());
+            }
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
         }
-
-//        if (cursor.moveToFirst()) {
-//            do {
-//                long id = cursor.getLong(cursor.getColumnIndex(COLUMN_ID));
-//                String callerInfo = cursor.getString(cursor.getColumnIndex(COLUMN_CALLER_INFO));
-//                long timestamp = cursor.getLong(cursor.getColumnIndex(COLUMN_TIMESTAMP));
-//                String dateTime = cursor.getString(cursor.getColumnIndex(COLUMN_DATE_TIME));
-//
-//                String callType;
-//                try {
-//                    callType = cursor.getString(cursor.getColumnIndex(COLUMN_CALL_TYPE));
-//                    if (callType == null) callType = "INCOMING";
-//                } catch (Exception e) {
-//                    callType = "INCOMING";
-//                }
-//
-//                String source;
-//                try {
-//                    source = cursor.getString(cursor.getColumnIndex(COLUMN_SOURCE));
-//                    if (source == null) source = "WhatsApp";
-//                } catch (Exception e) {
-//                    source = "WhatsApp";
-//                }
-//
-//                long duration;
-//                try {
-//                    duration = cursor.getLong(cursor.getColumnIndex(COLUMN_DURATION));
-//                } catch (Exception e) {
-//                    duration = 0L;
-//                }
-//
-//                recentCalls.add(new CallLog(id, callerInfo, timestamp, dateTime, callType, source, duration));
-//            } while (cursor.moveToNext());
-//        }
-        
-        cursor.close();
-        db.close();
         
         return recentCalls;
     }

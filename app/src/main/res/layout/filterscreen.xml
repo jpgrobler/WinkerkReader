@@ -31,6 +31,7 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
+
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -245,4 +246,15 @@
             android:layout_height="wrap_content" />
     </RelativeLayout>
 </ScrollView>
+    <Button
+        android:id="@+id/filter_aktief"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Aktief" />
+
+    <Button
+        android:id="@+id/filter_onaktief"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Onaktief" />
 </LinearLayout>

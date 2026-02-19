@@ -217,8 +217,13 @@ public class winkerkProvider extends ContentProvider {
                 catch (Exception e) {
                     Log.d(TAG, "Gemeente doesn't exist :(((");
                 }
+                finally {
+                    if (cursor != null) {
+                        cursor.close();
+                    }
+                }
 
-        }
+             }
         if ( match == LIDMAAT_LIST || match == LIDMAAT_GUID
                     || match == LIDMAAT_OUDERDOM || match == OPROEP || match == MYLPALE_GUID
                     || match == GESIN_GUID || match == GROEPE_GUID || match == GROEPE_LYS || match == MEELEWING_LIDMAAT || match == ARGIEF_LAAI) {
@@ -241,6 +246,7 @@ public class winkerkProvider extends ContentProvider {
                 }catch (SQLException mSQLException) {
                     Log.e("WinkerkReader", "LIDMAAT_LIST >>" + mSQLException);
                 }
+
                 break;
 
             case LIDMAAT_GUID: // Find single Lidmaat's info
@@ -254,6 +260,7 @@ public class winkerkProvider extends ContentProvider {
                 }catch (SQLException mSQLException) {
                     Log.e("WinkerkReader", "LIDMAAT_GUID >>" + mSQLException);
                 }
+
                 break;
 
             case LIDMAAT_OUDERDOM: // find all Lidmate sorted by age
@@ -263,62 +270,95 @@ public class winkerkProvider extends ContentProvider {
                 }catch (SQLException mSQLException) {
                     Log.e("WinkerkReader", "LIDMAAT_OUDERDOM >>" + mSQLException);
                 }
+                finally {
+                    if (cursor != null) {
+                        cursor.close();
+                    }
+                }
                 break;
 
             case GESIN_GUID: // Find familiymembers
                 try {
+                    if (cursor != null) {
+                        cursor.close();
+                    }
                     cursor = database.rawQuery(selection, selectionArgs);
                     g = cursor.getCount();
-                }catch (SQLException mSQLException) {
+                    }
+                catch (SQLException mSQLException) {
                     Log.e("WinkerkReader", "GESIN_GUID >>" + mSQLException);
-                }
+                    }
+
                 break;
 
             case OPROEP: // Find incomming caller
                 try {
+                    if (cursor != null) {
+                        cursor.close();
+                    }
                     cursor = database.rawQuery(selection, selectionArgs);
                     g = cursor.getCount();
-                } catch (SQLException mSQLException) {
+                    }
+                catch (SQLException mSQLException) {
                     Log.e("WinkerkReader", "OPROEP >>" + mSQLException);
-                }
+                    }
+
                 break;
 
             case MYLPALE_GUID: // Find aal MYLPALE of lidmaat
                 try {
+                    if (cursor != null) {
+                        cursor.close();
+                    }
                     cursor = database.rawQuery(selection, selectionArgs);
                     g = cursor.getCount();
-                    } catch (SQLException mSQLException) {
+                    }
+                catch (SQLException mSQLException) {
                             Log.e("WinkerkReader", "MYLPALE >>" + mSQLException);
                     }
+
                 break;
 
 
             case MEELEWING_LIDMAAT: // Find familiymembers
                 try {
+                    if (cursor != null) {
+                        cursor.close();
+                    }
                     cursor = database.rawQuery(selection, selectionArgs);
                     g = cursor.getCount();
-                }catch (SQLException mSQLException) {
+                    }
+                catch (SQLException mSQLException) {
                     Log.e("WinkerkReader", "Meelewing_Lidmaat >>" + mSQLException);
-                }
+                    }
 
                 break;
 
             case GROEPE_GUID: // Find familiymembers
                 try {
+                    if (cursor != null) {
+                        cursor.close();
+                    }
                     cursor = database.rawQuery(selection, selectionArgs);
                     g = cursor.getCount();
-                }catch (SQLException mSQLException) {
+                    }
+                catch (SQLException mSQLException) {
                     Log.e("WinkerkReader", "Groepe_GUID >>" + mSQLException);
-                }
+                    }
 
                 break;
             case GROEPE_LYS: // Find all Winkerk Groups
                 try {
+                    if (cursor != null) {
+                        cursor.close();
+                    }
                     cursor = database.rawQuery(selection, selectionArgs);
                     g = cursor.getCount();
-                }catch (SQLException mSQLException) {
+                    }
+                catch (SQLException mSQLException) {
                     Log.e("WinkerkReader", "Groepe_Lys >>" + mSQLException);
-                }
+                    }
+
                 break;
 
             default:
@@ -332,27 +372,36 @@ public class winkerkProvider extends ContentProvider {
                 if (match == FOTO_UPDATER){
                     //database = mInfoDbHelper.getReadableDatabase();
                     database = mDbHelper.getReadableDatabase();
-                    Cursor c = null;
+                    //Cursor cursor = null;
                     try {
+                        if (cursor != null) {
+                            cursor.close();
+                        }
                         database.execSQL(" ATTACH '"+ getContext().getDatabasePath("wkr_info.db").getPath() + "' as INFO; ");
                         cursor = database.rawQuery(selection, selectionArgs);
                         g = cursor.getCount();
                         database.execSQL("detach database INFO");
-                    }catch (SQLException mSQLException) {
+                        }
+                    catch (SQLException mSQLException) {
                         Log.e("WinkerkReader", "FOTO_SYNC >>" + mSQLException);
-                    }
+                        }
                 }
             }
                 switch (match) {
                     case FOTO:
                         database = mInfoDbHelper.getReadableDatabase();
                         try {
+                            if (cursor != null) {
+                                cursor.close();
+                            }
                             cursor = database.rawQuery(selection, selectionArgs);
                             g = cursor.getCount();
                             Log.v(TAG, "Cursor INFO query " + database.isOpen());
-                        }catch (SQLException mSQLException) {
+                            }
+                        catch (SQLException mSQLException) {
                             Log.e("WinkerkReader", "FOTO >>" + mSQLException);
-                        }
+                            }
+
                         break;
 
                     default:
@@ -395,12 +444,19 @@ public class winkerkProvider extends ContentProvider {
             case WKR_GROEPLEDE:
                 SQLiteDatabase database3 = mInfoDbHelper.getWritableDatabase();
                 int g = 0;
+                cursor = null;
                 try {
                     cursor = database3.rawQuery("SELECT * FROM wkrLidmate2Groepe WHERE (GroepID ='" + contentValues.getAsString("GroepID") + "') AND (LidmaatGUID = \"" + contentValues.getAsString("LidmaatGUID") + "\")",null);
                     g = cursor.getCount();
-                }catch (SQLException mSQLException) {
+                    }
+                catch (SQLException mSQLException) {
                     Log.e("WinkerkReader", "Groepe_GUID >>" + mSQLException);
-                }
+                    }
+                finally {
+                    if (cursor != null) {
+                        cursor.close();
+                        }
+                    }
 
                 if (g < 1) {
                     long id3 = database3.insert(WKR_LIDMATE2GROEPE_TABLENAME, null,contentValues);
@@ -422,8 +478,14 @@ public class winkerkProvider extends ContentProvider {
     public Bundle call(String method, String arg, Bundle extras) {
         if(method.equals("clearTag")) {
             SQLiteDatabase database = mDbHelper.getWritableDatabase();
-            String sql = "UPDATE " + arg + " SET "+ LIDMATE_TAG +" = 0;";
-            database.rawQuery(sql,null);
+            String sql = "UPDATE " + arg + " SET " + LIDMATE_TAG + " = 0;";
+            Cursor cursor = null;
+            try {
+                database.rawQuery(sql, null);
+                }
+            catch (SQLException mSQLException) {
+                Log.e("WinkerkReader", "Groepe_GUID >>" + mSQLException);
+                }
         }
         return null;
     }
@@ -578,8 +640,15 @@ public class winkerkProvider extends ContentProvider {
     {
         boolean isExist = false;
         SQLiteDatabase db = mInfoDbHelper.getWritableDatabase();
-        Cursor res = db.rawQuery("PRAGMA table_info(" + tableName + ")", null);
-
+        Cursor res = null;
+        try {
+            res = db.rawQuery("PRAGMA table_info(" + tableName + ")", null);
+            }
+        finally {
+            if (res != null) {
+                res.close();
+                }
+            }
 
         if (res.moveToFirst()) {
             do {

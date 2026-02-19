@@ -20,6 +20,7 @@ import za.co.jpsoft.winkerkreader.data.WinkerkContract;
 import static za.co.jpsoft.winkerkreader.data.WinkerkContract.*;
 import java.io.IOException;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 
 /**
@@ -27,11 +28,11 @@ import androidx.appcompat.app.AppCompatActivity;
  */
 
 public class registreer extends AppCompatActivity {
-    @Override
-    public void onBackPressed() {
-        finish();
-        super.onBackPressed();
-    }
+//    @Override
+//    public void onBackPressed() {
+//        finish();
+//        super.onBackPressed();
+//    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -40,6 +41,13 @@ public class registreer extends AppCompatActivity {
         initializeUI();
         populateUserData();
         setupClickListeners();
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                finish(); // or
+                // super.onBackPressed() if you want default behavior
+            }
+        });
     }
 
     private void initializeUI() {

@@ -34,6 +34,7 @@ import org.joda.time.format.DateTimeFormatter;
 
 import java.io.File;
 import java.text.Normalizer;
+import java.util.Locale;
 
 import static za.co.jpsoft.winkerkreader.R.color.selected_view;
 import static za.co.jpsoft.winkerkreader.Utils.fixphonenumber;
@@ -176,38 +177,46 @@ public class WinkerkCursorAdapter extends CursorAdapter {
     @Override
     public void bindView(View view, Context context, Cursor cursor) {
         Log.v(TAG, "bindView");
+        try {
+            // Your existing binding code
+            if (cursor != null && !cursor.isClosed() && cursor.getCount() > 0) {
 
-        if ((cursor == null) || "GEMEENTENAAM".equals(LOADER) || "DATADATUM".equals(LOADER)) {
-            return;
+                if ((cursor == null) || "GEMEENTENAAM".equals(LOADER) || "DATADATUM".equals(LOADER)) {
+                    return;
+                }
+
+                ViewHolder vh = (ViewHolder) view.getTag();
+
+                // Extract member data using safe methods (NO BRACKETS IN COLUMN NAMES!)
+                MemberData member = extractMemberData(cursor);
+
+                // Apply display settings
+                applySearchBackground(view);
+                applyCongregationColor(view, member.congregation);
+                applyVisibilitySettings(vh);
+                resetViewState(vh);
+
+                // Bind data to views
+                bindPhotoData(vh, member, context);
+                bindSelectionState(view, vh, member);
+                bindBasicInfo(vh, member);
+                bindContactInfo(vh, member);
+                bindAgeInfo(vh, member);
+                bindWeddingInfo(vh, member);
+                bindEmailIndicator(vh, member);
+
+                // Apply search highlighting
+                applySearchHighlighting(vh);
+
+                // Handle separators
+                handleSeparators(view, vh, cursor, member);
+            }
+        } catch (IllegalStateException e) {
+            Log.e("Adapter", "Cursor was closed, refreshing data", e);
+            // Trigger a data refresh
+
         }
-
-        ViewHolder vh = (ViewHolder) view.getTag();
-
-        // Extract member data using safe methods (NO BRACKETS IN COLUMN NAMES!)
-        MemberData member = extractMemberData(cursor);
-
-        // Apply display settings
-        applySearchBackground(view);
-        applyCongregationColor(view, member.congregation);
-        applyVisibilitySettings(vh);
-        resetViewState(vh);
-
-        // Bind data to views
-        bindPhotoData(vh, member, context);
-        bindSelectionState(view, vh, member);
-        bindBasicInfo(vh, member);
-        bindContactInfo(vh, member);
-        bindAgeInfo(vh, member);
-        bindWeddingInfo(vh, member);
-        bindEmailIndicator(vh, member);
-
-        // Apply search highlighting
-        applySearchHighlighting(vh);
-
-        // Handle separators
-        handleSeparators(view, vh, cursor, member);
     }
-
     /**
      * Extract all member data from cursor into MemberData object
      * Uses CursorDataExtractor helper methods for safe access
@@ -710,7 +719,7 @@ public class WinkerkCursorAdapter extends CursorAdapter {
 
         String normalizedText = Normalizer.normalize(originalText, Normalizer.Form.NFD)
                 .replaceAll("\\p{InCombiningDiacriticalMarks}+", "")
-                .toLowerCase();
+                .toLowerCase(Locale.ROOT);
         int start = normalizedText.indexOf(search.toLowerCase());
         if (start < 0) {
             return originalText;
