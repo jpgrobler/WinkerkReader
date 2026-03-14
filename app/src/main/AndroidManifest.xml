@@ -9,7 +9,9 @@
     <uses-feature
         android:name="android.hardware.telephony"
         android:required="false" />
-
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL"
+        tools:node="merge" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <!-- For Android 12+ (API 31+) exact alarms -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
@@ -56,14 +58,9 @@
 
     <!-- System overlay and alert permissions -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
-    <uses-permission android:name="android.permission.ACTION_MANAGE_OVERLAY_PERMISSION"/>
 
     <!-- Background service and auto-start permissions -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
     <uses-permission android:name="android.permission.MANAGE_OWN_CALLS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
@@ -75,7 +72,6 @@
     <application
         android:requestLegacyExternalStorage="true"
         android:name="za.co.jpsoft.winkerkreader.WinkerkReader"
-        android:exported="true"
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher_round"
         android:label="@string/app_name"
@@ -143,13 +139,6 @@
             android:exported="true"
             android:icon="@mipmap/ic_shortcut_family_roof"
             android:label="Laai nuwe data">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="za.co.jpsoft.winkerkreader.MainActivity2"/>
-        </activity>
-        <activity android:name="za.co.jpsoft.winkerkreader.SyncFotos"
-            android:exported="true"
-            android:parentActivityName="za.co.jpsoft.winkerkreader.MainActivity2">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="za.co.jpsoft.winkerkreader.MainActivity2"/>
@@ -225,7 +214,7 @@
 
         <service
             android:name="za.co.jpsoft.winkerkreader.WhatsAppNotificationService"
-            android:exported="false"
+            android:exported="true"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
             <intent-filter>
                 <action android:name="android.service.notification.NotificationListenerService" />
@@ -235,10 +224,7 @@
             android:name="za.co.jpsoft.winkerkreader.CallMonitoringService"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="specialUse">
-            <property
-                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Call monitoring and logging service for WhatsApp and phone calls" />
+            android:foregroundServiceType="phoneCall">
         </service>
         <receiver android:name="za.co.jpsoft.winkerkreader.IncomingCall"
             android:enabled="true"
@@ -259,8 +245,7 @@
             android:name="za.co.jpsoft.winkerkreader.AlarmReceiver"
             android:exported="true">
             <intent-filter>
-                <action android:name=".AlarmReceiver" >
-                </action>
+                <action android:name="za.co.jpsoft.winkerkreader.AlarmReceiver" />
             </intent-filter>
         </receiver>
 
@@ -292,16 +277,7 @@
 
 
 
-        <provider
-            android:name="androidx.startup.InitializationProvider"
-            android:authorities="${applicationId}.androidx-startup"
-            android:exported="false"
-            tools:node="merge">
-            <meta-data
-                android:name="androidx.work.WorkManagerInitializer"
-                android:value="androidx.startup"
-                tools:node="remove" />
-        </provider>
+
 
     </application>
 </manifest>

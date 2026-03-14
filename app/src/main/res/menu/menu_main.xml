@@ -88,12 +88,6 @@
                 android:icon="@drawable/downs"
                 />
             <item
-                android:id="@+id/fotos"
-                android:title="@string/mainmenu_fotos"
-                app:showAsAction="never"
-                android:icon="@drawable/kontaks"
-                />
-            <item
                 android:id="@+id/registreer"
                 android:title="@string/mainmenu_registreer"
                 app:showAsAction="never"

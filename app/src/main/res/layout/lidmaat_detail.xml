@@ -30,7 +30,7 @@
                 android:ellipsize="marquee"
                 android:marqueeRepeatLimit="marquee_forever"
                 android:visibility="visible"
-                android:gravity="center_vertical"/>
+                android:gravity="center_horizontal"/>
             <Button
                 android:layout_alignParentEnd="true"
                 android:id="@+id/buttonWysig"

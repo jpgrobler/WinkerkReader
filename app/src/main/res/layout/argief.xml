@@ -11,21 +11,24 @@
             android:layout_height="wrap_content"
             android:id="@+id/argief_sort"
             android:orientation="horizontal">
+
             <RadioButton
                 android:id="@+id/argief_sort_van"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Van"></RadioButton>
+                android:text="Van" />
+
             <RadioButton
                 android:id="@+id/argief_sort_datum"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="datum"></RadioButton>
+                android:text="datum" />
+
             <RadioButton
                 android:id="@+id/argief_sort_rede"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Rede"></RadioButton>
+                android:text="Rede" />
         </RadioGroup>
     </LinearLayout>
     <ListView

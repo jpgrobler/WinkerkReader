@@ -51,7 +51,7 @@
                     android:id="@+id/argief_geboortedatum"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="bottom|right"
+                    android:layout_gravity="bottom|end"
                     android:fontFamily="sans-serif-medium"
                     android:paddingEnd="8dp"
                     android:textAppearance="?android:textAppearanceSmall"
@@ -104,7 +104,7 @@
                         android:textColor="@android:color/black" />
                     <TextView
                         android:layout_alignParentEnd="true"
-                        android:layout_gravity="bottom|right"
+                        android:layout_gravity="bottom|end"
                         android:id="@+id/argief_bestemming"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"

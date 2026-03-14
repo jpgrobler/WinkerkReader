@@ -20,22 +20,12 @@ local.properties
 *.apk
 *.ap_ 
 *.dex
-*.class
 *.so
-*.log
 app/.idea/
 app/gradle.properties
 
-# Local configuration file (SDK path, etc)
-local.properties
-
 # Android Studio
-.idea/
-*.iml
 *.hprof
-
-# IntelliJ
-out/
 
 # Package Files
 *.7z

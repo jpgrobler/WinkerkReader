@@ -73,10 +73,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentStart="true"
-            android:layout_toLeftOf="@id/dbLinkButton"
+            android:layout_toStartOf="@id/dbLinkButton"
             android:selectAllOnFocus="true"
             android:text="@string/dbLink"
-            android:textSize="15dp" />
+            android:textSize="15sp" />
 
         <Button
             android:id="@+id/dbLinkButton"
@@ -95,10 +95,10 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/db_link"
             android:layout_alignBottom="@+id/tydText"
-            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
             android:paddingTop="5dp"
             android:text="Tyd:"
-            android:textSize="18dp"
+            android:textSize="18sp"
             android:textStyle="bold" />
 
         <EditText
@@ -107,7 +107,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/db_link"
-            android:layout_toRightOf="@+id/textTyd"
+            android:layout_toEndOf="@+id/textTyd"
             android:ems="5" />
 
         <TextView
@@ -119,7 +119,7 @@
             android:layout_toRightOf="@+id/tydText"
             android:paddingTop="5dp"
             android:text="Dag:"
-            android:textSize="18dp"
+            android:textSize="18sp"
             android:textStyle="bold" />
 
         <Spinner
@@ -129,7 +129,7 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/db_link"
             android:layout_toRightOf="@+id/textDag"
-            android:paddingTop="5dp" />
+            android:paddingTop="5sp" />
 
         <CheckBox
 
@@ -219,7 +219,7 @@
                 android:id="@+id/laai_filelist"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"></RadioGroup>
+                android:orientation="vertical"/>
         </ScrollView>
     </LinearLayout>
 
@@ -264,6 +264,41 @@
             android:textColor="@color/colorAccent"
             android:textSize="30dp" />
     </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+    <CheckBox
+        android:id="@+id/force_sync_check"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Force Sync of aal photos" />
+    <CheckBox
+        android:id="@+id/sync_photos"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sync photos after database" />
+    </LinearLayout>>
+    <Button
+        android:id="@+id/start_photo_sync"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sync Photos Now"
+        android:visibility="visible" />
+
+    <ProgressBar
+        android:id="@+id/photo_sync_progress"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/photo_sync_status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:text="Syncing photos..." />
 </LinearLayout>
 
 </ScrollView>
