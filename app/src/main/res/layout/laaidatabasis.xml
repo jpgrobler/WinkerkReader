@@ -1,16 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
-<ScrollView
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 <LinearLayout
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:orientation="vertical">
 
     <ProgressBar
@@ -76,7 +73,8 @@
             android:layout_toStartOf="@id/dbLinkButton"
             android:selectAllOnFocus="true"
             android:text="@string/dbLink"
-            android:textSize="15sp" />
+            android:textSize="15sp"
+            android:inputType="text"/>
 
         <Button
             android:id="@+id/dbLinkButton"
@@ -86,7 +84,7 @@
             android:background="@drawable/buttonshape"
             android:text="@string/dbLinkButtonText"
             android:textColor="@android:color/white"
-            android:textSize="10dp" />
+            android:textSize="10sp" />
 
         <TextView
 
@@ -102,7 +100,7 @@
             android:textStyle="bold" />
 
         <EditText
-
+            android:inputType="text"
             android:id="@+id/tydText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -116,7 +114,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/db_link"
-            android:layout_toRightOf="@+id/tydText"
+            android:layout_toEndOf="@+id/tydText"
             android:paddingTop="5dp"
             android:text="Dag:"
             android:textSize="18sp"
@@ -128,7 +126,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/db_link"
-            android:layout_toRightOf="@+id/textDag"
+            android:layout_toEndOf="@+id/textDag"
             android:paddingTop="5sp" />
 
         <CheckBox
@@ -137,7 +135,7 @@
             android:layout_width="104dp"
             android:layout_height="wrap_content"
             android:layout_below="@+id/db_link"
-            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
             android:paddingTop="5dp"
             android:text="Auto dl\nInternet" />
 
@@ -146,7 +144,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/db_link"
-            android:layout_toRightOf="@+id/weeksdag"
+            android:layout_toEndOf="@+id/weeksdag"
             android:text="Opdateer\nTyd"
             android:visibility="gone" />
     </RelativeLayout>
@@ -180,7 +178,7 @@
                 android:text="@string/laai_button"
                 android:textColor="@android:color/white"
                 tools:visibility="gone"
-                android:layout_marginRight="5dp"/>
+                android:layout_marginEnd="5dp"/>
 
             <Button
                 android:id="@+id/laai_picker"
@@ -190,7 +188,7 @@
                 android:background="@drawable/buttonshape"
                 android:text="Kies self"
                 android:textColor="@android:color/white"
-                android:layout_marginRight="5dp"/>
+                android:layout_marginEnd="5dp"/>
             <Button
                 android:id="@+id/laai_socket"
                 android:layout_width="70dp"
@@ -199,7 +197,7 @@
                 android:background="@drawable/buttonshape"
                 android:text="WiFi"
                 android:textColor="@android:color/white"
-                android:layout_marginRight="5dp"/>
+                android:layout_marginEnd="5dp"/>
 
             <Button
                 android:id="@+id/laai_USB"
@@ -238,16 +236,14 @@
                 android:text="IP van PC:  "
                 android:textAlignment="center"
                 android:textColor="@color/colorPrimary"
-                android:textSize="20dp" />
+                android:textSize="20sp" />
             <EditText
                 android:id="@+id/server_ip"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
-                android:layout_toLeftOf="@id/dbLinkButton"
                 android:selectAllOnFocus="true"
                 android:text="###.###.###.###"
-                android:textSize="15dp" />
+                android:textSize="15sp" />
         </LinearLayout>
         <ProgressBar
             android:id="@+id/laai_status"
@@ -262,7 +258,7 @@
             android:layout_height="wrap_content"
             android:textAlignment="center"
             android:textColor="@color/colorAccent"
-            android:textSize="30dp" />
+            android:textSize="30sp" />
     </LinearLayout>
     <LinearLayout
         android:layout_width="match_parent"
@@ -278,7 +274,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Sync photos after database" />
-    </LinearLayout>>
+    </LinearLayout>
     <Button
         android:id="@+id/start_photo_sync"
         android:layout_width="wrap_content"
@@ -302,4 +298,3 @@
 </LinearLayout>
 
 </ScrollView>
-</LinearLayout>

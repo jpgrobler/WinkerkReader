@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <!-- Disable specific checks that take a long time -->
+    <issue id="UnusedResources" severity="warning" />
+    <issue id="IconLocation" severity="warning" />
+    <issue id="IconDipSize" severity="ignore" />
+    <issue id="IconDuplicates" severity="ignore" />
+    
+    <!-- Set baseline to ignore existing issues in third-party code -->
+    <issue id="all">
+        <ignore path="**/org/sqlite/**" />
+    </issue>
+</lint>

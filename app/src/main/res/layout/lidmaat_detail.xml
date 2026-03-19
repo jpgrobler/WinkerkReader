@@ -1,60 +1,70 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-        android:id="@+id/detail_naam_van"
+    android:id="@+id/detail_naam_van"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <!-- Progress bar top -->
+    <ProgressBar
+        android:id="@+id/detail_indeterminateBar"
+        style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
-        <ProgressBar
-            android:id="@+id/detail_indeterminateBar"
-            android:focusedByDefault="true"
-            style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:visibility="visible" />
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-            <TextView
-                android:layout_toStartOf="@+id/buttonWysig"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/detail_gemeentenaam"
-                android:textColor="@android:color/black"
-                android:textAlignment="center"
-                android:layout_centerVertical="true"
-                android:text="@string/detail_gemeente"
-                android:maxLines="1"
-                android:ellipsize="marquee"
-                android:marqueeRepeatLimit="marquee_forever"
-                android:visibility="visible"
-                android:gravity="center_horizontal"/>
-            <Button
-                android:layout_alignParentEnd="true"
-                android:id="@+id/buttonWysig"
-                android:layout_width="wrap_content"
-                android:layout_height="35dp"
+        android:focusedByDefault="true"
+        android:visibility="visible" />
 
-                android:background="@drawable/buttonshape"
-                android:textColor="@android:color/white"
-                android:scaleX=".9"
-                android:scaleY=".75"
-                android:text="@string/detail_wysig" />
-        </RelativeLayout>
+    <!-- Header with church name and edit button -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
 
+        <TextView
+            android:id="@+id/detail_gemeentenaam"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:ellipsize="marquee"
+            android:gravity="center_horizontal"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:maxLines="1"
+            android:text="@string/detail_gemeente"
+            android:textColor="@android:color/black"
+            android:visibility="visible"
+            app:layout_constraintEnd_toStartOf="@id/buttonWysig"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <Button
+            android:id="@+id/buttonWysig"
+            android:layout_width="wrap_content"
+            android:layout_height="35dp"
+            android:background="@drawable/buttonshape"
+            android:scaleX=".9"
+            android:scaleY=".75"
+            android:text="@string/detail_wysig"
+            android:textColor="@android:color/white"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Scrollable content area -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scrollbarSize="12dp"
         android:scrollbars="vertical">
 
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_height="wrap_content">
 
+            <!-- Contact photo -->
             <ImageView
                 android:id="@+id/detail_kontak_foto"
                 android:layout_width="100dp"
@@ -63,79 +73,99 @@
                 android:scaleType="centerInside"
                 android:src="@drawable/kontak"
                 android:tag="default"
-                android:visibility="visible" />
+                android:visibility="visible"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
+            <!-- Row 1: Noemnaam + Geslag + Huwelikstatus -->
+            <TextView
+                android:id="@+id/label_noemnaam"
+                style="@style/CategoryStyle"
+                android:text="@string/detail_naam"
+                app:layout_constraintTop_toBottomOf="@id/detail_kontak_foto"
+                app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginTop="8dp" />
+
+            <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+                android:id="@+id/detail_noemnaam"
+                style="@style/EditorFieldStyle"
+                android:text="@string/detail_noemnaam"
+                android:textIsSelectable="true"
+                app:layout_constraintTop_toTopOf="@id/label_noemnaam"
+                app:layout_constraintStart_toEndOf="@id/label_noemnaam"
+                app:layout_constraintEnd_toStartOf="@id/geslag"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp" />
+
+            <Spinner
+                android:id="@+id/geslag"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <!-- Label -->
-                <TextView
-                    style="@style/CategoryStyle"
-                    android:text="@string/detail_naam" />
-                <!-- Label -->
-                <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+                app:layout_constraintTop_toTopOf="@id/label_noemnaam"
+                app:layout_constraintEnd_toStartOf="@id/huwelikstatus"
+                android:layout_marginEnd="8dp" />
 
-                    android:id="@+id/detail_noemnaam"
-                    style="@style/EditorFieldStyle"
-                    android:text="@string/detail_noemnaam"
-                    android:textIsSelectable="true" />
-
-                <Spinner
-                    android:id="@+id/geslag"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-
-                <Spinner
-                    android:id="@+id/huwelikstatus"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
+            <Spinner
+                android:id="@+id/huwelikstatus"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <!-- Label -->
-                <TextView
-                    style="@style/CategoryStyle"
-                    android:text="@string/detail_vollename" />
-                <!-- Label -->
-                <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+                app:layout_constraintTop_toTopOf="@id/label_noemnaam"
+                app:layout_constraintEnd_toEndOf="parent" />
 
-                    android:id="@+id/detail_vollename"
-                    style="@style/EditorFieldStyle"
-                    android:text="@string/detail_vollename"
-                    android:textIsSelectable="true" />
-            </LinearLayout>
+            <!-- Row 2: Vollename -->
+            <TextView
+                android:id="@+id/label_vollename"
+                style="@style/CategoryStyle"
+                android:text="@string/detail_vollename"
+                app:layout_constraintTop_toBottomOf="@id/label_noemnaam"
+                app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginTop="8dp" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <!-- Label -->
-                <TextView
-                    style="@style/CategoryStyle"
-                    android:text="@string/detail_van" />
-                <!-- Label -->
-                <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+            <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+                android:id="@+id/detail_vollename"
+                style="@style/EditorFieldStyle"
+                android:text="@string/detail_vollename"
+                android:textIsSelectable="true"
+                app:layout_constraintTop_toTopOf="@id/label_vollename"
+                app:layout_constraintStart_toEndOf="@id/label_vollename"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginStart="8dp" />
 
-                    android:id="@+id/detail_van"
-                    style="@style/EditorFieldStyle"
-                    android:text="@string/detail_van"
-                    android:textIsSelectable="true" />
-            </LinearLayout>
+            <!-- Row 3: Van -->
+            <TextView
+                android:id="@+id/label_van"
+                style="@style/CategoryStyle"
+                android:text="@string/detail_van"
+                app:layout_constraintTop_toBottomOf="@id/label_vollename"
+                app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginTop="8dp" />
 
+            <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+                android:id="@+id/detail_van"
+                style="@style/EditorFieldStyle"
+                android:text="@string/detail_van"
+                android:textIsSelectable="true"
+                app:layout_constraintTop_toTopOf="@id/label_van"
+                app:layout_constraintStart_toEndOf="@id/label_van"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginStart="8dp" />
+
+            <!-- Row 4: Nooiensvan (optional block) -->
             <LinearLayout
                 android:id="@+id/detail_nooiensvanBlock"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <!-- Label -->
+                android:orientation="horizontal"
+                app:layout_constraintTop_toBottomOf="@id/label_van"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginTop="8dp">
+
                 <TextView
                     style="@style/CategoryStyle"
                     android:text="@string/detail_Nooiensvan" />
-                <!-- Label -->
+
                 <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
                     android:id="@+id/detail_nooiensvan"
                     style="@style/EditorFieldStyle"
@@ -143,23 +173,32 @@
                     android:textIsSelectable="true" />
             </LinearLayout>
 
+            <!-- Row 5: Werkgewer (EditText alone) -->
             <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
-
                 android:id="@+id/detail_Werkgewer"
                 style="@style/EditorFieldStyle"
                 android:textIsSelectable="true"
-                tools:text="@string/detail_werkgewer" />
+                tools:text="@string/detail_werkgewer"
+                app:layout_constraintTop_toBottomOf="@id/detail_nooiensvanBlock"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginTop="8dp" />
 
+            <!-- Row 6: Lidmaatstatus -->
             <LinearLayout
                 android:id="@+id/detail_lidmaatstatusBlock"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <!-- Label -->
+                android:orientation="horizontal"
+                app:layout_constraintTop_toBottomOf="@id/detail_Werkgewer"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginTop="8dp">
+
                 <TextView
                     style="@style/CategoryStyle"
                     android:text="@string/detail_lidmaatskap" />
-                <!-- Label -->
+
                 <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
                     android:id="@+id/detail_Lidmaatstatus"
                     style="@style/EditorFieldStyle"
@@ -167,45 +206,54 @@
                     android:textIsSelectable="true" />
             </LinearLayout>
 
-            <LinearLayout
-                android:layout_width="match_parent"
+            <!-- Row 7: Geboortedatum + Age -->
+            <TextView
+                android:id="@+id/label_gebore"
+                style="@style/CategoryStyle"
+                android:text="@string/detail_gebore"
+                app:layout_constraintTop_toBottomOf="@id/detail_lidmaatstatusBlock"
+                app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginTop="8dp" />
+
+            <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+                android:id="@+id/detail_geboortedatum"
+                style="@style/EditorFieldStyle"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:text="@string/detail_gebore"
+                android:textIsSelectable="true"
+                app:layout_constraintTop_toTopOf="@id/label_gebore"
+                app:layout_constraintStart_toEndOf="@id/label_gebore"
+                app:layout_constraintEnd_toStartOf="@id/detail_jareoud"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp" />
+
+            <TextView
+                android:id="@+id/detail_jareoud"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <!-- Label -->
-                <TextView
-                    style="@style/CategoryStyle"
-                    android:text="@string/detail_gebore" />
-                <!-- Label -->
-                <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+                android:layout_marginEnd="8dp"
+                android:layout_marginStart="4dp"
+                android:text=""
+                app:layout_constraintTop_toTopOf="@id/label_gebore"
+                app:layout_constraintEnd_toEndOf="parent" />
 
-                    android:id="@+id/detail_geboortedatum"
-                    style="@style/EditorFieldStyle"
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:text="@string/detail_gebore"
-                    android:textIsSelectable="true" />
-
-                <TextView
-                    android:id="@+id/detail_jareoud"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="8dp"
-                    android:layout_marginStart="4dp"
-                    android:text="" />
-            </LinearLayout>
-
+            <!-- Row 8: Selfoon + icons -->
             <LinearLayout
                 android:id="@+id/detail_selfoonBlock"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <!-- Label -->
+                android:orientation="horizontal"
+                app:layout_constraintTop_toBottomOf="@id/label_gebore"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginTop="8dp">
+
                 <TextView
                     style="@style/CategoryStyle"
                     android:text="@string/detail_selfoon" />
-                <!-- Label -->
-                <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
 
+                <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
                     android:id="@+id/detail_selfoon"
                     style="@style/EditorFieldStyle"
                     android:text="@string/detail_selfoon"
@@ -234,18 +282,22 @@
                     android:src="@drawable/cell3" />
             </LinearLayout>
 
+            <!-- Row 9: Landlyn + icon -->
             <LinearLayout
                 android:id="@+id/detail_telefoonBlock"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <!-- Label -->
+                android:orientation="horizontal"
+                app:layout_constraintTop_toBottomOf="@id/detail_selfoonBlock"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginTop="8dp">
+
                 <TextView
                     style="@style/CategoryStyle"
                     android:text="@string/detail_landlyn" />
-                <!-- Label -->
-                <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
 
+                <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
                     android:id="@+id/detail_telefoon"
                     style="@style/EditorFieldStyle"
                     android:text="@string/detail_landlyn"
@@ -259,25 +311,28 @@
                     android:src="@drawable/oldphone" />
             </LinearLayout>
 
+            <!-- Row 10: Epos + icon -->
             <LinearLayout
                 android:id="@+id/detail_eposBlock"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <!-- Label -->
+                android:orientation="horizontal"
+                app:layout_constraintTop_toBottomOf="@id/detail_telefoonBlock"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginTop="8dp">
+
                 <TextView
                     style="@style/CategoryStyle"
                     android:text="@string/detail_epos" />
-                <!-- Label -->
-                <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
 
+                <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
                     android:id="@+id/detail_epos"
                     style="@style/EditorFieldStyle"
                     android:text="@string/detail_epos"
                     android:textIsSelectable="true" />
 
                 <ImageView
-
                     android:id="@+id/detail_email_icon"
                     android:layout_width="32dp"
                     android:layout_height="32dp"
@@ -285,71 +340,85 @@
                     android:src="@drawable/email2" />
             </LinearLayout>
 
+            <!-- Row 11: Beroep -->
             <LinearLayout
                 android:id="@+id/detail_BeroepBlock"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <!-- Label -->
+                android:orientation="horizontal"
+                app:layout_constraintTop_toBottomOf="@id/detail_eposBlock"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginTop="8dp">
+
                 <TextView
                     style="@style/CategoryStyle"
                     android:text="@string/detail_beroep" />
 
                 <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
-
                     android:id="@+id/detail_Beroep"
                     style="@style/EditorFieldStyle"
                     android:textIsSelectable="true"
                     tools:text="@string/detail_beroep" />
-
             </LinearLayout>
 
+            <!-- Row 12: Werkgever (label only, field already above?) – keeping original structure -->
             <LinearLayout
                 android:id="@+id/detail_WerkgewerBlock"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <!-- Label -->
+                android:orientation="horizontal"
+                app:layout_constraintTop_toBottomOf="@id/detail_BeroepBlock"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginTop="8dp">
+
                 <TextView
                     style="@style/CategoryStyle"
                     android:text="@string/detail_werkgewer" />
-
+                <!-- No EditText here – original had none, just label -->
             </LinearLayout>
 
+            <!-- Row 13: Wyk -->
             <LinearLayout
                 android:id="@+id/detail_wykBlock"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <!-- Label -->
+                android:orientation="horizontal"
+                app:layout_constraintTop_toBottomOf="@id/detail_WerkgewerBlock"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginTop="8dp">
+
                 <TextView
                     style="@style/CategoryStyle"
                     android:text="@string/detail_wyk" />
 
                 <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
-
                     android:id="@+id/detail_wyk"
                     style="@style/EditorFieldStyle"
                     android:textIsSelectable="true"
                     tools:text="@string/detail_wyk" />
-
             </LinearLayout>
 
+            <!-- Row 14: Straatadres + icon -->
             <LinearLayout
                 android:id="@+id/detail_straatadresBlock"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <!-- Label -->
+                android:orientation="horizontal"
+                app:layout_constraintTop_toBottomOf="@id/detail_wykBlock"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginTop="8dp">
+
                 <TextView
                     style="@style/CategoryStyle"
                     android:text="@string/detail_straatadres" />
 
                 <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
-
                     android:id="@+id/detail_straatadres"
                     style="@style/EditorFieldStyle"
-                    android:layout_height="wrap_content"
                     android:textIsSelectable="true"
                     tools:text="@string/detail_straatadres" />
 
@@ -361,24 +430,33 @@
                     android:src="@drawable/location" />
             </LinearLayout>
 
+            <!-- Row 15: Posadres (label only) -->
             <LinearLayout
                 android:id="@+id/detail_posadresBlock"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <!-- Label -->
+                android:orientation="horizontal"
+                app:layout_constraintTop_toBottomOf="@id/detail_straatadresBlock"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginTop="8dp">
+
                 <TextView
                     style="@style/CategoryStyle"
                     android:text="@string/detail_posadres" />
-
             </LinearLayout>
 
+            <!-- Mylpale section (two nested blocks) -->
             <LinearLayout
                 android:id="@+id/detail_mylpaleBlock2"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <!-- Label -->
+                android:orientation="horizontal"
+                app:layout_constraintTop_toBottomOf="@id/detail_posadresBlock"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginTop="8dp">
+
                 <TextView
                     style="@style/CategoryStyle"
                     android:layout_gravity="top"
@@ -389,21 +467,23 @@
                     android:id="@+id/detail_mylpaleBlock"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
-                </LinearLayout>
+                    android:orientation="vertical" />
             </LinearLayout>
 
+            <!-- Gesin section -->
             <LinearLayout
                 android:id="@+id/detail_gesinBlock"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
-                <!-- Label -->
-                <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+                android:orientation="vertical"
+                app:layout_constraintTop_toBottomOf="@id/detail_mylpaleBlock2"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginTop="8dp">
 
+                <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
                     android:id="@+id/detail_posadres"
                     style="@style/EditorFieldStyle"
-                    android:layout_height="wrap_content"
                     android:textIsSelectable="true"
                     tools:text="@string/detail_posadres" />
 
@@ -413,12 +493,17 @@
                     android:text="@string/detail_gesin" />
             </LinearLayout>
 
+            <!-- Groepe section -->
             <LinearLayout
                 android:id="@+id/detail_groepBlockm"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
-                <!-- Label -->
+                android:orientation="vertical"
+                app:layout_constraintTop_toBottomOf="@id/detail_gesinBlock"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginTop="8dp">
+
                 <TextView
                     style="@style/CategoryStyle"
                     android:layout_width="wrap_content"
@@ -428,51 +513,71 @@
                     android:id="@+id/detail_groepBlock"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
-                </LinearLayout>
+                    android:orientation="vertical" />
             </LinearLayout>
+
+            <!-- Meelewing section -->
             <LinearLayout
                 android:id="@+id/detail_meelewingBlock"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
-                <!-- Label -->
+                android:orientation="vertical"
+                app:layout_constraintTop_toBottomOf="@id/detail_groepBlockm"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginTop="8dp">
+
                 <TextView
                     style="@style/CategoryStyle"
                     android:layout_width="wrap_content"
                     android:text="@string/detail_meelewing" />
             </LinearLayout>
+
+            <!-- Gawes section -->
             <LinearLayout
                 android:id="@+id/detail_gawesBlock"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
-                <!-- Label -->
+                android:orientation="vertical"
+                app:layout_constraintTop_toBottomOf="@id/detail_meelewingBlock"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginTop="8dp">
+
                 <TextView
                     style="@style/CategoryStyle"
                     android:layout_width="wrap_content"
                     android:text="@string/detail_gawes" />
             </LinearLayout>
+
+            <!-- Passie section -->
             <LinearLayout
                 android:id="@+id/detail_passieBlock"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
-                <!-- Label -->
+                android:orientation="vertical"
+                app:layout_constraintTop_toBottomOf="@id/detail_gawesBlock"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp">
+
                 <TextView
                     style="@style/CategoryStyle"
                     android:layout_width="wrap_content"
                     android:text="@string/detail_passie" />
             </LinearLayout>
-        </LinearLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>
 
+    <!-- Progress bar bottom -->
     <ProgressBar
-            android:id="@+id/detail_indeterminateBar2"
-            style="?android:attr/progressBarStyleHorizontal"
-            android:focusedByDefault="true"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:visibility="visible" />
-</LinearLayout>
+        android:id="@+id/detail_indeterminateBar2"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:focusedByDefault="true"
+        android:visibility="visible" />
 
+</LinearLayout>

@@ -9,7 +9,7 @@
 
     <TextView
         android:id="@+id/list_separator"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/borderseparator"
         android:padding="3dp"
@@ -69,13 +69,13 @@
             android:fontFamily="sans-serif-medium"
             android:textAppearance="?android:textAppearanceLarge"
             android:textColor="#2B3D4D"
-            android:layout_toRightOf="@+id/list_name"
+            android:layout_toEndOf="@+id/list_name"
             />
         <TextView
             android:id="@+id/list_huwelik"
             tools:text=""
-            android:layout_marginRight="4dp"
-            android:layout_toLeftOf="@+id/list_bday"
+            android:layout_marginEnd="4dp"
+            android:layout_toStartOf="@+id/list_bday"
             android:layout_centerVertical="true"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

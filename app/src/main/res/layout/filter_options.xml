@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <!-- Row 1: Selfoon + Geslag -->
+        <CheckBox
+            android:id="@+id/filter_selfoon"
+            android:layout_width="110dp"
+            android:layout_height="wrap_content"
+            android:text="@string/filter_selfoon"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <CheckBox
+            android:id="@+id/filter_geslag_check"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/filter_geslag"
+            app:layout_constraintStart_toEndOf="@id/filter_selfoon"
+            app:layout_constraintTop_toTopOf="@id/filter_selfoon"
+            android:layout_marginStart="8dp" />
+
+        <Spinner
+            android:id="@+id/filter_geslag_opsies"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:entries="@array/filtergeslagoptions"
+            android:textAlignment="textEnd"
+            app:layout_constraintStart_toEndOf="@id/filter_geslag_check"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/filter_selfoon"
+            android:layout_marginStart="8dp" />
+
+        <!-- Row 2: Landlyn + Huwelikstatus -->
+        <CheckBox
+            android:id="@+id/filter_landlyn"
+            android:layout_width="110dp"
+            android:layout_height="wrap_content"
+            android:text="@string/filter_landlyn"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/filter_selfoon"
+            android:layout_marginTop="8dp" />
+
+        <CheckBox
+            android:id="@+id/filter_huwelikstatus_check"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/filter_huwelikstatus"
+            app:layout_constraintStart_toEndOf="@id/filter_landlyn"
+            app:layout_constraintTop_toTopOf="@id/filter_landlyn"
+            android:layout_marginStart="8dp" />
+
+        <Spinner
+            android:id="@+id/filter_huwelikstatus_opsies"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:entries="@array/filterhuwelikstatusoptions"
+            android:textAlignment="textEnd"
+            app:layout_constraintStart_toEndOf="@id/filter_huwelikstatus_check"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/filter_landlyn"
+            android:layout_marginStart="8dp" />
+
+        <!-- Row 3: Epos + Lidmaatskap -->
+        <CheckBox
+            android:id="@+id/filter_epos"
+            android:layout_width="110dp"
+            android:layout_height="wrap_content"
+            android:text="@string/filter_epos"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/filter_landlyn"
+            android:layout_marginTop="8dp" />
+
+        <CheckBox
+            android:id="@+id/filter_lidmaatsakapstatus_check"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/filter_lidmaatskap"
+            app:layout_constraintStart_toEndOf="@id/filter_epos"
+            app:layout_constraintTop_toTopOf="@id/filter_epos"
+            android:layout_marginStart="8dp" />
+
+        <Spinner
+            android:id="@+id/filter_lidmaatsakp_opsies"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:entries="@array/filterlidmaatsakpstatusoptions"
+            android:textAlignment="textEnd"
+            app:layout_constraintStart_toEndOf="@id/filter_lidmaatsakapstatus_check"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/filter_epos"
+            android:layout_marginStart="8dp" />
+
+        <!-- Row 4: Gesinshoof + Wyk -->
+        <CheckBox
+            android:id="@+id/filter_gesinshoof"
+            android:layout_width="110dp"
+            android:layout_height="wrap_content"
+            android:text="@string/filter_gesinshoof"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/filter_epos"
+            android:layout_marginTop="8dp" />
+
+        <CheckBox
+            android:id="@+id/filter_wyk_check"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/filter_wyk"
+            app:layout_constraintStart_toEndOf="@id/filter_gesinshoof"
+            app:layout_constraintTop_toTopOf="@id/filter_gesinshoof"
+            android:layout_marginStart="8dp" />
+
+        <Spinner
+            android:id="@+id/filter_wyk_opsies"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:entries="@array/filtertextoptions"
+            android:textAlignment="textEnd"
+            app:layout_constraintStart_toEndOf="@id/filter_wyk_check"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/filter_gesinshoof"
+            android:layout_marginStart="8dp" />
+
+        <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+            android:id="@+id/filter_wyk"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/filter_wyk_check"
+            android:layout_marginTop="4dp" />
+
+        <!-- Row 5: Ouderdom -->
+        <CheckBox
+            android:id="@+id/filter_ouderdom_check"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/filter_ouderdom"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/filter_wyk"
+            android:layout_marginTop="8dp" />
+
+        <Spinner
+            android:id="@+id/filter_ouderdom_opsies"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:entries="@array/filterouderdomoptions"
+            android:textAlignment="textEnd"
+            app:layout_constraintStart_toEndOf="@id/filter_ouderdom_check"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/filter_ouderdom_check"
+            android:layout_marginStart="8dp" />
+
+        <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+            android:id="@+id/filter_ouderdom1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/en"
+            app:layout_constraintTop_toBottomOf="@id/filter_ouderdom_check"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="4dp" />
+
+        <TextView
+            android:id="@+id/en"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/filter_en"
+            android:gravity="center_vertical"
+            app:layout_constraintStart_toEndOf="@id/filter_ouderdom1"
+            app:layout_constraintEnd_toStartOf="@id/filter_ouderdom2"
+            app:layout_constraintTop_toTopOf="@id/filter_ouderdom1"
+            app:layout_constraintBottom_toBottomOf="@id/filter_ouderdom1"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp" />
+
+        <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+            android:id="@+id/filter_ouderdom2"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toEndOf="@id/en"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/filter_ouderdom1"
+            app:layout_constraintBottom_toBottomOf="@id/filter_ouderdom1"
+            android:layout_marginStart="4dp" />
+
+        <!-- Row 6: Van -->
+        <CheckBox
+            android:id="@+id/filter_van_check"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/filter_van"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/filter_ouderdom1"
+            android:layout_marginTop="8dp" />
+
+        <Spinner
+            android:id="@+id/filter_van_opsies"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:entries="@array/filtertextoptions"
+            android:textAlignment="textEnd"
+            app:layout_constraintStart_toEndOf="@id/filter_van_check"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/filter_van_check"
+            android:layout_marginStart="8dp" />
+
+        <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+            android:id="@+id/filter_van"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/filter_van_check"
+            android:layout_marginTop="4dp" />
+
+        <!-- Row 7: Noemnaam -->
+        <CheckBox
+            android:id="@+id/filter_noemnaam_check"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/filter_noemnaam"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/filter_van"
+            android:layout_marginTop="8dp" />
+
+        <Spinner
+            android:id="@+id/filter_noemnaam_opsies"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:entries="@array/filtertextoptions"
+            android:textAlignment="textEnd"
+            app:layout_constraintStart_toEndOf="@id/filter_noemnaam_check"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/filter_noemnaam_check"
+            android:layout_marginStart="8dp" />
+
+        <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+            android:id="@+id/filter_noemnaam"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/filter_noemnaam_check"
+            android:layout_marginTop="4dp" />
+
+        <!-- Row 8: Nooiensvan -->
+        <CheckBox
+            android:id="@+id/filter_nooiensvan_check"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/filter_nooiensvan"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/filter_noemnaam"
+            android:layout_marginTop="8dp" />
+
+        <Spinner
+            android:id="@+id/filter_nooiensvan_opsies"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:entries="@array/filtertextoptions"
+            android:textAlignment="textEnd"
+            app:layout_constraintStart_toEndOf="@id/filter_nooiensvan_check"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/filter_nooiensvan_check"
+            android:layout_marginStart="8dp" />
+
+        <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+            android:id="@+id/filter_nooiensvan"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/filter_nooiensvan_check"
+            android:layout_marginTop="4dp" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

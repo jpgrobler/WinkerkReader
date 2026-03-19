@@ -1,384 +1,245 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     tools:context="za.co.jpsoft.winkerkreader.MainActivity2">
-<LinearLayout
-    android:id="@+id/main_main"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical">
 
-    <RelativeLayout
+    <!-- Main content (visible) – now fills available space -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/main_main"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/main_filter"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- Search bar -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/search_item_block"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <TextView
+                android:id="@+id/search_text"
+                android:layout_width="0dp"
+                android:layout_height="30dp"
+                android:paddingStart="10dp"
+                android:paddingEnd="0dp"
+                android:maxLines="1"
+                android:ellipsize="marquee"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:text="@string/main_soek"
+                android:textAlignment="center"
+                android:textColor="@android:color/white"
+                android:textStyle="bold"
+                android:background="@android:color/darker_gray"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/main_search_text_close"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
+
+            <ImageView
+                android:id="@+id/main_search_text_close"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:src="@drawable/ic_close"
+                android:contentDescription="@string/close_search_description"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <!-- Progress bar above -->
+        <ProgressBar
+            android:id="@+id/indeterminateBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="visible"
+            app:layout_constraintTop_toBottomOf="@id/search_item_block"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- Info row (version, gemeente, count, sort) -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/info_row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/indeterminateBar"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <TextView
+                android:id="@+id/version"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingEnd="4dp"
+                android:paddingStart="0dp"
+                android:text="@string/version_prefix"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
+
+            <TextView
+                android:id="@+id/sortorder"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textStyle="bold"
+                android:text="@string/main_sortorder"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
+
+            <TextView
+                android:id="@+id/main_Count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/count_placeholder"
+                android:layout_marginEnd="8dp"
+                app:layout_constraintEnd_toStartOf="@id/sortorder"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
+
+            <TextView
+                android:id="@+id/main_gemeentenaam"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
+                android:maxLines="1"
+                android:ellipsize="marquee"
+                android:scrollHorizontally="true"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:textAlignment="center"
+                android:textColor="@android:color/black"
+                android:text="@string/main_gemeentenaam"
+                app:layout_constraintStart_toEndOf="@id/version"
+                app:layout_constraintEnd_toStartOf="@id/main_Count"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <!-- Progress bar below -->
+        <ProgressBar
+            android:id="@+id/main_indeterminateBar2"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="visible"
+            android:focusedByDefault="true"
+            app:layout_constraintTop_toBottomOf="@id/info_row"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- ListView – now fills remaining space in main_main -->
+        <ListView
+            android:id="@+id/lidmaat_list"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            app:layout_constraintTop_toBottomOf="@id/main_indeterminateBar2"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Filter panel – initially gone, sits below main_main -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/main_filter"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:id="@+id/search_item_block">
-        <TextView
-            android:layout_alignParentStart="true"
-            android:layout_centerVertical="true"
-            android:textAlignment="center"
-            android:textColor="@android:color/white"
-            android:background="@android:color/darker_gray"
-            android:textStyle="bold"
-            android:paddingStart="10dp"
-            android:paddingEnd="0dp"
-            android:layout_toStartOf="@+id/main_search_text_close"
-            android:layout_width="match_parent"
-            android:layout_height="30dp"
-            android:id="@+id/search_text"
-            android:text="@string/main_soek"
-            android:maxLines="1"
-            android:ellipsize="marquee"
-            android:marqueeRepeatLimit="marquee_forever"
-            android:visibility="visible"/>
-        <ImageView
-            android:layout_alignParentEnd="true"
-            android:id="@+id/main_search_text_close"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:contentDescription="TODO"
-            android:src="@drawable/ic_close"/>
-    </RelativeLayout>
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/main_main"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:id="@+id/main">
-    <ProgressBar
-        android:id="@+id/indeterminateBar"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:visibility="visible" />
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-        <TextView
-            android:id="@+id/version"
-            android:layout_width="wrap_content"
+        <!-- Header row: active/inactive buttons, run, cancel -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/filter_header"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingEnd="4dp"
-            android:paddingStart="0dp"
-            android:text="V"
-            tools:ignore="HardcodedText" />
-        <TextView
-            android:paddingLeft="4dp"
-            android:paddingRight="4dp"
-            android:layout_weight="1"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:text="@string/main_gemeentenaam"
-            android:id="@+id/main_gemeentenaam"
-            android:ellipsize="marquee"
-            android:scrollHorizontally="true"
-            android:marqueeRepeatLimit="marquee_forever"
-            android:textAlignment="center"
-            android:textColor="@android:color/black"
-            android:maxLines="1"
-            android:visibility="visible"/>
-        <TextView
-            android:paddingStart="4dp"
-            android:paddingEnd="0dp"
-            android:id="@+id/main_Count"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="#"
-            android:layout_marginEnd="4dp"
-            tools:ignore="HardcodedText" />
-        <TextView
-            android:textStyle="bold"
-            android:id="@+id/sortorder"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/main_sortorder"/>
-    </LinearLayout>
-    <ProgressBar
-        android:id="@+id/main_indeterminateBar2"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:focusedByDefault="true"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:visibility="visible" />
-    </LinearLayout>
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
 
-    <ListView
-        android:id="@+id/lidmaat_list"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+            <Button
+                android:id="@+id/filter_aktief"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:background="@drawable/aktief0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
 
-</LinearLayout>
-<LinearLayout
-android:id="@+id/main_filter"
-android:visibility="gone"
-android:layout_width="match_parent"
-android:layout_height="wrap_content"
-android:orientation="vertical">
-<RelativeLayout
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:layout_gravity="center_horizontal"
-    android:gravity="center_vertical">
-    <Button
-        android:id="@+id/filter_aktief"
-        android:layout_height="30dp"
-        android:layout_width="30dp"
-        android:background="@drawable/aktief0"
-        android:layout_alignParentStart="true" />
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_toEndOf="@+id/filter_aktief"
-        android:layout_margin="5dp"
-        android:text="Aktief"/>
-    <Button
-        android:id="@+id/filter_onaktief"
-        android:layout_height="30dp"
-        android:layout_width="30dp"
-        android:background="@drawable/onaktief"
-        android:layout_below="@+id/filter_aktief"/>
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_toEndOf="@+id/filter_onaktief"
-        android:layout_below="@+id/filter_aktief"
-        android:layout_margin="5dp"
-        android:text="OnAktief"/>
-    <Button
-        android:id="@+id/run_filter2"
-        android:layout_height="50dp"
-        android:layout_width="50dp"
-        android:background="@mipmap/ic_run"
-        android:layout_centerHorizontal="true"/>
-    <Button
-        android:id="@+id/cancel_filter2"
-        android:layout_height="30dp"
-        android:layout_width="30dp"
-        android:background="@drawable/ic_close"
-        android:layout_alignParentEnd="true"
-        android:gravity="center_vertical"
-        android:layout_centerVertical="true"/>
-</RelativeLayout>
-<ScrollView
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:text="@string/filter_aktief_text"
+                app:layout_constraintStart_toEndOf="@id/filter_aktief"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
 
-        <CheckBox
-            android:id="@+id/filter_selfoon"
-            android:layout_width="110dp"
-            android:layout_height="wrap_content"
-            android:layout_alignParentStart="true"
-            android:text="@string/filter_selfoon" />
-        <CheckBox
-            android:layout_toEndOf="@+id/filter_selfoon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/filter_geslag_check"
-            android:text="@string/filter_geslag"/>
-        <Spinner
-            android:layout_toEndOf="@+id/filter_geslag_check"
-            android:layout_alignParentEnd="true"
-            android:layout_above="@+id/filter_huwelikstatus_opsies"
-            android:id="@+id/filter_geslag_opsies"
-            android:entries="@array/filtergeslagoptions"
-            android:textAlignment="textEnd"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-        </Spinner>
+            <Button
+                android:id="@+id/filter_onaktief"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:background="@drawable/onaktief"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/filter_aktief"
+                app:layout_constraintBottom_toBottomOf="parent" />
 
-        <CheckBox
-            android:id="@+id/filter_landlyn"
-            android:layout_width="110dp"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/filter_selfoon"
-            android:text="@string/filter_landlyn" />
-        <CheckBox
-            android:layout_toEndOf="@+id/filter_landlyn"
-            android:layout_below="@+id/filter_selfoon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/filter_huwelikstatus_check"
-            android:text="@string/filter_huwelikstatus"/>
-        <Spinner
-            android:layout_toEndOf="@+id/filter_huwelikstatus_check"
-            android:layout_below="@+id/filter_selfoon"
-            android:layout_above="@+id/filter_lidmaatsakp_opsies"
-            android:id="@+id/filter_huwelikstatus_opsies"
-            android:entries="@array/filterhuwelikstatusoptions"
-            android:textAlignment="textEnd"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-        </Spinner>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:text="@string/filter_onaktief_text"
+                app:layout_constraintStart_toEndOf="@id/filter_onaktief"
+                app:layout_constraintTop_toBottomOf="@id/filter_aktief"
+                app:layout_constraintBottom_toBottomOf="parent" />
 
-        <CheckBox
-            android:id="@+id/filter_epos"
-            android:layout_width="110dp"
-            android:layout_height="wrap_content"
-            android:layout_alignParentStart="true"
-            android:layout_below="@+id/filter_landlyn"
-            android:text="@string/filter_epos" />
-        <CheckBox
-            android:layout_toEndOf="@+id/filter_epos"
-            android:layout_below="@+id/filter_landlyn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/filter_lidmaatsakapstatus_check"
-            android:text="@string/filter_lidmaatskap"/>
-        <Spinner
-            android:layout_alignParentEnd="true"
-            android:layout_toEndOf="@+id/filter_lidmaatsakapstatus_check"
-            android:layout_below="@+id/filter_landlyn"
-            android:layout_above="@+id/filter_wyk_opsies"
-            android:id="@+id/filter_lidmaatsakp_opsies"
-            android:entries="@array/filterlidmaatsakpstatusoptions"
-            android:textAlignment="textEnd"
+            <Button
+                android:id="@+id/run_filter2"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:background="@mipmap/ic_run"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
+
+            <Button
+                android:id="@+id/cancel_filter2"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:background="@drawable/ic_close"
+                android:gravity="center_vertical"
+                android:contentDescription="@string/cancel_filter_desc"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <!-- Include the filter options from the separate file -->
+        <include
+            layout="@layout/filter_options"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-        </Spinner>
-        <CheckBox
-            android:id="@+id/filter_gesinshoof"
-            android:layout_alignParentStart="true"
-            android:layout_below="@+id/filter_epos"
-            android:layout_width="110dp"
-            android:layout_height="wrap_content"
-            android:text="@string/filter_gesinshoof" />
-        <CheckBox
-            android:layout_below="@+id/filter_epos"
-            android:layout_toEndOf="@+id/filter_gesinshoof"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/filter_wyk_check"
-            android:text="@string/filter_wyk"/>
-        <Spinner
-            android:layout_below="@+id/filter_epos"
-            android:layout_toEndOf="@+id/filter_wyk_check"
-            android:layout_alignParentEnd="true"
-            android:layout_above="@+id/filter_wyk"
-            android:textAlignment="textEnd"
-            android:id="@+id/filter_wyk_opsies"
-            android:entries="@array/filtertextoptions"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-        </Spinner>
-        <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
-            android:layout_below="@+id/filter_wyk_check"
-            android:layout_alignParentEnd="true"
-            android:id="@+id/filter_wyk"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_toEndOf="@+id/filter_wyk_check" />
-        <CheckBox
-            android:layout_alignParentStart="true"
-            android:layout_below="@+id/filter_wyk"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/filter_ouderdom_check"
-            android:text="@string/filter_ouderdom"/>
-        <Spinner
-            android:layout_below="@+id/filter_wyk"
-            android:layout_above="@+id/en"
-            android:layout_toEndOf="@+id/filter_ouderdom_check"
-            android:id="@+id/filter_ouderdom_opsies"
-            android:textAlignment="textEnd"
-            android:entries="@array/filterouderdomoptions"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-        </Spinner>
-        <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
-            android:layout_below="@+id/filter_ouderdom_check"
-            android:layout_alignParentStart="true"
-            android:layout_toStartOf="@+id/en"
-            android:id="@+id/filter_ouderdom1"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-        <TextView
-            android:id="@+id/en"
-            android:layout_below="@+id/filter_ouderdom_check"
-            android:layout_above="@+id/filter_van_opsies"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:gravity="center_vertical"
-            android:text="@string/filter_en"/>
-        <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
-            android:layout_below="@+id/filter_ouderdom_check"
-            android:layout_alignParentEnd="true"
-            android:layout_toEndOf="@+id/en"
-            android:id="@+id/filter_ouderdom2"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-        <CheckBox
-            android:layout_below="@id/filter_ouderdom1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/filter_van_check"
-            android:text="@string/filter_van"/>
-        <Spinner
-            android:layout_below="@id/filter_ouderdom1"
-            android:layout_above="@+id/filter_van"
-            android:layout_toEndOf="@+id/filter_van_check"
-            android:textAlignment="textEnd"
-            android:id="@+id/filter_van_opsies"
-            android:entries="@array/filtertextoptions"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-        </Spinner>
-        <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
-            android:layout_below= "@+id/filter_van_check"
-            android:id="@+id/filter_van"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-        <CheckBox
-            android:layout_below="@+id/filter_van"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/filter_noemnaam_check"
-            android:text="@string/filter_noemnaam"/>
-        <Spinner
-            android:layout_below="@+id/filter_van"
-            android:layout_above="@+id/filter_noemnaam"
-            android:layout_toEndOf="@+id/filter_noemnaam_check"
-            android:layout_centerHorizontal="true"
-            android:id="@+id/filter_noemnaam_opsies"
-            android:textAlignment="textEnd"
-            android:entries="@array/filtertextoptions"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-        </Spinner>
-        <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
-            android:layout_below="@+id/filter_noemnaam_check"
-            android:id="@+id/filter_noemnaam"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-        <CheckBox
-            android:layout_below="@id/filter_noemnaam"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/filter_nooiensvan_check"
-            android:text="@string/filter_nooiensvan"/>
-        <Spinner
-            android:layout_below="@id/filter_noemnaam"
-            android:layout_above="@+id/filter_nooiensvan"
-            android:layout_toEndOf="@+id/filter_nooiensvan_check"
-            android:textAlignment="textEnd"
-            android:id="@+id/filter_nooiensvan_opsies"
-            android:entries="@array/filtertextoptions"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-        </Spinner>
-        <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
-            android:layout_below= "@+id/filter_nooiensvan_check"
-            android:id="@+id/filter_nooiensvan"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-    </RelativeLayout>
-</ScrollView>
-</LinearLayout>
-</RelativeLayout>
+            android:layout_height="0dp"
+            app:layout_constraintTop_toBottomOf="@id/filter_header"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

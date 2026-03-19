@@ -5,9 +5,8 @@
     tools:context=".ui.home.activities.TransactionSearchActivity">
     <item
         android:id="@+id/argief_action_search"
-        android:icon="@drawable/searchmenu2"
-        android:title="@string/mainmenu_soek"
-        app:showAsAction="collapseActionView"
+        android:title="@string/argief_soek"
         app:actionViewClass="androidx.appcompat.widget.SearchView"
-        />
+        app:showAsAction="always|collapseActionView"
+        android:theme="@style/CustomSearchView" />
 </menu>

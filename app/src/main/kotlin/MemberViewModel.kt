@@ -100,8 +100,7 @@ class MemberViewModel : ViewModel() {
     fun getOUDERDOM_DATA(context: MainActivity2): LiveData<Cursor?> =
         observeCursorWrapper(OUDERDOM_DATA) { fetchData(context, "OUDERDOM_DATA") }
 
-    fun getINFO_DATA(context: MainActivity2): LiveData<Cursor?> =
-        observeCursorWrapper(INFO_DATA) { fetchData(context, "INFO_DATA") }
+
 
     fun getFILTER_DATA(context: MainActivity2, filterLys: ArrayList<FilterBox>): LiveData<Cursor?> {
         filterList = filterLys
@@ -110,20 +109,17 @@ class MemberViewModel : ViewModel() {
 
     fun getTextLiveData(): LiveData<String> = textLiveData
 
-    fun getFOTO_UPDATE_DATA(context: MainActivity2): LiveData<Cursor?> =
-        observeCursorWrapper(FOTO_UPDATE_DATA) { fetchData(context, "FOTO_UPDATE_DATA") }
+
 
     fun getGESINNE_DATA(context: MainActivity2): LiveData<Cursor?> =
         observeCursorWrapper(GESINNE_DATA) { fetchData(context, "GESINNE_DATA") }
 
-    fun getTAGGED_DATA(context: MainActivity2): LiveData<Cursor?> =
-        observeCursorWrapper(TAGGED_DATA) { fetchData(context, "TAGGED_DATA") }
+
 
     fun getHUWELIK_DATA(context: MainActivity2): LiveData<Cursor?> =
         observeCursorWrapper(HUWELIK_DATA) { fetchData(context, "HUWELIK_DATA") }
 
-    fun getARGIEF_DATA(context: MainActivity2): LiveData<Cursor?> =
-        observeCursorWrapper(ARGIEF_DATA) { fetchData(context, "ARGIEF_DATA") }
+
 
     // observeCursorWrapper now returns LiveData<Cursor?> (nullable)
     private fun observeCursorWrapper(
@@ -149,13 +145,14 @@ class MemberViewModel : ViewModel() {
                 }
 
                 lastWrapper = newWrapper
-
-                if (newWrapper != null && !newWrapper.isClosed()) {
-                    val cursor = newWrapper.getCursor()
-                    cursorLiveData.postValue(cursor)   // cursor is Cursor?, OK now
-                } else {
-                    cursorLiveData.postValue(null)     // null allowed
-                }
+                val cursor = newWrapper.getCursor()
+                cursorLiveData.postValue(cursor)   // cursor is Cursor?, OK now
+//                if (newWrapper != null && !newWrapper.isClosed()) {
+//                    val cursor = newWrapper.getCursor()
+//                    cursorLiveData.postValue(cursor)   // cursor is Cursor?, OK now
+//                } else {
+//                    cursorLiveData.postValue(null)     // null allowed
+//                }
             }
         }
 
@@ -293,7 +290,7 @@ class MemberViewModel : ViewModel() {
     private fun buildMemberQuery(context: Context, eventType: String): String {
         winkerkEntry.SOEKLIST = false
         val selectionBase = winkerkEntry.SELECTION_LIDMAAT_INFO
-        var from = " Members "
+        val from = " Members "
         val where = StringBuilder()
         val sortOrder = StringBuilder()
 
@@ -302,7 +299,7 @@ class MemberViewModel : ViewModel() {
             .append(col(winkerkEntry.LIDMATE_REKORDSTATUS)).append(" = '")
             .append(winkerkEntry.RECORDSTATUS).append("' )")
 
-        appendWhereClause(context, eventType, where, sortOrder)
+        appendWhereClause(context, eventType, where) //, sortOrder)
         appendOrderByClause(eventType, sortOrder)
 
         val finalFrom: String
@@ -322,7 +319,7 @@ class MemberViewModel : ViewModel() {
         }
     }
 
-    private fun appendWhereClause(context: Context, eventType: String, where: StringBuilder, sortOrder: StringBuilder) {
+    private fun appendWhereClause(context: Context, eventType: String, where: StringBuilder) {
         when (eventType) {
             "TAGGED_DATA" -> where.append(" AND (").append(col(winkerkEntry.LIDMATE_TAG)).append(" = 1 )")
             "HUWELIK_DATA" -> where.append(" AND ").append(winkerkEntry.SELECTION_HUWELIK_WHERE)
@@ -494,22 +491,7 @@ class MemberViewModel : ViewModel() {
         return filtertext.toString()
     }
 
-    private fun getLiveDataForEventType(eventType: String): MutableLiveData<CursorWrapper>? {
-        return when (eventType) {
-            "GESINNE_DATA" -> GESINNE_DATA
-            "FILTER_DATA" -> FILTER_DATA
-            "LIDMAAT_DATA" -> LIDMAAT_DATA
-            "LIDMAAT_DATA_WYK" -> LIDMAAT_DATA_WYK
-            "SOEK_DATA" -> SOEK_DATA
-            "LIDMAAT_DATA_VERJAAR" -> LIDMAAT_DATA_VERJAAR
-            "OUDERDOM_DATA" -> OUDERDOM_DATA
-            "LIDMAAT_DATA_ADRES" -> LIDMAAT_DATA_ADRES
-            "TAGGED_DATA" -> TAGGED_DATA
-            "HUWELIK_DATA" -> HUWELIK_DATA
-            "ARGIEF_DATA" -> ARGIEF_DATA
-            else -> null
-        }
-    }
+
 
     private fun postCursorToLiveData(eventType: String, wrapper: CursorWrapper, filterText: String) {
         try {
@@ -597,13 +579,5 @@ class MemberViewModel : ViewModel() {
         } catch (e: Exception) {
             Log.w(TAG, "Error closing cursor in LiveData: ${e.message}")
         }
-    }
-
-    fun clearQueryCache() {
-        queryCache.clear()
-        lastEventType = ""
-        lastSearchTerm = ""
-        lastFilterList = null
-        Log.d(TAG, "Query cache manually cleared")
     }
 }

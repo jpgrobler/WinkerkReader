@@ -3,7 +3,6 @@ package za.co.jpsoft.winkerkreader
 
 import android.content.ContentValues
 import android.content.Context
-import android.net.Uri
 import android.provider.CalendarContract
 import android.util.Log
 import za.co.jpsoft.winkerkreader.data.CursorDataExtractor
@@ -161,7 +160,7 @@ class CalendarManager(private val context: Context) {
                 while (it.moveToNext()) {
                     val existingTitle = CursorDataExtractor.getSafeString(it, CalendarContract.Events.TITLE, "") ?: ""
                     val existingDescription = CursorDataExtractor.getSafeString(it, CalendarContract.Events.DESCRIPTION, "") ?: ""
-                    val existingTime = CursorDataExtractor.getSafeLong(it, CalendarContract.Events.DTSTART, 0L) ?: 0L
+                    val existingTime = CursorDataExtractor.getSafeLong(it, CalendarContract.Events.DTSTART, 0L)   // no Elvis, as it's non-nullable
 
                     val expectedTitle = createEventTitle(callerInfo, callType, source)
 
@@ -196,7 +195,6 @@ class CalendarManager(private val context: Context) {
             CallType.OUTGOING -> "📤"
             CallType.MISSED -> "📵"
             CallType.ENDED -> "📞"
-            else -> "📞"
         }
 
         val sourceEmoji = when {
@@ -240,38 +238,6 @@ class CalendarManager(private val context: Context) {
         return CalendarContract.Colors.TYPE_EVENT
     }
 
-    fun hasCalendarPermissions(): Boolean {
-        return try {
-            val calendars = getAvailableCalendars()
-            calendars.isNotEmpty()
-        } catch (e: SecurityException) {
-            Log.e(TAG, "Calendar permissions denied", e)
-            false
-        } catch (e: Exception) {
-            Log.e(TAG, "Error checking calendar permissions", e)
-            false
-        }
-    }
-
-    fun hasCalendarsAvailable(): Boolean {
-        val calendars = getAvailableCalendars()
-        return calendars.isNotEmpty()
-    }
-
-    fun getCalendarStatusMessage(): String {
-        return try {
-            val calendars = getAvailableCalendars()
-            if (calendars.isEmpty()) {
-                "No calendars found. Please add a Google account or other calendar provider to enable calendar logging."
-            } else {
-                "Found ${calendars.size} calendar(s) available for logging."
-            }
-        } catch (e: SecurityException) {
-            "Calendar permission denied. Please grant calendar access to enable logging."
-        } catch (e: Exception) {
-            "Error accessing calendars: ${e.message}"
-        }
-    }
 
     companion object {
         private const val TAG = "CalendarManager"

@@ -22,10 +22,10 @@
     <string name="widget_sterf_title_short">Sterf</string>
 
     <!-- Widget Loading States -->
-    <string name="widget_doop_loading">Loading baptism info...</string>
-    <string name="widget_belydenis_loading">Loading confession info...</string>
-    <string name="widget_huwelik_loading">Loading marriage info...</string>
-    <string name="widget_sterf_loading">Loading death info...</string>
+    <string name="widget_doop_loading">Loading baptism info…</string>
+    <string name="widget_belydenis_loading">Loading confession info…</string>
+    <string name="widget_huwelik_loading">Loading marriage info…</string>
+    <string name="widget_sterf_loading">Loading death info…</string>
 
     <!-- Widget Content Descriptions -->
     <string name="widget_doop_content_desc">Baptism information content</string>
@@ -111,7 +111,7 @@
     <string name="validation_invalid_layout">Please select a valid layout option</string>
     <string name="validation_color_contrast_warning">Selected color may have poor contrast</string>
     <!-- Widget Loading States -->
-    <string name="widget_loading">Loading events...</string>
+    <string name="widget_loading">Loading events…</string>
     <string name="widget_error_loading">Unable to load events</string>
 
     <!-- Widget Error Messages -->
@@ -402,5 +402,13 @@
     <string name="check_for_updates">Toets vir opdatering</string>
     <string name="tap_check_for_updates">Opdatering beskikbaar?</string>
     <string name="app_icon">WinkerkReader</string>
+    <string name="argief_soek">Soek</string>
+    <string name="separator_format">%1$s %2$s</string>
+    <string name="filter_aktief_text">Aktief</string>
+    <string name="filter_onaktief_text">OnAktief</string>
+    <string name="cancel_filter_desc">Kanselleer</string>
+    <string name="version_prefix">v</string>
+    <string name="count_placeholder">Gesin</string>
+    <string name="close_search_description">Maak toe</string>
 </resources>
 

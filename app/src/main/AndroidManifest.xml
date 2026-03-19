@@ -14,7 +14,6 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <!-- For Android 12+ (API 31+) exact alarms -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
 
     <!-- Network and Internet permissions -->
     <uses-permission android:name="android.permission.INTERNET"/>
@@ -65,8 +64,6 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <!-- Package management permissions -->
-    <!-- uses-permission android:name="android.permission.INSTALL_PACKAGES"/ -->
-    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" tools:ignore="QueryAllPackagesPermission" />
 
     <application
@@ -139,13 +136,6 @@
             android:exported="true"
             android:icon="@mipmap/ic_shortcut_family_roof"
             android:label="Laai nuwe data">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="za.co.jpsoft.winkerkreader.MainActivity2"/>
-        </activity>
-        <activity android:name="za.co.jpsoft.winkerkreader.UpdateActivity"
-            android:exported="true"
-            android:parentActivityName="za.co.jpsoft.winkerkreader.MainActivity2">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="za.co.jpsoft.winkerkreader.MainActivity2"/>

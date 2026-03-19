@@ -1,6 +1,6 @@
 package za.co.jpsoft.winkerkreader
 
-import android.Manifest
+import android.view.View
 import android.app.*
 import android.appwidget.AppWidgetManager
 import android.content.*
@@ -9,7 +9,6 @@ import android.database.Cursor
 import android.database.sqlite.SQLiteException
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -31,11 +30,11 @@ import com.readystatesoftware.sqliteasset.SQLiteAssetHelper
 import forceShowIcons
 import org.joda.time.DateTime
 import za.co.jpsoft.winkerkreader.data.*
-import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
 import java.util.Calendar
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
+import androidx.core.net.toUri
 
 class MainActivity2 : AppCompatActivity() {
 
@@ -52,7 +51,7 @@ class MainActivity2 : AppCompatActivity() {
     private lateinit var memberCountView: TextView
     private lateinit var searchTextView: TextView
     private lateinit var churchNameView: TextView
-    private lateinit var searchItemBlock: RelativeLayout
+    private lateinit var searchItemBlock: View
     private var optionsMenu: Menu? = null
 
     // Data
@@ -77,27 +76,10 @@ class MainActivity2 : AppCompatActivity() {
         const val CHANNEL_ID = "winkerkReaderServiceChannel"
         const val SEARCH_CHECK_BOX = "SEARCH_CHECK_BOX"
         const val FILTER_CHECK_BOX = "FILTER_CHECK_BOX"
-        val CALENDAR_PERMISSIONS = arrayOf(
-            Manifest.permission.READ_CALENDAR,
-            Manifest.permission.WRITE_CALENDAR
-        )
+
         val whatsappContacts = mutableListOf<String>()
     }
 
-    private val REQUIRED_PERMISSIONS = arrayOf(
-        Manifest.permission.READ_PHONE_STATE,
-        Manifest.permission.READ_PHONE_NUMBERS,
-        Manifest.permission.READ_CONTACTS,
-        Manifest.permission.WRITE_CONTACTS,
-        Manifest.permission.READ_CALL_LOG,
-        Manifest.permission.WRITE_EXTERNAL_STORAGE,
-        Manifest.permission.READ_EXTERNAL_STORAGE,
-        Manifest.permission.SYSTEM_ALERT_WINDOW,
-        Manifest.permission.SEND_SMS,
-        Manifest.permission.READ_SMS,
-        Manifest.permission.READ_CALENDAR,
-        Manifest.permission.WRITE_CALENDAR
-    )
 
     private val overlayPermissionLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { }
 
@@ -248,7 +230,7 @@ class MainActivity2 : AppCompatActivity() {
 
     private fun checkOverlayPermission() {
         if (!Settings.canDrawOverlays(this)) {
-            val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
+            val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, "package:$packageName".toUri())
             overlayPermissionLauncher.launch(intent)
         }
     }
@@ -1086,54 +1068,5 @@ class MainActivity2 : AppCompatActivity() {
         NavigationHandler.handleRightSwipe(this, sortOrderView)
     }
 
-    private class GroupMemberCollector(private val cursor: Cursor) {
-        fun collectAllMembers(): ArrayList<SmsList> {
-            val list = arrayListOf<SmsList>()
-            cursor.moveToFirst()
-            val nameIdx = cursor.getColumnIndex(winkerkEntry.LIDMATE_NOEMNAAM)
-            val surnameIdx = cursor.getColumnIndex(winkerkEntry.LIDMATE_VAN)
-            val phoneIdx = cursor.getColumnIndex(winkerkEntry.LIDMATE_SELFOON)
-            val guidIdx = cursor.getColumnIndex(winkerkEntry.LIDMATE_LIDMAATGUID)
-            repeat(cursor.count) {
-                if (!cursor.isNull(phoneIdx)) {
-                    list.add(
-                        SmsList(
-                            cursor.getString(nameIdx),
-                            cursor.getString(surnameIdx),
-                            cursor.getString(phoneIdx),
-                            cursor.getInt(0),
-                            cursor.getString(guidIdx)
-                        )
-                    )
-                }
-                cursor.moveToNext()
-            }
-            return list
-        }
 
-        fun collectSelectedMembers(): ArrayList<SmsList> {
-            val list = arrayListOf<SmsList>()
-            cursor.moveToFirst()
-            val nameIdx = cursor.getColumnIndex(winkerkEntry.LIDMATE_NOEMNAAM)
-            val surnameIdx = cursor.getColumnIndex(winkerkEntry.LIDMATE_VAN)
-            val phoneIdx = cursor.getColumnIndex(winkerkEntry.LIDMATE_SELFOON)
-            val tagIdx = cursor.getColumnIndex(winkerkEntry.LIDMATE_TAG)
-            val guidIdx = cursor.getColumnIndex(winkerkEntry.LIDMATE_LIDMAATGUID)
-            repeat(cursor.count) {
-                if (!cursor.isNull(phoneIdx) && cursor.getInt(tagIdx) == 1) {
-                    list.add(
-                        SmsList(
-                            cursor.getString(nameIdx),
-                            cursor.getString(surnameIdx),
-                            cursor.getString(phoneIdx),
-                            cursor.getInt(0),
-                            cursor.getString(guidIdx)
-                        )
-                    )
-                }
-                cursor.moveToNext()
-            }
-            return list
-        }
-    }
 }

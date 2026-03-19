@@ -1,16 +1,15 @@
 package za.co.jpsoft.winkerkreader
 
-import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.view.MenuItem
-import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.Spinner
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import za.co.jpsoft.winkerkreader.data.FilterBox
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.RECORDSTATUS
 
@@ -21,14 +20,11 @@ class MyFilter : AppCompatActivity() {
 
     private var filterList: ArrayList<FilterBox>? = null
 
-    override fun onBackPressed() {
-        finish()
-        super.onBackPressed()
-    }
+
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == android.R.id.home) {
-            onBackPressed()
+            onBackPressedDispatcher.onBackPressed()
             return true
         }
         return super.onOptionsItemSelected(item)
@@ -42,20 +38,12 @@ class MyFilter : AppCompatActivity() {
         val onaktiefB = findViewById<Button>(R.id.filter_onaktief)
         val run = findViewById<Button>(R.id.run_filter2)
 
-        aktiefB.setOnClickListener {
-            if (aktiefB.background.constantState != resources.getDrawable(R.drawable.aktief0).constantState) {
-                RECORDSTATUS = "0"
-                aktiefB.setBackgroundResource(R.drawable.aktief0)
-                onaktiefB.setBackgroundResource(R.drawable.onaktief)
-            } else {
-                aktiefB.setBackgroundResource(R.drawable.aktief)
-                onaktiefB.setBackgroundResource(R.drawable.onaktief2)
-                RECORDSTATUS = "2"
-            }
-        }
 
         onaktiefB.setOnClickListener {
-            if (onaktiefB.background.constantState != resources.getDrawable(R.drawable.onaktief2).constantState) {
+            val onaktief2 = ContextCompat.getDrawable(this, R.drawable.onaktief2)
+            //val onaktief = ContextCompat.getDrawable(this, R.drawable.onaktief)
+
+            if (onaktiefB.background.constantState != onaktief2?.constantState) {
                 RECORDSTATUS = "2"
                 onaktiefB.setBackgroundResource(R.drawable.onaktief2)
                 aktiefB.setBackgroundResource(R.drawable.aktief)
@@ -147,7 +135,7 @@ class MyFilter : AppCompatActivity() {
                 )
             )
 
-            setResult(Activity.RESULT_OK, Intent().putExtra(MainActivity2.FILTER_CHECK_BOX, filterList))
+            setResult(RESULT_OK, Intent().putExtra(MainActivity2.FILTER_CHECK_BOX, filterList))
 
             val inputMethodManager = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
             currentFocus?.let {
@@ -163,7 +151,7 @@ class MyFilter : AppCompatActivity() {
                 val inputMethodManager = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
                 inputMethodManager.hideSoftInputFromWindow(it.windowToken, 0)
             }
-            setResult(Activity.RESULT_CANCELED)
+            setResult(RESULT_CANCELED)
             finish()
         }
         close.requestFocus()

@@ -1,26 +1,22 @@
 // registreer.kt
 package za.co.jpsoft.winkerkreader
 
-import android.app.AlarmManager
-import android.app.PendingIntent
-import android.content.Context
-import android.content.Intent
-import android.content.SharedPreferences
-import android.net.Uri
+
 import android.os.Bundle
 import android.provider.Settings
 import android.view.View
 import android.widget.EditText
 import android.widget.ImageView
-import android.widget.ProgressBar
+
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
-import za.co.jpsoft.winkerkreader.data.WinkerkContract
+
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
-import java.io.IOException
+import androidx.core.content.edit
+
 
 /**
  * Created by Pieter Grobler on 21/08/2017.
@@ -42,11 +38,6 @@ class registreer : AppCompatActivity() {
     }
 
     private fun initializeUI() {
-        // Hide progress bars initially
-        val progressBar = findViewById<ProgressBar>(R.id.reg_indeterminateBar)
-        val progressBar2 = findViewById<ProgressBar>(R.id.reg_indeterminateBar2)
-        progressBar.visibility = View.GONE
-        progressBar2.visibility = View.GONE
 
         // Set device ID
         winkerkEntry.id = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
@@ -54,8 +45,6 @@ class registreer : AppCompatActivity() {
         // Set about text
         findViewById<TextView>(R.id.reg_about).text = getAboutText()
 
-        // Display device ID
-        findViewById<EditText>(R.id.WinkerkReaderID).setText(winkerkEntry.id)
     }
 
     private fun getAboutText(): String {
@@ -91,52 +80,12 @@ class registreer : AppCompatActivity() {
 
     private fun setupClickListeners() {
         findViewById<ImageView>(R.id.reg_opdateer).setOnClickListener(::handleUpdateClick)
-        findViewById<ImageView>(R.id.reg).setOnClickListener(::handleRegistrationClick)
-        findViewById<ImageView>(R.id.reg_stuur_epos).setOnClickListener(::handleEmailClick)
-        findViewById<ImageView>(R.id.reg_stuur_sms).setOnClickListener(::handleSmsClick)
     }
 
     private fun handleUpdateClick(view: View) {
         val userData = collectUserData()
         saveUserData(userData)
         Toast.makeText(this, "Inligting gestoor", Toast.LENGTH_LONG).show()
-    }
-
-    private fun handleRegistrationClick(view: View) {
-        val kodeView = findViewById<EditText>(R.id.reg_kode)
-        val regKode = kodeView.text.toString().trim()
-
-        if (regKode.isEmpty()) {
-            Toast.makeText(this, "Voer asseblief 'n registrasie kode in", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        try {
-            val userData = collectUserData()
-            saveUserData(userData)
-
-            if (Installation.write(regKode, this)) {
-                Toast.makeText(this, "Kode gestoor\nDankie vir registrasie", Toast.LENGTH_LONG).show()
-                restartApplication()
-            } else {
-                showRegistrationError()
-            }
-        } catch (e: IOException) {
-            e.printStackTrace()
-            showRegistrationError()
-        }
-    }
-
-    private fun handleEmailClick(view: View) {
-        val userData = collectUserData()
-        saveUserData(userData)
-        sendRegistrationEmail(userData)
-    }
-
-    private fun handleSmsClick(view: View) {
-        val userData = collectUserData()
-        saveUserData(userData)
-        sendRegistrationSms(userData)
     }
 
     private fun collectUserData(): UserData {
@@ -159,83 +108,14 @@ class registreer : AppCompatActivity() {
 
         // Save to SharedPreferences
         val settings = getSharedPreferences(PREFS_USER_INFO, 0)
-        settings.edit()
-            .putString("Naam", userData.naam)
-            .putString("Van", userData.van)
-            .putString("E-Pos", userData.epos)
-            .putString("Selfoon", userData.selNo)
-            .putString("Gemeente", userData.gemNaam)
-            .putString("Gemeente_Epos", userData.gemEpos)
-            .apply()
-    }
-
-    private fun showRegistrationError() {
-        findViewById<TextView>(R.id.reg_reg).apply {
-            text = getString(R.string.ongereg)
-            isSelected = true
+        settings.edit {
+            putString("Naam", userData.naam)
+            putString("Van", userData.van)
+            putString("E-Pos", userData.epos)
+            putString("Selfoon", userData.selNo)
+            putString("Gemeente", userData.gemNaam)
+            putString("Gemeente_Epos", userData.gemEpos)
         }
-        findViewById<ProgressBar>(R.id.reg_indeterminateBar).visibility = View.GONE
-        findViewById<ProgressBar>(R.id.reg_indeterminateBar2).visibility = View.GONE
-    }
-
-    private fun restartApplication() {
-        val restartIntent = Intent(this, MainActivity2::class.java)
-        val pendingIntent = PendingIntent.getActivity(
-            this,
-            123456,
-            restartIntent,
-            PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        alarmManager.set(AlarmManager.RTC, System.currentTimeMillis() + 100, pendingIntent)
-        Runtime.getRuntime().exit(0)
-    }
-
-    private fun sendRegistrationEmail(userData: UserData) {
-        val body = buildRegistrationMessage(userData)
-        val emailAddress = "jpgrobler@gmail.com"
-
-        val selectorIntent = Intent(Intent.ACTION_SENDTO).apply {
-            data = Uri.parse("mailto:")
-        }
-
-        val emailIntent = Intent(Intent.ACTION_SENDTO).apply {
-            putExtra(Intent.EXTRA_EMAIL, arrayOf(emailAddress))
-            putExtra(Intent.EXTRA_SUBJECT, "Registrasie kode vir WinkerkReader Toep asb")
-            putExtra(Intent.EXTRA_TEXT, body)
-            selector = selectorIntent
-        }
-
-        try {
-            startActivity(emailIntent)
-        } catch (e: Exception) {
-            Toast.makeText(this, "Kan nie e-pos app oopmaak nie", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun sendRegistrationSms(userData: UserData) {
-        val body = buildRegistrationMessage(userData)
-
-        val smsUri = Uri.parse("smsto:+27822932795")
-        val smsIntent = Intent(Intent.ACTION_SENDTO, smsUri).apply {
-            putExtra("sms_body", body)
-        }
-
-        try {
-            startActivity(smsIntent)
-        } catch (e: Exception) {
-            Toast.makeText(this, "Kan nie SMS app oopmaak nie", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun buildRegistrationMessage(userData: UserData): String {
-        return "Kode vir WinkerkReader asb:\n" +
-                "${userData.naam} ${userData.van}\n" +
-                "${userData.selNo}\n" +
-                "${userData.epos}\n" +
-                "${winkerkEntry.GEMEENTE_NAAM}\n" +
-                winkerkEntry.id
     }
 
     // Helper class to hold user data (static nested)

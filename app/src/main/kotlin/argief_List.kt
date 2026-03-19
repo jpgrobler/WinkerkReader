@@ -9,11 +9,11 @@ import android.view.*
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
-import androidx.core.content.ContextCompat
+
 import androidx.cursoradapter.widget.CursorAdapter
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import za.co.jpsoft.winkerkreader.data.WinkerkContract
+
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
 
 class argief_List : AppCompatActivity() {
@@ -88,11 +88,9 @@ class argief_List : AppCompatActivity() {
 
         val searchView = searchItem.actionView as SearchView
         searchView.apply {
-            setSubmitButtonEnabled(false)   // ← change to false
-            findViewById<EditText>(androidx.appcompat.R.id.search_src_text)?.hint = "Soek"
-            findViewById<View>(androidx.appcompat.R.id.search_plate)?.setBackgroundColor(
-                ContextCompat.getColor(this@argief_List, android.R.color.transparent)
-            )
+            setSubmitButtonEnabled(false)
+            queryHint = "Soek"   // ← Use built-in API
+
 
             setOnQueryTextListener(object : SearchView.OnQueryTextListener {
                 override fun onQueryTextSubmit(query: String): Boolean {
@@ -119,7 +117,7 @@ class argief_List : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == android.R.id.home) {
-            onBackPressed()
+            onBackPressedDispatcher.onBackPressed()  // ✅ Use dispatcher instead of deprecated onBackPressed()
             return true
         }
         return super.onOptionsItemSelected(item)
@@ -137,11 +135,6 @@ class argief_List : AppCompatActivity() {
 
 class argiefLysAdapter(context: Context, cursor: Cursor?) : CursorAdapter(context, cursor, 0) {
 
-    class ViewHolder(view: View) {
-        val GroepNaamView: TextView = view.findViewById(R.id.GroepNaam)
-        val GroepCountView: TextView = view.findViewById(R.id.GroepCount)
-    }
-
     class ViewHolder2(view: View) {
         val redeTextView: TextView = view.findViewById(R.id.argief_rede)
         val nameTextView: TextView = view.findViewById(R.id.argief_name)
@@ -155,7 +148,7 @@ class argiefLysAdapter(context: Context, cursor: Cursor?) : CursorAdapter(contex
     override fun swapCursor(newCursor: Cursor?): Cursor? = super.swapCursor(newCursor)
 
     override fun newView(context: Context, cursor: Cursor, parent: ViewGroup): View {
-        if (cursor == null || cursor.count < 1) return LayoutInflater.from(context).inflate(R.layout.argief_item, parent, false)
+       // if (cursor == null || cursor.count < 1) return LayoutInflater.from(context).inflate(R.layout.argief_item, parent, false)
 
         val view = LayoutInflater.from(context).inflate(R.layout.argief_item, parent, false)
         val viewHolder = ViewHolder2(view)
@@ -164,7 +157,7 @@ class argiefLysAdapter(context: Context, cursor: Cursor?) : CursorAdapter(contex
     }
 
     override fun bindView(view: View, context: Context, cursor: Cursor) {
-        if (cursor == null || cursor.count < 1) return
+        //if (cursor == null || cursor.count < 1) return
 
         val viewHolder2 = view.tag as ViewHolder2
 
@@ -194,7 +187,7 @@ class argiefLysAdapter(context: Context, cursor: Cursor?) : CursorAdapter(contex
 
         if (position == 0) {
             viewHolder2.separatorView.visibility = View.VISIBLE
-            viewHolder2.separatorView.text = "${winkerkEntry.KEUSE} $current"
+            viewHolder2.separatorView.text = context.getString(R.string.separator_format, winkerkEntry.KEUSE, current)
         } else {
             cursor.moveToPosition(position - 1)
             val previous = when (winkerkEntry.KEUSE) {

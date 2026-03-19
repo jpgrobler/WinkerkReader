@@ -1,16 +1,14 @@
 package za.co.jpsoft.winkerkreader
 
-import android.Manifest
+
 import android.content.ContentValues
 import android.content.Intent
-import android.content.pm.PackageManager
+
 import android.view.MenuItem
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
-import za.co.jpsoft.winkerkreader.data.WinkerkContract
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.LIDMATE_TAG
 
@@ -40,7 +38,6 @@ class MenuItemHandler(
             R.id.sms_verjaar -> handleSmsVerjaar()
             R.id.filter_options -> handleFilterOptions()
             R.id.deselect -> handleDeselect()
-            R.id.opdateerApp -> handleUpdateApp()
             R.id.uitleg -> handleUitleg()
             R.id.argief -> handleArgief()
             R.id.action_view_call_log -> handleViewCallLog()
@@ -73,7 +70,8 @@ class MenuItemHandler(
 
     private fun handleTagged(sortOrderView: TextView): Boolean {
         sortOrderView.background = null
-        winkerkEntry.DEFLAYOUT = winkerkEntry.SORTORDER.apply { "VAN" }
+        winkerkEntry.DEFLAYOUT = "VAN"
+        winkerkEntry.SORTORDER = "VAN"
         winkerkEntry.SOEKLIST = false
         (activity as MainActivity2).observeDataset()
         return true
@@ -81,7 +79,8 @@ class MenuItemHandler(
 
     private fun handleSortVan(sortOrderView: TextView): Boolean {
         sortOrderView.background = null
-        winkerkEntry.DEFLAYOUT = winkerkEntry.SORTORDER.apply { "VAN" }
+        winkerkEntry.DEFLAYOUT =  "VAN"
+        winkerkEntry.SORTORDER = "VAN"
         winkerkEntry.SOEKLIST = false
         (activity as MainActivity2).observeDataset()
         return true
@@ -89,7 +88,8 @@ class MenuItemHandler(
 
     private fun handleSortWyk(sortOrderView: TextView): Boolean {
         sortOrderView.background = null
-        winkerkEntry.DEFLAYOUT = winkerkEntry.SORTORDER.apply { "WYK" }
+        winkerkEntry.DEFLAYOUT =  "WYK"
+        winkerkEntry.SORTORDER = "WYL"
         winkerkEntry.SOEKLIST = false
         (activity as MainActivity2).observeDataset()
         return true
@@ -97,7 +97,8 @@ class MenuItemHandler(
 
     private fun handleSortOuderdom(sortOrderView: TextView): Boolean {
         sortOrderView.background = null
-        winkerkEntry.DEFLAYOUT = winkerkEntry.SORTORDER.apply { "OUDERDOM" }
+        winkerkEntry.DEFLAYOUT = "OUDERDOM"
+        winkerkEntry.SORTORDER = "OUDERDOM"
         winkerkEntry.SOEKLIST = false
         (activity as MainActivity2).observeDataset()
         return true
@@ -105,7 +106,8 @@ class MenuItemHandler(
 
     private fun handleVerjaar(sortOrderView: TextView): Boolean {
         sortOrderView.background = null
-        winkerkEntry.DEFLAYOUT = winkerkEntry.SORTORDER.apply { "VERJAAR" }
+        winkerkEntry.DEFLAYOUT = "VERJAAR"
+        winkerkEntry.SORTORDER = "VERJAAR"
         winkerkEntry.SOEKLIST = false
         (activity as MainActivity2).observeDataset()
         return true
@@ -113,7 +115,8 @@ class MenuItemHandler(
 
     private fun handleSortAdres(sortOrderView: TextView): Boolean {
         sortOrderView.background = null
-        winkerkEntry.DEFLAYOUT = winkerkEntry.SORTORDER.apply { "ADRES" }
+        winkerkEntry.DEFLAYOUT = "ADRES"
+        winkerkEntry.SORTORDER = "ADRES"
         winkerkEntry.SOEKLIST = false
         (activity as MainActivity2).observeDataset()
         return true
@@ -121,7 +124,8 @@ class MenuItemHandler(
 
     private fun handleSortGesin(sortOrderView: TextView): Boolean {
         sortOrderView.background = null
-        winkerkEntry.DEFLAYOUT = winkerkEntry.SORTORDER.apply { "GESINNE" }
+        winkerkEntry.DEFLAYOUT = "GESINNE"
+        winkerkEntry.SORTORDER = "GESINNE"
         winkerkEntry.SOEKLIST = false
         (activity as MainActivity2).observeDataset()
         return true
@@ -133,37 +137,7 @@ class MenuItemHandler(
         return true
     }
 
-    private fun checkAndRequestStoragePermissions(): Boolean {
-        if (PermissionHelper.arePermissionsGranted(activity, PermissionHelper.STORAGE_PERMISSIONS)) {
-            return true
-        } else {
-            if (PermissionHelper.shouldShowRationaleForPermissions(activity, PermissionHelper.STORAGE_PERMISSIONS)) {
-                showStoragePermissionRationale()
-            } else {
-                PermissionHelper.requestPermissionGroup(
-                    activity,
-                    PermissionHelper.STORAGE_PERMISSIONS,
-                    PermissionHelper.REQUEST_CODE_STORAGE
-                )
-            }
-        }
-        return PermissionHelper.arePermissionsGranted(activity, PermissionHelper.STORAGE_PERMISSIONS)
-    }
 
-    private fun showStoragePermissionRationale() {
-        AlertDialog.Builder(activity)
-            .setTitle("Storage Permission Required")
-            .setMessage("This app needs storage access to read and save files. Please grant the permission.")
-            .setPositiveButton("Grant") { _, _ ->
-                PermissionHelper.requestPermissionGroup(
-                    activity,
-                    PermissionHelper.STORAGE_PERMISSIONS,
-                    PermissionHelper.REQUEST_CODE_STORAGE
-                )
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
 
     private fun handleLaai(): Boolean {
         settings.fromMenu = true
@@ -185,7 +159,7 @@ class MenuItemHandler(
             val filterHandler = FilterHandler(activity)
             filterHandler.showFilterDialog()
             true
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             Toast.makeText(activity, "Error opening filter options", Toast.LENGTH_SHORT).show()
             false
         }
@@ -195,13 +169,7 @@ class MenuItemHandler(
         val values = ContentValues().apply {
             put(LIDMATE_TAG, 0)
         }
-        activity.contentResolver.update(WinkerkContract.winkerkEntry.CONTENT_URI, values, null, null)
-        return true
-    }
-
-    private fun handleUpdateApp(): Boolean {
-        val intent = Intent(activity, UpdateActivity::class.java)
-        activity.startActivity(intent)
+        activity.contentResolver.update(winkerkEntry.CONTENT_URI, values, null, null)
         return true
     }
 
@@ -215,17 +183,6 @@ class MenuItemHandler(
         val intent = Intent(activity, argief_List::class.java)
         activity.startActivity(intent)
         return true
-    }
-
-    private fun checkStoragePermission(): Boolean {
-        val permission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-        return if (permission != PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(activity, "Storage permission required", Toast.LENGTH_SHORT).show()
-            ActivityCompat.requestPermissions(activity, STORAGE_PERMISSIONS, REQUEST_EXTERNAL_STORAGE)
-            false
-        } else {
-            true
-        }
     }
 
     private fun showPermissionSettingsDialog() {
@@ -248,13 +205,5 @@ class MenuItemHandler(
             }
             .setNegativeButton("Cancel", null)
             .show()
-    }
-
-    companion object {
-        private const val REQUEST_EXTERNAL_STORAGE = 1
-        private val STORAGE_PERMISSIONS = arrayOf(
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
-        )
     }
 }
