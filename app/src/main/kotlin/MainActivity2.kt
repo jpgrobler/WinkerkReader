@@ -35,6 +35,7 @@ import java.util.Calendar
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 import androidx.core.net.toUri
+import za.co.jpsoft.winkerkreader.R
 
 class MainActivity2 : AppCompatActivity() {
 
@@ -46,7 +47,7 @@ class MainActivity2 : AppCompatActivity() {
     // Views
     private lateinit var cursorAdapter: WinkerkCursorAdapter
     private lateinit var memberListView: ListView
-    private lateinit var progressBar: ProgressBar
+
     private lateinit var sortOrderView: TextView
     private lateinit var memberCountView: TextView
     private lateinit var searchTextView: TextView
@@ -244,7 +245,7 @@ class MainActivity2 : AppCompatActivity() {
     private fun initializeComponents() {
         backgroundExecutor = Executors.newSingleThreadExecutor()
 
-        progressBar = findViewById(R.id.indeterminateBar)
+
         sortOrderView = findViewById(R.id.sortorder)
         memberCountView = findViewById(R.id.main_Count)
         searchTextView = findViewById(R.id.search_text)
@@ -257,11 +258,6 @@ class MainActivity2 : AppCompatActivity() {
         memberListView.isFastScrollEnabled = true
 
         gestureDetector = GestureDetector(this, SwipeGestureDetector())
-
-        progressBar.visibility = View.GONE
-        progressBar.isIndeterminate = true
-
-        findViewById<ProgressBar>(R.id.main_indeterminateBar2).visibility = View.GONE
     }
 
     private fun setupViewModel() {
@@ -319,6 +315,7 @@ class MainActivity2 : AppCompatActivity() {
         winkerkEntry.id = DeviceIdManager.getDeviceId(this)
         setupVersionInfo()
         initializeSearchAndFilterLists()
+        viewModel.setSearchList(searchList)
         savedInstanceState?.let { restoreInstanceState(it) }
         if (winkerkEntry.DEFLAYOUT.isEmpty()) {
             winkerkEntry.DEFLAYOUT = "GESINNE"

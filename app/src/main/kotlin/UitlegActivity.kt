@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
 import yuku.ambilwarna.AmbilWarnaDialog
+import za.co.jpsoft.winkerkreader.data.WinkerkContract
 
 class UitlegActivity : AppCompatActivity() {
 
@@ -169,9 +170,17 @@ class UitlegActivity : AppCompatActivity() {
             showSterwe = findViewById(R.id.widget_Sterf)
 
             gem1 = findViewById(R.id.gem1)
+            if (!WinkerkContract.winkerkEntry.GEMEENTE_NAAM.isNullOrEmpty()) {
+                gem1.setText(WinkerkContract.winkerkEntry.GEMEENTE_NAAM)
+            }
             gem2 = findViewById(R.id.gem2)
+            if (!WinkerkContract.winkerkEntry.GEMEENTE2_NAAM.isNullOrEmpty()) {
+                gem2.setText(WinkerkContract.winkerkEntry.GEMEENTE2_NAAM)
+            }
             gem3 = findViewById(R.id.gem3)
-
+            if (!WinkerkContract.winkerkEntry.GEMEENTE3_NAAM.isNullOrEmpty()) {
+                gem3.setText(WinkerkContract.winkerkEntry.GEMEENTE3_NAAM)
+            }
             calendarSpinner = findViewById(R.id.calendarSpinner)
 
             validateRequiredComponents()

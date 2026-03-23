@@ -19,8 +19,9 @@ class FilterHandler(private val activity: AppCompatActivity) {
     private var filterList: MutableList<FilterBox> = mutableListOf()
 
     fun showFilterDialog() {
-        val mainLayout = activity.findViewById<LinearLayout>(R.id.main_main)
-        val filterLayout = activity.findViewById<LinearLayout>(R.id.main_filter)
+        val mainLayout = activity.findViewById<View>(R.id.main_main)
+        val filterLayout = activity.findViewById<View>(R.id.main_filter)
+
 
         if (mainLayout == null || filterLayout == null) {
             // Filter layout not found in current activity layout
@@ -167,8 +168,8 @@ class FilterHandler(private val activity: AppCompatActivity) {
     }
 
     private fun closeFilterDialog() {
-        val mainLayout = activity.findViewById<LinearLayout>(R.id.main_main)
-        val filterLayout = activity.findViewById<LinearLayout>(R.id.main_filter)
+        val mainLayout = activity.findViewById<View>(R.id.main_main)
+        val filterLayout = activity.findViewById<View>(R.id.main_filter)
 
         mainLayout?.visibility = View.VISIBLE
         filterLayout?.visibility = View.GONE

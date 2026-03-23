@@ -14,6 +14,7 @@ import android.provider.Settings
 import android.text.InputType
 import android.util.Base64
 import android.util.Log
+import android.view.MenuItem
 import android.view.View
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
@@ -111,11 +112,41 @@ class Laaidatabasis : AppCompatActivity() {
                         unregisterReceiver(recieverDownloadComplete)
                     } catch (_: IllegalArgumentException) {
                     }
-                    performDatabaseReloadAndRestart()
-                    finish()
+                    reloadDatabaseAndFinish() //performDatabaseReloadAndRestart()
+                    //finish()
                 }
             }
         }
+    }
+
+    override fun onBackPressed() {
+        receiveFileTaskUSB.cancel()
+        receiveFileTaskWiFi.cancel()
+        if (myDownloadReference != 0L) {
+            getSystemService(Context.DOWNLOAD_SERVICE)?.let {
+                (it as DownloadManager).remove(myDownloadReference)
+                myDownloadReference = 0
+            }
+        }
+        try {
+            recieverDownloadComplete?.let { unregisterReceiver(it) }
+        } catch (e: Exception) { }
+        navigateBackToMain()
+        // Do NOT call super.onBackPressed() because navigateBackToMain already finishes the activity
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == android.R.id.home) {
+            navigateBackToMain()
+            return true
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
+    private fun navigateBackToMain() {
+        val intent = Intent(this, MainActivity2::class.java)
+        startActivity(intent)
+        finish()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -124,7 +155,7 @@ class Laaidatabasis : AppCompatActivity() {
 
         settings = getSharedPreferences(PREFS_USER_INFO, Context.MODE_PRIVATE)
         initializeSettings()
-
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
         requestPermissionsIfNeeded()
 
         initializeTimePickerUI()
@@ -430,6 +461,7 @@ class Laaidatabasis : AppCompatActivity() {
         navigateToMainActivity()
     }
 
+    // Restore navigateToMainActivity() to original behavior
     private fun navigateToMainActivity() {
         val intent = Intent(this, MainActivity2::class.java).apply {
             putExtra("SENDER_CLASS_NAME", "WysVerjaar")
@@ -484,7 +516,7 @@ class Laaidatabasis : AppCompatActivity() {
         if (LaaiNuweData(filePath!!)) {
             Toast.makeText(this, "Suksesvol", Toast.LENGTH_SHORT).show()
             resetGemeenteSettings()
-            performDatabaseReloadAndRestart()
+            reloadDatabaseAndFinish() //performDatabaseReloadAndRestart()
         } else {
             Toast.makeText(this, "Onsuksesvol", Toast.LENGTH_SHORT).show()
             navigateToMainActivity()
@@ -505,19 +537,15 @@ class Laaidatabasis : AppCompatActivity() {
             .apply()
     }
 
+    // If you keep performDatabaseReloadAndRestart(), simplify it:
     private fun performDatabaseReloadAndRestart() {
         try {
             contentResolver.call(WinkerkContract.winkerkEntry.CONTENT_URI, "reloadDatabase", null, null)
-            val dummy = contentResolver.query(WinkerkContract.winkerkEntry.CONTENT_URI, null, null, null, null)
-            dummy?.close()
+            contentResolver.query(WinkerkContract.winkerkEntry.CONTENT_URI, null, null, null, null)?.close()
         } catch (e: Exception) {
             Log.e(TAG, "Error during database reload", e)
         }
-        val intent = Intent(this, MainActivity2::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-        }
-        startActivity(intent)
-        finish()
+        navigateBackToMain()
     }
 
     private fun handlePickFile() {
@@ -552,6 +580,28 @@ class Laaidatabasis : AppCompatActivity() {
             } else {
                 laai_boodskap.text = "Voer geldige IP adres in asb"
             }
+        }
+    }
+
+    fun isSQLiteDatabase(filePath: String): Boolean {
+        return try {
+            SQLiteDatabase.openDatabase(filePath, null, SQLiteDatabase.OPEN_READONLY).use { db ->
+                db.isOpen
+            }
+        } catch (e: Exception) {
+            false
+        }
+    }
+    private fun reloadDatabaseAndFinish() {
+        try {
+            contentResolver.call(WinkerkContract.winkerkEntry.CONTENT_URI, "reloadDatabase", null, null)
+            // Wait a bit for the database to be reopened
+            Handler(Looper.getMainLooper()).postDelayed({
+                navigateBackToMain()
+            }, 200) // 200 ms delay
+        } catch (e: Exception) {
+            Log.e(TAG, "Error during database reload", e)
+            navigateBackToMain()
         }
     }
 
@@ -714,28 +764,25 @@ class Laaidatabasis : AppCompatActivity() {
         processAutomaticDatabaseUpdate(extra)
     }
 
+    // Fix processAutomaticDatabaseUpdate()
     private fun processAutomaticDatabaseUpdate(filePath: String) {
         Toast.makeText(this, "WKR - Databasislaai", Toast.LENGTH_SHORT).show()
-
         val file = File(filePath)
         val fileSizeKB = file.length() / 1024
         val fileSizeMB = fileSizeKB / 1024
-
         Toast.makeText(this, "WKR - DROPBOX Databasis $fileSizeKB KB", Toast.LENGTH_LONG).show()
-
         if (fileSizeMB >= 1) {
             Toast.makeText(this, "WKR - Probeer Dropbox databasis laai", Toast.LENGTH_LONG).show()
-
             if (LaaiNuweData(filePath)) {
                 Toast.makeText(this, "WKR - Dropbox Databasis gelaai", Toast.LENGTH_LONG).show()
-                performDatabaseReloadAndRestart()
+                reloadDatabaseAndFinish()
             } else {
                 Toast.makeText(this, "WKR - Dropbox Databasis laai was onsuksesvol", Toast.LENGTH_LONG).show()
             }
         } else {
             Toast.makeText(this, "WKR - Dropbox Databasis te klein", Toast.LENGTH_LONG).show()
         }
-        finish()
+        // Remove the extra navigateBackToMain() here
     }
 
     private fun handleAutomaticDownload() {
@@ -905,7 +952,7 @@ class Laaidatabasis : AppCompatActivity() {
                                     when (status) {
                                         DownloadManager.STATUS_SUCCESSFUL -> {
                                             findViewById<Button>(R.id.dbLinkButton).visibility = View.VISIBLE
-
+                                            contentResolver.call(WinkerkContract.winkerkEntry.CONTENT_URI, "closeDatabase", null, null)
                                             var `in`: InputStream? = null
                                             var out: OutputStream? = null
                                             try {
@@ -929,7 +976,7 @@ class Laaidatabasis : AppCompatActivity() {
                                                     unregisterReceiver(recieverDownloadComplete)
                                                 } catch (_: IllegalArgumentException) {
                                                 }
-                                                performDatabaseReloadAndRestart()
+                                                reloadDatabaseAndFinish()//performDatabaseReloadAndRestart()
                                                 return
                                             }
                                         }
@@ -1180,20 +1227,26 @@ class Laaidatabasis : AppCompatActivity() {
 
                     val progress = (totalBytesReceived.toFloat() / fileSize.toFloat() * 100).toInt()
                     runOnUiThread {
-                        findViewById<TextView>(R.id.laai_boodskap).text = "Received: $progress%"
+                        if (!this@Laaidatabasis.isFinishing) {
+                            findViewById<TextView>(R.id.laai_boodskap).text = "Received: $progress%"
+                        }
                     }
                 }
 
                 Log.d("FileTransfer", "File transfer complete. File saved to: $filePath")
                 runOnUiThread {
-                    findViewById<TextView>(R.id.laai_boodskap).text = "File transfer complete."
+                    if (!this@Laaidatabasis.isFinishing) {
+                        findViewById<TextView>(R.id.laai_boodskap).text = "File transfer complete."
+                    }
                 }
                 processDownloadedFile(filePath, fileName)
 
             } catch (e: IOException) {
                 e.printStackTrace()
                 runOnUiThread {
-                    findViewById<TextView>(R.id.laai_boodskap).text = "Error receiving file."
+                    if (!this@Laaidatabasis.isFinishing) {
+                        findViewById<TextView>(R.id.laai_boodskap).text = "Error receiving file."
+                    }
                 }
             } finally {
                 try {
@@ -1209,18 +1262,19 @@ class Laaidatabasis : AppCompatActivity() {
             }
         }
 
+        // Fix processDownloadedFile() in ReceiveFileTask
         private fun processDownloadedFile(filePath: String, fileName: String) {
             val deleteButton = findViewById<RadioButton>(R.id.laai_wisuit)
             delete = deleteButton.isChecked
             if (LaaiNuweData(filePath)) {
-                runOnUiThread { performDatabaseReloadAndRestart() }
+                runOnUiThread { reloadDatabaseAndFinish() }
             } else {
                 Toast.makeText(this@Laaidatabasis, "File loading failed.", Toast.LENGTH_SHORT).show()
                 val intent = Intent(this@Laaidatabasis, MainActivity2::class.java).apply {
                     putExtra("SENDER_CLASS_NAME", "Laaidatabasis")
                 }
                 startActivity(intent)
-                finish()
+                finish() // only finish, do not call navigateBackToMain again
             }
             deleteButton.isChecked = false
         }

@@ -5,10 +5,8 @@ import android.database.Cursor
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import android.util.LruCache
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import za.co.jpsoft.winkerkreader.data.FilterBox
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.col
@@ -20,228 +18,133 @@ class MemberViewModel : ViewModel() {
         private val TAG = "MemberViewModel"
     }
 
-    private val queryCache = QueryCache(10)
+    // LiveData that holds the current cursor (nullable)
+    private val LIDMAAT_DATA = MutableLiveData<Cursor?>()
+    private val LIDMAAT_DATA_WYK = MutableLiveData<Cursor?>()
+    private val SOEK_DATA = MutableLiveData<Cursor?>()
+    private val LIDMAAT_DATA_VERJAAR = MutableLiveData<Cursor?>()
+    private val LIDMAAT_DATA_ADRES = MutableLiveData<Cursor?>()
+    private val OUDERDOM_DATA = MutableLiveData<Cursor?>()
+    private val GESINNE_DATA = MutableLiveData<Cursor?>()
+    private val HUWELIK_DATA = MutableLiveData<Cursor?>()
+    private val FILTER_DATA = MutableLiveData<Cursor?>()
+
+    // Additional LiveData for UI state
+    private val textLiveData = MutableLiveData<String>()
+    private val verjaarFlag = MutableLiveData<Boolean>()
+    private val rowCount = MutableLiveData<Int>()
+
+    // Helper to track pending close tasks
+    private val closeTasks = mutableMapOf<String, Runnable>()
+    private val mainHandler = Handler(Looper.getMainLooper())
+
+    // To prevent concurrent fetches
+    private val isProcessing = AtomicBoolean(false)
+
+    // Last state for query caching
     private var lastEventType = ""
     private var lastSearchTerm = ""
     private var lastFilterList: ArrayList<FilterBox>? = null
-    private val cursorLock = Any()
-    private val isProcessing = AtomicBoolean(false)
 
-    private val LIDMAAT_DATA = MutableLiveData<CursorWrapper>()
-    private val LIDMAAT_DATA_WYK = MutableLiveData<CursorWrapper>()
-    private val SOEK_DATA = MutableLiveData<CursorWrapper>()
-    private val LIDMAAT_DATA_VERJAAR = MutableLiveData<CursorWrapper>()
-    private val GEMEENTENAAM = MutableLiveData<CursorWrapper>()
-    private val LIDMAAT_DATA_ADRES = MutableLiveData<CursorWrapper>()
-    private val OUDERDOM_DATA = MutableLiveData<CursorWrapper>()
-    private val INFO_DATA = MutableLiveData<CursorWrapper>()
-    private val FILTER_DATA = MutableLiveData<CursorWrapper>()
-    private val FOTO_UPDATE_DATA = MutableLiveData<CursorWrapper>()
-    private val GESINNE_DATA = MutableLiveData<CursorWrapper>()
-    private val TAGGED_DATA = MutableLiveData<CursorWrapper>()
-    private val HUWELIK_DATA = MutableLiveData<CursorWrapper>()
-    private val ARGIEF_DATA = MutableLiveData<CursorWrapper>()
+    // Cache for generated SQL queries
+    private val queryCache = mutableMapOf<String, String>()
 
-    private var searchList: ArrayList<SearchCheckBox>? = null
-    private var filterList: ArrayList<FilterBox>? = null
-    private val textLiveData = MutableLiveData<String>()
-    private val VerjaarFlag = MutableLiveData<Boolean>()
-    private val rowCount = MutableLiveData<Int>()
-
-    class CursorWrapper(private val cursor: Cursor?) {
-        @Volatile
-        private var isClosed = false
-        private val lock = Any()
-
-        fun getCursor(): Cursor? = synchronized(lock) { if (isClosed) null else cursor }
-
-        fun close() = synchronized(lock) {
-            if (cursor != null && !isClosed) {
-                try {
-                    cursor.close()
-                } catch (e: Exception) {
-                    Log.w(TAG, "Error closing cursor: ${e.message}")
-                } finally {
-                    isClosed = true
-                }
-            }
-        }
-
-        fun isClosed(): Boolean = synchronized(lock) { isClosed }
-    }
-
-    private class QueryCache(maxSize: Int) {
-        private val cache = LruCache<String, String>(maxSize)
-        fun get(key: String): String? = cache.get(key)
-        fun put(key: String, value: String) = cache.put(key, value)
-        fun clear() = cache.evictAll()
-    }
-
+    // Public LiveData getters
     fun getRowCount(): LiveData<Int> = rowCount
 
-    // All public LiveData getters now return nullable Cursor (Cursor?)
-    fun getLIDMAAT_DATA(context: MainActivity2): LiveData<Cursor?> =
-        observeCursorWrapper(LIDMAAT_DATA) { fetchData(context, "LIDMAAT_DATA") }
+    fun getLIDMAAT_DATA(context: Context): LiveData<Cursor?> {
+        fetchData(context, "LIDMAAT_DATA")
+        return LIDMAAT_DATA
+    }
 
-    fun getLIDMAAT_DATA_WYK(context: MainActivity2): LiveData<Cursor?> =
-        observeCursorWrapper(LIDMAAT_DATA_WYK) { fetchData(context, "LIDMAAT_DATA_WYK") }
+    fun getLIDMAAT_DATA_WYK(context: Context): LiveData<Cursor?> {
+        fetchData(context, "LIDMAAT_DATA_WYK")
+        return LIDMAAT_DATA_WYK
+    }
 
-    fun getSOEK_DATA(context: MainActivity2): LiveData<Cursor?> =
-        observeCursorWrapper(SOEK_DATA) { fetchData(context, "SOEK_DATA") }
+    fun getSOEK_DATA(context: Context): LiveData<Cursor?> {
+        fetchData(context, "SOEK_DATA")
+        return SOEK_DATA
+    }
 
-    fun getLIDMAAT_DATA_VERJAAR(context: MainActivity2): LiveData<Cursor?> =
-        observeCursorWrapper(LIDMAAT_DATA_VERJAAR) { fetchData(context, "LIDMAAT_DATA_VERJAAR") }
+    fun getLIDMAAT_DATA_VERJAAR(context: Context): LiveData<Cursor?> {
+        fetchData(context, "LIDMAAT_DATA_VERJAAR")
+        return LIDMAAT_DATA_VERJAAR
+    }
 
-    fun getVerjaarFLag(): LiveData<Boolean> = VerjaarFlag
+    fun getVerjaarFLag(): LiveData<Boolean> = verjaarFlag
 
-    fun getLIDMAAT_DATA_ADRES(context: MainActivity2): LiveData<Cursor?> =
-        observeCursorWrapper(LIDMAAT_DATA_ADRES) { fetchData(context, "LIDMAAT_DATA_ADRES") }
+    fun getLIDMAAT_DATA_ADRES(context: Context): LiveData<Cursor?> {
+        fetchData(context, "LIDMAAT_DATA_ADRES")
+        return LIDMAAT_DATA_ADRES
+    }
 
-    fun getOUDERDOM_DATA(context: MainActivity2): LiveData<Cursor?> =
-        observeCursorWrapper(OUDERDOM_DATA) { fetchData(context, "OUDERDOM_DATA") }
+    fun getOUDERDOM_DATA(context: Context): LiveData<Cursor?> {
+        fetchData(context, "OUDERDOM_DATA")
+        return OUDERDOM_DATA
+    }
 
+    fun getGESINNE_DATA(context: Context): LiveData<Cursor?> {
+        fetchData(context, "GESINNE_DATA")
+        return GESINNE_DATA
+    }
 
+    fun getHUWELIK_DATA(context: Context): LiveData<Cursor?> {
+        fetchData(context, "HUWELIK_DATA")
+        return HUWELIK_DATA
+    }
 
-    fun getFILTER_DATA(context: MainActivity2, filterLys: ArrayList<FilterBox>): LiveData<Cursor?> {
-        filterList = filterLys
-        return observeCursorWrapper(FILTER_DATA) { fetchData(context, "FILTER_DATA") }
+    fun getFILTER_DATA(context: Context, filterLys: ArrayList<FilterBox>): LiveData<Cursor?> {
+        lastFilterList = filterLys
+        fetchData(context, "FILTER_DATA")
+        return FILTER_DATA
     }
 
     fun getTextLiveData(): LiveData<String> = textLiveData
 
-
-
-    fun getGESINNE_DATA(context: MainActivity2): LiveData<Cursor?> =
-        observeCursorWrapper(GESINNE_DATA) { fetchData(context, "GESINNE_DATA") }
-
-
-
-    fun getHUWELIK_DATA(context: MainActivity2): LiveData<Cursor?> =
-        observeCursorWrapper(HUWELIK_DATA) { fetchData(context, "HUWELIK_DATA") }
-
-
-
-    // observeCursorWrapper now returns LiveData<Cursor?> (nullable)
-    private fun observeCursorWrapper(
-        wrapperLiveData: MutableLiveData<CursorWrapper>,
-        fetchAction: () -> Unit
-    ): LiveData<Cursor?> {
-        val cursorLiveData = MutableLiveData<Cursor?>()  // nullable type
-        var lastWrapper: CursorWrapper? = null
-
-        val observer = Observer<CursorWrapper> { newWrapper ->
-            synchronized(cursorLock) {
-                lastWrapper?.let { wrapper ->
-                    if (!wrapper.isClosed()) {
-                        val wrapperToClose = wrapper
-                        Handler(Looper.getMainLooper()).postDelayed({
-                            try {
-                                wrapperToClose.close()
-                            } catch (e: Exception) {
-                                Log.w(TAG, "Error closing delayed cursor: ${e.message}")
-                            }
-                        }, 500)
-                    }
-                }
-
-                lastWrapper = newWrapper
-                val cursor = newWrapper.getCursor()
-                cursorLiveData.postValue(cursor)   // cursor is Cursor?, OK now
-//                if (newWrapper != null && !newWrapper.isClosed()) {
-//                    val cursor = newWrapper.getCursor()
-//                    cursorLiveData.postValue(cursor)   // cursor is Cursor?, OK now
-//                } else {
-//                    cursorLiveData.postValue(null)     // null allowed
-//                }
-            }
-        }
-
-        wrapperLiveData.observeForever(observer)
-        fetchAction.invoke()
-        return cursorLiveData
-    }
-
-    private fun needsQueryRebuild(eventType: String): Boolean {
-        var changed = false
-        if (eventType != lastEventType) changed = true
-        if (eventType == "SOEK_DATA" && winkerkEntry.SOEK != lastSearchTerm) changed = true
-        if (eventType == "FILTER_DATA" && !filterListsEqual(filterList, lastFilterList)) changed = true
-        return changed
-    }
-
-    private fun filterListsEqual(a: ArrayList<FilterBox>?, b: ArrayList<FilterBox>?): Boolean {
-        if (a === b) return true
-        if (a == null || b == null) return false
-        if (a.size != b.size) return false
-        return a.zip(b).all { (itemA, itemB) -> itemA.toString() == itemB.toString() }
-    }
-
+    // Core data fetching logic
     private fun fetchData(context: Context, eventType: String) {
         if (!isProcessing.compareAndSet(false, true)) {
-            Log.w(TAG, "Fetch already in progress, skipping: $eventType")
+            Log.d(TAG, "Fetch already in progress, skipping: $eventType")
             return
         }
 
         try {
-            VerjaarFlag.postValue(false)
+            verjaarFlag.postValue(false)
 
             val cacheKey = buildCacheKey(eventType)
-            val cachedQuery = queryCache.get(cacheKey)
+            val cachedQuery = queryCache[cacheKey]
 
-            val selection: String
-            var filtertextF = ""
-
-            if (cachedQuery != null && !needsQueryRebuild(eventType)) {
-                selection = cachedQuery
-                Log.d(TAG, "Using cached query for: $eventType")
+            val selection: String = if (cachedQuery != null && !needsQueryRebuild(eventType)) {
+                cachedQuery
             } else {
-                selection = buildQuery(context, eventType)
-                    ?: run {
-                        Log.e(TAG, "Failed to build query for: $eventType")
-                        return
-                    }
-
-                queryCache.put(cacheKey, selection)
-
-                lastEventType = eventType
-                if (eventType == "SOEK_DATA") {
-                    lastSearchTerm = winkerkEntry.SOEK
+                buildQuery(context, eventType)?.also {
+                    queryCache[cacheKey] = it
+                    updateLastState(eventType)
+                } ?: run {
+                    Log.e(TAG, "Failed to build query for: $eventType")
+                    return
                 }
-                if (eventType == "FILTER_DATA") {
-                    lastFilterList = filterList?.let { ArrayList(it) }
-                }
-
-                Log.d(TAG, "Built new query for: $eventType")
             }
 
-            if (eventType == "FILTER_DATA") {
-                filtertextF = buildFilterText()
-            }
-
+            // Validate SQL
             val result = SQLiteStatementValidator.validateAndFixSQLiteStatement(selection)
             val finalSelection = if (result.isValid) {
-                if (result.wasFixed) {
-                    Log.i(TAG, "Query was fixed: ${result.fixedSql}")
-                }
                 result.fixedSql ?: error("fixedSql cannot be null when isValid is true")
             } else {
                 Log.e(TAG, "Could not fix SQL: ${result.errorMessage}")
                 return
             }
 
-            val cursor = try {
-                queryDatabase(context, finalSelection)
-            } catch (e: Exception) {
-                Log.e(TAG, "Error querying database: ${e.message}", e)
-                return
-            }
+            // Execute query
+            val cursor = queryDatabase(context.applicationContext, finalSelection)
 
-            synchronized(cursorLock) {
-                val wrapper = CursorWrapper(cursor)
-                val count = cursor?.count ?: 0
-                rowCount.postValue(count)
-                postCursorToLiveData(eventType, wrapper, filtertextF)
-            }
+            // Update row count
+            rowCount.postValue(cursor?.count ?: 0)
+
+            // Post cursor to the appropriate LiveData
+            postCursorToLiveData(eventType, cursor)
+
         } catch (e: Exception) {
             Log.e(TAG, "Unexpected error in fetchData: ${e.message}", e)
         } finally {
@@ -256,22 +159,52 @@ class MemberViewModel : ViewModel() {
                 "SOEK_DATA" -> {
                     append("_").append(winkerkEntry.SOEK)
                     append("_").append(winkerkEntry.SORTORDER)
-                    searchList?.forEach { item ->
-                        if (item.isChecked) {  // Fixed: removed parentheses
-                            append("_").append(item.columnName)
-                        }
+                    // Use the stored searchList (must be set by activity before any SOEK_DATA fetch)
+                    searchList?.filter { it.isChecked }?.forEach {
+                        append("_").append(it.columnName)
                     }
                 }
                 "FILTER_DATA" -> {
-                    filterList?.forEach { filter ->
-                        if (filter.checked) {  // Fixed: removed parentheses
-                            append("_").append(filter.title)
-                                .append("_").append(filter.text1)
-                                .append("_").append(filter.text3)
-                        }
+                    lastFilterList?.filter { it.checked }?.forEach { filter ->
+                        append("_").append(filter.title)
+                            .append("_").append(filter.text1)
+                            .append("_").append(filter.text3)
                     }
                 }
             }
+        }
+    }
+
+    // Store searchList as member variable (set from activity when needed)
+    private var searchList: List<SearchCheckBox>? = null
+
+    fun setSearchList(list: List<SearchCheckBox>) {
+        searchList = list
+    }
+
+    private fun needsQueryRebuild(eventType: String): Boolean {
+        return when {
+            eventType != lastEventType -> true
+            eventType == "SOEK_DATA" && winkerkEntry.SOEK != lastSearchTerm -> true
+            eventType == "FILTER_DATA" && !filterListsEqual(lastFilterList, lastFilterList) -> true
+            else -> false
+        }
+    }
+
+    private fun filterListsEqual(a: ArrayList<FilterBox>?, b: ArrayList<FilterBox>?): Boolean {
+        if (a === b) return true
+        if (a == null || b == null) return false
+        if (a.size != b.size) return false
+        return a.zip(b).all { (itemA, itemB) -> itemA.toString() == itemB.toString() }
+    }
+
+    private fun updateLastState(eventType: String) {
+        lastEventType = eventType
+        if (eventType == "SOEK_DATA") {
+            lastSearchTerm = winkerkEntry.SOEK
+        }
+        if (eventType == "FILTER_DATA") {
+            lastFilterList = lastFilterList?.let { ArrayList(it) }
         }
     }
 
@@ -279,7 +212,7 @@ class MemberViewModel : ViewModel() {
         return when (eventType) {
             "GESINNE_DATA", "FILTER_DATA", "LIDMAAT_DATA", "LIDMAAT_DATA_WYK",
             "SOEK_DATA", "LIDMAAT_DATA_VERJAAR", "OUDERDOM_DATA", "LIDMAAT_DATA_ADRES",
-            "TAGGED_DATA", "HUWELIK_DATA" -> buildMemberQuery(context, eventType)
+            "HUWELIK_DATA" -> buildMemberQuery(context, eventType)
             else -> {
                 Log.e(TAG, "Invalid event type: $eventType")
                 null
@@ -294,12 +227,12 @@ class MemberViewModel : ViewModel() {
         val where = StringBuilder()
         val sortOrder = StringBuilder()
 
-        // Base WHERE clause with proper column wrapping
+        // Base WHERE clause
         where.append(" (").append(winkerkEntry.LIDMATE_TABLE_NAME).append(".")
             .append(col(winkerkEntry.LIDMATE_REKORDSTATUS)).append(" = '")
             .append(winkerkEntry.RECORDSTATUS).append("' )")
 
-        appendWhereClause(context, eventType, where) //, sortOrder)
+        appendWhereClause(context, eventType, where)
         appendOrderByClause(eventType, sortOrder)
 
         val finalFrom: String
@@ -321,16 +254,15 @@ class MemberViewModel : ViewModel() {
 
     private fun appendWhereClause(context: Context, eventType: String, where: StringBuilder) {
         when (eventType) {
-            "TAGGED_DATA" -> where.append(" AND (").append(col(winkerkEntry.LIDMATE_TAG)).append(" = 1 )")
             "HUWELIK_DATA" -> where.append(" AND ").append(winkerkEntry.SELECTION_HUWELIK_WHERE)
             "SOEK_DATA" -> {
-                val prefsManager = SearchCheckBoxPreferences(context)
-                searchList = prefsManager.getSearchCheckBoxList()
-                searchList?.let { list ->
-                    val searchFields = list.filter { it.isChecked }.size  // Fixed: removed parentheses
+                // Use the stored searchList (should be set before calling getSOEK_DATA)
+                val list = searchList
+                if (!list.isNullOrEmpty()) {
+                    val searchFields = list.filter { it.isChecked }.size
                     if (searchFields > 0) {
                         where.append(" AND (")
-                        list.filter { it.isChecked }.forEachIndexed { index, item ->  // Fixed: removed parentheses
+                        list.filter { it.isChecked }.forEachIndexed { index, item ->
                             if (index > 0) where.append(" OR ")
                             where.append(col(item.columnName)).append(" LIKE '%").append(winkerkEntry.SOEK).append("%'")
                         }
@@ -340,8 +272,9 @@ class MemberViewModel : ViewModel() {
                 winkerkEntry.SOEKLIST = true
             }
             "FILTER_DATA" -> {
-                filterList?.let { list ->
-                    val filterFields = list.filter { it.checked }  // Fixed: removed parentheses
+                val list = lastFilterList
+                if (!list.isNullOrEmpty()) {
+                    val filterFields = list.filter { it.checked }
                     if (filterFields.isNotEmpty()) {
                         where.append(" AND (")
                         filterFields.forEachIndexed { index, filter ->
@@ -410,7 +343,6 @@ class MemberViewModel : ViewModel() {
                     .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_GESINSROL)).append(" ASC, ")
                     .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
             }
-            "TAGGED_DATA" -> sortOrder.append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ").append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
             "HUWELIK_DATA" -> {
                 winkerkEntry.SORTORDER = "HUWELIK"
                 sortOrder.append(" strftime('%m', ").append(winkerkEntry.LIDMATE_TABLE_NAME).append(".")
@@ -459,9 +391,9 @@ class MemberViewModel : ViewModel() {
     }
 
     private fun buildFilterText(): String {
-        if (filterList.isNullOrEmpty()) return ""
+        if (lastFilterList.isNullOrEmpty()) return ""
         val filtertext = StringBuilder()
-        val filterFields = filterList!!.filter { it.checked }  // Fixed: removed parentheses
+        val filterFields = lastFilterList!!.filter { it.checked }
         if (filterFields.isNotEmpty()) {
             filtertext.append("FILTER: (")
             filterFields.forEachIndexed { index, filter ->
@@ -491,35 +423,54 @@ class MemberViewModel : ViewModel() {
         return filtertext.toString()
     }
 
+    private fun postCursorToLiveData(eventType: String, newCursor: Cursor?) {
+        // Get the LiveData for this event type
+        val liveData = when (eventType) {
+            "LIDMAAT_DATA" -> LIDMAAT_DATA
+            "LIDMAAT_DATA_WYK" -> LIDMAAT_DATA_WYK
+            "SOEK_DATA" -> SOEK_DATA
+            "LIDMAAT_DATA_VERJAAR" -> LIDMAAT_DATA_VERJAAR
+            "LIDMAAT_DATA_ADRES" -> LIDMAAT_DATA_ADRES
+            "OUDERDOM_DATA" -> OUDERDOM_DATA
+            "GESINNE_DATA" -> GESINNE_DATA
+            "HUWELIK_DATA" -> HUWELIK_DATA
+            "FILTER_DATA" -> FILTER_DATA
+            else -> return
+        }
 
+        // Get the old cursor before posting new one
+        val oldCursor = liveData.value
 
-    private fun postCursorToLiveData(eventType: String, wrapper: CursorWrapper, filterText: String) {
-        try {
-            when (eventType) {
-                "GESINNE_DATA" -> GESINNE_DATA.postValue(wrapper)
-                "FILTER_DATA" -> {
-                    FILTER_DATA.postValue(wrapper)
-                    textLiveData.postValue(filterText)
+        // Post the new cursor
+        liveData.postValue(newCursor)
+
+        // Schedule closing of the old cursor after a short delay
+        // This gives the adapter time to swap to the new cursor
+        if (oldCursor != null && !oldCursor.isClosed) {
+            val closeTask = Runnable {
+                try {
+                    if (!oldCursor.isClosed) {
+                        oldCursor.close()
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "Error closing old cursor for $eventType", e)
+                } finally {
+                    closeTasks.remove(eventType)
                 }
-                "LIDMAAT_DATA" -> LIDMAAT_DATA.postValue(wrapper)
-                "LIDMAAT_DATA_WYK" -> LIDMAAT_DATA_WYK.postValue(wrapper)
-                "SOEK_DATA" -> {
-                    SOEK_DATA.postValue(wrapper)
-                    textLiveData.postValue(winkerkEntry.SOEK)
-                }
-                "LIDMAAT_DATA_VERJAAR" -> {
-                    LIDMAAT_DATA_VERJAAR.postValue(wrapper)
-                    VerjaarFlag.postValue(true)
-                }
-                "OUDERDOM_DATA" -> OUDERDOM_DATA.postValue(wrapper)
-                "LIDMAAT_DATA_ADRES" -> LIDMAAT_DATA_ADRES.postValue(wrapper)
-                "TAGGED_DATA" -> TAGGED_DATA.postValue(wrapper)
-                "HUWELIK_DATA" -> HUWELIK_DATA.postValue(wrapper)
-                "ARGIEF_DATA" -> ARGIEF_DATA.postValue(wrapper)
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error posting cursor to LiveData for $eventType: ${e.message}")
-            wrapper.close()
+            closeTasks[eventType] = closeTask
+            mainHandler.postDelayed(closeTask, 200) // 200 ms should be enough
+        }
+
+        // For filter and search, update the text live data
+        when (eventType) {
+            "SOEK_DATA" -> textLiveData.postValue(winkerkEntry.SOEK)
+            "FILTER_DATA" -> textLiveData.postValue(buildFilterText())
+        }
+
+        // For birthdays, set the flag
+        if (eventType == "LIDMAAT_DATA_VERJAAR") {
+            verjaarFlag.postValue(true)
         }
     }
 
@@ -539,45 +490,31 @@ class MemberViewModel : ViewModel() {
     }
 
     override fun onCleared() {
-        super.onCleared()
-        synchronized(cursorLock) {
-            closeAllCursors()
-            queryCache.clear()
-            isProcessing.set(false)
-            Log.d(TAG, "ViewModel cleared, all resources released")
+        // Cancel all pending close tasks
+        closeTasks.forEach { (_, task) ->
+            mainHandler.removeCallbacks(task)
         }
-    }
+        closeTasks.clear()
 
-    private fun closeAllCursors() {
-        try {
-            closeCursorInLiveData(LIDMAAT_DATA)
-            closeCursorInLiveData(LIDMAAT_DATA_WYK)
-            closeCursorInLiveData(SOEK_DATA)
-            closeCursorInLiveData(LIDMAAT_DATA_VERJAAR)
-            closeCursorInLiveData(GEMEENTENAAM)
-            closeCursorInLiveData(LIDMAAT_DATA_ADRES)
-            closeCursorInLiveData(OUDERDOM_DATA)
-            closeCursorInLiveData(INFO_DATA)
-            closeCursorInLiveData(FILTER_DATA)
-            closeCursorInLiveData(FOTO_UPDATE_DATA)
-            closeCursorInLiveData(GESINNE_DATA)
-            closeCursorInLiveData(TAGGED_DATA)
-            closeCursorInLiveData(HUWELIK_DATA)
-            closeCursorInLiveData(ARGIEF_DATA)
-        } catch (e: Exception) {
-            Log.e(TAG, "Error closing all cursors: ${e.message}")
-        }
-    }
-
-    private fun closeCursorInLiveData(liveData: MutableLiveData<CursorWrapper>?) {
-        try {
-            liveData?.value?.let { wrapper ->
-                if (!wrapper.isClosed()) {
-                    wrapper.close()
+        // Close any cursors still held by LiveData
+        val liveDataList = listOf(
+            LIDMAAT_DATA, LIDMAAT_DATA_WYK, SOEK_DATA, LIDMAAT_DATA_VERJAAR,
+            LIDMAAT_DATA_ADRES, OUDERDOM_DATA, GESINNE_DATA, HUWELIK_DATA, FILTER_DATA
+        )
+        liveDataList.forEach { liveData ->
+            liveData.value?.let { cursor ->
+                if (!cursor.isClosed) {
+                    try { cursor.close() } catch (e: Exception) { Log.w(TAG, "Error closing cursor", e) }
                 }
             }
-        } catch (e: Exception) {
-            Log.w(TAG, "Error closing cursor in LiveData: ${e.message}")
+            liveData.value = null
         }
+
+        // Clear caches
+        queryCache.clear()
+        isProcessing.set(false)
+
+        Log.d(TAG, "ViewModel cleared, all resources released")
+        super.onCleared()
     }
 }

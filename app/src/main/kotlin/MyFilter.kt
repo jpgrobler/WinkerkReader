@@ -32,7 +32,7 @@ class MyFilter : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.filterscreen)
+        setContentView(R.layout.activity_main)
 
         val aktiefB = findViewById<Button>(R.id.filter_aktief)
         val onaktiefB = findViewById<Button>(R.id.filter_onaktief)

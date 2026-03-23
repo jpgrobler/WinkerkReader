@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
+    android:fitsSystemWindows="true"
     android:layout_height="match_parent">
 
     <RelativeLayout
@@ -63,7 +64,7 @@
                 android:text="@string/NuweGroepNaam"
                 android:textAppearance="?android:textAppearanceSmall"
                 android:paddingTop="6dp"/>
-            <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+            <EditText
                 android:id="@+id/Nuwe_groep_naam"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -77,7 +78,7 @@
                 android:text="@string/NuweGroepTipe"
                 android:textAppearance="?android:textAppearanceSmall"
                 android:paddingTop="6dp"/>
-            <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+            <EditText
                 android:id="@+id/Nuwe_groep_tipe"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -92,7 +93,7 @@
                 android:text="@string/NuweGroepAdres"
                 android:textAppearance="?android:textAppearanceSmall"
                 android:paddingTop="6dp"/>
-            <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+            <EditText
                 android:id="@+id/Nuwe_groep_adres"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

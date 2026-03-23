@@ -100,7 +100,7 @@ class winkerkProvider : ContentProvider() {
                 try {
                     cursor = db.rawQuery(selection ?: "", selectionArgs)
                     count = cursor.count
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     Log.d(tag, "Gemeente doesn't exist :(((")
                 } finally {
                     cursor?.close()
@@ -222,14 +222,19 @@ class winkerkProvider : ContentProvider() {
                 }
                 return null
             }
-
+            "closeDatabase" -> {
+                mDbHelper?.close()
+                mDbHelper = null
+                mInfoDbHelper?.close()
+                mInfoDbHelper = null
+            }
             "reloadDatabase" -> {
+                mDbHelper = null
+                mInfoDbHelper = null
                 Log.d(tag, "reloadDatabase called")
                 // Close existing helpers and remove them from the map
                 mDbHelper?.let { winkerk_DB_Helper.closeInstance(WINKERK_DB) }
                 mInfoDbHelper?.let { winkerk_DB_Helper.closeInstance(INFO_DB) }
-                mDbHelper = null
-                mInfoDbHelper = null
 
                 // Obtain fresh instances
                 val ctx = context ?: return Bundle.EMPTY

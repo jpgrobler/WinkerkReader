@@ -44,10 +44,10 @@
 
         <item name="android:windowBackground">?attr/colorSurface</item>
     </style>
-
-
-    <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="android:windowActionBarOverlay">false</item>
+        <!-- or for AppCompat -->
+        <item name="windowActionBarOverlay">false</item>
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>

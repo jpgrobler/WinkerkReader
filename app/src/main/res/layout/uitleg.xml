@@ -2,6 +2,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     android:fillViewport="true">
 
     <LinearLayout
@@ -278,6 +279,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
                     android:text="Gemeente 1"
+                    android:textStyle="bold"
                     android:textSize="16sp"
                     android:gravity="center"
                     android:layout_marginBottom="8dp"
@@ -289,6 +291,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
                     android:text="Gemeente 2"
+                    android:textStyle="bold"
                     android:textSize="16sp"
                     android:gravity="center"
                     android:layout_marginBottom="8dp"
@@ -300,6 +303,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
                     android:text="Gemeente 3"
+                    android:textStyle="bold"
                     android:textSize="16sp"
                     android:gravity="center"
                     android:layout_marginBottom="8dp"

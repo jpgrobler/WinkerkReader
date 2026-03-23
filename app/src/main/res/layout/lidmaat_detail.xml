@@ -5,6 +5,7 @@
     android:id="@+id/detail_naam_van"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:fitsSystemWindows="true"
     android:orientation="vertical">
 
     <!-- Progress bar top -->
@@ -87,7 +88,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 android:layout_marginTop="8dp" />
 
-            <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+            <EditText
                 android:id="@+id/detail_noemnaam"
                 style="@style/EditorFieldStyle"
                 android:text="@string/detail_noemnaam"
@@ -122,7 +123,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 android:layout_marginTop="8dp" />
 
-            <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+            <EditText
                 android:id="@+id/detail_vollename"
                 style="@style/EditorFieldStyle"
                 android:text="@string/detail_vollename"
@@ -141,7 +142,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 android:layout_marginTop="8dp" />
 
-            <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+            <EditText
                 android:id="@+id/detail_van"
                 style="@style/EditorFieldStyle"
                 android:text="@string/detail_van"
@@ -166,7 +167,7 @@
                     style="@style/CategoryStyle"
                     android:text="@string/detail_Nooiensvan" />
 
-                <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+                <EditText
                     android:id="@+id/detail_nooiensvan"
                     style="@style/EditorFieldStyle"
                     android:text="@string/detail_Nooiensvan"
@@ -174,7 +175,7 @@
             </LinearLayout>
 
             <!-- Row 5: Werkgewer (EditText alone) -->
-            <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+            <EditText
                 android:id="@+id/detail_Werkgewer"
                 style="@style/EditorFieldStyle"
                 android:textIsSelectable="true"
@@ -199,7 +200,7 @@
                     style="@style/CategoryStyle"
                     android:text="@string/detail_lidmaatskap" />
 
-                <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+                <EditText
                     android:id="@+id/detail_Lidmaatstatus"
                     style="@style/EditorFieldStyle"
                     android:text="@string/detail_lidmaatskap"
@@ -215,7 +216,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 android:layout_marginTop="8dp" />
 
-            <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+            <EditText
                 android:id="@+id/detail_geboortedatum"
                 style="@style/EditorFieldStyle"
                 android:layout_width="0dp"
@@ -253,7 +254,7 @@
                     style="@style/CategoryStyle"
                     android:text="@string/detail_selfoon" />
 
-                <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+                <EditText
                     android:id="@+id/detail_selfoon"
                     style="@style/EditorFieldStyle"
                     android:text="@string/detail_selfoon"
@@ -297,7 +298,7 @@
                     style="@style/CategoryStyle"
                     android:text="@string/detail_landlyn" />
 
-                <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+                <EditText
                     android:id="@+id/detail_telefoon"
                     style="@style/EditorFieldStyle"
                     android:text="@string/detail_landlyn"
@@ -326,7 +327,7 @@
                     style="@style/CategoryStyle"
                     android:text="@string/detail_epos" />
 
-                <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+                <EditText
                     android:id="@+id/detail_epos"
                     style="@style/EditorFieldStyle"
                     android:text="@string/detail_epos"
@@ -355,7 +356,7 @@
                     style="@style/CategoryStyle"
                     android:text="@string/detail_beroep" />
 
-                <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+                <EditText
                     android:id="@+id/detail_Beroep"
                     style="@style/EditorFieldStyle"
                     android:textIsSelectable="true"
@@ -394,7 +395,7 @@
                     style="@style/CategoryStyle"
                     android:text="@string/detail_wyk" />
 
-                <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+                <EditText
                     android:id="@+id/detail_wyk"
                     style="@style/EditorFieldStyle"
                     android:textIsSelectable="true"
@@ -416,7 +417,7 @@
                     style="@style/CategoryStyle"
                     android:text="@string/detail_straatadres" />
 
-                <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+                <EditText
                     android:id="@+id/detail_straatadres"
                     style="@style/EditorFieldStyle"
                     android:textIsSelectable="true"
@@ -481,7 +482,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 android:layout_marginTop="8dp">
 
-                <za.co.jpsoft.winkerkreader.data.WellBehavedEditText
+                <EditText
                     android:id="@+id/detail_posadres"
                     style="@style/EditorFieldStyle"
                     android:textIsSelectable="true"

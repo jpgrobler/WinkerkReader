@@ -8,7 +8,6 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.database.Cursor
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -37,7 +36,6 @@ import org.joda.time.Years
 import za.co.jpsoft.winkerkreader.data.SpinnerAdapter
 import za.co.jpsoft.winkerkreader.Utils.fixphonenumber
 import za.co.jpsoft.winkerkreader.Utils.parseDate
-import za.co.jpsoft.winkerkreader.data.*
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
 import java.io.File
@@ -50,7 +48,7 @@ class lidmaat_detail_Activity : AppCompatActivity() {
     }
 
     // UI Views
-    private lateinit var mNameTextView: WellBehavedEditText
+    private lateinit var mNameTextView: EditText
     private lateinit var mNooiensVanTextView: EditText
     private lateinit var mVanTextView: EditText
     private lateinit var mVolleNameTextView: EditText
@@ -372,7 +370,7 @@ class lidmaat_detail_Activity : AppCompatActivity() {
                         `package` = "com.whatsapp"
                     }
                     startActivity(Intent.createChooser(intent, ""))
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     Toast.makeText(this, "WhatsApp not Installed", Toast.LENGTH_SHORT).show()
                 }
             }
@@ -426,6 +424,7 @@ class lidmaat_detail_Activity : AppCompatActivity() {
     // ---------- display methods ----------
 
     private fun displayMemberData(cursor: Cursor) {
+        mCursor = cursor
         current_id = cursor.getIntOrDefault("_id", 0)
         winkerkEntry.LIDMAATGUID = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_LIDMAATGUID)
         mLidmaatGUID = winkerkEntry.LIDMAATGUID
@@ -470,7 +469,7 @@ class lidmaat_detail_Activity : AppCompatActivity() {
             try {
                 val bDayDT = parseDate(bDay)
                 ageYears = Years.yearsBetween(bDayDT, DateTime.now()).years
-            } catch (e: Exception) { }
+            } catch (_: Exception) { }
         }
 
         mNameTextView.setText(name)
@@ -573,7 +572,7 @@ class lidmaat_detail_Activity : AppCompatActivity() {
                 try {
                     val bDayDT = parseDate(bDay)
                     age = Years.yearsBetween(bDayDT, DateTime.now()).years
-                } catch (e: Exception) { }
+                } catch (_: Exception) { }
             }
             val ageText = if (age < 0) "(?)" else "($age)"
             val gesinString = "\n$naam\t $van\t $bDay $ageText"
@@ -681,7 +680,7 @@ class lidmaat_detail_Activity : AppCompatActivity() {
                     val dt = parseDate(huwelikDatum)
                     val years = Years.yearsBetween(dt, DateTime.now()).years
                     huwelikText = "$huwelikText : $years jaar)"
-                } catch (e: Exception) { }
+                } catch (_: Exception) { }
             }
             val huwelikTv = TextView(this).apply {
                 text = huwelikText
@@ -858,7 +857,7 @@ class lidmaat_detail_Activity : AppCompatActivity() {
         }
         try {
             cropImageLauncher.launch(cropIntent)
-        } catch (ex: ActivityNotFoundException) {
+        } catch (_: ActivityNotFoundException) {
             // ignore
         }
     }
