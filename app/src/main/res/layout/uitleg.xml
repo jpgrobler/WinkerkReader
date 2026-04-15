@@ -28,7 +28,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textAlignment="center"
-                    android:text="Uitleg + Icons"
+                    android:text="@string/uitleg_icons_title"
                     android:textStyle="bold"
                     android:textSize="20sp"
                     android:paddingBottom="8dp" />
@@ -38,62 +38,62 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:text="Stoor"
+                    android:text="@string/stoor"
                     android:textColor="#FFFF"
                     android:background="@drawable/buttonshape"
                     android:layout_marginBottom="8dp" />
 
                 <CheckBox
                     android:id="@+id/uitleg_foto"
-                    android:text="Foto"
+                    android:text="@string/uitleg_foto"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
 
                 <CheckBox
                     android:id="@+id/uitleg_epos"
-                    android:text="Epos"
+                    android:text="@string/uitleg_epos"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
 
                 <CheckBox
                     android:id="@+id/uitleg_whatsap"
-                    android:text="Whatsapp"
+                    android:text="@string/uitleg_whatsapp"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
 
                 <CheckBox
                     android:id="@+id/uitleg_verjaarsdag"
-                    android:text="Verjaarsdag"
+                    android:text="@string/uitleg_verjaarsdag"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
 
                 <CheckBox
                     android:id="@+id/uitleg_ouderdom"
-                    android:text="Ouderdom"
+                    android:text="@string/filter_ouderdom"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
 
                 <CheckBox
                     android:id="@+id/uitleg_Huweliksdag"
-                    android:text="Huweliksdatum"
+                    android:text="@string/uitleg_huweliksdatum"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
 
                 <CheckBox
                     android:id="@+id/uitleg_wyk"
-                    android:text="Wyk"
+                    android:text="@string/list_wyk"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
 
                 <CheckBox
                     android:id="@+id/uitleg_selfoon"
-                    android:text="Selfoon"
+                    android:text="@string/list_selfoon"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
 
                 <CheckBox
                     android:id="@+id/uitleg_telefoon"
-                    android:text="Telefoon"
+                    android:text="@string/list_telefoon"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
 
@@ -102,7 +102,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textAlignment="center"
-                    android:text="Widget"
+                    android:text="@string/uitleg_widget_title"
                     android:textStyle="bold"
                     android:textSize="20sp"
                     android:paddingTop="16dp"
@@ -113,32 +113,32 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:text="Stoor"
+                    android:text="@string/stoor"
                     android:textColor="#FFFF"
                     android:background="@drawable/buttonshape"
                     android:layout_marginBottom="8dp" />
 
                 <CheckBox
                     android:id="@+id/widget_Doop_select"
-                    android:text="Doopdatum"
+                    android:text="@string/uitleg_doopdatum"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
 
                 <CheckBox
                     android:id="@+id/widget_Belydenis_select"
-                    android:text="Belydenisdatum"
+                    android:text="@string/uitleg_belydenisdatum"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
 
                 <CheckBox
                     android:id="@+id/widget_Huwelik_select"
-                    android:text="Huweliksdatum"
+                    android:text="@string/uitleg_huweliksdatum"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
 
                 <CheckBox
                     android:id="@+id/widget_Sterf"
-                    android:text="Sterfdatum"
+                    android:text="@string/uitleg_sterfdatum"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
             </LinearLayout>
@@ -155,7 +155,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textAlignment="center"
-                    android:text="Funksies"
+                    android:text="@string/uitleg_funksies_title"
                     android:textStyle="bold"
                     android:textSize="20sp"
                     android:paddingBottom="8dp" />
@@ -165,39 +165,39 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:text="Stoor"
+                    android:text="@string/stoor"
                     android:textColor="#FFFF"
                     android:background="@drawable/buttonshape"
                     android:layout_marginBottom="8dp" />
 
                 <CheckBox
                     android:id="@+id/autoStartSwitch"
-                    android:text="Begin outomaties\n\tmonitor &amp; log"
+                    android:text="@string/uitleg_autostart_monitor"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
 
                 <CheckBox
                     android:id="@+id/uitleg_Monitor_Oproepe"
-                    android:text="Monitor Oproepe"
+                    android:text="@string/uitleg_monitor_oproepe"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
 
                 <CheckBox
                     android:id="@+id/uitleg_Log_Oproepe"
-                    android:text="Log Tel Oproepe"
+                    android:text="@string/uitleg_log_tel_oproepe"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
 
                 <CheckBox
                     android:id="@+id/uitleg_Log_VOIP"
-                    android:text="Log VOIP Oproepe"
+                    android:text="@string/uitleg_log_voip_oproepe"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Kies 📅 kalender:"
+                    android:text="@string/uitleg_calendar_picker"
                     android:textSize="14sp"
                     android:textColor="#666666"
                     android:layout_marginTop="8dp"
@@ -213,7 +213,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Def Uitleg:"
+                    android:text="@string/uitleg_default_layout"
                     android:textSize="16sp"
                     android:paddingTop="8dp" />
 
@@ -228,38 +228,38 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Whatsapp:"
+                    android:text="@string/uitleg_whatsapp_label"
                     android:textSize="16sp"
                     android:paddingTop="8dp" />
 
                 <CheckBox
                     android:id="@+id/uitleg_w1"
-                    android:text="Whatsapp Metode 1"
+                    android:text="@string/uitleg_whatsapp_method_1"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
 
                 <CheckBox
                     android:id="@+id/uitleg_w2"
-                    android:text="Whatsapp Metode 2"
+                    android:text="@string/uitleg_whatsapp_method_2"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
 
                 <CheckBox
                     android:id="@+id/uitleg_w3"
-                    android:text="Whatsapp Metode 3"
+                    android:text="@string/uitleg_whatsapp_method_3"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Epos:"
+                    android:text="@string/uitleg_epos_label"
                     android:textSize="16sp"
                     android:paddingTop="8dp" />
 
                 <CheckBox
                     android:id="@+id/uitleg_html"
-                    android:text="HTML Epos"
+                    android:text="@string/uitleg_html_epos"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
 
@@ -268,7 +268,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:text="Stoor Kleur"
+                    android:text="@string/uitleg_stoor_kleur"
                     android:textColor="#FFFF"
                     android:background="@drawable/buttonshape"
                     android:layout_marginTop="12dp"
@@ -278,7 +278,7 @@
                     android:id="@+id/gem1"
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
-                    android:text="Gemeente 1"
+                    android:text="@string/uitleg_gemeente_1"
                     android:textStyle="bold"
                     android:textSize="16sp"
                     android:gravity="center"
@@ -290,7 +290,7 @@
                     android:id="@+id/gem2"
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
-                    android:text="Gemeente 2"
+                    android:text="@string/uitleg_gemeente_2"
                     android:textStyle="bold"
                     android:textSize="16sp"
                     android:gravity="center"
@@ -302,7 +302,7 @@
                     android:id="@+id/gem3"
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
-                    android:text="Gemeente 3"
+                    android:text="@string/uitleg_gemeente_3"
                     android:textStyle="bold"
                     android:textSize="16sp"
                     android:gravity="center"

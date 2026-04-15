@@ -5,7 +5,7 @@
     android:orientation="horizontal">
     <Button android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="End Call"
+        android:text="@string/end_call"
         android:layout_gravity="center_vertical"
         android:id="@+id/end_call"
         android:textColor="@android:color/holo_orange_dark"/>

@@ -1,7 +1,7 @@
 
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context="za.co.jpsoft.winkerkreader.MainActivity2">
+    tools:context="za.co.jpsoft.winkerkreader.MainActivity">
     <item
         android:id="@+id/kyk_lidmaat_detail"
         android:icon="@drawable/clipboards"

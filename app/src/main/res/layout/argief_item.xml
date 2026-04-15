@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:background="@drawable/borderseparator"
         android:padding="3dp"
-        android:text="New Text"
+        android:text="@string/argief_separator_placeholder"
         android:textColor="@android:color/white"
         android:textSize="14sp"
         android:textStyle="bold"

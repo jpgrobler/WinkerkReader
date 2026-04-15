@@ -17,19 +17,19 @@
                 android:id="@+id/argief_sort_van"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Van" />
+                android:text="@string/argief_van" />
 
             <RadioButton
                 android:id="@+id/argief_sort_datum"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="datum" />
+                android:text="@string/argief_datum" />
 
             <RadioButton
                 android:id="@+id/argief_sort_rede"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Rede" />
+                android:text="@string/argief_rede" />
         </RadioGroup>
     </LinearLayout>
     <ListView

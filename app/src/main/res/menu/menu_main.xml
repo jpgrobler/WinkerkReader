@@ -88,7 +88,7 @@
                 android:icon="@drawable/downs"
                 />
             <item
-                android:id="@+id/registreer"
+                android:id="@+id/RegistreerActivity"
                 android:title="@string/mainmenu_registreer"
                 app:showAsAction="never"
                 android:icon="@drawable/indexs"

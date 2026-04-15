@@ -8,7 +8,7 @@
         android:id="@+id/imageView"
         android:layout_width="30dp"
         android:layout_height="30dp"
-        android:contentDescription="TODO"
+        android:contentDescription="@string/spinner_icon_description"
         android:padding="5dp"
         android:src="@drawable/male" /><!--Make sure image is present in Drawable folder-->
 

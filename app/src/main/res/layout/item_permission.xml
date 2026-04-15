@@ -19,7 +19,7 @@
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:src="@android:drawable/ic_delete"
-            android:contentDescription="Permission Status"/>
+            android:contentDescription="@string/permission_status"/>
 
         <LinearLayout
             android:layout_width="0dp"
@@ -33,7 +33,7 @@
                 android:id="@+id/tvPermissionName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Permission Name"
+                android:text="@string/permission_name_placeholder"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:textColor="@android:color/black"/>
@@ -42,7 +42,7 @@
                 android:id="@+id/tvPermissionDescription"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Permission description"
+                android:text="@string/permission_description_placeholder"
                 android:textSize="12sp"
                 android:layout_marginTop="4dp"
                 android:textColor="@android:color/darker_gray"/>
@@ -53,7 +53,7 @@
             android:id="@+id/btnRequestPermission"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Request"
+            android:text="@string/permission_request"
             android:textAllCaps="false"
             android:minWidth="80dp"
             android:padding="8dp"/>

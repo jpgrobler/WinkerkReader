@@ -9,7 +9,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="App Permissions"
+        android:text="@string/permissions_title"
         android:textSize="24sp"
         android:textStyle="bold"
         android:paddingBottom="8dp"/>
@@ -17,7 +17,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Gee asb toestemming vir die volgende 'Permissions' om al die app se funksies te kan gebruik"
+        android:text="@string/permissions_intro"
         android:textSize="14sp"
         android:paddingBottom="16dp"
         android:textColor="@android:color/darker_gray"/>
@@ -34,7 +34,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="Toestemming vir alle 'permissions'"
+        android:text="@string/permissions_request_all"
         android:textAllCaps="false"
         android:padding="12dp"/>
 

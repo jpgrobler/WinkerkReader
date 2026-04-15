@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:textColor="@android:color/darker_gray"
-    android:text="Hi"
+    android:text="@string/row2_placeholder"
     android:scrollHorizontally="true"
     android:textAppearance="?android:attr/textAppearanceMedium"
     android:gravity="center_vertical"

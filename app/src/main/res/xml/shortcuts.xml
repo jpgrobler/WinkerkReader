@@ -8,7 +8,7 @@
         android:shortcutShortLabel="@string/shortcut_settings_short">
         <intent
             android:action="android.intent.action.VIEW"
-            android:targetClass="za.co.jpsoft.winkerkreader.UitlegActivity"
+            android:targetClass="za.co.jpsoft.winkerkreader.ui.activities.UitlegActivity"
             android:targetPackage="za.co.jpsoft.winkerkreader" />
         <categories android:name="android.shortcut.conversation" />
     </shortcut>
@@ -21,7 +21,7 @@
         android:shortcutShortLabel="@string/shortcut_monitor_short">
         <intent
             android:action="za.co.jpsoft.winkerkreader.TOGGLE_MONITOR"
-            android:targetClass="za.co.jpsoft.winkerkreader.MainActivity2"
+            android:targetClass="za.co.jpsoft.winkerkreader.ui.activities.MainActivity"
             android:targetPackage="za.co.jpsoft.winkerkreader" />
         <categories android:name="android.shortcut.conversation" />
     </shortcut>

@@ -59,25 +59,25 @@
             android:id="@+id/Keuse_Verjaar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Verjaar"
+            android:text="@string/verjaar_option_verjaar"
             android:layout_weight="1"/>
         <RadioButton
             android:layout_gravity="center_horizontal"
             android:id="@+id/Keuse_Doop"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Doop" android:layout_weight="1"/>
+            android:text="@string/verjaar_option_doop" android:layout_weight="1"/>
         <RadioButton
             android:id="@+id/Keuse_Huwelik"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Huwelik"
+            android:text="@string/verjaar_option_huwelik"
             android:layout_weight="1"/>
         <RadioButton
             android:id="@+id/Keuse_Belydenis"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Belydenis"
+            android:text="@string/verjaar_option_belydenis"
             android:layout_weight="1"/>
     </RadioGroup>
     <TextView
@@ -113,8 +113,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text=":"
-            tools:ignore="HardcodedText" />
+            android:text="@string/time_separator" />
         <EditText
             android:id="@+id/time_minute"
             android:maxLength="2"
@@ -165,7 +164,7 @@
             android:background="@drawable/buttonshape"
             android:textColor="@android:color/white"
             android:textSize="12sp"
-            android:text="Opdateer\nSMS"/>
+            android:text="@string/verjaar_opdateer_sms"/>
     </LinearLayout>
     </RelativeLayout>
 </LinearLayout>
