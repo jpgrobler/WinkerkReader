@@ -1,0 +1,20 @@
+package za.co.jpsoft.winkerkreader.ui.activities
+
+// SplashActivity.kt
+
+
+import android.content.Intent
+import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
+
+/**
+ * Created by Pieter Grobler on 30/08/2017.
+ */
+class SplashActivity : AppCompatActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        startActivity(Intent(this, MainActivity::class.java))
+        finish()
+    }
+}
