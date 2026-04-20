@@ -63,8 +63,14 @@ class MemberActionHandler(
 
     private fun openMemberDetail(): Boolean {
         return try {
+            // Get the _id directly from the cursor (it's now available!)
             val memberId = cursor.getIntOrDefault("_id", -1)
-            if (memberId == -1) return false
+            Log.d(TAG, "memberId: $memberId")
+
+            if (memberId == -1) {
+                Log.e(TAG, "Could not find _id in cursor")
+                return false
+            }
 
             val intent = Intent(activity, LidmaatDetailActivity::class.java).apply {
                 data = ContentUris.withAppendedId(WinkerkContract.winkerkEntry.CONTENT_URI, memberId.toLong())
@@ -75,6 +81,32 @@ class MemberActionHandler(
         } catch (e: Exception) {
             Log.e(TAG, "Error opening member detail", e)
             false
+        }
+    }
+
+    private fun getMemberIdByGuid(guid: String): Int {
+        // Query the database to get the _rowid_ for this GUID
+        val uri = WinkerkContract.winkerkEntry.CONTENT_URI
+        val selection = "MemberGUID = ?"
+        val selectionArgs = arrayOf(guid)
+        val projection = arrayOf("rowid")
+
+        var cursor: Cursor? = null
+        return try {
+            cursor = activity.contentResolver.query(uri, projection, selection, selectionArgs, null)
+            if (cursor != null && cursor.moveToFirst()) {
+                val id = cursor.getInt(0)
+                Log.d(TAG, "Found member ID $id for GUID $guid")
+                id
+            } else {
+                Log.e(TAG, "No member found with GUID: $guid")
+                -1
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error resolving member ID from GUID", e)
+            -1
+        } finally {
+            cursor?.close()
         }
     }
 

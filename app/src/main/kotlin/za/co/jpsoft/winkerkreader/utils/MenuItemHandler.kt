@@ -14,6 +14,7 @@ import android.content.ContentValues
 import android.content.Intent
 
 import android.view.MenuItem
+import android.widget.RadioGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -35,6 +36,7 @@ class MenuItemHandler(
         val sortOrderView = activity.findViewById<TextView>(R.id.sortorder)
 
         return when (item.itemId) {
+            R.id.aktief_radio_group -> handleAktiefRadioGroup()
             R.id.select_options -> handleSelectOptions()
             R.id.tagged -> handleTagged(sortOrderView)
             R.id.sort_van -> handleSortVan(sortOrderView)
@@ -58,6 +60,10 @@ class MenuItemHandler(
             }
             else -> false
         }
+    }
+
+    fun handleAktiefRadioGroup(): Boolean {
+        return true
     }
 
     fun handlePermissions(): Boolean {
@@ -99,7 +105,7 @@ class MenuItemHandler(
     private fun handleSortWyk(sortOrderView: TextView): Boolean {
         sortOrderView.background = null
         settings.defLayout =  "WYK"
-        AppSessionState.sortOrder = "WYL"
+        AppSessionState.sortOrder = "WYK"
         AppSessionState.soekList = false
         (activity as MainActivity).observeDataset()
         return true

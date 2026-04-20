@@ -5,12 +5,17 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".ui.home.activities.TransactionSearchActivity">
     <item
-                android:id="@+id/action_search"
-                android:icon="@drawable/searchmenu2"
-                android:title="@string/mainmenu_soek"
-                app:showAsAction="collapseActionView"
-                app:actionViewClass="androidx.appcompat.widget.SearchView"
-                 />
+        android:id="@+id/aktief_radio_group"
+        android:title="Aktief/Onaktief/Beide"
+        app:actionLayout="@layout/aktief_radio"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_search"
+        android:icon="@drawable/searchmenu2"
+        android:title="@string/mainmenu_soek"
+        app:showAsAction="collapseActionView"
+        app:actionViewClass="androidx.appcompat.widget.SearchView"
+         />
     <item android:id="@+id/select_options"
         android:icon="@android:drawable/ic_search_category_default"
         android:title="@string/mainmenu_soek_opsies">

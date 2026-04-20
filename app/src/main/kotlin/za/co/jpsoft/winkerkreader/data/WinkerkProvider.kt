@@ -9,6 +9,7 @@ import android.content.*
 import android.database.Cursor
 import android.database.SQLException
 import android.database.sqlite.SQLiteDatabase
+import android.database.sqlite.SQLiteException
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -28,6 +29,7 @@ import za.co.jpsoft.winkerkreader.data.WinkerkContract.PATH_WKR_GROEPE
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.PATH_WKR_GROEPLEDE
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.INFO_DB
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.WINKERK_DB
+
 
 class WinkerkProvider : ContentProvider() {
 
@@ -86,6 +88,19 @@ class WinkerkProvider : ContentProvider() {
         return true
     }
 
+    private fun safeGetCursorCount(cursor: Cursor?): Int {
+        return try {
+            cursor?.count ?: 0
+        } catch (e: SQLiteException) {
+            if (e.message?.contains("SQLITE_OK") == true) {
+                Log.w(tag, "Ignoring spurious SQLITE_OK exception in cursor count")
+                0
+            } else {
+                throw e
+            }
+        }
+    }
+
     override fun query(
         uri: Uri,
         projection: Array<out String>?,
@@ -93,17 +108,26 @@ class WinkerkProvider : ContentProvider() {
         selectionArgs: Array<out String>?,
         sortOrder: String?
     ): Cursor? {
+        Log.e("DEBUG_PROVIDER", "=== QUERY START ===")
+        Log.e("DEBUG_PROVIDER", "uri: $uri")
+        Log.e("DEBUG_PROVIDER", "selection: $selection")
+        Log.e("DEBUG_PROVIDER", "selectionArgs: ${selectionArgs?.joinToString()}")
+        Log.e("DEBUG_PROVIDER", "sortOrder: $sortOrder")
+
         var cursor: Cursor? = null
         val match = uriMatcher.match(uri)
+        Log.e("DEBUG_PROVIDER", "match code: $match")
+
         var count = 0
 
         when (match) {
             GEMEENTE_NAAM -> {
+                Log.e("DEBUG_PROVIDER", "Case: GEMEENTE_NAAM")
                 val db = mDbHelper?.readableDatabase ?: return null
                 Log.v(tag, "GEMEENTE_NAAM ${db.isOpen}")
                 try {
                     cursor = db.rawQuery(selection ?: "", selectionArgs)
-                    count = cursor.count
+                    count = try { cursor?.count ?: 0 } catch (e: SQLiteException) { 0 }
                 } catch (_: Exception) {
                     Log.d(tag, "Gemeente doesn't exist :(((")
                 } finally {
@@ -117,24 +141,60 @@ class WinkerkProvider : ContentProvider() {
                 val db = mDbHelper?.readableDatabase ?: return null
                 Log.v(tag, "Cursor query ${db.isOpen}")
 
-                val finalSelection = when (match) {
+                // Build the actual query based on URI and match type
+                var finalQuery: String? = selection
+                var finalArgs: Array<out String>? = selectionArgs
+
+                when (match) {
                     LIDMAAT_GUID -> {
-                        if (AppSessionState.sortOrder == "VAN") {
-                            "$selection ORDER BY ${winkerkEntry.LIDMATE_VAN} ASC, ${winkerkEntry.LIDMATE_TABLE_NAME}.${winkerkEntry.LIDMATE_NOEMNAAM} ASC ;"
-                        } else if (AppSessionState.sortOrder == "WYK") {
-                            "$selection ORDER BY ${winkerkEntry.LIDMATE_WYK} ASC, ${winkerkEntry.LIDMATE_VAN} ASC, ${winkerkEntry.LIDMATE_TABLE_NAME}.${winkerkEntry.LIDMATE_NOEMNAAM} ASC ;"
+                        // Extract the ID from the URI path
+                        val id = uri.pathSegments?.getOrNull(1)?.toLongOrNull()
+                        if (id != null) {
+                            // Build a complete SELECT query
+                            val baseQuery = "SELECT *, _rowid_ as _id FROM ${winkerkEntry.LIDMATE_TABLE_NAME} WHERE _rowid_ = ?"
+
+                            // Apply sort order if needed (though for a single record, sort order doesn't matter)
+                            finalQuery = when (AppSessionState.sortOrder) {
+                                "VAN" -> "$baseQuery ORDER BY ${winkerkEntry.LIDMATE_VAN} ASC, ${winkerkEntry.LIDMATE_TABLE_NAME}.${winkerkEntry.LIDMATE_NOEMNAAM} ASC"
+                                "WYK" -> "$baseQuery ORDER BY ${winkerkEntry.LIDMATE_WYK} ASC, ${winkerkEntry.LIDMATE_VAN} ASC, ${winkerkEntry.LIDMATE_TABLE_NAME}.${winkerkEntry.LIDMATE_NOEMNAAM} ASC"
+                                else -> baseQuery
+                            }
+                            finalArgs = arrayOf(id.toString())
+
+                            Log.d(tag, "LIDMAAT_GUID query: $finalQuery")
+                            Log.d(tag, "LIDMAAT_GUID args: ${finalArgs.joinToString()}")
                         } else {
-                            selection
+                            Log.e(tag, "Invalid ID in URI: $uri")
+                            return null
                         }
                     }
-                    else -> selection
+                    else -> {
+                        // For other matches, apply sort order if needed
+                        if (AppSessionState.sortOrder == "VAN" && selection != null) {
+                            finalQuery = "$selection ORDER BY ${winkerkEntry.LIDMATE_VAN} ASC, ${winkerkEntry.LIDMATE_TABLE_NAME}.${winkerkEntry.LIDMATE_NOEMNAAM} ASC ;"
+                        } else if (AppSessionState.sortOrder == "WYK" && selection != null) {
+                            finalQuery = "$selection ORDER BY ${winkerkEntry.LIDMATE_WYK} ASC, ${winkerkEntry.LIDMATE_VAN} ASC, ${winkerkEntry.LIDMATE_TABLE_NAME}.${winkerkEntry.LIDMATE_NOEMNAAM} ASC ;"
+                        }
+                    }
                 }
 
                 try {
-                    cursor = db.rawQuery(finalSelection ?: "", selectionArgs)
-                    count = cursor.count
+                    cursor = db.rawQuery(finalQuery ?: "", finalArgs)
+                    // Safely get count - wrap in try-catch for the SQLITE_OK false positive
+                    count = try {
+                        cursor?.count ?: 0
+                    } catch (e: SQLiteException) {
+                        if (e.message?.contains("SQLITE_OK") == true) {
+                            Log.w(tag, "Ignoring spurious SQLITE_OK exception")
+                            0
+                        } else {
+                            throw e
+                        }
+                    }
                 } catch (e: SQLException) {
                     Log.e("WinkerkReader", "Query error for match $match >> $e")
+                    Log.e("WinkerkReader", "Query was: $finalQuery")
+                    Log.e("WinkerkReader", "Args were: ${finalArgs?.joinToString()}")
                 }
             }
 
@@ -144,7 +204,7 @@ class WinkerkProvider : ContentProvider() {
                 try {
                     db.execSQL("ATTACH '$dbPath' as INFO;")
                     cursor = db.rawQuery(selection ?: "", selectionArgs)
-                    count = cursor.count
+                    count = try { cursor?.count ?: 0 } catch (e: SQLiteException) { 0 }
                     db.execSQL("detach database INFO")
                 } catch (e: SQLException) {
                     Log.e("WinkerkReader", "FOTO_SYNC >> $e")
@@ -155,7 +215,7 @@ class WinkerkProvider : ContentProvider() {
                 val db = mInfoDbHelper?.readableDatabase ?: return null
                 try {
                     cursor = db.rawQuery(selection ?: "", selectionArgs)
-                    count = cursor.count
+                    count = try { cursor?.count ?: 0 } catch (e: SQLiteException) { 0 }
                     Log.v(tag, "Cursor INFO query ${db.isOpen}")
                 } catch (e: SQLException) {
                     Log.e("WinkerkReader", "FOTO >> $e")
@@ -166,7 +226,8 @@ class WinkerkProvider : ContentProvider() {
         }
 
         Log.v(tag, "Cursor count $count")
-        return if (cursor != null && cursor.count > 0) cursor else null
+        // Double-check cursor is actually usable
+        return if (cursor != null && try { safeGetCursorCount(cursor) > 0 } catch (e: SQLiteException) { false }) cursor else null
     }
 
     override fun insert(uri: Uri, contentValues: ContentValues?): Uri? {
@@ -198,7 +259,7 @@ class WinkerkProvider : ContentProvider() {
                     "SELECT * FROM ${winkerkEntry.WKR_LIDMATE2GROEPE_TABLENAME} WHERE (GroepID = ?) AND (LidmaatGUID = ?)",
                     arrayOf(groepId, lidmaatGuid)
                 ).use { cursor ->
-                    count = cursor.count
+                    count = safeGetCursorCount(cursor)
                 }
 
                 if (count < 1) {

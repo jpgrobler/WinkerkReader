@@ -54,60 +54,62 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:visibility="visible" />
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-        <TextView
-            android:id="@+id/version"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingEnd="4dp"
-            android:paddingStart="0dp"
-            android:text="@string/version_prefix" />
-        <TextView
-            android:paddingLeft="4dp"
-            android:paddingRight="4dp"
-            android:layout_weight="1"
-            android:layout_width="0dp"
+            android:orientation="horizontal">
+            <TextView
+                android:id="@+id/version"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingEnd="4dp"
+                android:paddingStart="0dp"
+                android:visibility="gone"
+                android:text="@string/version_prefix" />
+            <TextView
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="@string/main_gemeentenaam"
+                android:id="@+id/main_gemeentenaam"
+                android:ellipsize="marquee"
+                android:scrollHorizontally="true"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:textAlignment="center"
+                android:textColor="@android:color/black"
+                android:maxLines="1"
+                android:visibility="visible"/>
+            <TextView
+                android:paddingStart="4dp"
+                android:paddingEnd="0dp"
+                android:id="@+id/main_Count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/main_count_symbol"
+                android:layout_marginEnd="4dp" />
+            <TextView
+                android:textStyle="bold"
+                android:id="@+id/sortorder"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/main_sortorder"/>
+        </LinearLayout>
+        <ProgressBar
+            android:id="@+id/main_indeterminateBar3"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:focusedByDefault="true"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/main_gemeentenaam"
-            android:id="@+id/main_gemeentenaam"
-            android:ellipsize="marquee"
-            android:scrollHorizontally="true"
-            android:marqueeRepeatLimit="marquee_forever"
-            android:textAlignment="center"
-            android:textColor="@android:color/black"
-            android:maxLines="1"
-            android:visibility="visible"/>
-        <TextView
-            android:paddingStart="4dp"
-            android:paddingEnd="0dp"
-            android:id="@+id/main_Count"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/main_count_symbol"
-            android:layout_marginEnd="4dp" />
-        <TextView
-            android:textStyle="bold"
-            android:id="@+id/sortorder"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/main_sortorder"/>
-    </LinearLayout>
-    <ProgressBar
-        android:id="@+id/main_indeterminateBar2"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:focusedByDefault="true"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:visibility="visible" />
+            android:visibility="visible" />
     </LinearLayout>
 
-    <ListView
+    <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/lidmaat_list"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:scrollbars="vertical" />
 
 </LinearLayout>
 <LinearLayout

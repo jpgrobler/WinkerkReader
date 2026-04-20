@@ -8,7 +8,7 @@ import za.co.jpsoft.winkerkreader.utils.AppSessionState
 import za.co.jpsoft.winkerkreader.utils.SearchCheckBoxPreferences
 import za.co.jpsoft.winkerkreader.utils.MenuItemHandler
 import za.co.jpsoft.winkerkreader.utils.WorkManagerHelper
-import za.co.jpsoft.winkerkreader.ui.adapters.WinkerkCursorAdapter
+import za.co.jpsoft.winkerkreader.ui.adapters.MemberListAdapter
 import za.co.jpsoft.winkerkreader.services.CallMonitoringService
 import za.co.jpsoft.winkerkreader.widget.WinkerkReaderWidgetProvider
 import za.co.jpsoft.winkerkreader.utils.PermissionHelper
@@ -20,6 +20,7 @@ import za.co.jpsoft.winkerkreader.ui.components.SearchCheckBox
 import za.co.jpsoft.winkerkreader.utils.NavigationHandler
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
 import za.co.jpsoft.winkerkreader.data.models.FilterBox
+import za.co.jpsoft.winkerkreader.data.models.MemberItem
 import za.co.jpsoft.winkerkreader.data.WinkerkContract
 import za.co.jpsoft.winkerkreader.utils.forceShowIcons
 
@@ -49,6 +50,8 @@ import androidx.appcompat.widget.PopupMenu
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.readystatesoftware.sqliteasset.SQLiteAssetHelper
 import org.joda.time.DateTime
 import java.util.Calendar
@@ -71,8 +74,8 @@ class MainActivity : AppCompatActivity() {
     private var searchRunnable: Runnable? = null
 
     // Views
-    private lateinit var cursorAdapter: WinkerkCursorAdapter
-    private lateinit var memberListView: ListView
+    private lateinit var memberListAdapter: MemberListAdapter
+    private lateinit var memberListView: RecyclerView
 
     private lateinit var sortOrderView: TextView
     private lateinit var memberCountView: TextView
@@ -157,12 +160,13 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
-        val mainView = findViewById<View>(R.id.lidmaat_list) // or your root content
+        val mainView = findViewById<View>(R.id.lidmaat_list)
         ViewCompat.setOnApplyWindowInsetsListener(mainView) { view, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             view.setPadding(0, 0, 0, systemBars.bottom)
             insets
         }
+
     }
 
     override fun onResume() {
@@ -290,23 +294,39 @@ class MainActivity : AppCompatActivity() {
         notificationManager?.createNotificationChannel(serviceChannel)
     }
 
+    // -------------------------------------------------------------------------
+    // Component initialisation — RecyclerView replaces ListView
+    // -------------------------------------------------------------------------
+
     private fun initializeComponents() {
         backgroundExecutor = Executors.newSingleThreadExecutor()
 
+        sortOrderView    = findViewById(R.id.sortorder)
+        memberCountView  = findViewById(R.id.main_Count)
+        searchTextView   = findViewById(R.id.search_text)
+        churchNameView   = findViewById(R.id.main_gemeentenaam)
+        searchItemBlock  = findViewById(R.id.search_item_block)
+        memberListView   = findViewById(R.id.lidmaat_list)
 
-        sortOrderView = findViewById(R.id.sortorder)
-        memberCountView = findViewById(R.id.main_Count)
-        searchTextView = findViewById(R.id.search_text)
-        churchNameView = findViewById(R.id.main_gemeentenaam)
-        searchItemBlock = findViewById(R.id.search_item_block)
-        memberListView = findViewById(R.id.lidmaat_list)
+        // Build adapter with click lambdas — no more AdapterView listeners
+        memberListAdapter = MemberListAdapter(
+            onItemClick = { view, item, position ->
+                showMemberPopupMenu(view, item, position)
+            },
+            onItemLongClick = { item, position ->
+                onMemberLongClick(item, position)
+            }
+        )
 
-        cursorAdapter = WinkerkCursorAdapter(this, null)
-        memberListView.adapter = cursorAdapter
-        memberListView.isFastScrollEnabled = true
+        memberListView.layoutManager = LinearLayoutManager(this)
+        memberListView.adapter       = memberListAdapter
 
         gestureDetector = GestureDetector(this, SwipeGestureDetector())
     }
+
+    // -------------------------------------------------------------------------
+    // ViewModel — single observer replaces the previous 9 cursor observers
+    // -------------------------------------------------------------------------
 
     private fun setupViewModel() {
         viewModel = ViewModelProvider(this)[MemberViewModel::class.java]
@@ -318,55 +338,21 @@ class MainActivity : AppCompatActivity() {
             searchTextView.text = searchText
             searchItemBlock.visibility = if (searchText.isEmpty()) View.GONE else View.VISIBLE
         }
-        viewModel.getVerjaarFLag().observe(this, ::handleBirthdayFlag)
+        viewModel.getVerjaarFLag().observe(this) { showBirthday ->
+            // Flag fires after VERJAAR list is committed; scroll is handled in the
+            // submitList callback below, so nothing extra needed here.
+            Log.d(TAG, "verjaarFlag: $showBirthday")
+        }
 
-        // Observe each stream once; observeDataset() only triggers loading.
-        viewModel.getSOEK_DATA().observe(this) { cursor ->
-            if (za.co.jpsoft.winkerkreader.utils.SettingsManager(this).defLayout == "SOEK_DATA") {
-                cursorAdapter.swapCursor(cursor)
-            }
-        }
-        viewModel.getFILTER_DATA().observe(this) { cursor ->
-            if (za.co.jpsoft.winkerkreader.utils.SettingsManager(this).defLayout == "FILTER_DATA") {
-                cursorAdapter.swapCursor(cursor)
-            }
-        }
-        viewModel.getLIDMAAT_DATA_ADRES().observe(this) { cursor ->
-            if (za.co.jpsoft.winkerkreader.utils.SettingsManager(this).defLayout == "ADRES") {
-                cursorAdapter.swapCursor(cursor)
-            }
-        }
-        viewModel.getGESINNE_DATA().observe(this) { cursor ->
-            if (za.co.jpsoft.winkerkreader.utils.SettingsManager(this).defLayout == "GESINNE") {
-                cursorAdapter.swapCursor(cursor)
-            }
-        }
-        viewModel.getHUWELIK_DATA().observe(this) { cursor ->
-            if (za.co.jpsoft.winkerkreader.utils.SettingsManager(this).defLayout == "HUWELIK") {
-                cursorAdapter.swapCursor(cursor)
-            }
-        }
-        viewModel.getOUDERDOM_DATA().observe(this) { cursor ->
-            if (za.co.jpsoft.winkerkreader.utils.SettingsManager(this).defLayout == "OUDERDOM") {
-                cursorAdapter.swapCursor(cursor)
-            }
-        }
-        viewModel.getLIDMAAT_DATA().observe(this) { cursor ->
-            if (za.co.jpsoft.winkerkreader.utils.SettingsManager(this).defLayout == "VAN") {
-                cursorAdapter.swapCursor(cursor)
-            }
-        }
-        viewModel.getLIDMAAT_DATA_VERJAAR().observe(this) { cursor ->
-            if (za.co.jpsoft.winkerkreader.utils.SettingsManager(this).defLayout == "VERJAAR") {
-                cursorAdapter.swapCursor(cursor)
-                if (cursor != null && cursor.count > 0) {
-                    scrollToNextBirthday(cursor)
+        // One observer for ALL sort orders — no cursor leaks, no 9-way dispatch
+        viewModel.getMemberList().observe(this) { items ->
+            val isVerjaar = settingsManager.defLayout == "VERJAAR"
+            memberListAdapter.submitList(items) {
+                // submitList callback fires on the main thread once DiffUtil has
+                // committed changes — safe place to auto-scroll
+                if (isVerjaar && items.isNotEmpty()) {
+                    scrollToNextBirthday(items)
                 }
-            }
-        }
-        viewModel.getLIDMAAT_DATA_WYK().observe(this) { cursor ->
-            if (za.co.jpsoft.winkerkreader.utils.SettingsManager(this).defLayout == "WYK") {
-                cursorAdapter.swapCursor(cursor)
             }
         }
     }
@@ -429,10 +415,15 @@ class MainActivity : AppCompatActivity() {
             val manager = packageManager
             val info = manager.getPackageInfo(packageName, 0)
             val versionName = "v${info.versionName}"
-            findViewById<TextView>(R.id.version).text = versionName
+            //findViewById<TextView>(R.id.version).text = versionName
+            supportActionBar?.let { actionBar ->
+                // This adds version to the title while keeping radio buttons separate
+                actionBar.title = "${getString(R.string.app_name)} ${versionName}"
+            }
         } catch (e: PackageManager.NameNotFoundException) {
             Log.e(TAG, "Failed to get package info", e)
         }
+
     }
 
     private fun createDefaultSearchList(): ArrayList<SearchCheckBox> {
@@ -476,7 +467,8 @@ class MainActivity : AppCompatActivity() {
         setupSearchCloseHandler()
         setupSortOrderClickHandler()
         setupChurchNameClickHandler()
-        setupListViewHandlers()
+        // Note: list item click/long-click are handled via MemberListAdapter lambdas
+        // set up in initializeComponents()
     }
 
     private fun setupSearchCloseHandler() {
@@ -508,27 +500,21 @@ class MainActivity : AppCompatActivity() {
         churchNameView.setOnClickListener(::showGroupFunctionMenu)
     }
 
-    private fun setupListViewHandlers() {
-        memberListView.onItemLongClickListener = AdapterView.OnItemLongClickListener { _, _, position, id ->
-            onMemberLongClick(position, id)
-        }
-        memberListView.onItemClickListener = AdapterView.OnItemClickListener { _, view, position, id ->
-            showMemberPopupMenu(view, position, id)
-        }
-    }
+    // -------------------------------------------------------------------------
+    // Long-click — toggle TAG without needing a cursor
+    // -------------------------------------------------------------------------
 
-    private fun onMemberLongClick(position: Int, id: Long): Boolean {
-        val cursor = cursorAdapter.getItem(position) as? Cursor ?: return false
+    private fun onMemberLongClick(item: MemberItem, position: Int): Boolean {
         val values = ContentValues().apply {
-            val tagIndex = cursor.getColumnIndex(winkerkEntry.LIDMATE_TAG)
-            val currentTag = cursor.getInt(tagIndex)
-            put(winkerkEntry.LIDMATE_TAG, if (currentTag == 0) 1 else 0)
+            put(winkerkEntry.LIDMATE_TAG, if (item.tag == 0) 1 else 0)
         }
-        val memberUri = ContentUris.withAppendedId(winkerkEntry.CONTENT_URI, id)
-        val rowsAffected = contentResolver.update(memberUri, values, "${winkerkEntry.LIDMATE_TABLE_NAME}._rowid_ =?", arrayOf(id.toString()))
-        if (rowsAffected == 1) {
-            observeDataset()
-        }
+        val memberUri = ContentUris.withAppendedId(winkerkEntry.CONTENT_URI, item.id)
+        val rowsAffected = contentResolver.update(
+            memberUri, values,
+            "${winkerkEntry.LIDMATE_TABLE_NAME}._rowid_ =?",
+            arrayOf(item.id.toString())
+        )
+        if (rowsAffected == 1) observeDataset()
         return rowsAffected == 1
     }
 
@@ -568,95 +554,6 @@ class MainActivity : AppCompatActivity() {
     private fun setupWidgetRefreshWork() {
         WorkManagerHelper.scheduleWidgetRefresh(this)
     }
-    
-//    private fun setupAlarms() {
-//        setupAutoDownloadAlarm()
-//        setupReminderAlarm()
-//        setupWidgetRefreshAlarm()
-//    }
-//
-//    private fun setupAutoDownloadAlarm() {
-//        if (settingsManager.autoDl || settingsManager.dlTimeUpdate) {
-//            val hour = settingsManager.dlHour
-//            val minute = settingsManager.dlMinute
-//            val day = settingsManager.dlDay
-//
-//            val calendar = Calendar.getInstance().apply {
-//                set(Calendar.HOUR_OF_DAY, hour.toInt())
-//                set(Calendar.MINUTE, minute.toInt())
-//                set(Calendar.SECOND, 0)
-//                set(Calendar.DAY_OF_WEEK, day)
-//            }
-//            val now = Calendar.getInstance()
-//            settingsManager.fromMenu = false
-//
-//            val intent = Intent(this, AlarmReceiver::class.java).apply { action = "DropBoxDownLoad" }
-//            val pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
-//            val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
-//            alarmManager.cancel(pendingIntent)
-//
-//            var triggerTime = calendar.timeInMillis
-//            if (triggerTime <= now.timeInMillis) {
-//                triggerTime += AlarmManager.INTERVAL_DAY * 7
-//            }
-//            scheduleRepeatingAlarm(alarmManager, triggerTime, AlarmManager.INTERVAL_DAY * 7, pendingIntent)
-//        }
-//    }
-//
-//    private fun setupReminderAlarm() {
-//        if (settingsManager.herinner || settingsManager.smsTimeUpdate) {
-//            val hour = settingsManager.smsHour
-//            val minute = settingsManager.smsMinute
-//
-//            val calendar = Calendar.getInstance().apply {
-//                set(Calendar.HOUR_OF_DAY, hour.toInt())
-//                set(Calendar.MINUTE, minute.toInt())
-//                set(Calendar.SECOND, 0)
-//            }
-//            val now = Calendar.getInstance()
-//            settingsManager.smsTimeUpdate = false
-//            settingsManager.fromMenu = false
-//
-//            val intent = Intent(this, AlarmReceiver::class.java).apply { action = "VerjaarSMS" }
-//            val pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
-//            val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
-//            var triggerTime = calendar.timeInMillis
-//            if (triggerTime <= now.timeInMillis) {
-//                triggerTime += AlarmManager.INTERVAL_DAY
-//            }
-//            scheduleRepeatingAlarm(alarmManager, triggerTime, AlarmManager.INTERVAL_DAY, pendingIntent)
-//        }
-//    }
-//
-//    private fun setupWidgetRefreshAlarm() {
-//        val calendar = Calendar.getInstance().apply {
-//            set(Calendar.HOUR_OF_DAY, 6)
-//            set(Calendar.MINUTE, 0)
-//            set(Calendar.SECOND, 0)
-//        }
-//        val intent = Intent(this, WinkerkReaderWidgetProvider::class.java).apply {
-//            action = "android.appwidget.action.APPWIDGET_UPDATE"
-//            val ids = AppWidgetManager.getInstance(this@MainActivity)
-//                .getAppWidgetIds(ComponentName(this@MainActivity, WinkerkReaderWidgetProvider::class.java))
-//            putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
-//        }
-//        val pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
-//        val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
-//        scheduleRepeatingAlarm(alarmManager, calendar.timeInMillis, AlarmManager.INTERVAL_DAY, pendingIntent)
-//    }
-//
-//    private fun scheduleRepeatingAlarm(alarmManager: AlarmManager, triggerTime: Long, interval: Long, pendingIntent: PendingIntent) {
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-//            if (alarmManager.canScheduleExactAlarms()) {
-//                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
-//            } else {
-//                startActivity(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM))
-//                alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
-//            }
-//        } else {
-//            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
-//        }
-//    }
 
     private fun loadInitialData() {
         currentFocus?.let {
@@ -698,106 +595,30 @@ class MainActivity : AppCompatActivity() {
                 )
                 searchItemBlock.visibility = View.VISIBLE
             }
-            "ADRES" -> {
-                viewModel.loadData(this, "LIDMAAT_DATA_ADRES")
-            }
-            "GESINNE" -> {
-                viewModel.loadData(this, "GESINNE_DATA")
-            }
-            "HUWELIK" -> {
-                viewModel.loadData(this, "HUWELIK_DATA")
-            }
-            "OUDERDOM" -> {
-                viewModel.loadData(this, "OUDERDOM_DATA")
-            }
-            "VAN" -> {
-                viewModel.loadData(this, "LIDMAAT_DATA")
-            }
-            "VERJAAR" -> {
-                viewModel.loadData(this, "LIDMAAT_DATA_VERJAAR")
-            }
-            "WYK" -> {
-                viewModel.loadData(this, "LIDMAAT_DATA_WYK")
-            }
+            "ADRES"   -> viewModel.loadData(this, "LIDMAAT_DATA_ADRES")
+            "GESINNE" -> viewModel.loadData(this, "GESINNE_DATA")
+            "HUWELIK" -> viewModel.loadData(this, "HUWELIK_DATA")
+            "OUDERDOM"-> viewModel.loadData(this, "OUDERDOM_DATA")
+            "VAN"     -> viewModel.loadData(this, "LIDMAAT_DATA")
+            "VERJAAR" -> viewModel.loadData(this, "LIDMAAT_DATA_VERJAAR")
+            "WYK"     -> viewModel.loadData(this, "LIDMAAT_DATA_WYK")
         }
     }
 
-    private fun handleBirthdayFlag(showBirthday: Boolean) {
-        if (!showBirthday) return
-        val data = cursorAdapter.cursor ?: return
+    // -------------------------------------------------------------------------
+    // Birthday auto-scroll — operates on List<MemberItem>, not a Cursor
+    // -------------------------------------------------------------------------
+
+    private fun scrollToNextBirthday(items: List<MemberItem>) {
         backgroundExecutor.execute {
             try {
-                val today = DateTime.now()
-                if (data.count == 0) return@execute
-                val birthdayIndex = data.getColumnIndex(winkerkEntry.LIDMATE_GEBOORTEDATUM)
-                if (birthdayIndex == -1) return@execute
-                data.moveToFirst()
+                val today        = DateTime.now()
                 val currentMonth = today.toString().substring(5, 7).trim()
-                val currentDay = today.toString().substring(8, 10).trim()
-                // Find the position of the next birthday
-                val targetPosition = findNextBirthdayPosition(data, birthdayIndex, currentMonth, currentDay)
-                //val targetPosition = findTodaysBirthday(data, birthdayIndex, currentMonth, currentDay)
+                val currentDay   = today.toString().substring(8, 10).trim()
+                val targetPosition = findNextBirthdayPosition(items, currentMonth, currentDay)
                 if (targetPosition != -1) {
                     runOnUiThread {
-                        memberListView.post { memberListView.setSelection(targetPosition) }
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "Error handling birthday flag", e)
-            }
-        }
-    }
-
-    /**
-     * Finds the position of the first birthday that is >= today's month-day,
-     * wrapping around to the first birthday of the year if none is found after today.
-     * @param data The cursor containing member data, sorted by month and day.
-     * @param columnIndex The column index of the birthday date.
-     * @param todayMonth The current month as a two-digit string ("01".."12").
-     * @param todayDay The current day as a two-digit string ("01".."31").
-     * @return The cursor position of the next birthday, or -1 if no birthdays exist.
-     */
-    private fun findNextBirthdayPosition(data: Cursor, columnIndex: Int, todayMonth: String, todayDay: String): Int {
-        val todayMD = todayMonth.toInt() * 100 + todayDay.toInt()
-        var firstCandidatePos = -1
-        var firstCandidateMD = Int.MAX_VALUE
-
-        data.moveToFirst()
-        while (!data.isAfterLast) {
-            if (!data.isNull(columnIndex)) {
-                val dateString = data.getString(columnIndex)
-                if (dateString.length >= 10) {
-                    val month = dateString.substring(3, 5).trim()
-                    val day = dateString.substring(0, 2).trim()
-                    val monthDay = month.toInt() * 100 + day.toInt()
-
-                    if (monthDay >= todayMD) {
-                        return data.position
-                    } else {
-                        if (monthDay < firstCandidateMD) {
-                            firstCandidateMD = monthDay
-                            firstCandidatePos = data.position
-                        }
-                    }
-                }
-            }
-            data.moveToNext()
-        }
-        return firstCandidatePos
-    }
-
-    private fun scrollToNextBirthday(cursor: Cursor) {
-        backgroundExecutor.execute {
-            try {
-                val today = DateTime.now()
-                val birthdayIndex = cursor.getColumnIndex(winkerkEntry.LIDMATE_GEBOORTEDATUM)
-                if (birthdayIndex == -1) return@execute
-                val currentMonth = today.toString().substring(5, 7).trim()
-                val currentDay = today.toString().substring(8, 10).trim()
-                val targetPosition = findNextBirthdayPosition(cursor, birthdayIndex, currentMonth, currentDay)
-                if (targetPosition != -1) {
-                    runOnUiThread {
-                        memberListView.post { memberListView.setSelection(targetPosition) }
+                        memberListView.post { memberListView.scrollToPosition(targetPosition) }
                     }
                 }
             } catch (e: Exception) {
@@ -806,30 +627,40 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun findTodaysBirthday(data: Cursor, columnIndex: Int, targetMonth: String, targetDay: String): Int {
-        data.moveToFirst()
-        while (!data.isAfterLast) {
-            if (!data.isNull(columnIndex) && !data.getString(columnIndex).isNullOrEmpty()) {
-                val dateString = data.getString(columnIndex)
-                if (dateString.length >= 5) {
-                    val month = dateString.substring(3, 5).trim()
-                    if (month == targetMonth) break
-                }
+    /**
+     * Finds the position of the first birthday >= today's month-day,
+     * wrapping around to the first birthday of the year if none found after today.
+     */
+    private fun findNextBirthdayPosition(
+        items: List<MemberItem>,
+        todayMonth: String,
+        todayDay: String
+    ): Int {
+        val todayMD = todayMonth.toInt() * 100 + todayDay.toInt()
+        var firstCandidatePos = -1
+        var firstCandidateMD  = Int.MAX_VALUE
+
+        for ((pos, item) in items.withIndex()) {
+            val birthday = item.birthday
+            if (birthday.length >= 10) {
+                try {
+                    val month    = birthday.substring(3, 5).trim()
+                    val day      = birthday.substring(0, 2).trim()
+                    val monthDay = month.toInt() * 100 + day.toInt()
+                    if (monthDay >= todayMD) return pos
+                    if (monthDay < firstCandidateMD) {
+                        firstCandidateMD  = monthDay
+                        firstCandidatePos = pos
+                    }
+                } catch (_: NumberFormatException) { }
             }
-            data.moveToNext()
         }
-        while (!data.isAfterLast) {
-            if (!data.isNull(columnIndex) && !data.getString(columnIndex).isNullOrEmpty()) {
-                val dateString = data.getString(columnIndex)
-                if (dateString.length >= 2) {
-                    val day = dateString.substring(0, 2).trim()
-                    if (day == targetDay) return data.position
-                }
-            }
-            data.moveToNext()
-        }
-        return -1
+        return firstCandidatePos
     }
+
+    // -------------------------------------------------------------------------
+    // WhatsApp contacts loading (unchanged)
+    // -------------------------------------------------------------------------
 
     private fun loadWhatsAppContactsAtomic() {
         if (whatsAppContactsLoaded.get() && whatsappContacts.isNotEmpty()) {
@@ -905,61 +736,55 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun showMemberPopupMenu(view: View, position: Int, id: Long) {
+    // -------------------------------------------------------------------------
+    // Popup menu — uses MemberItem for configuration; re-queries cursor for actions
+    // -------------------------------------------------------------------------
+
+    private fun showMemberPopupMenu(view: View, item: MemberItem, position: Int) {
         listItemPosition = position
-        listItemId = id
+        listItemId       = item.id
         val popup = PopupMenu(this, view)
         popup.menuInflater.inflate(R.menu.lidmaatlist_menu, popup.menu)
         popup.forceShowIcons()
-        val cursor = cursorAdapter.getItem(position) as? Cursor ?: return
-        if (!cursor.moveToPosition(position)) return
-        configurePopupMenu(popup, cursor)
+        configurePopupMenuFromItem(popup, item)
         popup.show()
-        popup.setOnMenuItemClickListener { item -> handlePopupMenuClick(item, cursor) }
+        popup.setOnMenuItemClickListener { menuItem ->
+            handlePopupMenuClick(menuItem.itemId, item)
+        }
     }
 
-    private fun configurePopupMenu(popup: PopupMenu, cursor: Cursor) {
-        val nameIdx = cursor.getColumnIndex(winkerkEntry.LIDMATE_NOEMNAAM)
-        val surnameIdx = cursor.getColumnIndex(winkerkEntry.LIDMATE_VAN)
-        val cellIdx = cursor.getColumnIndex(winkerkEntry.LIDMATE_SELFOON)
-        val phoneIdx = cursor.getColumnIndex(winkerkEntry.ADRESSE_LANDLYN)
-        val emailIdx = cursor.getColumnIndex(winkerkEntry.LIDMATE_EPOS)
-
-        val name = cursor.getString(nameIdx)
-        val surname = cursor.getString(surnameIdx)
+    /** Configure menu titles and visibility from a [MemberItem] — no cursor needed. */
+    private fun configurePopupMenuFromItem(popup: PopupMenu, item: MemberItem) {
         val menu = popup.menu
+        menu.findItem(R.id.kyk_lidmaat_detail).title = "Detail van ${item.name} ${item.surname}"
+        menu.findItem(R.id.submenu_bel).title        = "Skakel ${item.name}"
+        menu.findItem(R.id.submenu_teks).title       = "Teks ${item.name}"
+        menu.findItem(R.id.submenu_ander).title      = item.name
 
-        menu.findItem(R.id.kyk_lidmaat_detail).title = "Detail van $name $surname"
-        menu.findItem(R.id.submenu_bel).title = "Skakel $name"
-        menu.findItem(R.id.submenu_teks).title = "Teks $name"
-        menu.findItem(R.id.submenu_ander).title = name
-
-        if (cursor.isNull(cellIdx)) {
-            safeRemoveMenuItem(menu, R.id.submenu_bel, R.id.bel_selfoon)
+        if (item.cellphone.isEmpty()) {
+            safeRemoveMenuItem(menu, R.id.submenu_bel,  R.id.bel_selfoon)
             safeRemoveMenuItem(menu, R.id.submenu_teks, R.id.stuur_sms)
             safeRemoveMenuItem(menu, R.id.submenu_teks, R.id.stuur_whatsapp)
             safeRemoveMenuItem(menu, R.id.submenu_teks, R.id.stuur_whatsapp2)
             safeRemoveMenuItem(menu, R.id.submenu_teks, R.id.stuur_whatsapp3)
         } else {
-            val cellNumber = cursor.getString(cellIdx)
-            menu.findItem(R.id.bel_selfoon).title = "Skakel $cellNumber"
-            menu.findItem(R.id.stuur_sms).title = "SMS na $cellNumber"
+            menu.findItem(R.id.bel_selfoon)?.title = "Skakel ${item.cellphone}"
+            menu.findItem(R.id.stuur_sms)?.title   = "SMS na ${item.cellphone}"
         }
 
-        if (cursor.isNull(phoneIdx)) {
+        if (item.landline.isEmpty()) {
             safeRemoveMenuItem(menu, R.id.submenu_bel, R.id.bel_landlyn)
         } else {
-            val phoneNumber = cursor.getString(phoneIdx)
-            menu.findItem(R.id.bel_landlyn).title = "Skakel $phoneNumber"
+            menu.findItem(R.id.bel_landlyn)?.title = "Skakel ${item.landline}"
         }
 
-        if (cursor.isNull(emailIdx) || cursor.getString(emailIdx).isNullOrEmpty()) {
+        if (item.email.isEmpty()) {
             safeRemoveMenuItem(menu, R.id.submenu_teks, R.id.stuur_epos)
         }
 
-        if (!za.co.jpsoft.winkerkreader.utils.SettingsManager(this).whatsapp1) safeRemoveMenuItem(menu, R.id.submenu_teks, R.id.stuur_whatsapp)
-        if (!za.co.jpsoft.winkerkreader.utils.SettingsManager(this).whatsapp2) safeRemoveMenuItem(menu, R.id.submenu_teks, R.id.stuur_whatsapp2)
-        if (!za.co.jpsoft.winkerkreader.utils.SettingsManager(this).whatsapp3) safeRemoveMenuItem(menu, R.id.submenu_teks, R.id.stuur_whatsapp3)
+        if (!settingsManager.whatsapp1) safeRemoveMenuItem(menu, R.id.submenu_teks, R.id.stuur_whatsapp)
+        if (!settingsManager.whatsapp2) safeRemoveMenuItem(menu, R.id.submenu_teks, R.id.stuur_whatsapp2)
+        if (!settingsManager.whatsapp3) safeRemoveMenuItem(menu, R.id.submenu_teks, R.id.stuur_whatsapp3)
     }
 
     private fun safeRemoveMenuItem(menu: Menu, submenuId: Int, itemId: Int) {
@@ -969,55 +794,79 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun handlePopupMenuClick(item: MenuItem, cursor: Cursor): Boolean {
-        return MemberActionHandler(this, cursor).handleAction(item.itemId)
+    /**
+     * Re-queries the specific member by ID so [MemberActionHandler] (which still
+     * accepts a Cursor) can perform its actions without holding a long-lived cursor.
+     */
+    private fun handlePopupMenuClick(actionId: Int, item: MemberItem): Boolean {
+        Log.e("DEBUG", "=== handlePopupMenuClick START ===")
+        Log.e("DEBUG", "actionId: $actionId")
+        Log.e("DEBUG", "item.id: ${item.id}")
+        Log.e("DEBUG", "item.guid: ${item.guid}")
+        Log.e("DEBUG", "item.name: ${item.name}")
+
+        val memberUri = ContentUris.withAppendedId(winkerkEntry.CONTENT_URI, item.id)
+        Log.e("DEBUG", "memberUri: $memberUri")
+
+        var cursor: Cursor? = null
+        return try {
+            Log.e("DEBUG", "Before query...")
+            cursor = contentResolver.query(memberUri, null, null, null, null)
+            Log.e("DEBUG", "After query, cursor = $cursor")
+
+            if (cursor != null) {
+                Log.e("DEBUG", "Cursor count: ${cursor.count}")
+                Log.e("DEBUG", "Cursor moveToFirst: ${cursor.moveToFirst()}")
+            }
+
+            if (cursor != null && cursor.moveToFirst()) {
+                Log.e("DEBUG", "Calling MemberActionHandler")
+                MemberActionHandler(this, cursor).handleAction(actionId)
+            } else {
+                Log.w(TAG, "Could not query member for action: id=${item.id}")
+                false
+            }
+        } catch (e: Exception) {
+            Log.e("DEBUG", "EXCEPTION CAUGHT!", e)
+            Log.e("DEBUG", "Exception message: ${e.message}")
+            Log.e("DEBUG", "Exception stack trace:", e)
+            false
+        } finally {
+            cursor?.close()
+            Log.e("DEBUG", "=== handlePopupMenuClick END ===")
+        }
     }
+
+    // -------------------------------------------------------------------------
+    // Group-function menu — uses currentList, no cursor
+    // -------------------------------------------------------------------------
 
     private fun showGroupFunctionMenu(view: View) {
         val popup = PopupMenu(this, view)
         popup.menuInflater.inflate(R.menu.groepfunksie_menu, popup.menu)
         popup.forceShowIcons()
-        val cursor = cursorAdapter.cursor ?: return
-        if (cursor.count < 1) return
-        val counts = calculateMemberCounts(cursor)
-        val totalCount = counts[0]
-        val selectedCount = counts[1]
+        val items = memberListAdapter.currentList
+        if (items.isEmpty()) return
+        val totalCount    = items.size
+        val selectedCount = items.count { it.tag == 1 }
 
-        popup.menu.findItem(R.id.sms_groep).title = "Almal ($totalCount)"
-        popup.menu.findItem(R.id.sms_selected).title = "Geselekteerdes ($selectedCount)"
-        popup.menu.findItem(R.id.almal_in_groep).title = "Almal ($totalCount)"
-        popup.menu.findItem(R.id.selected_in_groep).title = "Geselekteerdes ($selectedCount)"
+        popup.menu.findItem(R.id.sms_groep).title          = "Almal ($totalCount)"
+        popup.menu.findItem(R.id.sms_selected).title       = "Geselekteerdes ($selectedCount)"
+        popup.menu.findItem(R.id.almal_in_groep).title     = "Almal ($totalCount)"
+        popup.menu.findItem(R.id.selected_in_groep).title  = "Geselekteerdes ($selectedCount)"
 
         popup.show()
-        popup.setOnMenuItemClickListener { handleGroupMenuClick(it, cursor) }
+        popup.setOnMenuItemClickListener { handleGroupMenuClick(it) }
     }
 
-    private fun calculateMemberCounts(cursor: Cursor): IntArray {
-        cursor.moveToFirst()
-        val totalCount = cursor.count
-        var selectedCount = 0
-        val tagIdx = cursor.getColumnIndex(winkerkEntry.LIDMATE_TAG)
-        if (tagIdx != -1) {
-            repeat(totalCount) {
-                if (cursor.getInt(tagIdx) == 1) selectedCount++
-                cursor.moveToNext()
-            }
-        }
-        return intArrayOf(totalCount, selectedCount)
-    }
-
-    private fun handleGroupMenuClick(item: MenuItem, cursor: Cursor): Boolean {
-        if (cursor.count < 1) return false
-        // SMS sending not yet implemented – collector collects members but not used yet
-        // val collector = GroupMemberCollector(cursor)
-        // val smsList = when (item.itemId) {
-        //     R.id.sms_groep, R.id.almal_in_groep -> collector.collectAllMembers()
-        //     R.id.sms_selected, R.id.selected_in_groep -> collector.collectSelectedMembers()
-        //     else -> arrayListOf()
-        // }
-        // TODO: handle smsList
+    private fun handleGroupMenuClick(item: MenuItem): Boolean {
+        // SMS group sending not yet implemented
         return true
     }
+
+    // -------------------------------------------------------------------------
+    // Database helpers (unchanged)
+    // -------------------------------------------------------------------------
 
     private fun setDatabaseDate() {
         try {
@@ -1053,7 +902,7 @@ class MainActivity : AppCompatActivity() {
                         za.co.jpsoft.winkerkreader.utils.SettingsManager(this).gemeente3Epos = ""
 
                         if (cursor.moveToFirst()) {
-                            val nameIdx = cursor.getColumnIndex("Gemeente")
+                            val nameIdx  = cursor.getColumnIndex("Gemeente")
                             val emailIdx = cursor.getColumnIndex("Gemeente epos")
                             if (nameIdx != -1 && emailIdx != -1) {
                                 za.co.jpsoft.winkerkreader.utils.SettingsManager(this).gemeenteNaam = cursor.getString(nameIdx) ?: ""
@@ -1076,6 +925,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // -------------------------------------------------------------------------
+    // Options menu & search (unchanged)
+    // -------------------------------------------------------------------------
+
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         optionsMenu = menu
         if (menu.javaClass.simpleName == "MenuBuilder") {
@@ -1089,6 +942,32 @@ class MainActivity : AppCompatActivity() {
         }
         menuInflater.inflate(R.menu.menu_main, menu)
         setupSearchView(menu)
+
+        val menuItem = optionsMenu?.findItem(R.id.aktief_radio_group)
+        val radioGroup = menuItem?.actionView as RadioGroup
+        when (AppSessionState.recordStatus) {
+            "0" -> radioGroup.check(R.id.filter_aktief2)
+            "2" -> radioGroup.check(R.id.filter_onaktief2)
+            "*" -> radioGroup.check(R.id.filter_beide)
+            else -> radioGroup.check(R.id.filter_aktief2) // Default to Active
+        }
+        radioGroup.setOnCheckedChangeListener { group, checkedId ->
+            val newStatus = when (checkedId) {
+                R.id.filter_aktief2 -> "0"
+                R.id.filter_onaktief2 -> "2"
+                R.id.filter_beide -> "*"
+                else -> "0"
+            }
+
+            Log.d("MainActivity", "Radio changed: ${AppSessionState.recordStatus} -> $newStatus")
+            AppSessionState.recordStatus = newStatus
+
+            // Clear the cache to force a fresh query
+            // You might want to add a clearCache() method in your ViewModel
+            viewModel.clearCache()  // We'll add this
+
+            observeDataset()
+        }
         return true
     }
 
@@ -1122,9 +1001,7 @@ class MainActivity : AppCompatActivity() {
 
             override fun onQueryTextChange(newText: String): Boolean {
                 searchRunnable?.let { searchHandler.removeCallbacks(it) }
-                searchRunnable = Runnable {
-                    performSearch(newText)
-                }
+                searchRunnable = Runnable { performSearch(newText) }
                 searchHandler.postDelayed(searchRunnable!!, 300)
                 return true
             }
@@ -1170,11 +1047,7 @@ class MainActivity : AppCompatActivity() {
         if (resultCode != RESULT_OK || data == null) {
             AppSessionState.sortOrder = SettingsManager(this).defLayout
             AppSessionState.soekList = false
-            try {
-                cursorAdapter.swapCursor(null)
-            } finally {
-                observeDataset()
-            }
+            observeDataset()
             return
         }
         when (requestCode) {
@@ -1207,24 +1080,27 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         isLoadingWhatsAppContacts.set(false)
         whatsAppContactsLoaded.set(false)
-        cursorAdapter.swapCursor(null)
         backgroundExecutor.shutdown()
         super.onDestroy()
     }
 
+    // -------------------------------------------------------------------------
+    // Swipe gesture detector (unchanged)
+    // -------------------------------------------------------------------------
+
     private inner class SwipeGestureDetector : GestureDetector.SimpleOnGestureListener() {
-        private val SWIPE_MIN_DISTANCE = 120
-        private val SWIPE_MAX_OFF_PATH = 200
+        private val SWIPE_MIN_DISTANCE      = 120
+        private val SWIPE_MAX_OFF_PATH      = 200
         private val SWIPE_THRESHOLD_VELOCITY = 200
 
         override fun onFling(e1: MotionEvent?, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
             try {
                 if (e1 == null) return false
                 val diffAbs = Math.abs(e1.y - e2.y)
-                val diff = e1.x - e2.x
+                val diff    = e1.x - e2.x
                 if (diffAbs > SWIPE_MAX_OFF_PATH) return false
                 when {
-                    diff > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY -> onLeftSwipe()
+                    diff > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY  -> onLeftSwipe()
                     -diff > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY -> onRightSwipe()
                 }
             } catch (e: Exception) {
@@ -1234,13 +1110,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun onLeftSwipe() {
-        NavigationHandler.handleLeftSwipe(this, sortOrderView)
-    }
-
-    private fun onRightSwipe() {
-        NavigationHandler.handleRightSwipe(this, sortOrderView)
-    }
-
-
+    private fun onLeftSwipe()  { NavigationHandler.handleLeftSwipe(this, sortOrderView) }
+    private fun onRightSwipe() { NavigationHandler.handleRightSwipe(this, sortOrderView) }
 }
