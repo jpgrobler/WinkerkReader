@@ -1,7 +1,7 @@
 package za.co.jpsoft.winkerkreader.utils
 
-import org.joda.time.DateTime
-import org.joda.time.format.DateTimeFormat
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 object Utils {
 
@@ -30,11 +30,11 @@ object Utils {
     }
 
     @JvmStatic
-    fun parseDate(date: String): DateTime? {
+    fun parseDate(date: String): LocalDate? {
         val patterns = listOf("dd/MM/yyyy", "dd.MM.yyyy", "dd MM yyy", "dd-MM-yyyy")
         for (pattern in patterns) {
             try {
-                return DateTime.parse(date, DateTimeFormat.forPattern(pattern))
+                return LocalDate.parse(date, DateTimeFormatter.ofPattern(pattern))
             } catch (_: Exception) {
                 // continue
             }

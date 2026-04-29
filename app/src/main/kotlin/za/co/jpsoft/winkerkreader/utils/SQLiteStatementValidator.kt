@@ -63,7 +63,7 @@ object SQLiteStatementValidator {
             return ValidationResult(false, "SQL statement cannot be null or empty", 0)
         }
 
-        val originalSql = sqlStatement.trim()
+        val originalSql = sqlStatement!!.trim()
         var wasFixed = false
 
         try {
@@ -91,7 +91,7 @@ object SQLiteStatementValidator {
             return ValidationResult(false, "SQL statement cannot be null or empty", 0)
         }
 
-        val originalSql = sqlStatement.trim()
+        val originalSql = sqlStatement!!.trim()
 
         return try {
             val cleanedSql = removeStringLiteralsAndComments(originalSql)
@@ -114,7 +114,7 @@ object SQLiteStatementValidator {
     fun fixSQLiteStatement(sqlStatement: String?): String? {
         if (sqlStatement.isNullOrBlank()) return sqlStatement
 
-        var sql = sqlStatement.trim()
+        var sql = sqlStatement!!.trim()
         sql = fixIllegalCharactersAfterKeywords(sql)
         sql = fixTrailingCommas(sql)
         sql = fixConsecutiveCommas(sql)

@@ -1,13 +1,5 @@
 package za.co.jpsoft.winkerkreader.ui.activities
 
-import za.co.jpsoft.winkerkreader.utils.SettingsManager
-import za.co.jpsoft.winkerkreader.WinkerkReader
-import za.co.jpsoft.winkerkreader.ui.adapters.SpinnerAdapter
-import za.co.jpsoft.winkerkreader.services.receivers.AlarmReceiver
-import za.co.jpsoft.winkerkreader.workers.PhotoDownloadWorker
-import za.co.jpsoft.winkerkreader.utils.AppSessionState
-import za.co.jpsoft.winkerkreader.R
-
 import android.Manifest
 import android.app.*
 import android.content.*
@@ -33,29 +25,31 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import androidx.work.*
+import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.WinkerkContract
-import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
+import za.co.jpsoft.winkerkreader.data.WinkerkDbHelper
+import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.INFO_DB
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.WINKERK_DB
-import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.WkrDir
-import za.co.jpsoft.winkerkreader.data.WinkerkDbHelper
+import za.co.jpsoft.winkerkreader.services.receivers.AlarmReceiver
+import za.co.jpsoft.winkerkreader.utils.SettingsManager
+import za.co.jpsoft.winkerkreader.workers.FileDownloadWorker
+import za.co.jpsoft.winkerkreader.workers.PhotoDownloadWorker
 import java.io.*
 import java.net.Socket
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.security.MessageDigest
-import java.security.NoSuchAlgorithmException
 import java.util.*
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.regex.Pattern
 
 class LaaiDatabasisActivity : AppCompatActivity() {
 
     private lateinit var settings: SharedPreferences
+    private lateinit var settingsManager: SettingsManager
     private var currentWorkInfoLiveData: LiveData<WorkInfo?>? = null
-    private var workInfoObserver: Observer<WorkInfo?>? = null
+    private var workInfoObserver: Observer<WorkInfo?> = Observer { }
 
     private lateinit var syncPhotosCheck: CheckBox
     private lateinit var startPhotoSyncBtn: Button
@@ -77,57 +71,53 @@ class LaaiDatabasisActivity : AppCompatActivity() {
     private lateinit var eText: EditText
     private var AutoDL = false
 
-    private var receiveFileTaskUSB = ReceiveFileTask()
-    private var receiveFileTaskWiFi = ReceiveFileTask()
-
     private val weeksdagArray = arrayOf("Sondag", "Maandag", "Dinsdag", "Woensdag", "Donderdag", "Vrydag", "Saterdag")
     private var FlagCancelledUSB = false
     private var FlagCancelledWiFi = false
 
-    // Activity Result Launcher for file picker
-    private val pickFileLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == RESULT_OK) {
-            val data = result.data
-            val fileUri = data?.data
-            if (fileUri != null) {
-                val filePath = fileUri.path
-                if (filePath != null) {
-                    val context = this
-                    val dbPath = context.applicationInfo.dataDir + "/databases/"
-                    var `in`: InputStream? = null
-                    var out: OutputStream? = null
-                    try {
-                        `in` = contentResolver.openInputStream(fileUri)
-                        out = Files.newOutputStream(Paths.get(dbPath + "/" + DB_NAME))
-                        val buffer = ByteArray(1024)
-                        var len: Int
-                        while (`in`!!.read(buffer).also { len = it } != -1) {
-                            out!!.write(buffer, 0, len)
-                        }
-                    } catch (e: IOException) {
-                        Log.e(TAG, "Write buffer out failed", e)
-                    } finally {
-                        try {
-                            `in`?.close()
-                            out?.close()
-                        } catch (e: IOException) {
-                            Log.e(TAG, "Stream close failed", e)
-                        }
+    // Track ongoing file download work
+    private var fileDownloadWorkId: UUID? = null
+
+    private val notificationPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+        if (isGranted) Log.d("LaaiDatabasis", "Notification permission granted")
+    }
+
+    private val storagePermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+        if (isGranted) Log.d("LaaiDatabasis", "Storage permission granted")
+    }
+
+    // Modern Activity Result Launcher for file picker
+    private val pickFileLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) {
+            val dbPath = File(applicationInfo.dataDir, "databases")
+            if (!dbPath.exists()) dbPath.mkdirs()
+
+            val targetFile = File(dbPath, DB_NAME)
+            try {
+                contentResolver.openInputStream(uri)?.use { input ->
+                    FileOutputStream(targetFile).use { output ->
+                        input.copyTo(output)
                     }
-                    try {
-                        unregisterReceiver(recieverDownloadComplete)
-                    } catch (_: IllegalArgumentException) {
-                    }
-                    reloadDatabaseAndFinish() //performDatabaseReloadAndRestart()
-                    //finish()
                 }
+
+                try {
+                    unregisterReceiver(recieverDownloadComplete)
+                } catch (_: IllegalArgumentException) {}
+
+                reloadDatabaseAndFinish()
+            } catch (e: IOException) {
+                Log.e(TAG, "File copy failed", e)
+                Toast.makeText(this, "Kon nie lêer kopieer nie: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
     }
 
     override fun onBackPressed() {
-        receiveFileTaskUSB.cancel()
-        receiveFileTaskWiFi.cancel()
+        // Cancel ongoing file download work if any
+        fileDownloadWorkId?.let { workId ->
+            WorkManager.getInstance(this).cancelWorkById(workId)
+            fileDownloadWorkId = null
+        }
         if (myDownloadReference != 0L) {
             getSystemService(Context.DOWNLOAD_SERVICE)?.let {
                 (it as DownloadManager).remove(myDownloadReference)
@@ -159,10 +149,15 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.laaidatabasis)
 
-        settings = getSharedPreferences(PREFS_USER_INFO, MODE_PRIVATE)
+        settings = getSharedPreferences(WinkerkContract.PREFS_USER_INFO, MODE_PRIVATE)
+        settingsManager = SettingsManager.getInstance(this)
         initializeSettings()
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        requestPermissionsIfNeeded()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
 
         initializeTimePickerUI()
         initializeSpinnerUI()
@@ -193,32 +188,26 @@ class LaaiDatabasisActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        // Cancel any ongoing file download work
+        fileDownloadWorkId?.let { workId ->
+            WorkManager.getInstance(this).cancelWorkById(workId)
+            fileDownloadWorkId = null
+        }
+        // Remove observer for photo sync (safe even if observer is null)
+        currentWorkInfoLiveData?.removeObserver(workInfoObserver)
         try {
-            if (recieverDownloadComplete != null) {
-                unregisterReceiver(recieverDownloadComplete)
-            }
+            recieverDownloadComplete?.let { unregisterReceiver(it) }
         } catch (e: Exception) {
-            Log.e("WinkerkReader LaaiDatabasisActivity", "Error: $e")
+            Log.e(TAG, "Error unregistering download receiver", e)
         }
     }
 
     // -------------------------------------------------------------------------
-    // Private helpers
+    // Private helpers (unchanged except for socket transfer replaced by WorkManager)
     // -------------------------------------------------------------------------
 
     private fun initializeSettings() {
         AutoDL = settings.getBoolean("AUTO_DL", false)
-    }
-
-    private fun requestPermissionsIfNeeded() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 787)
-            }
-        }
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), 786)
-        }
     }
 
     private fun initializeTimePickerUI() {
@@ -259,14 +248,13 @@ class LaaiDatabasisActivity : AppCompatActivity() {
     private fun initializeSpinnerUI() {
         val day = settings.getInt("DL-DAY", 6)
         val weeksDag = findViewById<Spinner>(R.id.weeksdag)
-        val weeksdagStatusAdapter = SpinnerAdapter(this, null, weeksdagArray)
+        val weeksdagStatusAdapter = za.co.jpsoft.winkerkreader.ui.adapters.SpinnerAdapter(this, null, weeksdagArray)
         weeksDag.adapter = weeksdagStatusAdapter
         weeksDag.setSelection(day - 1)
         weeksDag.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 saveDaySelection(position + 1)
             }
-
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
     }
@@ -467,14 +455,12 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         navigateToMainActivity()
     }
 
-    // Restore navigateToMainActivity() to original behavior
     private fun navigateToMainActivity() {
+        settingsManager.defLayout = "VERJAAR"
         val intent = Intent(this, MainActivity::class.java).apply {
             putExtra("SENDER_CLASS_NAME", "WysVerjaar")
-            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
-        AppSessionState.sortOrder = "VERJAAR"
-        AppSessionState.soekList = false
         startActivity(intent)
         finish()
     }
@@ -522,7 +508,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         if (LaaiNuweData(filePath!!)) {
             Toast.makeText(this, "Suksesvol", Toast.LENGTH_SHORT).show()
             resetGemeenteSettings()
-            reloadDatabaseAndFinish() //performDatabaseReloadAndRestart()
+            reloadDatabaseAndFinish()
         } else {
             Toast.makeText(this, "Onsuksesvol", Toast.LENGTH_SHORT).show()
             navigateToMainActivity()
@@ -533,8 +519,8 @@ class LaaiDatabasisActivity : AppCompatActivity() {
     }
 
     private fun resetGemeenteSettings() {
-        za.co.jpsoft.winkerkreader.utils.SettingsManager(this).gemeenteNaam = ""
-        za.co.jpsoft.winkerkreader.utils.SettingsManager(this).gemeenteEpos = ""
+        settingsManager.gemeenteNaam = ""
+        settingsManager.gemeenteEpos = ""
 
         settings.edit()
             .putString("Gemeente", "")
@@ -543,26 +529,14 @@ class LaaiDatabasisActivity : AppCompatActivity() {
             .apply()
     }
 
-    // If you keep performDatabaseReloadAndRestart(), simplify it:
-    private fun performDatabaseReloadAndRestart() {
-        try {
-            contentResolver.call(WinkerkContract.winkerkEntry.CONTENT_URI, "reloadDatabase", null, null)
-            contentResolver.query(WinkerkContract.winkerkEntry.CONTENT_URI, null, null, null, null)?.close()
-        } catch (e: Exception) {
-            Log.e(TAG, "Error during database reload", e)
-        }
-        navigateBackToMain()
-    }
-
     private fun handlePickFile() {
-        val chooseFile = Intent(Intent.ACTION_GET_CONTENT).apply {
-            addCategory(Intent.CATEGORY_OPENABLE)
-            type = "*/*"
-        }
-        pickFileLauncher.launch(Intent.createChooser(chooseFile, "Kies die databasis"))
-
+        pickFileLauncher.launch(arrayOf("application/octet-stream", "application/x-sqlite3", "application/vnd.sqlite3"))
         findViewById<Button>(R.id.laai_picker).setBackgroundColor(Color.GREEN)
     }
+
+    // -------------------------------------------------------------------------
+    // REFACTORED: WiFi and USB transfer using WorkManager
+    // -------------------------------------------------------------------------
 
     private fun handleNetworkTransfer() {
         val networkButton = findViewById<Button>(R.id.laai_socket)
@@ -570,8 +544,10 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         laai_boodskap = findViewById(R.id.laai_boodskap)
 
         if (FlagCancelledWiFi) {
+            // Cancel ongoing work
+            fileDownloadWorkId?.let { WorkManager.getInstance(this).cancelWorkById(it) }
+            fileDownloadWorkId = null
             networkButton.background.clearColorFilter()
-            receiveFileTaskWiFi.cancel()
             laai_boodskap.text = "Aflaai gekanselleer"
             FlagCancelledWiFi = false
         } else {
@@ -581,33 +557,11 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                 saveIPAddress(ipText)
                 SERVER_IP = ipText
                 SERVER_PORT = 49514
-                startWiFiFileTransfer()
+                startFileDownload(ipText, SERVER_PORT, networkButton, isWiFi = true)
                 FlagCancelledWiFi = true
             } else {
                 laai_boodskap.text = "Voer geldige IP adres in asb"
             }
-        }
-    }
-
-    fun isSQLiteDatabase(filePath: String): Boolean {
-        return try {
-            SQLiteDatabase.openDatabase(filePath, null, SQLiteDatabase.OPEN_READONLY).use { db ->
-                db.isOpen
-            }
-        } catch (e: Exception) {
-            false
-        }
-    }
-    private fun reloadDatabaseAndFinish() {
-        try {
-            contentResolver.call(WinkerkContract.winkerkEntry.CONTENT_URI, "reloadDatabase", null, null)
-            // Wait a bit for the database to be reopened
-            Handler(Looper.getMainLooper()).postDelayed({
-                navigateBackToMain()
-            }, 200) // 200 ms delay
-        } catch (e: Exception) {
-            Log.e(TAG, "Error during database reload", e)
-            navigateBackToMain()
         }
     }
 
@@ -617,9 +571,10 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         laai_boodskap = findViewById(R.id.laai_boodskap)
 
         if (FlagCancelledUSB) {
+            fileDownloadWorkId?.let { WorkManager.getInstance(this).cancelWorkById(it) }
+            fileDownloadWorkId = null
             usbButton.background.clearColorFilter()
             ipAddress.setText("")
-            receiveFileTaskUSB.cancel()
             laai_boodskap.text = "Aflaai gekanselleer"
             FlagCancelledUSB = false
         } else {
@@ -627,25 +582,59 @@ class LaaiDatabasisActivity : AppCompatActivity() {
             ipAddress.setText("127.0.0.1")
             SERVER_IP = "localhost"
             SERVER_PORT = 49514
-            startUSBFileTransfer()
+            startFileDownload("127.0.0.1", SERVER_PORT, usbButton, isWiFi = false)
             FlagCancelledUSB = true
+        }
+    }
+
+    private fun startFileDownload(serverIp: String, port: Int, button: Button, isWiFi: Boolean) {
+        laai_boodskap.text = "Begin aflaai..."
+
+        val inputData = Data.Builder()
+            .putString(FileDownloadWorker.KEY_SERVER_IP, serverIp)
+            .putInt(FileDownloadWorker.KEY_SERVER_PORT, port)
+            .build()
+
+        val workRequest = OneTimeWorkRequest.Builder(FileDownloadWorker::class.java)
+            .setInputData(inputData)
+            .addTag("file_download")
+            .build()
+
+        WorkManager.getInstance(this).enqueue(workRequest)
+        fileDownloadWorkId = workRequest.id
+
+        // Observe progress and result
+        WorkManager.getInstance(this).getWorkInfoByIdLiveData(workRequest.id).observe(this) { workInfo ->
+            if (workInfo == null) return@observe
+
+            // Update progress
+            val progress = workInfo.progress.getInt(FileDownloadWorker.KEY_PROGRESS, 0)
+            if (progress > 0) {
+                laai_boodskap.text = "Ontvang: $progress%"
+            }
+
+            if (workInfo.state.isFinished) {
+                button.background.clearColorFilter()
+                if (workInfo.state == WorkInfo.State.SUCCEEDED) {
+                    laai_boodskap.text = "Aflaai voltooi"
+                    Toast.makeText(this, "Databasis suksesvol ontvang", Toast.LENGTH_SHORT).show()
+                    // Worker already called reloadDatabase, just delay then finish
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        navigateBackToMain()
+                    }, 1500)
+                } else {
+                    laai_boodskap.text = "Aflaai misluk"
+                    Toast.makeText(this, "Kon nie databasis aflaai nie", Toast.LENGTH_LONG).show()
+                }
+                // Reset flags
+                if (isWiFi) FlagCancelledWiFi = false else FlagCancelledUSB = false
+                fileDownloadWorkId = null
+            }
         }
     }
 
     private fun saveIPAddress(ipAddress: String) {
         settings.edit().putString("IP", ipAddress).apply()
-    }
-
-    private fun startWiFiFileTransfer() {
-        receiveFileTaskWiFi.cancel() // Cancel any ongoing transfer
-        receiveFileTaskWiFi = ReceiveFileTask() // Create fresh instance
-        receiveFileTaskWiFi.execute()
-    }
-
-    private fun startUSBFileTransfer() {
-        receiveFileTaskUSB.cancel()
-        receiveFileTaskUSB = ReceiveFileTask()
-        receiveFileTaskUSB.execute()
     }
 
     private fun initializeProgressBars() {
@@ -654,7 +643,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
     }
 
     private fun initializeDataInfo() {
-        findViewById<TextView>(R.id.datadate).text = "Huidige Data: ${za.co.jpsoft.winkerkreader.utils.SettingsManager(this).dataDatum}"
+        findViewById<TextView>(R.id.datadate).text = "Huidige Data: ${settingsManager.dataDatum}"
         val dbLinkView = findViewById<EditText>(R.id.db_link)
         val dropBoxUrl = settings.getString("DropBox", "")
         if (!dropBoxUrl.isNullOrEmpty()) {
@@ -664,13 +653,10 @@ class LaaiDatabasisActivity : AppCompatActivity() {
 
     private fun scanForDatabaseFiles() {
         try {
-            getFileList(MEDIA_PATH)
-            getFileList(Environment.getExternalStorageDirectory().toString() + "/WinkerkReader/")
-            getFileList(MEDIA_PATH2)
+            getFileList(winkerkEntry.getWkrDir(this))
         } catch (e: Exception) {
             Log.e("WinkerkReader LaaiDatabasisActivity", "Error scanning files: $e")
         }
-
         backupCurrentDatabase()
     }
 
@@ -678,7 +664,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         try {
             val dataDir = File(applicationInfo.dataDir, "/databases/")
             val currentDB = File(dataDir, INFO_DB)
-            val backupDB = File(WkrDir, INFO_DB)
+            val backupDB = File(winkerkEntry.getWkrDir(this), INFO_DB)
 
             if (backupDB.exists()) {
                 backupDB.delete()
@@ -770,7 +756,6 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         processAutomaticDatabaseUpdate(extra)
     }
 
-    // Fix processAutomaticDatabaseUpdate()
     private fun processAutomaticDatabaseUpdate(filePath: String) {
         Toast.makeText(this, "WKR - Databasislaai", Toast.LENGTH_SHORT).show()
         val file = File(filePath)
@@ -788,7 +773,6 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         } else {
             Toast.makeText(this, "WKR - Dropbox Databasis te klein", Toast.LENGTH_LONG).show()
         }
-        // Remove the extra navigateBackToMain() here
     }
 
     private fun handleAutomaticDownload() {
@@ -831,189 +815,170 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         WinkerkDbHelper.closeInstance(WINKERK_DB)
         WinkerkDbHelper.closeInstance(INFO_DB)
 
-        val context = this
-        val dbPath = context.applicationInfo.dataDir + "/databases/"
-
+        val dbPath = applicationInfo.dataDir + "/databases/"
         var result = false
         val sourceFile = File(nfile)
 
-        if (checkPermission()) {
-            var `is`: InputStream? = null
+        if (!checkPermission()) return false
+
+        var inputStream: InputStream? = null
+        var outputStream: OutputStream? = null
+        try {
+            inputStream = FileInputStream(sourceFile)
+            outputStream = FileOutputStream("$dbPath/$DB_NAME")
+        } catch (e: FileNotFoundException) {
+            Log.e(TAG, "Laai Nuwe Data stream failed", e)
+            showError("Kan databasis lêer nie oopmaak nie")
+            return false
+        }
+
+        try {
+            writeExtractedFileToDisk(inputStream!!, outputStream!!)
+            result = true
+        } catch (e: IOException) {
+            Log.e(TAG, "Write ExtractedFileToDisk failed", e)
+            showError("Fout tydens skryf van databasis")
+            result = false
+        } finally {
+            inputStream?.close()
+            outputStream?.close()
+        }
+
+        if (delete) {
             try {
-                `is` = FileInputStream(sourceFile)
-                result = true
-            } catch (e: FileNotFoundException) {
-                Log.e(TAG, "Laai Nuwe Data Input stream failed", e)
-                result = false
-            }
-
-            if (result) {
-                var dest: OutputStream? = null
-                try {
-                    dest = FileOutputStream("$dbPath/$DB_NAME")
-                } catch (e: FileNotFoundException) {
-                    val mediaStorageDir = File(applicationInfo.dataDir, "/databases/")
-                    mediaStorageDir.mkdirs()
-                    try {
-                        dest = Files.newOutputStream(Paths.get("$dbPath/$DB_NAME"))
-                    } catch (ss: IOException) {
-                        Log.e(TAG, "Laai Nuwe Data Output stream failed", ss)
-                        result = false
-                    }
+                val absolutePath = sourceFile.absolutePath
+                sourceFile.delete()
+                MediaScannerConnection.scanFile(this, arrayOf(absolutePath), null, null)
+                if (sourceFile.exists()) {
+                    sourceFile.canonicalFile.delete()
+                    if (sourceFile.exists()) applicationContext.deleteFile(sourceFile.name)
                 }
-
-                try {
-                    writeExtractedFileToDisk(`is`!!, dest!!)
-                    result = true
-                } catch (e: IOException) {
-                    Log.e(TAG, "Write ExtractedFileToDisk failed", e)
-                    result = false
-                }
-
-                if (delete) {
-                    try {
-                        val absolutePathToFile = sourceFile.absolutePath
-                        sourceFile.delete()
-                        MediaScannerConnection.scanFile(this, arrayOf(absolutePathToFile), null, null)
-                        if (sourceFile.exists()) {
-                            sourceFile.canonicalFile.delete()
-                            if (sourceFile.exists()) {
-                                applicationContext.deleteFile(sourceFile.name)
-                            }
-                        }
-                    } catch (e: IOException) {
-                        Log.e(TAG, "File Delete failed", e)
-                    }
-                }
-
-                try {
-                    val data = File(applicationInfo.dataDir, "/databases/")
-                    val currentDBPath = "/$INFO_DB"
-                    val backupDBPath = "/$INFO_DB"
-                    val currentDB = File(data, currentDBPath)
-                    val backupDB = File(WkrDir, backupDBPath)
-
-                    if (backupDB.exists()) {
-                        backupDB.canonicalFile.delete()
-                        if (backupDB.exists()) {
-                            applicationContext.deleteFile(backupDB.name)
-                        }
-                    }
-
-                    if (currentDB.exists()) {
-                        FileInputStream(currentDB).channel.use { src ->
-                            FileOutputStream(backupDB).channel.use { dst ->
-                                src.transferTo(0, src.size(), dst)
-                            }
-                        }
-                    }
-
-                    MediaScannerConnection.scanFile(this, arrayOf(backupDB.absolutePath), null, null)
-                } catch (e: Exception) {
-                    Log.e("WinkerkReader LaaiDatabasisActivity", "Error: $e")
-                }
+            } catch (e: IOException) {
+                Log.e(TAG, "File Delete failed", e)
             }
         }
 
-        if (syncPhotosAfterDb) {
-            startPhotoSync()
+        // Backup existing INFO_DB (unchanged logic, already safe)
+        try {
+            val dataDir = File(applicationInfo.dataDir, "/databases/")
+            val currentDB = File(dataDir, INFO_DB)
+            val backupDB = File(winkerkEntry.getWkrDir(this), INFO_DB)
+            if (backupDB.exists()) backupDB.delete()
+            if (currentDB.exists()) {
+                FileInputStream(currentDB).channel.use { src ->
+                    FileOutputStream(backupDB).channel.use { dst ->
+                        src.transferTo(0, src.size(), dst)
+                    }
+                }
+            }
+            MediaScannerConnection.scanFile(this, arrayOf(backupDB.absolutePath), null, null)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error backing up database", e)
         }
 
+        if (syncPhotosAfterDb) startPhotoSync()
         return result
     }
 
     private fun checkPermission(): Boolean {
-        val result = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-        return if (result == PackageManager.PERMISSION_GRANTED) {
-            ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
-        } else {
-            true
-        }
+        // Scoped storage does not require READ/WRITE permissions for app-specific directories
+        return true
     }
 
     private fun downloadFromDropBoxUrl(url: String) {
         val context = this
         val dbPath = context.applicationInfo.dataDir + "/databases/"
 
-        if (isDownloadManagerAvailable()) {
-            val intentFilter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
-            recieverDownloadComplete = object : BroadcastReceiver() {
-                override fun onReceive(context: Context, intent: Intent) {
-                    val manager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-                    val reference = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
-                    if (myDownloadReference == reference) {
-                        val laai_boodskap = findViewById<TextView>(R.id.laai_boodskap)
-                        val query = DownloadManager.Query().setFilterById(reference)
-                        manager.query(query).use { cursor ->
-                            if (cursor.moveToFirst()) {
-                                val statusIdx = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)
-                                val reasonIdx = cursor.getColumnIndex(DownloadManager.COLUMN_REASON)
-                                val fileNameIdx = cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI)
-                                if (statusIdx >= 0 && reasonIdx >= 0 && fileNameIdx >= 0) {
-                                    val status = cursor.getInt(statusIdx)
-                                    val reason = cursor.getInt(reasonIdx)
-                                    val downloadFileLocalUri = cursor.getString(fileNameIdx).replace("file://", "")
-                                    val downloadFileLocalUri2 = manager.getUriForDownloadedFile(reference)
+        if (!isDownloadManagerAvailable()) return
 
-                                    when (status) {
-                                        DownloadManager.STATUS_SUCCESSFUL -> {
-                                            findViewById<Button>(R.id.dbLinkButton).visibility = View.VISIBLE
-                                            contentResolver.call(WinkerkContract.winkerkEntry.CONTENT_URI, "closeDatabase", null, null)
-                                            var `in`: InputStream? = null
-                                            var out: OutputStream? = null
-                                            try {
-                                                `in` = contentResolver.openInputStream(downloadFileLocalUri2!!)
-                                                out = Files.newOutputStream(File("$dbPath/$DB_NAME").toPath())
-                                                val buffer = ByteArray(1024)
-                                                var len: Int
-                                                while (`in`!!.read(buffer).also { len = it } != -1) {
-                                                    out!!.write(buffer, 0, len)
-                                                }
-                                            } catch (e: IOException) {
-                                                Log.e(TAG, "Write outbuffer failed", e)
-                                            } finally {
-                                                try {
-                                                    `in`?.close()
-                                                    out?.close()
-                                                } catch (e: IOException) {
-                                                    Log.e(TAG, "Stream close failed", e)
-                                                }
-                                                try {
-                                                    unregisterReceiver(recieverDownloadComplete)
-                                                } catch (_: IllegalArgumentException) {
-                                                }
-                                                reloadDatabaseAndFinish()//performDatabaseReloadAndRestart()
-                                                return
-                                            }
-                                        }
-                                        DownloadManager.STATUS_FAILED -> Toast.makeText(this@LaaiDatabasisActivity, "FAILED: $reason", Toast.LENGTH_LONG).show()
-                                        DownloadManager.STATUS_PAUSED -> Toast.makeText(this@LaaiDatabasisActivity, "PAUSED: $reason", Toast.LENGTH_LONG).show()
-                                        DownloadManager.STATUS_PENDING -> Toast.makeText(this@LaaiDatabasisActivity, "PENDING! ", Toast.LENGTH_LONG).show()
-                                        DownloadManager.STATUS_RUNNING -> Toast.makeText(this@LaaiDatabasisActivity, "RUNNING! ", Toast.LENGTH_LONG).show()
+        val intentFilter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
+        recieverDownloadComplete = object : BroadcastReceiver() {
+            override fun onReceive(context: Context, intent: Intent) {
+                val manager = getSystemService(Context.DOWNLOAD_SERVICE) as? DownloadManager
+                if (manager == null) {
+                    showError("DownloadManager not available")
+                    return
+                }
+
+                val reference = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
+                if (myDownloadReference != reference) return
+
+                val query = DownloadManager.Query().setFilterById(reference)
+                manager.query(query).use { cursor ->
+                    if (cursor.moveToFirst()) {
+                        val statusIdx = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)
+                        val reasonIdx = cursor.getColumnIndex(DownloadManager.COLUMN_REASON)
+                        val fileNameIdx = cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI)
+                        if (statusIdx >= 0 && reasonIdx >= 0 && fileNameIdx >= 0) {
+                            val status = cursor.getInt(statusIdx)
+                            val reason = cursor.getInt(reasonIdx)
+
+                            when (status) {
+                                DownloadManager.STATUS_SUCCESSFUL -> {
+                                    val downloadUri = manager.getUriForDownloadedFile(reference)
+                                    if (downloadUri == null) {
+                                        showError("Download succeeded but file URI is null")
+                                        return
                                     }
+
+                                    findViewById<Button>(R.id.dbLinkButton).visibility = View.VISIBLE
+                                    contentResolver.call(WinkerkContract.winkerkEntry.CONTENT_URI, "closeDatabase", null, null)
+
+                                    var input: InputStream? = null
+                                    var output: OutputStream? = null
+                                    try {
+                                        input = contentResolver.openInputStream(downloadUri)
+                                        if (input == null) {
+                                            showError("Cannot open downloaded file")
+                                            return
+                                        }
+                                        output = Files.newOutputStream(File("$dbPath/$DB_NAME").toPath())
+                                        val buffer = ByteArray(1024)
+                                        var len: Int
+                                        while (input.read(buffer).also { len = it } != -1) {
+                                            output!!.write(buffer, 0, len)
+                                        }
+                                    } catch (e: IOException) {
+                                        Log.e(TAG, "Write outbuffer failed", e)
+                                        showError("Failed to save database: ${e.message}")
+                                    } finally {
+                                        input?.close()
+                                        output?.close()
+                                    }
+                                    try { unregisterReceiver(recieverDownloadComplete) } catch (_: IllegalArgumentException) {}
+                                    reloadDatabaseAndFinish()
+                                    return
                                 }
+                                DownloadManager.STATUS_FAILED -> showError("Download failed: $reason")
+                                DownloadManager.STATUS_PAUSED -> showError("Download paused: $reason")
+                                DownloadManager.STATUS_PENDING -> showError("Download pending...")
+                                DownloadManager.STATUS_RUNNING -> showError("Download running...")
                             }
-                        }
-                        try {
-                            unregisterReceiver(recieverDownloadComplete)
-                        } catch (_: IllegalArgumentException) {
                         }
                     }
                 }
+                try { unregisterReceiver(recieverDownloadComplete) } catch (_: IllegalArgumentException) {}
             }
-            registerReceiver(recieverDownloadComplete, intentFilter, RECEIVER_EXPORTED)
+        }
+        registerReceiver(recieverDownloadComplete, intentFilter, RECEIVER_EXPORTED)
 
-            val request = DownloadManager.Request(Uri.parse(url)).apply {
-                setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
-                setDescription("WinkerkReader Database Download")
-                setTitle(WINKERK_DB)
-                setMimeType("application/vnd.sqlite3")
-                setVisibleInDownloadsUi(true)
-                setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, DB_NAME)
-            }
+        val request = DownloadManager.Request(Uri.parse(url)).apply {
+            setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
+            setDescription("WinkerkReader Database Download")
+            setTitle(WINKERK_DB)
+            setMimeType("application/vnd.sqlite3")
+            setVisibleInDownloadsUi(true)
+            setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, DB_NAME)
+        }
 
-            val manager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-            myDownloadReference = manager.enqueue(request)
+        val manager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+        myDownloadReference = manager.enqueue(request)
+    }
+
+    private fun showError(message: String) {
+        runOnUiThread {
+            Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+            laai_boodskap.text = message
         }
     }
 
@@ -1040,12 +1005,22 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         return "https://api.onedrive.com/v1.0/shares/$encodedUrl/root/content"
     }
 
+    private fun reloadDatabaseAndFinish() {
+        try {
+            contentResolver.call(WinkerkContract.winkerkEntry.CONTENT_URI, "reloadDatabase", null, null)
+            Handler(Looper.getMainLooper()).postDelayed({
+                navigateBackToMain()
+            }, 200)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error during database reload", e)
+            navigateBackToMain()
+        }
+    }
+
     companion object {
         private const val TAG = "LaaiDatabasisActivity"
-        private const val DB_NAME = WINKERK_DB
+        const val DB_NAME = WINKERK_DB
         private const val PICKFILE_RESULT_CODE = 1
-        private const val MEDIA_PATH = "/storage/emulated/0/"
-        private const val MEDIA_PATH2 = "/storage/emulated/0/Download/"
         private val RECEIVER_EXPORTED = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) Context.RECEIVER_EXPORTED else 0
 
         private fun writeExtractedFileToDisk(`in`: InputStream, outs: OutputStream) {
@@ -1069,236 +1044,6 @@ class LaaiDatabasisActivity : AppCompatActivity() {
             val p = Pattern.compile(regex)
             val m = p.matcher(s)
             return m.matches()
-        }
-    }
-
-    // -------------------------------------------------------------------------
-    // Inner class ReceiveFileTask
-    // -------------------------------------------------------------------------
-    private inner class ReceiveFileTask {
-        private val executorService: ExecutorService = Executors.newSingleThreadExecutor()
-        private val mainHandler = Handler(Looper.getMainLooper())
-        @Volatile
-        private var isCancelled = false
-
-        fun execute() {
-            onPreExecute()
-            executorService.submit {
-                try {
-                    doInBackground()
-                } finally {
-                    onPostExecute()
-                    executorService.shutdown()
-                }
-            }
-        }
-
-        fun cancel() {
-            isCancelled = true
-            executorService.shutdownNow()
-            onCancelled()
-        }
-
-        private fun onCancelled() {
-            Log.d(LaaiDatabasisActivity::class.java.canonicalName, "ReceiveFileTask USB / WIFI was canceled")
-        }
-
-        private fun onPostExecute() {
-            mainHandler.post {
-                findViewById<TextView>(R.id.laai_boodskap).text = "Klaar"
-            }
-        }
-
-        private fun onPreExecute() {
-            mainHandler.post {
-                findViewById<TextView>(R.id.laai_boodskap).text = "Begin"
-            }
-        }
-
-        private fun doInBackground() {
-            val retryAttempts = AtomicInteger(5)
-            val retryInterval = 2000
-            var connected = false
-            var socket: Socket? = null
-            var ackSocket: Socket? = null
-            var checksumSocket: Socket? = null
-
-            while (!connected && retryAttempts.get() > 0 && !isCancelled) {
-                try {
-                    socket = Socket(SERVER_IP, SERVER_PORT)
-                    ackSocket = Socket(SERVER_IP, SERVER_PORT + 1)
-                    checksumSocket = Socket(SERVER_IP, SERVER_PORT + 2)
-                    connected = true
-                } catch (e: IOException) {
-                    val attemptsRemaining = retryAttempts.decrementAndGet()
-                    mainHandler.post {
-                        findViewById<TextView>(R.id.laai_boodskap).text = "Waiting for server... Attempts remaining: $attemptsRemaining"
-                    }
-                    try {
-                        Thread.sleep(retryInterval.toLong())
-                    } catch (_: InterruptedException) {
-                        Thread.currentThread().interrupt()
-                        break
-                    }
-                }
-            }
-
-            if (connected) {
-                mainHandler.post {
-                    findViewById<TextView>(R.id.laai_boodskap).text = "Server connected. Starting download..."
-                }
-                startFileTransfer(socket!!, ackSocket!!, checksumSocket!!)
-            } else {
-                mainHandler.post {
-                    findViewById<TextView>(R.id.laai_boodskap).text = "Unable to connect to the server after retries."
-                }
-            }
-        }
-
-        private fun startFileTransfer(socket: Socket, ackSocket: Socket, checksumSocket: Socket) {
-            var buffer = ByteArray(8192)
-            var inputStream: InputStream? = null
-            var outputStream: OutputStream? = null
-            var bufferedOutputStream: BufferedOutputStream? = null
-            var ackWriter: BufferedWriter? = null
-            var checksumReader: BufferedReader? = null
-
-            try {
-                Log.d(TAG, "Getting input stream...")
-                inputStream = socket.getInputStream()
-                Log.d(TAG, "Input stream obtained")
-                outputStream = socket.getOutputStream()
-                Log.d(TAG, "Output stream obtained")
-
-                val fileName = "WinkerReader.sqlite"
-                val filePath = getExternalFilesDir(null)!!.absolutePath + "/" + fileName
-
-                bufferedOutputStream = BufferedOutputStream(FileOutputStream(getExternalFilesDir(null)!!.absolutePath + "/" + fileName))
-                ackWriter = BufferedWriter(OutputStreamWriter(ackSocket.getOutputStream()))
-                checksumReader = BufferedReader(InputStreamReader(checksumSocket.getInputStream()))
-                val reader = BufferedReader(InputStreamReader(inputStream))
-
-                Log.d(TAG, "Waiting for file size...")
-                val fileSizeString = reader.readLine()
-                Log.d(TAG, "Received file size: $fileSizeString")
-                val fileSize = fileSizeString.toLong()
-                ackWriter.write("ACK\n")
-                ackWriter.flush()
-                val bufferSizeString = reader.readLine()
-                val bufferSize = bufferSizeString.toInt()
-                ackWriter.write("ACK\n")
-                ackWriter.flush()
-                buffer = ByteArray(bufferSize)
-                var totalBytesReceived = 0L
-                var chunks = 0
-                ackWriter.write("ACK\n")
-                ackWriter.flush()
-
-                while (totalBytesReceived < fileSize) {
-                    var totalBytesRead = 0
-                    val chunkSize = buffer.size
-
-                    while (totalBytesRead < chunkSize) {
-                        val bytesRead = inputStream.read(buffer, totalBytesRead, chunkSize - totalBytesRead)
-                        if (bytesRead == -1) {
-                            throw IOException("Connection closed prematurely.")
-                        }
-                        totalBytesRead += bytesRead
-                        if (totalBytesReceived + totalBytesRead.toLong() == fileSize) {
-                            break
-                        }
-                    }
-
-                    ackWriter.write("ACK\n")
-                    ackWriter.flush()
-                    chunks++
-                    Log.e("FileTransfer", "Chunk #$chunks")
-                    Log.e("FileTransfer", "Chunk size $totalBytesRead")
-                    val checksumString = checksumReader.readLine()
-                    ackWriter.write("ACK\n")
-                    ackWriter.flush()
-                    val chunkChecksum = calculateChecksum(buffer, 0, totalBytesRead)
-                    if (chunkChecksum != checksumString) {
-                        Log.e("FileTransfer", "Checksum mismatch for chunk. Aborting.")
-                        ackWriter.write("ERROR\n")
-                        ackWriter.flush()
-                    } else {
-                        Log.e("FileTransfer", "Checksum valid.")
-                        ackWriter.write("ACK\n")
-                        ackWriter.flush()
-                        totalBytesReceived += totalBytesRead.toLong()
-                        bufferedOutputStream.write(buffer, 0, totalBytesRead)
-                        bufferedOutputStream.flush()
-                    }
-
-                    val progress = (totalBytesReceived.toFloat() / fileSize.toFloat() * 100).toInt()
-                    runOnUiThread {
-                        if (!this@LaaiDatabasisActivity.isFinishing) {
-                            findViewById<TextView>(R.id.laai_boodskap).text = "Received: $progress%"
-                        }
-                    }
-                }
-
-                Log.d("FileTransfer", "File transfer complete. File saved to: $filePath")
-                runOnUiThread {
-                    if (!this@LaaiDatabasisActivity.isFinishing) {
-                        findViewById<TextView>(R.id.laai_boodskap).text = "File transfer complete."
-                    }
-                }
-                processDownloadedFile(filePath, fileName)
-
-            } catch (e: IOException) {
-                e.printStackTrace()
-                runOnUiThread {
-                    if (!this@LaaiDatabasisActivity.isFinishing) {
-                        findViewById<TextView>(R.id.laai_boodskap).text = "Error receiving file."
-                    }
-                }
-            } finally {
-                try {
-                    bufferedOutputStream?.close()
-                    inputStream?.close()
-                    outputStream?.close()
-                    if (!socket.isClosed) socket.close()
-                    checksumReader?.close()
-                    ackWriter?.close()
-                } catch (e: IOException) {
-                    Log.e(TAG, "Error closing file transfer streams", e)
-                }
-            }
-        }
-
-        // Fix processDownloadedFile() in ReceiveFileTask
-        private fun processDownloadedFile(filePath: String, fileName: String) {
-            val deleteButton = findViewById<RadioButton>(R.id.laai_wisuit)
-            delete = deleteButton.isChecked
-            if (LaaiNuweData(filePath)) {
-                runOnUiThread { reloadDatabaseAndFinish() }
-            } else {
-                Toast.makeText(this@LaaiDatabasisActivity, "File loading failed.", Toast.LENGTH_SHORT).show()
-                val intent = Intent(this@LaaiDatabasisActivity, MainActivity::class.java).apply {
-                    putExtra("SENDER_CLASS_NAME", "LaaiDatabasisActivity")
-                }
-                startActivity(intent)
-                finish() // only finish, do not call navigateBackToMain again
-            }
-            deleteButton.isChecked = false
-        }
-
-        private fun calculateChecksum(data: ByteArray, offset: Int, length: Int): String? {
-            return try {
-                val digest = MessageDigest.getInstance("SHA-256")
-                digest.update(data, offset, length)
-                val hashBytes = digest.digest()
-                val hexString = StringBuilder()
-                for (b in hashBytes) {
-                    hexString.append(String.format("%02x", b))
-                }
-                hexString.toString()
-            } catch (e: NoSuchAlgorithmException) {
-                Log.e(TAG, "SHA-256 algorithm not available for checksum", e)
-                null
-            }
         }
     }
 }

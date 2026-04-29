@@ -4,22 +4,29 @@ import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import za.co.jpsoft.winkerkreader.utils.CalendarManager
 
 import android.app.Notification
+import android.content.ContentUris
 import android.content.Intent
 import android.content.SharedPreferences
+import android.os.Build
 import android.os.Bundle
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import za.co.jpsoft.winkerkreader.data.DatabaseHelper
+import za.co.jpsoft.winkerkreader.data.WinkerkContract
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
 import za.co.jpsoft.winkerkreader.data.models.CallType
-import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 class WhatsAppNotificationService : NotificationListenerService() {
 
     private var databaseHelper: DatabaseHelper? = null
     private var settingsManager: SettingsManager? = null
+    private val recentVoipEventTimes = mutableMapOf<String, Long>()
 
     override fun onCreate() {
         super.onCreate()
@@ -33,7 +40,7 @@ class WhatsAppNotificationService : NotificationListenerService() {
                 databaseHelper = DatabaseHelper(this)
             }
             if (settingsManager == null) {
-                settingsManager = SettingsManager(this) // Use constructor, not getInstance()
+                settingsManager = SettingsManager.getInstance(this)
             }
             Log.d(TAG, "Services initialized successfully")
         } catch (e: Exception) {
@@ -73,7 +80,7 @@ class WhatsAppNotificationService : NotificationListenerService() {
     }
 
     private fun processVoIPNotification(sbn: StatusBarNotification, appName: String) {
-        val extras = sbn.notification.extras
+        val extras = sbn.notification.extras ?: return
         val title = extras.getCharSequence(Notification.EXTRA_TITLE)?.toString() ?: ""
         val text = extras.getCharSequence(Notification.EXTRA_TEXT)?.toString() ?: ""
         val bigText = extras.getCharSequence(Notification.EXTRA_BIG_TEXT)?.toString() ?: ""
@@ -89,25 +96,82 @@ class WhatsAppNotificationService : NotificationListenerService() {
         Log.d(TAG, "InfoText: '$infoText'")
         Log.d(TAG, "SummaryText: '$summaryText'")
 
-        val callerInfo = extractCallerInfo(title, text, bigText, subText)
+        val extractedNumber = extractPhoneNumber(title, text, bigText, subText)
+        val rawCallerInfo = extractCallerInfo(title, text, bigText, subText)
+        val dbCallerInfo = if (extractedNumber.isNotBlank()) lookupCallerInfoInMemberDb(extractedNumber) else null
+        val callerInfo = buildBestCallerInfo(rawCallerInfo, extractedNumber, dbCallerInfo)
 
         when {
             isMissedCall(title, text, bigText, subText) -> {
-                logCall(callerInfo, CallType.MISSED, appName)
+                logCall(callerInfo, CallType.MISSED, appName, extractedNumber)
                 return
             }
             isCallEndedNotification(title, text, bigText, subText) -> {
-                logCall(callerInfo, CallType.ENDED, appName)
+                logCall(callerInfo, CallType.ENDED, appName, extractedNumber)
                 return
             }
             isIncomingCall(title, text, bigText, subText) -> {
-                logCall(callerInfo, CallType.INCOMING, appName)
+                if (!isUnknownCaller(callerInfo)) {
+                    logCall(callerInfo, CallType.INCOMING, appName, extractedNumber)
+                    triggerVoipCallerPopup(callerInfo, extractedNumber)
+                } else {
+                    Log.d(TAG, "VoIP dedupe rule: unknown-skip (incoming, app=$appName)")
+                }
                 return
             }
             isPossibleOutgoingCall(title, text, bigText, subText) -> {
-                logCall(callerInfo, CallType.OUTGOING, appName)
+                if (!isUnknownCaller(callerInfo)) {
+                    logCall(callerInfo, CallType.OUTGOING, appName, extractedNumber)
+                } else {
+                    Log.d(TAG, "VoIP dedupe rule: unknown-skip (outgoing, app=$appName)")
+                }
                 return
             }
+        }
+    }
+
+    private fun buildBestCallerInfo(rawCallerInfo: String, number: String, dbCallerInfo: String?): String {
+        if (!dbCallerInfo.isNullOrBlank()) {
+            return if (number.isNotBlank()) "$dbCallerInfo ($number)" else dbCallerInfo
+        }
+        if (rawCallerInfo.isNotBlank() && rawCallerInfo != "Unknown Contact") {
+            return rawCallerInfo
+        }
+        return if (number.isNotBlank()) number else "Unknown Contact"
+    }
+
+    private fun isUnknownCaller(callerInfo: String): Boolean {
+        val normalized = callerInfo.trim().lowercase(Locale.ROOT)
+        return normalized.isEmpty() || normalized == "unknown contact" || normalized == "unknown"
+    }
+
+    private fun lookupCallerInfoInMemberDb(phoneNumber: String): String? {
+        return try {
+            val searchNumber = phoneNumber.filter { it.isDigit() }.takeLast(9)
+            if (searchNumber.isBlank()) return null
+
+            val queryUri = ContentUris.withAppendedId(WinkerkContract.winkerkEntry.CONTENT_FOON_URI, 0)
+            val selection = """
+            ${WinkerkContract.winkerkEntry.SELECTION_LIDMAAT_INFO} FROM ${WinkerkContract.winkerkEntry.SELECTION_LIDMAAT_FROM}
+            WHERE (REPLACE([${WinkerkContract.winkerkEntry.LIDMATE_SELFOON}],' ','') LIKE '%$searchNumber')
+               OR (REPLACE([${WinkerkContract.winkerkEntry.LIDMATE_LANDLYN}],' ','') LIKE '%$searchNumber')
+               OR (REPLACE([${WinkerkContract.winkerkEntry.LIDMATE_WERKFOON}],' ','') LIKE '%$searchNumber');
+        """.trimIndent()
+
+            val cursor = contentResolver.query(queryUri, arrayOf(""), selection, null, null)
+            cursor?.use { c ->
+                if (!c.moveToFirst()) return null
+                val firstNameIdx = c.getColumnIndex(WinkerkContract.winkerkEntry.LIDMATE_NOEMNAAM)
+                val surnameIdx = c.getColumnIndex(WinkerkContract.winkerkEntry.LIDMATE_VAN)
+                if (firstNameIdx < 0 || surnameIdx < 0) return null
+                val firstName = c.getString(firstNameIdx) ?: return null
+                val surname = c.getString(surnameIdx) ?: return null
+                return "$firstName $surname".trim()
+            }
+            null
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to resolve VoIP caller", e)
+            null
         }
     }
 
@@ -118,14 +182,42 @@ class WhatsAppNotificationService : NotificationListenerService() {
             "wants to call you",
             "incoming call",
             "incoming video call",
-            "incoming voice call"
+            "incoming voice call",
+            "inkomende oproep",
+            "inkomende video-oproep",
+            "inkomende stemoproep",
+            "bel jou",
+            "wil jou bel",
+            "eingehender anruf",
+            "eingehender videoanruf",
+            "eingehender sprachanruf",
+            "ruft dich an",
+            "appel entrant",
+            "appel video entrant",
+            "appel vocal entrant",
+            "vous appelle",
+            "llamada entrante",
+            "videollamada entrante",
+            "llamada de voz entrante",
+            "te esta llamando",
+            "te está llamando",
+            "chamada recebida",
+            "chamada de entrada",
+            "chamada de video recebida",
+            "está ligando para você",
+            "esta ligando para voce"
         )
         if (strongIncoming.any { combinedText.contains(it) }) return true
 
         if (combinedText.contains("you called") ||
             combinedText.contains("you are calling") ||
             combinedText.contains("outgoing") ||
-            combinedText.contains("call started")
+            combinedText.contains("call started") ||
+            combinedText.contains("uitgaande oproep") ||
+            combinedText.contains("ausgehender anruf") ||
+            combinedText.contains("appel sortant") ||
+            combinedText.contains("llamada saliente") ||
+            combinedText.contains("chamada efetuada")
         ) return false
 
         return combinedText.contains("calling") &&
@@ -139,7 +231,22 @@ class WhatsAppNotificationService : NotificationListenerService() {
             "you are calling",
             "outgoing call",
             "call started",
-            "calling..."
+            "calling...",
+            "uitgaande oproep",
+            "jy het gebel",
+            "jy bel",
+            "ausgehender anruf",
+            "du rufst an",
+            "appel sortant",
+            "vous appelez",
+            "llamada saliente",
+            "estas llamando",
+            "estás llamando",
+            "chamada efetuada",
+            "ligacao efetuada",
+            "ligação efetuada",
+            "voce esta ligando",
+            "você está ligando"
         )
         if (strongOutgoing.any { combinedText.contains(it) }) return true
         if (combinedText.contains("is calling") ||
@@ -153,7 +260,13 @@ class WhatsAppNotificationService : NotificationListenerService() {
     private fun isCallEndedNotification(title: String, text: String, bigText: String, subText: String): Boolean {
         val endedKeywords = arrayOf(
             "call ended", "call finished", "call completed", "call duration",
-            "call lasted", "hung up", "disconnected", "call time"
+            "call lasted", "hung up", "disconnected", "call time",
+            "oproep beeindig", "oproep beëindig", "gesprek beeindig", "gesprek beëindig",
+            "oproep klaar", "gesprek klaar", "gesprekstyd",
+            "anruf beendet", "gesprach beendet", "gespräch beendet",
+            "appel termine", "appel terminé",
+            "llamada finalizada", "llamada terminada", "duracion de la llamada", "duración de la llamada",
+            "chamada encerrada", "ligacao encerrada", "ligação encerrada", "duracao da chamada", "duração da chamada"
         )
         val combinedText = "$title $text $bigText $subText".lowercase(Locale.ROOT)
         return endedKeywords.any { combinedText.contains(it) }
@@ -162,7 +275,12 @@ class WhatsAppNotificationService : NotificationListenerService() {
     private fun isMissedCall(title: String, text: String, bigText: String, subText: String): Boolean {
         val missedKeywords = arrayOf(
             "missed call", "missed video call", "missed voice call",
-            "unanswered", "didn't answer", "no answer"
+            "unanswered", "didn't answer", "no answer",
+            "gemiste oproep", "gemisde oproep", "onbeantwoord",
+            "verpasster anruf", "nicht beantwortet",
+            "appel manque", "appel manqué", "sans reponse", "sans réponse",
+            "llamada perdida", "no respondio", "no respondió",
+            "chamada perdida", "ligacao perdida", "ligação perdida", "nao atendida", "não atendida"
         )
         val combinedText = "$title $text $bigText $subText".lowercase(Locale.ROOT)
         return missedKeywords.any { combinedText.contains(it) }
@@ -304,21 +422,31 @@ class WhatsAppNotificationService : NotificationListenerService() {
         return appKeywords.any { lowerText.contains(it) }
     }
 
-    private fun logCall(callerInfo: String, callType: CallType, appName: String) {
+    private fun logCall(callerInfo: String, callType: CallType, appName: String, numberHint: String = "") {
         try {
             ensureServicesInitialized()
             if (databaseHelper == null) {
                 Log.e(TAG, "DatabaseHelper is null, cannot log call")
                 return
             }
+            val eventKey = "${appName.lowercase(Locale.ROOT)}|${callType.name}|${callerInfo.lowercase(Locale.ROOT)}|${numberHint.filter { it.isDigit() }}"
+            val now = System.currentTimeMillis()
+            val recentTime = recentVoipEventTimes[eventKey]
+            if (recentTime != null && now - recentTime < 15000L) {
+                Log.d(TAG, "VoIP dedupe rule: debounce-skip (key=$eventKey)")
+                return
+            }
+
             val timestamp = System.currentTimeMillis()
-            val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-            val dateTime = dateFormat.format(Date(timestamp))
+            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+            val dateTime = Instant.ofEpochMilli(timestamp)
+                .atZone(ZoneId.systemDefault())
+                .format(formatter)
 
             Log.d(TAG, "$appName call detected - Type: $callType, Contact: $callerInfo, Time: $dateTime")
 
             if (isDuplicateCall(callerInfo, timestamp, callType, appName)) {
-                Log.d(TAG, "Duplicate call detected, skipping - Contact: $callerInfo, Type: $callType, App: $appName")
+                Log.d(TAG, "VoIP dedupe rule: db-duplicate-skip (contact=$callerInfo, type=$callType, app=$appName)")
                 return
             }
 
@@ -327,11 +455,39 @@ class WhatsAppNotificationService : NotificationListenerService() {
                 Log.d(TAG, "$appName call log saved to database successfully")
                 logToCalendar(callerInfo, timestamp, callType, appName)
                 broadcastCallLogUpdate()
+                recentVoipEventTimes[eventKey] = now
             } else {
                 Log.e(TAG, "Failed to save $appName call log")
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error logging call", e)
+        }
+    }
+
+    private fun triggerVoipCallerPopup(callerInfo: String, extractedNumber: String) {
+        try {
+            if (OproepDetailService.isOn || OproepDetailService.isServiceActive()) return
+            if (settingsManager?.callMonitorEnabled != true) return
+
+            val callerForOverlay = when {
+                extractedNumber.isNotBlank() -> extractedNumber
+                callerInfo.isNotBlank() -> callerInfo
+                else -> return
+            }
+            if (callerForOverlay == "Unknown Contact") return
+
+            val prefs = getSharedPreferences(PREFS_USER_INFO, MODE_PRIVATE)
+            prefs.edit().putString("CallerNumber", callerForOverlay).apply()
+
+            val serviceIntent = Intent(this, OproepDetailService::class.java)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(serviceIntent)
+            } else {
+                startService(serviceIntent)
+            }
+            Log.d(TAG, "Started caller popup for incoming VoIP call: $callerForOverlay")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to start caller popup for VoIP call", e)
         }
     }
 
@@ -416,8 +572,8 @@ class WhatsAppNotificationService : NotificationListenerService() {
 
     private fun broadcastCallLogUpdate() {
         try {
-            val intent = Intent("za.co.jpsoft.winkerkreader.CALL_LOG_UPDATED")
-            sendBroadcast(intent)
+            val intent = Intent(za.co.jpsoft.winkerkreader.utils.PhoneCallMonitor.ACTION_CALL_LOG_UPDATED)
+            LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
         } catch (e: Exception) {
             Log.e(TAG, "Error broadcasting call log update", e)
         }

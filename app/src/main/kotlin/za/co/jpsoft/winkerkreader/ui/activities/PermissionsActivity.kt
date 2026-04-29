@@ -40,6 +40,10 @@ class PermissionsActivity : AppCompatActivity() {
         refreshPermissions()
     }
 
+    private val runtimePermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
+        refreshPermissions()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_permissions)
@@ -179,11 +183,7 @@ class PermissionsActivity : AppCompatActivity() {
             .mapNotNull { it.permission }
 
         if (permissionsToRequest.isNotEmpty()) {
-            ActivityCompat.requestPermissions(
-                this,
-                permissionsToRequest.toTypedArray(),
-                PERMISSION_REQUEST_CODE
-            )
+            runtimePermissionLauncher.launch(permissionsToRequest.toTypedArray())
         } else {
             Toast.makeText(this, "Alle toestemmings is reeds gegee", Toast.LENGTH_SHORT).show()
         }
@@ -197,7 +197,7 @@ class PermissionsActivity : AppCompatActivity() {
             PermissionType.NOTIFICATION_LISTENER -> requestNotificationListenerAccess()
             PermissionType.RUNTIME -> {
                 item.permission?.let {
-                    ActivityCompat.requestPermissions(this, arrayOf(it), PERMISSION_REQUEST_CODE)
+                    runtimePermissionLauncher.launch(arrayOf(it))
                 }
             }
         }
@@ -244,16 +244,6 @@ class PermissionsActivity : AppCompatActivity() {
             .show()
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == PERMISSION_REQUEST_CODE) {
-            refreshPermissions()
-        }
-    }
 
     override fun onResume() {
         super.onResume()

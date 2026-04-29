@@ -1,8 +1,6 @@
 package za.co.jpsoft.winkerkreader.utils
 
 
-import za.co.jpsoft.winkerkreader.utils.AppSessionState
-
 import android.content.Context
 import java.io.File
 import java.io.FileOutputStream
@@ -44,7 +42,7 @@ object Installation {
         } catch (e: IOException) {
             e.printStackTrace()
         }
-        return id(AppSessionState.deviceId, context)
+        return id(id, context)
     }
 
     @Throws(IOException::class)

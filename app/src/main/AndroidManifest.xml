@@ -1,18 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-   >
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Queries - merged single section -->
     <queries>
         <package android:name="com.whatsapp"/>
         <package android:name="com.whatsapp.w4b"/>
     </queries>
+
     <uses-feature
         android:name="android.hardware.telephony"
         android:required="false" />
+
+    <!-- Call permissions -->
     <uses-permission android:name="android.permission.MANAGE_OWN_CALLS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL"
         tools:node="merge" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+
     <!-- For Android 12+ (API 31+) exact alarms -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 
@@ -21,7 +26,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
     <!-- Notification permissions -->
-    <!-- uses-permission android:name="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" /-->
+    <uses-permission android:name="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" />
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
@@ -51,23 +56,14 @@
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
 
-
     <!-- System overlay and alert permissions -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
 
     <!-- Background service and auto-start permissions -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-    <uses-permission android:name="android.permission.MANAGE_OWN_CALLS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
-
-    <queries>
-        <package android:name="com.whatsapp" />
-        <!-- If you need to support WhatsApp Business -->
-        <package android:name="com.whatsapp.w4b" />
-    </queries>
     <application
-        android:requestLegacyExternalStorage="true"
         android:name="za.co.jpsoft.winkerkreader.WinkerkReader"
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher_round"
@@ -76,6 +72,8 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
+
+        <!-- Activities -->
         <activity android:name="za.co.jpsoft.winkerkreader.ui.activities.MainActivity"
             android:launchMode="singleInstance"
             android:icon="@mipmap/ic_launcher"
@@ -88,30 +86,29 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity
             android:name="za.co.jpsoft.winkerkreader.ui.activities.SplashActivity"
             android:theme="@style/SplashTheme"
             android:exported="true">
         </activity>
+
         <activity android:name="za.co.jpsoft.winkerkreader.ui.activities.LidmaatDetailActivity"
             android:exported="true"
             android:icon="@mipmap/ic_shortcut_family_roof"
             android:windowSoftInputMode="adjustPan|adjustResize"
-            android:label="Lidmaat Detail">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="za.co.jpsoft.winkerkreader.ui.activities.MainActivity"/>
+            android:label="Lidmaat Detail"
+            android:parentActivityName="za.co.jpsoft.winkerkreader.ui.activities.MainActivity">
         </activity>
+
         <activity
             android:name="za.co.jpsoft.winkerkreader.ui.activities.PermissionsActivity"
             android:exported="true"
             android:icon="@mipmap/ic_shortcut_family_roof"
             android:label="App Permissions"
             android:parentActivityName="za.co.jpsoft.winkerkreader.ui.activities.MainActivity">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="za.co.jpsoft.winkerkreader.ui.activities.MainActivity"/>
         </activity>
+
         <activity android:name="za.co.jpsoft.winkerkreader.ui.activities.ArgiefListActivity"
             android:exported="true"
             android:icon="@mipmap/ic_shortcut_family_roof"
@@ -122,6 +119,7 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="za.co.jpsoft.winkerkreader.ui.activities.MainActivity"/>
         </activity>
+
         <activity android:name="za.co.jpsoft.winkerkreader.ui.activities.RegistreerActivity"
             android:exported="true"
             android:icon="@mipmap/ic_shortcut_family_roof"
@@ -132,6 +130,7 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="za.co.jpsoft.winkerkreader.ui.activities.MainActivity"/>
         </activity>
+
         <activity android:name="za.co.jpsoft.winkerkreader.ui.activities.LaaiDatabasisActivity"
             android:exported="true"
             android:icon="@mipmap/ic_shortcut_family_roof"
@@ -140,6 +139,7 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="za.co.jpsoft.winkerkreader.ui.activities.MainActivity"/>
         </activity>
+
         <activity android:name="za.co.jpsoft.winkerkreader.ui.activities.UitlegActivity"
             android:exported="true"
             android:label="Uitleg Opsies"
@@ -149,6 +149,7 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="za.co.jpsoft.winkerkreader.ui.activities.MainActivity"/>
         </activity>
+
         <activity android:name="za.co.jpsoft.winkerkreader.ui.activities.VerjaarSmsActivity"
             android:exported="true"
             android:icon="@mipmap/ic_shortcut_family_roof"
@@ -158,6 +159,7 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="za.co.jpsoft.winkerkreader.ui.activities.MainActivity"/>
         </activity>
+
         <activity android:name="za.co.jpsoft.winkerkreader.ui.activities.SettingsActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustPan|adjustResize"
@@ -167,16 +169,7 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="za.co.jpsoft.winkerkreader.ui.activities.MainActivity" />
         </activity>
-        <activity android:name="za.co.jpsoft.winkerkreader.ui.activities.FilterActivity"
-            android:exported="true"
-            android:windowSoftInputMode="adjustPan|adjustResize"
-            android:icon="@mipmap/ic_shortcut_family_roof"
-            android:label="Filter data"
-            android:parentActivityName="za.co.jpsoft.winkerkreader.ui.activities.MainActivity">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="za.co.jpsoft.winkerkreader.ui.activities.MainActivity"/>
-        </activity>
+
         <activity
             android:name="za.co.jpsoft.winkerkreader.ui.activities.CallLogActivity"
             android:label="Call Log History"
@@ -186,6 +179,8 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="za.co.jpsoft.winkerkreader.ui.activities.MainActivity" />
         </activity>
+
+        <!-- Receivers -->
         <receiver
             android:name="za.co.jpsoft.winkerkreader.services.receivers.DeviceBootReceiver"
             android:enabled="true"
@@ -197,6 +192,33 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </receiver>
+
+        <receiver android:name="za.co.jpsoft.winkerkreader.services.receivers.IncomingCall"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.PHONE_STATE" />
+            </intent-filter>
+        </receiver>
+
+        <receiver android:name="za.co.jpsoft.winkerkreader.widget.WinkerkReaderWidgetProvider"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider"
+                android:resource="@xml/winkerkreaderwidgetprovider" />
+        </receiver>
+
+        <receiver
+            android:name="za.co.jpsoft.winkerkreader.services.receivers.AlarmReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="za.co.jpsoft.winkerkreader.AlarmReceiver" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Services -->
         <service
             android:name="androidx.work.impl.foreground.SystemForegroundService"
             android:foregroundServiceType="dataSync"
@@ -210,51 +232,40 @@
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
         </service>
+
         <service
             android:name="za.co.jpsoft.winkerkreader.services.CallMonitoringService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="phoneCall">
         </service>
-        <receiver android:name="za.co.jpsoft.winkerkreader.services.receivers.IncomingCall"
-            android:enabled="true"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.PHONE_STATE" />
-            </intent-filter>
-        </receiver>
-        <receiver android:name="za.co.jpsoft.winkerkreader.widget.WinkerkReaderWidgetProvider"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data android:name="android.appwidget.provider"
-                android:resource="@xml/winkerkreaderwidgetprovider" />
-        </receiver>
-        <receiver
-            android:name="za.co.jpsoft.winkerkreader.services.receivers.AlarmReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="za.co.jpsoft.winkerkreader.AlarmReceiver" />
-            </intent-filter>
-        </receiver>
 
         <service
             android:name="za.co.jpsoft.winkerkreader.services.OproepDetailService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
-        <service
-            android:name="za.co.jpsoft.winkerkreader.services.MyService"
-            android:enabled="true"/>
+
         <service
             android:name="za.co.jpsoft.winkerkreader.services.ListViewWidgetService"
             android:permission="android.permission.BIND_REMOTEVIEWS" />
+
+        <!-- VoIP Call Detection Service - ADD THIS -->
+        <service
+            android:name="za.co.jpsoft.winkerkreader.utils.VoIPCallDetector"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
+        <!-- Providers -->
         <provider
             android:name="za.co.jpsoft.winkerkreader.data.WinkerkProvider"
             android:authorities="za.co.jpsoft.winkerkreader"
             android:exported="false" />
-        <!-- FileProvider for sharing APK files securely -->
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

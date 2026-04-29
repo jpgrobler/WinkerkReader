@@ -4,6 +4,8 @@ import android.content.Context
 import android.widget.ImageView
 import java.io.File
 import za.co.jpsoft.winkerkreader.R
+import za.co.jpsoft.winkerkreader.data.WinkerkContract
+
 object PhotoHelper {
 
     /**
@@ -14,8 +16,8 @@ object PhotoHelper {
      */
     fun getSyncedPhotoPath(context: Context, guid: String?): String? {
         if (guid.isNullOrEmpty()) return null
-        val externalDir = context.getExternalFilesDir(null) ?: return null
-        val syncedFile = File(externalDir, "photos/$guid.jpg")
+        val fotoDir = WinkerkContract.winkerkEntry.getFotoDir(context)
+        val syncedFile = File(fotoDir, "$guid.jpg")
         return if (syncedFile.exists()) syncedFile.absolutePath else null
     }
 

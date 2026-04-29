@@ -1,7 +1,7 @@
 package za.co.jpsoft.winkerkreader.widget
 
 
-import org.joda.time.DateTime
+import java.time.LocalDate
 
 /**
  * Centralised SQL query builder for the home screen widget.
@@ -16,13 +16,13 @@ object WidgetQueryBuilder {
      * Builds the complete UNION query that returns all events ordered by month and day.
      */
     fun buildCombinedQuery(): String {
-        val today = DateTime.now()
-        val futureDate = today.plusDays(LOOK_AHEAD_DAYS)
+        val today = LocalDate.now()
+        val futureDate = today.plusDays(LOOK_AHEAD_DAYS.toLong())
 
         val currentDay = today.dayOfMonth
-        val currentMonth = today.monthOfYear
+        val currentMonth = today.monthValue
         val futureDay = futureDate.dayOfMonth
-        val futureMonth = futureDate.monthOfYear
+        val futureMonth = futureDate.monthValue
 
         return """
             SELECT * FROM (

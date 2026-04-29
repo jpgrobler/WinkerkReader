@@ -1,6 +1,7 @@
 package za.co.jpsoft.winkerkreader.utils
 
 import za.co.jpsoft.winkerkreader.ui.activities.MainActivity
+import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel
 
 import android.view.View
 import android.widget.Button
@@ -8,27 +9,39 @@ import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Spinner
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import za.co.jpsoft.winkerkreader.data.models.FilterBox
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
 import java.util.ArrayList
 import za.co.jpsoft.winkerkreader.R
+
 /**
  * Handles filter dialog operations
  */
-class FilterHandler(private val activity: AppCompatActivity) {
+class FilterHandler(
+    private val activity: AppCompatActivity,
+    private val viewModel: MemberViewModel
+) {
 
     private var filterList: MutableList<FilterBox> = mutableListOf()
+    private var savedSortOrder: String = ""  // Store the original sort order
 
     fun showFilterDialog() {
         val mainLayout = activity.findViewById<View>(R.id.main_main)
         val filterLayout = activity.findViewById<View>(R.id.main_filter)
 
-
         if (mainLayout == null || filterLayout == null) {
             // Filter layout not found in current activity layout
             return
         }
+
+        // Save the current sort order BEFORE showing filter
+        savedSortOrder = viewModel.sortOrder
+        val mainActivity = activity as MainActivity
+        mainActivity.setFilterRestoreState(savedSortOrder)
+
+        android.util.Log.d("FilterHandler", "Saved sort order before filter: '$savedSortOrder'")
 
         mainLayout.visibility = View.GONE
         filterLayout.visibility = View.VISIBLE
@@ -37,22 +50,23 @@ class FilterHandler(private val activity: AppCompatActivity) {
     }
 
     private fun setupFilterControls() {
+        // Get reference to the sort order TextView to update when filter is applied
+        val sortOrderView = activity.findViewById<TextView>(R.id.sortorder)
+
         // Setup active/inactive buttons
         val activeButton = activity.findViewById<Button>(R.id.filter_aktief)
         val inactiveButton = activity.findViewById<Button>(R.id.filter_onaktief)
 
         activeButton?.setOnClickListener {
-            AppSessionState.recordStatus = "0"
+            viewModel.recordStatus = "0"
             activeButton.setBackgroundResource(R.drawable.aktief0)
             inactiveButton?.setBackgroundResource(R.drawable.onaktief)
-            winkerkEntry.SELECTION_LIDMAAT_WHERE = ""
         }
 
         inactiveButton?.setOnClickListener {
-            AppSessionState.recordStatus = "2"
+            viewModel.recordStatus = "2"
             inactiveButton.setBackgroundResource(R.drawable.onaktief2)
             activeButton?.setBackgroundResource(R.drawable.aktief)
-            winkerkEntry.SELECTION_LIDMAAT_WHERE = ""
         }
 
         // Setup run filter button
@@ -60,9 +74,9 @@ class FilterHandler(private val activity: AppCompatActivity) {
             applyFilters()
         }
 
-        // Setup cancel button
+        // Setup cancel button - restore original sort order when cancelled
         activity.findViewById<Button>(R.id.cancel_filter2)?.setOnClickListener {
-            closeFilterDialog()
+            cancelFilter()
         }
     }
 
@@ -94,9 +108,41 @@ class FilterHandler(private val activity: AppCompatActivity) {
         val mainActivity = activity as MainActivity
         mainActivity.applyFilterList(ArrayList(filterList))
 
-        AppSessionState.sortOrder = "Filter"
-        val settings = za.co.jpsoft.winkerkreader.utils.SettingsManager(activity)
+        viewModel.sortOrder = "Filter"
+        val settings = SettingsManager.getInstance(activity)
         settings.defLayout = "FILTER_DATA"
+
+        // Update the sort order TextView
+        val sortOrderView = activity.findViewById<TextView>(R.id.sortorder)
+        sortOrderView?.text = "Filter"
+
+        mainActivity.observeDataset()
+    }
+
+    private fun cancelFilter() {
+        // Restore the original sort order
+        val mainActivity = activity as MainActivity
+        if (savedSortOrder.isNotEmpty()) {
+            android.util.Log.d("FilterHandler", "Restoring sort order: '$savedSortOrder'")
+            viewModel.sortOrder = savedSortOrder
+            val settings = SettingsManager.getInstance(activity)
+            settings.defLayout = savedSortOrder
+
+            // Update the sort order TextView
+            val sortOrderView = activity.findViewById<TextView>(R.id.sortorder)
+            sortOrderView?.text = savedSortOrder
+
+            // Clear the saved layout in MainActivity
+            mainActivity.clearFilterRestoreState()
+        }
+
+        // Clear any filter state
+        mainActivity.clearAppliedFilterList()
+        viewModel.soekList = false
+
+        closeFilterDialog()
+
+        // Refresh the dataset with original sort order
         mainActivity.observeDataset()
     }
 

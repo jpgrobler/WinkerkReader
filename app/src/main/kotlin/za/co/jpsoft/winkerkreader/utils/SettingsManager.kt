@@ -12,6 +12,27 @@ import za.co.jpsoft.winkerkreader.data.WinkerkContract
  */
 class SettingsManager(context: Context) {
 
+    companion object {
+        private const val PREF_DB_INITIALIZED = "db_initialized"
+
+        @Volatile
+        private var instance: SettingsManager? = null
+
+        fun getInstance(context: Context): SettingsManager {
+            return instance ?: synchronized(this) {
+                instance ?: SettingsManager(context.applicationContext).also { instance = it }
+            }
+        }
+    }
+
+    fun isDatabaseInitialized(): Boolean {
+        return prefs.getBoolean(PREF_DB_INITIALIZED, false)
+    }
+
+    fun setDatabaseInitialized(initialized: Boolean) {
+        prefs.edit().putBoolean(PREF_DB_INITIALIZED, initialized).apply()
+    }
+
     fun getBirthdayMessage(): String = prefs.getString("VerjaarBoodskap", "") ?: ""
 
     fun setBirthdayMessage(value: String) = prefs.edit().putString("VerjaarBoodskap", value).apply()
@@ -68,11 +89,11 @@ class SettingsManager(context: Context) {
         set(value) = prefs.edit().putBoolean(WinkerkContract.KEY_AUTOSTART, value).apply()
 
     var callMonitorEnabled: Boolean
-        get() = prefs.getBoolean(WinkerkContract.KEY_OPROEPMONITOR, true)
+        get() = prefs.getBoolean(WinkerkContract.KEY_OPROEPMONITOR, false)
         set(value) = prefs.edit().putBoolean(WinkerkContract.KEY_OPROEPMONITOR, value).apply()
 
     var callLogEnabled: Boolean
-        get() = prefs.getBoolean(WinkerkContract.KEY_OPROEPLOG, true)
+        get() = prefs.getBoolean(WinkerkContract.KEY_OPROEPLOG, false)
         set(value) = prefs.edit().putBoolean(WinkerkContract.KEY_OPROEPLOG, value).apply()
 
     var defLayout: String
@@ -203,4 +224,12 @@ class SettingsManager(context: Context) {
     var fromMenu: Boolean
         get() = prefs.getBoolean("FROM_MENU", false)
         set(value) = prefs.edit().putBoolean("FROM_MENU", value).apply()
+
+    var listView: Int
+        get() = prefs.getInt("LIST_VIEW", 2)
+        set(value) = prefs.edit().putInt("LIST_VIEW", value).apply()
+
+    var groepView: Int
+        get() = prefs.getInt("GROEP_VIEW", 500) // WkrContract.winkerkEntry.GROEPLIST_LOADER
+        set(value) = prefs.edit().putInt("GROEP_VIEW", value).apply()
 }

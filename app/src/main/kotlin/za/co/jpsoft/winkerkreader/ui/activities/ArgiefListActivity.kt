@@ -1,8 +1,5 @@
 package za.co.jpsoft.winkerkreader.ui.activities
 
-import za.co.jpsoft.winkerkreader.utils.AppSessionState
-import za.co.jpsoft.winkerkreader.ui.viewmodels.ArgiefViewModel
-
 import android.content.Context
 import android.database.Cursor
 import android.os.Bundle
@@ -12,14 +9,13 @@ import android.view.*
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
-
 import androidx.cursoradapter.widget.CursorAdapter
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import za.co.jpsoft.winkerkreader.R
+import za.co.jpsoft.winkerkreader.ui.viewmodels.ArgiefViewModel
 import za.co.jpsoft.winkerkreader.utils.getStringOrEmpty
 import za.co.jpsoft.winkerkreader.utils.getStringOrNull
-
 
 class ArgiefListActivity : AppCompatActivity() {
 
@@ -28,6 +24,8 @@ class ArgiefListActivity : AppCompatActivity() {
     private lateinit var viewModel: ArgiefViewModel
     private val searchHandler = Handler(Looper.getMainLooper())
     private var searchRunnable: Runnable? = null
+    private var keuse: String = "Van"
+    private var isObserving = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,17 +33,28 @@ class ArgiefListActivity : AppCompatActivity() {
 
         argiefListView = findViewById(R.id.argief_list)
         mCursorAdapter = ArgiefLysAdapter(this, null)
+        mCursorAdapter.keuse = keuse
         argiefListView.adapter = mCursorAdapter
         argiefListView.isFastScrollEnabled = true
         argiefListView.isClickable = true
 
         viewModel = ViewModelProvider(this)[ArgiefViewModel::class.java]
-        viewModel.archiveCursor.observe(this, Observer { cursor ->
-            mCursorAdapter.swapCursor(cursor)
+
+        // FIX: Attach observer BEFORE loading data
+        viewModel.archiveCursor.observe(this, Observer { newCursor ->
+            if (!isObserving) {
+                isObserving = true
+                // Swap cursor but DON'T close the old one here
+                // The ViewModel will handle closing after a delay
+                mCursorAdapter.swapCursor(newCursor)
+                isObserving = false
+            }
         })
 
         setupSortRadioGroup()
-        viewModel.loadArchive(AppSessionState.keuse)
+
+        // FIX: Load data AFTER observer is attached
+        viewModel.loadArchive(keuse)
     }
 
     private fun setupSortRadioGroup() {
@@ -53,33 +62,34 @@ class ArgiefListActivity : AppCompatActivity() {
         val sortdatum = findViewById<RadioButton>(R.id.argief_sort_datum)
         val sortrede = findViewById<RadioButton>(R.id.argief_sort_rede)
 
-        when (AppSessionState.keuse) {
+        when (keuse) {
             "Van" -> sortvan.isChecked = true
             "Rede" -> sortrede.isChecked = true
             "Datum" -> sortdatum.isChecked = true
             else -> {
                 sortvan.isChecked = true
-                AppSessionState.keuse = "Van"
+                keuse = "Van"
             }
         }
 
         val radioGroup = findViewById<RadioGroup>(R.id.argief_sort)
         radioGroup.setOnCheckedChangeListener { _, checkedId ->
-            AppSessionState.keuse = when (checkedId) {
+            keuse = when (checkedId) {
                 R.id.argief_sort_van -> "Van"
                 R.id.argief_sort_datum -> "Datum"
                 R.id.argief_sort_rede -> "Rede"
                 else -> "Van"
             }
-            viewModel.loadArchive(AppSessionState.keuse)
+            mCursorAdapter.keuse = keuse
+            viewModel.loadArchive(keuse)
         }
     }
 
     private fun performArchiveSearch(query: String) {
         if (query.isBlank()) {
-            viewModel.loadArchive(AppSessionState.keuse)   // load all
+            viewModel.loadArchive(keuse)
         } else {
-            viewModel.loadArchive(AppSessionState.keuse, query)
+            viewModel.loadArchive(keuse, query)
         }
     }
 
@@ -94,27 +104,24 @@ class ArgiefListActivity : AppCompatActivity() {
         val searchView = searchItem.actionView as SearchView
         searchView.apply {
             setSubmitButtonEnabled(false)
-            queryHint = "Soek"   // ← Use built-in API
+            queryHint = "Soek"
 
-
-            setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-                override fun onQueryTextSubmit(query: String): Boolean {
-                    // optional: immediate search on submit
-                    searchRunnable?.let { searchHandler.removeCallbacks(it) }
-                    performArchiveSearch(query)
-                    return true
-                }
-
-                override fun onQueryTextChange(newText: String): Boolean {
-                    // debounce
-                    searchRunnable?.let { searchHandler.removeCallbacks(it) }
-                    searchRunnable = Runnable {
-                        performArchiveSearch(newText)
+            setOnQueryTextListener(
+                object : SearchView.OnQueryTextListener {
+                    override fun onQueryTextSubmit(query: String): Boolean {
+                        searchRunnable?.let { searchHandler.removeCallbacks(it) }
+                        performArchiveSearch(query)
+                        return true
                     }
-                    searchHandler.postDelayed(searchRunnable!!, 300)
-                    return true
+
+                    override fun onQueryTextChange(newText: String): Boolean {
+                        searchRunnable?.let { searchHandler.removeCallbacks(it) }
+                        searchRunnable = Runnable { performArchiveSearch(newText) }
+                        searchHandler.postDelayed(searchRunnable!!, 300)
+                        return true
+                    }
                 }
-            })
+            )
         }
 
         return true
@@ -122,23 +129,32 @@ class ArgiefListActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == android.R.id.home) {
-            onBackPressedDispatcher.onBackPressed()  // ✅ Use dispatcher instead of deprecated onBackPressed()
+            onBackPressedDispatcher.onBackPressed()
             return true
         }
         return super.onOptionsItemSelected(item)
     }
 
+    override fun onStop() {
+        super.onStop()
+        searchRunnable?.let { searchHandler.removeCallbacks(it) }
+        searchRunnable = null
+    }
+
     override fun onDestroy() {
-        mCursorAdapter.swapCursor(null)
+        searchRunnable?.let { searchHandler.removeCallbacks(it) }
+        mCursorAdapter.swapCursor(null)?.close()
         super.onDestroy()
     }
 }
 
 // ----------------------------------------------------------------------------
-// Adapter (unchanged, but uses cursor extensions)
+// Adapter with null-safety
 // ----------------------------------------------------------------------------
 
 class ArgiefLysAdapter(context: Context, cursor: Cursor?) : CursorAdapter(context, cursor, 0) {
+
+    var keuse: String = "Van"
 
     class ViewHolder2(view: View) {
         val redeTextView: TextView = view.findViewById(R.id.argief_rede)
@@ -150,11 +166,16 @@ class ArgiefLysAdapter(context: Context, cursor: Cursor?) : CursorAdapter(contex
         val separatorView: TextView = view.findViewById(R.id.argief_list_separator)
     }
 
-    override fun swapCursor(newCursor: Cursor?): Cursor? = super.swapCursor(newCursor)
+    override fun swapCursor(newCursor: Cursor?): Cursor? {
+        // Don't swap if it's the same cursor object
+        val oldCursor = cursor
+        if (oldCursor === newCursor) {
+            return oldCursor
+        }
+        return super.swapCursor(newCursor)
+    }
 
     override fun newView(context: Context, cursor: Cursor, parent: ViewGroup): View {
-       // if (cursor == null || cursor.count < 1) return LayoutInflater.from(context).inflate(R.layout.argief_item, parent, false)
-
         val view = LayoutInflater.from(context).inflate(R.layout.argief_item, parent, false)
         val viewHolder = ViewHolder2(view)
         view.tag = viewHolder
@@ -162,51 +183,59 @@ class ArgiefLysAdapter(context: Context, cursor: Cursor?) : CursorAdapter(contex
     }
 
     override fun bindView(view: View, context: Context, cursor: Cursor) {
-        //if (cursor == null || cursor.count < 1) return
-
-        val viewHolder2 = view.tag as ViewHolder2
-
-        val lidNaam = cursor.getStringOrEmpty("Name")
-        val lidVan = cursor.getStringOrEmpty("Surname")
-        val lidGeboortedatum = cursor.getStringOrEmpty("DateOfBirth")
-        val rede = cursor.getStringOrEmpty("Reason")
-        val bestemming = cursor.getStringOrEmpty("DepartureTo")
-        val vertrekDatum = cursor.getStringOrEmpty("DepartureDate")
-
-        viewHolder2.nameTextView.text = lidNaam
-        viewHolder2.vanTextView.text = lidVan
-        viewHolder2.geboortedatumTextView.text = lidGeboortedatum
-        viewHolder2.redeTextView.text = rede
-        viewHolder2.bestemmingTextView.text = bestemming
-        viewHolder2.vertrekTextview.text = vertrekDatum
-        viewHolder2.separatorView.text = AppSessionState.keuse
-        viewHolder2.separatorView.visibility = View.GONE
-
-        val position = cursor.position
-        val current = when (AppSessionState.keuse) {
-            "Van" -> cursor.getStringOrNull("Surname")
-            "Rede" -> cursor.getStringOrNull("Reason")
-            "Datum" -> cursor.getStringOrNull("DepartureDate")
-            else -> ""
+        // Safety check - ensure cursor is valid
+        if (cursor.isClosed) {
+            android.util.Log.e("ArgiefLysAdapter", "Attempted to bind with closed cursor")
+            return
         }
 
-        if (position == 0) {
-            viewHolder2.separatorView.visibility = View.VISIBLE
-            viewHolder2.separatorView.text = context.getString(R.string.separator_format, AppSessionState.keuse, current)
-        } else {
-            cursor.moveToPosition(position - 1)
-            val previous = when (AppSessionState.keuse) {
+        try {
+            val viewHolder2 = view.tag as ViewHolder2
+
+            val lidNaam = cursor.getStringOrEmpty("Name")
+            val lidVan = cursor.getStringOrEmpty("Surname")
+            val lidGeboortedatum = cursor.getStringOrEmpty("DateOfBirth")
+            val rede = cursor.getStringOrEmpty("Reason")
+            val bestemming = cursor.getStringOrEmpty("DepartureTo")
+            val vertrekDatum = cursor.getStringOrEmpty("DepartureDate")
+
+            viewHolder2.nameTextView.text = lidNaam
+            viewHolder2.vanTextView.text = lidVan
+            viewHolder2.geboortedatumTextView.text = lidGeboortedatum
+            viewHolder2.redeTextView.text = rede
+            viewHolder2.bestemmingTextView.text = bestemming
+            viewHolder2.vertrekTextview.text = vertrekDatum
+            viewHolder2.separatorView.text = keuse
+            viewHolder2.separatorView.visibility = View.GONE
+
+            val position = cursor.position
+            val current = when (keuse) {
                 "Van" -> cursor.getStringOrNull("Surname")
                 "Rede" -> cursor.getStringOrNull("Reason")
                 "Datum" -> cursor.getStringOrNull("DepartureDate")
                 else -> ""
             }
-            cursor.moveToPosition(position)
 
-            if (previous != null && current != null && previous != current) {
+            if (position == 0) {
                 viewHolder2.separatorView.visibility = View.VISIBLE
-                viewHolder2.separatorView.text = "${AppSessionState.keuse} $current"
+                viewHolder2.separatorView.text = context.getString(R.string.separator_format, keuse, current)
+            } else {
+                cursor.moveToPosition(position - 1)
+                val previous = when (keuse) {
+                    "Van" -> cursor.getStringOrNull("Surname")
+                    "Rede" -> cursor.getStringOrNull("Reason")
+                    "Datum" -> cursor.getStringOrNull("DepartureDate")
+                    else -> ""
+                }
+                cursor.moveToPosition(position)
+
+                if (previous != null && current != null && previous != current) {
+                    viewHolder2.separatorView.visibility = View.VISIBLE
+                    viewHolder2.separatorView.text = "${keuse} $current"
+                }
             }
+        } catch (e: Exception) {
+            android.util.Log.e("ArgiefLysAdapter", "Error binding view: ${e.message}", e)
         }
     }
 }

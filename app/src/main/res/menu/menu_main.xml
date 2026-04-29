@@ -109,19 +109,11 @@
                 android:title="Manage Permissions"
                 android:icon="@android:drawable/ic_lock_lock"
                 app:showAsAction="never" />
-
             <item
                 android:id="@+id/menu_permission_settings"
                 android:title="Permission Settings"
                 android:icon="@android:drawable/ic_menu_preferences"
                 app:showAsAction="never" />
-            <item
-                android:id="@+id/opdateerApp"
-                android:title="@string/opdateerApp"
-                app:showAsAction="never"
-                android:icon="@drawable/webups"
-                />
-
         </menu>
     </item>
     <item

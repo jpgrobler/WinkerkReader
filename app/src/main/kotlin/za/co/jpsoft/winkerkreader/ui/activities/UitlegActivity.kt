@@ -138,7 +138,7 @@ class UitlegActivity : AppCompatActivity() {
 
     private fun initializeSettingsManager(): Boolean {
         return try {
-            settingsManager = SettingsManager(this)
+            settingsManager = SettingsManager.getInstance(this)
             Log.d(TAG, "SettingsManager initialized successfully")
             true
         } catch (e: Exception) {
@@ -175,16 +175,16 @@ class UitlegActivity : AppCompatActivity() {
             showSterwe = findViewById(R.id.widget_Sterf)
 
             gem1 = findViewById(R.id.gem1)
-            if (!za.co.jpsoft.winkerkreader.utils.SettingsManager(this).gemeenteNaam.isNullOrEmpty()) {
-                gem1.setText(za.co.jpsoft.winkerkreader.utils.SettingsManager(this).gemeenteNaam)
+            if (!settingsManager.gemeenteNaam.isNullOrEmpty()) {
+                gem1.setText(settingsManager.gemeenteNaam)
             }
             gem2 = findViewById(R.id.gem2)
-            if (!za.co.jpsoft.winkerkreader.utils.SettingsManager(this).gemeente2Naam.isNullOrEmpty()) {
-                gem2.setText(za.co.jpsoft.winkerkreader.utils.SettingsManager(this).gemeente2Naam)
+            if (!settingsManager.gemeente2Naam.isNullOrEmpty()) {
+                gem2.setText(settingsManager.gemeente2Naam)
             }
             gem3 = findViewById(R.id.gem3)
-            if (!za.co.jpsoft.winkerkreader.utils.SettingsManager(this).gemeente3Naam.isNullOrEmpty()) {
-                gem3.setText(za.co.jpsoft.winkerkreader.utils.SettingsManager(this).gemeente3Naam)
+            if (!settingsManager.gemeente3Naam.isNullOrEmpty()) {
+                gem3.setText(settingsManager.gemeente3Naam)
             }
             calendarSpinner = findViewById(R.id.calendarSpinner)
 
@@ -291,14 +291,52 @@ class UitlegActivity : AppCompatActivity() {
 
     private fun setColorPreferences(): Boolean {
         return try {
-            gem1.setBackgroundColor(settingsManager.gemeenteKleur)
-            gem2.setBackgroundColor(settingsManager.gemeente2Kleur)
-            gem3.setBackgroundColor(settingsManager.gemeente3Kleur)
+            // Force update backgrounds with proper context
+            updateTextViewBackground(gem1, settingsManager.gemeenteKleur)
+            updateTextViewBackground(gem2, settingsManager.gemeente2Kleur)
+            updateTextViewBackground(gem3, settingsManager.gemeente3Kleur)
             true
         } catch (e: Exception) {
             Log.e(TAG, "Error setting color preferences", e)
             false
         }
+    }
+
+    // Add this helper function
+    private fun updateTextViewBackground(textView: TextView, color: Int) {
+        try {
+            if (color != -1 && color != 0) {
+                // Clear any existing background tint
+                textView.background = null
+
+                // Create a new ColorDrawable
+                val drawable = android.graphics.drawable.ColorDrawable(color)
+
+                // For Android 14+, ensure the drawable is mutable
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                    drawable.setTintList(null) // Remove any tint
+                }
+
+                textView.background = drawable
+
+                // Also set the text color for better contrast
+                if (isColorDark(color)) {
+                    textView.setTextColor(android.graphics.Color.WHITE)
+                } else {
+                    textView.setTextColor(android.graphics.Color.BLACK)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error updating background color", e)
+        }
+    }
+
+    // Helper to determine if color is dark
+    private fun isColorDark(color: Int): Boolean {
+        val darkness = 1 - (0.299 * android.graphics.Color.red(color) +
+                0.587 * android.graphics.Color.green(color) +
+                0.114 * android.graphics.Color.blue(color)) / 255
+        return darkness >= 0.5
     }
 
     private fun setSpinnerSelection(spinner: Spinner, value: String) {
@@ -477,7 +515,14 @@ class UitlegActivity : AppCompatActivity() {
     private fun handleColorSelected(view: View, gemeenteIndex: Int, color: Int) {
         try {
             updateGemeenteColor(gemeenteIndex, color)
-            view.setBackgroundColor(color)
+
+            // Instead of just view.setBackgroundColor(color), use the same helper
+            if (view is TextView) {
+                updateTextViewBackground(view, color)
+            } else {
+                view.setBackgroundColor(color)
+            }
+
             Log.d(TAG, "Color updated successfully for gemeente $gemeenteIndex: ${Integer.toHexString(color)}")
         } catch (e: Exception) {
             Log.e(TAG, "Error handling color selection", e)

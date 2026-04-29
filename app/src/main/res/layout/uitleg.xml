@@ -284,7 +284,11 @@
                     android:gravity="center"
                     android:layout_marginBottom="8dp"
                     android:clickable="true"
-                    android:focusable="true" />
+                    android:focusable="true"
+                    android:backgroundTint="@null"
+                    android:stateListAnimator="@null"
+                    android:elevation="0dp"
+                    android:outlineProvider="none" />
 
                 <TextView
                     android:id="@+id/gem2"
@@ -296,7 +300,11 @@
                     android:gravity="center"
                     android:layout_marginBottom="8dp"
                     android:clickable="true"
-                    android:focusable="true" />
+                    android:focusable="true"
+                    android:backgroundTint="@null"
+                    android:stateListAnimator="@null"
+                    android:elevation="0dp"
+                    android:outlineProvider="none" />
 
                 <TextView
                     android:id="@+id/gem3"
@@ -308,7 +316,11 @@
                     android:gravity="center"
                     android:layout_marginBottom="8dp"
                     android:clickable="true"
-                    android:focusable="true" />
+                    android:focusable="true"
+                    android:backgroundTint="@null"
+                    android:stateListAnimator="@null"
+                    android:elevation="0dp"
+                    android:outlineProvider="none" />
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

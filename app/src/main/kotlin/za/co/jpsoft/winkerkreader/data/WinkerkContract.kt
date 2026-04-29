@@ -1,11 +1,12 @@
 package za.co.jpsoft.winkerkreader.data
 
-import za.co.jpsoft.winkerkreader.utils.AppSessionState
 import za.co.jpsoft.winkerkreader.WinkerkReader
 import android.content.ContentResolver
+import android.content.Context
 import android.net.Uri
 import android.os.Environment
 import android.provider.BaseColumns
+import java.io.File
 
 /**
  * Created by Pieter Grobler on 22/07/2017.
@@ -248,7 +249,7 @@ object WinkerkContract {
         const val LIDMATE_SKYPE = "Skype"
         const val LIDMATE_STUUREPOS = "StuurEPos"
         const val LIDMATE_STUURSMS = "StuurSMS"
-        const val LIDMATE_TAG = "TAG"
+        const val LIDMATE_TAG = "Tag"
         const val LIDMATE_TITEL = "Titel"
         const val LIDMATE_VAN = "Van"
         const val LIDMATE_VOORLETTERS = "Voorletters"
@@ -351,9 +352,6 @@ object WinkerkContract {
 
         const val SELECTION_LIDMAAT_FROM_GESINSHOOF = " Members "
         const val SELECTION_LIDMAAT_FROM = LIDMATE_TABLE_NAME
-
-        @JvmField var SELECTION_LIDMAAT_WHERE =
-            " (" + LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_REKORDSTATUS) + " = " + AppSessionState.recordStatus + " )"
 
         const val SELECTION_HUWELIK_WHERE = " [Huwelikstatus] = 'Getroud' "
 
@@ -477,9 +475,31 @@ object WinkerkContract {
 
         const val KEY_LOG_VOIP = "LOG_VOIP"
 
+        @Deprecated("Use getWkrDir(context) for modern Scoped Storage compatibility")
         @JvmField val WkrDir = Environment.getExternalStorageDirectory().toString() + "/WinkerkReader/"
+        @Deprecated("Use getFotoDir(context) for modern Scoped Storage compatibility")
         @JvmField val FotoDir = Environment.getExternalStorageDirectory().toString() + "/WinkerkReader/Fotos/"
+        @Deprecated("Use getCacheDir(context) for modern Scoped Storage compatibility")
         @JvmField val CacheDir = Environment.getExternalStorageDirectory().toString() + "/WinkerkReader/Fotos/Cache/"
+
+        @JvmStatic
+        fun getWkrDir(context: Context): String {
+            return (context.getExternalFilesDir(null) ?: context.filesDir).absolutePath + "/"
+        }
+
+        @JvmStatic
+        fun getFotoDir(context: Context): String {
+            val dir = File(getWkrDir(context), "Fotos")
+            if (!dir.exists()) dir.mkdirs()
+            return dir.absolutePath + "/"
+        }
+
+        @JvmStatic
+        fun getCacheDir(context: Context): String {
+            val dir = File(getFotoDir(context), "Cache")
+            if (!dir.exists()) dir.mkdirs()
+            return dir.absolutePath + "/"
+        }
         @JvmStatic
         fun isValidGender(gender: Int): Boolean {
             return gender == GENDER_UNKNOWN || gender == GENDER_MALE || gender == GENDER_FEMALE

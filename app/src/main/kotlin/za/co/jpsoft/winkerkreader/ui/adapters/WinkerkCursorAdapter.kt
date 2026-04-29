@@ -4,7 +4,6 @@ import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import za.co.jpsoft.winkerkreader.utils.PhotoHelper
 import za.co.jpsoft.winkerkreader.ui.activities.MainActivity
 import za.co.jpsoft.winkerkreader.utils.Utils
-import za.co.jpsoft.winkerkreader.utils.AppSessionState
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
 import android.content.Context
 import android.database.Cursor
@@ -29,8 +28,8 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
-import org.joda.time.DateTime
-import org.joda.time.Years
+import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.utils.Utils.fixphonenumber
 import za.co.jpsoft.winkerkreader.utils.Utils.parseDate
@@ -53,6 +52,20 @@ class WinkerkCursorAdapter(context: Context, cursor: Cursor?) : CursorAdapter(co
     }
 
     private var mRowStates: IntArray? = null
+
+    private var listView: Int = 2
+    private var soekList: Boolean = false
+    private var soek: String = ""
+    private var recordStatus: String = "0"
+    private var sortOrder: String = "VAN"
+
+    fun updateState(listView: Int, soekList: Boolean, soek: String, recordStatus: String, sortOrder: String) {
+        this.listView = listView
+        this.soekList = soekList
+        this.soek = soek
+        this.recordStatus = recordStatus
+        this.sortOrder = sortOrder
+    }
     private val imageCache: LruCache<String, Bitmap>
 
     init {
@@ -77,7 +90,7 @@ class WinkerkCursorAdapter(context: Context, cursor: Cursor?) : CursorAdapter(co
 
     override fun newView(context: Context, cursor: Cursor, parent: ViewGroup): View {
         Log.v(TAG, "newView")
-        val view = if (AppSessionState.listView == 1) {
+        val view = if (listView == 1) {
             LayoutInflater.from(context).inflate(R.layout.list_item, parent, false)
         } else {
             LayoutInflater.from(context).inflate(R.layout.list_item_2, parent, false)
@@ -90,38 +103,39 @@ class WinkerkCursorAdapter(context: Context, cursor: Cursor?) : CursorAdapter(co
         Log.v(TAG, "bindView")
         try {
             if (cursor.isClosed || cursor.count <= 0) return
-            if (AppSessionState.loader == "GEMEENTENAAM" || AppSessionState.loader == "DATADATUM") return
+            // if (AppSessionState.loader == "GEMEENTENAAM" || AppSessionState.loader == "DATADATUM") return
 
             val vh = view.tag as ViewHolder
             val member = extractMemberData(cursor)
+            val settingsManager = SettingsManager.getInstance(context)
 
-            if (AppSessionState.soekList) {
+            if (soekList) {
                 view.setBackgroundColor(Color.LTGRAY)
             }
 
             when (member.congregation) {
-                za.co.jpsoft.winkerkreader.utils.SettingsManager(vh.nameTextView.context).gemeenteNaam -> view.setBackgroundColor(za.co.jpsoft.winkerkreader.utils.SettingsManager(vh.nameTextView.context).gemeenteKleur)
-                za.co.jpsoft.winkerkreader.utils.SettingsManager(vh.nameTextView.context).gemeente2Naam -> view.setBackgroundColor(za.co.jpsoft.winkerkreader.utils.SettingsManager(vh.nameTextView.context).gemeente2Kleur)
-                za.co.jpsoft.winkerkreader.utils.SettingsManager(vh.nameTextView.context).gemeente3Naam -> view.setBackgroundColor(za.co.jpsoft.winkerkreader.utils.SettingsManager(vh.nameTextView.context).gemeente3Kleur)
+                settingsManager.gemeenteNaam -> view.setBackgroundColor(settingsManager.gemeenteKleur)
+                settingsManager.gemeente2Naam -> view.setBackgroundColor(settingsManager.gemeente2Kleur)
+                settingsManager.gemeente3Naam -> view.setBackgroundColor(settingsManager.gemeente3Kleur)
             }
 
-            applyVisibilitySettings(vh)
+            applyVisibilitySettings(vh, settingsManager)
             resetViewState(vh)
 
             bindPhotoData(vh, member, context)
             bindSelectionState(view, vh, member)
             bindBasicInfo(vh, member)
-            bindContactInfo(vh, member)
-            bindAgeInfo(vh, member)
-            bindWeddingInfo(vh, member)
-            bindEmailIndicator(vh, member)
+            bindContactInfo(vh, member, settingsManager)
+            bindAgeInfo(vh, member, settingsManager)
+            bindWeddingInfo(vh, member, settingsManager)
+            bindEmailIndicator(vh, member, settingsManager)
 
-            if (AppSessionState.soekList) {
-                vh.vanTextView.text = highlight(AppSessionState.soek, vh.vanTextView.text.toString())
-                vh.nameTextView.text = highlight(AppSessionState.soek, vh.nameTextView.text.toString())
-                vh.cellTextView.text = highlight(AppSessionState.soek, vh.cellTextView.text.toString())
-                vh.telTextView.text = highlight(AppSessionState.soek, vh.telTextView.text.toString())
-                vh.spearatorTextView.text = highlight(AppSessionState.soek, vh.spearatorTextView.text.toString())
+            if (soekList) {
+                vh.vanTextView.text = highlight(soek, vh.vanTextView.text.toString())
+                vh.nameTextView.text = highlight(soek, vh.nameTextView.text.toString())
+                vh.cellTextView.text = highlight(soek, vh.cellTextView.text.toString())
+                vh.telTextView.text = highlight(soek, vh.telTextView.text.toString())
+                vh.spearatorTextView.text = highlight(soek, vh.spearatorTextView.text.toString())
             }
 
             handleSeparators(view, vh, cursor, member)
@@ -147,16 +161,20 @@ class WinkerkCursorAdapter(context: Context, cursor: Cursor?) : CursorAdapter(co
         if (member.birthday.isNotEmpty() && member.birthday.length >= 10) {
             try {
                 member.birthdayDT = parseDate(member.birthday.substring(0, 10))
-                val years = Years.yearsBetween(member.birthdayDT, DateTime.now())
-                if (years.years >= 0) member.age = years.years.toString()
+                member.birthdayDT?.let { dt ->
+                    val years = ChronoUnit.YEARS.between(dt, LocalDate.now())
+                    if (years >= 0) member.age = years.toString()
+                }
             } catch (_: Exception) { }
         }
         member.weddingDate = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_HUWELIKSDATUM)
         if (member.weddingDate.isNotEmpty() && member.weddingDate.length >= 10) {
             try {
                 member.weddingDT = parseDate(member.weddingDate.substring(0, 10))
-                val years = Years.yearsBetween(member.weddingDT, DateTime.now())
-                if (years.years >= 0) member.weddingYears = years.years.toString()
+                member.weddingDT?.let { dt ->
+                    val years = ChronoUnit.YEARS.between(dt, LocalDate.now())
+                    if (years >= 0) member.weddingYears = years.toString()
+                }
             } catch (_: Exception) { }
         }
         member.picturePath = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_PICTUREPATH)
@@ -165,13 +183,13 @@ class WinkerkCursorAdapter(context: Context, cursor: Cursor?) : CursorAdapter(co
         return member
     }
 
-    private fun applyVisibilitySettings(vh: ViewHolder) {
-        vh.fotoFrame.visibility = if (za.co.jpsoft.winkerkreader.utils.SettingsManager(vh.nameTextView.context).isListFoto) View.VISIBLE else View.GONE
-        vh.ouderdomTextView.visibility = if (za.co.jpsoft.winkerkreader.utils.SettingsManager(vh.nameTextView.context).isListOuderdom) View.VISIBLE else View.GONE
-        vh.wykTextView.visibility = if (za.co.jpsoft.winkerkreader.utils.SettingsManager(vh.nameTextView.context).isListWyk) View.VISIBLE else View.GONE
-        vh.huwelikTextView.visibility = if (za.co.jpsoft.winkerkreader.utils.SettingsManager(vh.nameTextView.context).isListHuwelikBlok) View.VISIBLE else View.GONE
-        vh.eposImageView.visibility = if (za.co.jpsoft.winkerkreader.utils.SettingsManager(vh.nameTextView.context).isListEpos) View.VISIBLE else View.GONE
-        if (za.co.jpsoft.winkerkreader.utils.SettingsManager(vh.nameTextView.context).isListVerjaarBlok) {
+    private fun applyVisibilitySettings(vh: ViewHolder, settingsManager: SettingsManager) {
+        vh.fotoFrame.visibility = if (settingsManager.isListFoto) View.VISIBLE else View.GONE
+        vh.ouderdomTextView.visibility = if (settingsManager.isListOuderdom) View.VISIBLE else View.GONE
+        vh.wykTextView.visibility = if (settingsManager.isListWyk) View.VISIBLE else View.GONE
+        vh.huwelikTextView.visibility = if (settingsManager.isListHuwelikBlok) View.VISIBLE else View.GONE
+        vh.eposImageView.visibility = if (settingsManager.isListEpos) View.VISIBLE else View.GONE
+        if (settingsManager.isListVerjaarBlok) {
             vh.koekImageView.visibility = View.VISIBLE
             vh.verjaarTextView.visibility = View.VISIBLE
         } else {
@@ -201,11 +219,11 @@ class WinkerkCursorAdapter(context: Context, cursor: Cursor?) : CursorAdapter(co
         }
 
         if (photoPath == null) {
-            PhotoHelper.setDefaultGenderImage(vh.fotoImageView, member.gender, if (AppSessionState.listView == 2) 50 else 30)
+            PhotoHelper.setDefaultGenderImage(vh.fotoImageView, member.gender, if (listView == 2) 50 else 30)
             return
         }
 
-        if (AppSessionState.listView == 2) {
+        if (listView == 2) {
             pixels = (50 * scale + 0.5f).toInt()
         }
         vh.fotoImageView.layoutParams.height = pixels
@@ -220,7 +238,7 @@ class WinkerkCursorAdapter(context: Context, cursor: Cursor?) : CursorAdapter(co
             imageLoaderExecutor.submit(LoadImage(WeakReference(vh.fotoImageView), imageCache, photoPath))
         }
 
-        if (AppSessionState.recordStatus == "2") {
+        if (recordStatus == "2") {
             vh.fotoFrameOverlay.setImageResource(R.drawable.circle_crop_onaktief)
         } else {
             vh.fotoFrameOverlay.setImageResource(R.drawable.circle_crop)
@@ -232,7 +250,7 @@ class WinkerkCursorAdapter(context: Context, cursor: Cursor?) : CursorAdapter(co
             view.setBackgroundColor(ContextCompat.getColor(view.context, R.color.selected_view))
             vh.fotoFrameOverlay.setImageResource(R.drawable.circle_crop_selected)
         } else {
-            if (AppSessionState.recordStatus == "2") {
+            if (recordStatus == "2") {
                 view.setBackgroundColor(Color.parseColor("#ffd0d0"))
                 vh.fotoFrameOverlay.setImageResource(R.drawable.circle_crop_onaktief)
             } else {
@@ -246,16 +264,16 @@ class WinkerkCursorAdapter(context: Context, cursor: Cursor?) : CursorAdapter(co
         vh.vanTextView.text = member.surname
     }
 
-    private fun bindContactInfo(vh: ViewHolder, member: MemberData) {
+    private fun bindContactInfo(vh: ViewHolder, member: MemberData, settingsManager: SettingsManager) {
         if (member.cellphone.isNotEmpty() && member.cellphone.isNotBlank()) {
             val formattedCell = fixphonenumber(member.cellphone)
-            if (za.co.jpsoft.winkerkreader.utils.SettingsManager(vh.nameTextView.context).isListSelfoon) {
+            if (settingsManager.isListSelfoon) {
                 vh.selBlock.visibility = View.VISIBLE
                 vh.cellTextView.text = formattedCell
             } else {
                 vh.selBlock.visibility = View.GONE
             }
-            if (MainActivity.whatsappContacts.isNotEmpty() && za.co.jpsoft.winkerkreader.utils.SettingsManager(vh.nameTextView.context).isListWhatsapp) {
+            if (MainActivity.whatsappContacts.isNotEmpty() && settingsManager.isListWhatsapp) {
                 if (MainActivity.whatsappContacts.contains(formattedCell)) {
                     vh.whatsappImageView.visibility = View.VISIBLE
                 }
@@ -264,9 +282,9 @@ class WinkerkCursorAdapter(context: Context, cursor: Cursor?) : CursorAdapter(co
             vh.cellTextView.text = ""
         }
 
-        if (member.ward.isNotEmpty() && za.co.jpsoft.winkerkreader.utils.SettingsManager(vh.nameTextView.context).isListWyk &&
-            (AppSessionState.sortOrder == "VAN" || AppSessionState.sortOrder == "OUDERDOM" ||
-                    AppSessionState.sortOrder == "VERJAAR" || AppSessionState.sortOrder == "HUWELIK")
+        if (member.ward.isNotEmpty() && settingsManager.isListWyk &&
+            (sortOrder == "VAN" || sortOrder == "OUDERDOM" ||
+                    sortOrder == "VERJAAR" || sortOrder == "HUWELIK")
         ) {
             vh.wykTextView.visibility = View.VISIBLE
             vh.wykTextView.text = member.ward
@@ -276,7 +294,7 @@ class WinkerkCursorAdapter(context: Context, cursor: Cursor?) : CursorAdapter(co
 
         if (member.landline.isNotEmpty() && member.landline.isNotBlank()) {
             val formattedLandline = fixphonenumber(member.landline)
-            if (za.co.jpsoft.winkerkreader.utils.SettingsManager(vh.nameTextView.context).isListTelefoon) {
+            if (settingsManager.isListTelefoon) {
                 vh.telBlock.visibility = View.VISIBLE
             } else {
                 vh.telBlock.visibility = View.GONE
@@ -287,17 +305,17 @@ class WinkerkCursorAdapter(context: Context, cursor: Cursor?) : CursorAdapter(co
         }
     }
 
-    private fun bindAgeInfo(vh: ViewHolder, member: MemberData) {
-        if (member.birthday.isNotEmpty() && za.co.jpsoft.winkerkreader.utils.SettingsManager(vh.nameTextView.context).isListOuderdom && member.birthday.length >= 10) {
+    private fun bindAgeInfo(vh: ViewHolder, member: MemberData, settingsManager: SettingsManager) {
+        if (member.birthday.isNotEmpty() && settingsManager.isListOuderdom && member.birthday.length >= 10) {
             vh.ouderdomTextView.text = "(${member.age})"
             vh.ouderdomTextView.visibility = View.VISIBLE
             val day = member.birthday.substring(0, 2)
             val month = member.birthday.substring(3, 5)
             vh.verjaarTextView.text = "$day ${getMonthAbbreviation(month)}"
-            if (member.birthdayDT != null) {
-                val today = DateTime.now()
-                if (member.birthdayDT!!.monthOfYear == today.monthOfYear) {
-                    if (za.co.jpsoft.winkerkreader.utils.SettingsManager(vh.nameTextView.context).isListVerjaarBlok && member.birthdayDT!!.dayOfMonth == today.dayOfMonth) {
+            member.birthdayDT?.let { bDayDT ->
+                val today = LocalDate.now()
+                if (bDayDT.monthValue == today.monthValue) {
+                    if (settingsManager.isListVerjaarBlok && bDayDT.dayOfMonth == today.dayOfMonth) {
                         vh.koekImageView.visibility = View.VISIBLE
                     } else {
                         vh.koekImageView.visibility = View.GONE
@@ -309,9 +327,9 @@ class WinkerkCursorAdapter(context: Context, cursor: Cursor?) : CursorAdapter(co
         }
     }
 
-    private fun bindWeddingInfo(vh: ViewHolder, member: MemberData) {
+    private fun bindWeddingInfo(vh: ViewHolder, member: MemberData, settingsManager: SettingsManager) {
         vh.huwelikTextView.visibility = View.GONE
-        if (member.weddingDate.isNotEmpty() && za.co.jpsoft.winkerkreader.utils.SettingsManager(vh.nameTextView.context).isListHuwelikBlok && member.weddingDate.length > 6) {
+        if (member.weddingDate.isNotEmpty() && settingsManager.isListHuwelikBlok && member.weddingDate.length > 6) {
             vh.ringImageView.visibility = View.VISIBLE
             val day = member.weddingDate.substring(0, 2)
             val month = member.weddingDate.substring(3, 5)
@@ -320,9 +338,9 @@ class WinkerkCursorAdapter(context: Context, cursor: Cursor?) : CursorAdapter(co
         }
     }
 
-    private fun bindEmailIndicator(vh: ViewHolder, member: MemberData) {
+    private fun bindEmailIndicator(vh: ViewHolder, member: MemberData, settingsManager: SettingsManager) {
         vh.eposImageView.visibility = View.GONE
-        if (member.email.isNotEmpty() && member.email.isNotBlank() && za.co.jpsoft.winkerkreader.utils.SettingsManager(vh.nameTextView.context).isListEpos) {
+        if (member.email.isNotEmpty() && member.email.isNotBlank() && settingsManager.isListEpos) {
             vh.eposImageView.visibility = View.VISIBLE
         }
     }
@@ -359,7 +377,7 @@ class WinkerkCursorAdapter(context: Context, cursor: Cursor?) : CursorAdapter(co
                         val prevMember = extractMemberData(cursor)
                         cursor.moveToPosition(position)
 
-                        when (AppSessionState.sortOrder) {
+                        when (sortOrder) {
                             "WYK" -> {
                                 if (prevMember.ward.isNotEmpty() && member.ward.isNotEmpty()) {
                                     if (prevMember.ward != member.ward) showSeparator = true
@@ -415,7 +433,7 @@ class WinkerkCursorAdapter(context: Context, cursor: Cursor?) : CursorAdapter(co
                 val prevMember = extractMemberData(cursor)
                 cursor.moveToPosition(position)
 
-                when (AppSessionState.sortOrder) {
+                when (sortOrder) {
                     "WYK" -> {
                         if (prevMember.ward.isNotEmpty() && member.ward.isNotEmpty()) {
                             if (prevMember.ward != member.ward) showSeparator = true
@@ -468,7 +486,7 @@ class WinkerkCursorAdapter(context: Context, cursor: Cursor?) : CursorAdapter(co
 
     private fun configureSeparatorDisplay(vh: ViewHolder, member: MemberData,
                                           showSeparator: Boolean, showSeparator2: Boolean) {
-        when (AppSessionState.sortOrder) {
+        when (sortOrder) {
             "WYK" -> {
                 var temp2 = member.address.replace("\r", "\n")
                 temp2 = temp2.replace("\n\n", "\n")
@@ -517,7 +535,7 @@ class WinkerkCursorAdapter(context: Context, cursor: Cursor?) : CursorAdapter(co
             }
             "VERJAAR", "HUWELIK" -> {
                 vh.spearatorWykTextView.text = ""
-                val month = when (AppSessionState.sortOrder) {
+                val month = when (sortOrder) {
                     "VERJAAR" -> if (member.birthday.length >= 5) member.birthday.substring(3, 5) else ""
                     else -> if (member.weddingDate.length >= 5) member.weddingDate.substring(3, 5) else ""
                 }
@@ -656,8 +674,8 @@ class WinkerkCursorAdapter(context: Context, cursor: Cursor?) : CursorAdapter(co
         var tag = 0
         var age = "?"
         var weddingYears = "?"
-        var birthdayDT: DateTime? = null
-        var weddingDT: DateTime? = null
+        var birthdayDT: LocalDate? = null
+        var weddingDT: LocalDate? = null
         var guid = ""
     }
-}
+}

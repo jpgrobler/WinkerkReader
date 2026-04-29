@@ -1,11 +1,5 @@
 package za.co.jpsoft.winkerkreader.services
 
-import za.co.jpsoft.winkerkreader.utils.OproepUtils
-import za.co.jpsoft.winkerkreader.WinkerkReader
-
-// OproepDetailService.kt
-
-
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -13,6 +7,7 @@ import android.app.Service
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.ContentUris
+import android.content.ContentValues.TAG
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -36,14 +31,39 @@ import android.widget.TextView
 import androidx.core.app.NotificationCompat
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.WinkerkContract
-import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
+import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
+import za.co.jpsoft.winkerkreader.utils.OproepUtils
+import java.lang.ref.WeakReference
 
 class OproepDetailService : Service() {
 
     companion object {
         @Volatile
         var isOn = false
+            private set
+
+        private var serviceInstance: WeakReference<OproepDetailService>? = null
+
+        fun isServiceActive(): Boolean = serviceInstance?.get() != null
+
+        // Track last processed number to prevent duplicates
+        private var lastProcessedNumber = ""
+        private var lastProcessedTime = 0L
+
+        fun canProcessCall(number: String): Boolean {
+            synchronized(this) {
+                val now = System.currentTimeMillis()
+                return if (lastProcessedNumber == number && now - lastProcessedTime < 3000) {
+                    Log.d("OproepDetailService", "Duplicate call number detected, skipping: $number")
+                    false
+                } else {
+                    lastProcessedNumber = number
+                    lastProcessedTime = now
+                    true
+                }
+            }
+        }
     }
 
     private lateinit var windowManager: WindowManager
@@ -54,14 +74,48 @@ class OproepDetailService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+
+        if (isOn || isServiceActive()) {
+            Log.d("OproepDetailService", "Service already running, skipping onCreate")
+            stopSelf()
+            return
+        }
+
+        serviceInstance = WeakReference(this)
+        isOn = true
+
         createForegroundNotification()
         val settings = getSharedPreferences(PREFS_USER_INFO, MODE_PRIVATE)
         val incomingNumber = settings.getString("CallerNumber", "") ?: ""
-        isOn = true
+
         if (isValidPhoneNumber(incomingNumber)) {
-            processIncomingCall(incomingNumber, settings)
+            if (canProcessCall(incomingNumber)) {
+                processIncomingCall(incomingNumber, settings)
+            } else {
+                Log.d("OproepDetailService", "Duplicate call, stopping service")
+                stopSelf()
+            }
         } else {
             stopSelf()
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        isOn = false
+        serviceInstance = null
+
+        val settings = getSharedPreferences(PREFS_USER_INFO, 0)
+        settings.edit().putString("CallerNumber", "XXXXXXXXXX").apply()
+
+        if (::floatingView.isInitialized) {
+            try {
+                if (::windowManager.isInitialized) {
+                    windowManager.removeView(floatingView)
+                }
+            } catch (e: Exception) {
+                Log.e("OproepDetailService", "Error removing floating view", e)
+            }
         }
     }
 
@@ -143,18 +197,35 @@ class OproepDetailService : Service() {
         val output = StringBuilder(phoneNumber).append("\r\n")
         val nameIndex = cursor.getColumnIndex(winkerkEntry.LIDMATE_NOEMNAAM)
         val surnameIndex = cursor.getColumnIndex(winkerkEntry.LIDMATE_VAN)
+
+        // Use Set to prevent duplicate contact entries
+        val uniqueContacts = LinkedHashSet<String>()
+
         cursor.moveToPosition(-1)
         while (cursor.moveToNext()) {
             if (!cursor.isNull(nameIndex) && !cursor.isNull(surnameIndex)) {
                 val name = cursor.getString(nameIndex)
                 val surname = cursor.getString(surnameIndex)
-                output.append(name).append("\t ").append(surname).append("\r\n")
+                val contact = "$name $surname"
+                uniqueContacts.add(contact)
             }
         }
+
+        // Append unique contacts
+        uniqueContacts.forEach { contact ->
+            output.append(contact).append("\r\n")
+        }
+
         return output.toString()
     }
 
     private fun createFloatingView(callerInfo: String, prefs: SharedPreferences) {
+        // Check if already initialized and showing
+        if (::floatingView.isInitialized) {
+            Log.d("OproepDetailService", "Floating view already exists, skipping")
+            return
+        }
+
         floatingView = LayoutInflater.from(this).inflate(R.layout.oproepfloat, null)
         val callerTextView = floatingView.findViewById<TextView>(R.id.oproepnommer)
         callerTextView.text = callerInfo
@@ -168,19 +239,29 @@ class OproepDetailService : Service() {
             stopSelf()
             return
         }
-        setupFloatingWindow()
+        createFloatingWindow()
         setupClickListeners(callerTextView)
         setupTouchListener()
     }
 
-    private fun setupFloatingWindow() {
+    private fun createFloatingWindow() {
         val params = createWindowLayoutParams().apply {
             gravity = Gravity.CENTER or Gravity.START
             x = 0
             y = 100
         }
-        windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
-        windowManager.addView(floatingView, params)
+        windowManager = (getSystemService(WINDOW_SERVICE) as? WindowManager)!!
+        if (windowManager == null) {
+            Log.e(TAG, "WindowManager not available")
+            stopSelf()
+            return
+        }
+        try {
+            windowManager.addView(floatingView, params)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to add floating view", e)
+            stopSelf()
+        }
     }
 
     private fun createWindowLayoutParams(): WindowManager.LayoutParams {
@@ -199,32 +280,20 @@ class OproepDetailService : Service() {
     }
 
     private fun setupClickListeners(callerTextView: TextView) {
-        floatingView.findViewById<ImageView>(R.id.close_btn).setOnClickListener {
+        floatingView.findViewById<ImageView>(R.id.close_btn)?.setOnClickListener {
             stopSelf()
         }
         callerTextView.setOnClickListener {
             val clipboard = getSystemService(CLIPBOARD_SERVICE) as? ClipboardManager
-            if (clipboard != null) {
-                val clip = ClipData.newPlainText("caller_info", callerTextView.text)
-                clipboard.setPrimaryClip(clip)
-            }
+            clipboard?.setPrimaryClip(ClipData.newPlainText("caller_info", callerTextView.text))
         }
     }
 
     private fun setupTouchListener() {
-        val params = floatingView.layoutParams as WindowManager.LayoutParams
-        floatingView.findViewById<View>(R.id.oproepfloaterbase).setOnTouchListener(
+        val params = floatingView.layoutParams as? WindowManager.LayoutParams ?: return
+        floatingView.findViewById<View>(R.id.oproepfloaterbase)?.setOnTouchListener(
             FloatingViewTouchListener(params, windowManager, floatingView)
         )
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        val settings = getSharedPreferences(PREFS_USER_INFO, 0)
-        settings.edit().putString("CallerNumber", "XXXXXXXXXX").apply()
-        if (::floatingView.isInitialized) {
-            windowManager.removeView(floatingView)
-        }
     }
 
     private inner class FloatingViewTouchListener(

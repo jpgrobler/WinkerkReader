@@ -38,7 +38,7 @@ class DeviceBootReceiver : BroadcastReceiver() {
             Intent.ACTION_PACKAGE_REPLACED,
             "android.intent.action.QUICKBOOT_POWERON" -> {
 
-                val settings = SettingsManager(context)
+                val settings = SettingsManager.getInstance(context)
 
                 // Start monitoring services if enabled
                 startMonitoringServiceIfEnabled(context, settings)

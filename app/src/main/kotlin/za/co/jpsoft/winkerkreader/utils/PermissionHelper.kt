@@ -89,12 +89,10 @@ object PermissionHelper {
     val NOTIFICATION_PERMISSIONS: Array<String> = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         arrayOf(
             Manifest.permission.POST_NOTIFICATIONS,
-            Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE,
             Manifest.permission.ACCESS_NOTIFICATION_POLICY
         )
     } else {
         arrayOf(
-            Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE,
             Manifest.permission.ACCESS_NOTIFICATION_POLICY
         )
     }
@@ -215,7 +213,6 @@ object PermissionHelper {
         val allPermissions = mutableListOf<String>()
 
         // Add all permission groups that need runtime requests
-        addPermissionsIfNeeded(activity, allPermissions, STORAGE_PERMISSIONS)
         addPermissionsIfNeeded(activity, allPermissions, CONTACT_PERMISSIONS)
         addPermissionsIfNeeded(activity, allPermissions, SMS_PERMISSIONS)
         addPermissionsIfNeeded(activity, allPermissions, PHONE_PERMISSIONS)
@@ -246,46 +243,11 @@ object PermissionHelper {
         }
     }
 
-    /**
-     * Check if we have all files access (Android 11+)
-     */
-    @JvmStatic
-    fun hasAllFilesAccess(): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            Environment.isExternalStorageManager()
-        } else true
-    }
 
-    /**
-     * Request all files access (Android 11+)
-     */
-    @JvmStatic
-    fun requestAllFilesAccess(activity: Activity) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
-            try {
-                val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
-                    .setData(Uri.parse("package:${activity.packageName}"))
-                activity.startActivityForResult(intent, REQUEST_CODE_STORAGE)
-            } catch (e: Exception) {
-                // Fallback to general settings
-                val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
-                activity.startActivity(intent)
-            }
-        }
-    }
 
-    /**
-     * Enhanced storage permission check that considers Android version differences
-     */
     @JvmStatic
     fun hasStoragePermissions(context: Context): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            // Android 11+ - check if we have all files access OR scoped storage permissions
-            Environment.isExternalStorageManager() || arePermissionsGranted(context, STORAGE_PERMISSIONS)
-        } else {
-            // Android 10 and below - use traditional permissions
-            arePermissionsGranted(context, STORAGE_PERMISSIONS)
-        }
+        return arePermissionsGranted(context, STORAGE_PERMISSIONS)
     }
 
     /**
@@ -293,38 +255,22 @@ object PermissionHelper {
      */
     @JvmStatic
     fun requestStoragePermissions(activity: Activity) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            // Android 11+ - offer choice between scoped storage and all files access
-            //showStoragePermissionDialog(activity);
-            requestPermissionGroup(activity, STORAGE_PERMISSIONS, REQUEST_CODE_STORAGE)
-        } else {
-            // Android 10 and below - request traditional permissions
-            requestPermissionGroup(activity, STORAGE_PERMISSIONS, REQUEST_CODE_STORAGE)
-        }
+        requestPermissionGroup(activity, STORAGE_PERMISSIONS, REQUEST_CODE_STORAGE)
     }
 
-    private fun showStoragePermissionDialog(activity: Activity) {
-        AlertDialog.Builder(activity)
-            .setTitle("Storage Access Required")
-            .setMessage("This app needs storage access. Choose your preferred option:")
-            .setPositiveButton("All Files Access") { _, _ -> requestAllFilesAccess(activity) }
-            .setNegativeButton("Scoped Access") { _, _ ->
-                requestPermissionGroup(activity, STORAGE_PERMISSIONS, REQUEST_CODE_STORAGE)
-            }
-            .setNeutralButton("Cancel", null)
-            .show()
-    }
-
+    /**
+     * Get intent for requesting system alert window permission
+     */
     @JvmStatic
-    fun requestSystemAlertWindowPermission(activity: Activity) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(activity)) {
-            val intent = Intent(
+    fun getSystemAlertWindowPermissionIntent(context: Context): Intent? {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(context)) {
+            Intent(
                 Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                Uri.parse("package:${activity.packageName}")
+                Uri.parse("package:${context.packageName}")
             )
-            activity.startActivityForResult(intent, REQUEST_CODE_OVERLAY)
-        }
+        } else null
     }
+
 
     /**
      * Request notification policy access
@@ -392,7 +338,6 @@ object PermissionHelper {
             Manifest.permission.READ_CALENDAR to "Read Calendar",
             Manifest.permission.WRITE_CALENDAR to "Write Calendar",
             Manifest.permission.POST_NOTIFICATIONS to "Post Notifications",
-            Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE to "Notification Listener",
             Manifest.permission.ACCESS_NOTIFICATION_POLICY to "Notification Policy Access",
             Manifest.permission.SCHEDULE_EXACT_ALARM to "Schedule Exact Alarm",
             Manifest.permission.USE_EXACT_ALARM to "Use Exact Alarm",

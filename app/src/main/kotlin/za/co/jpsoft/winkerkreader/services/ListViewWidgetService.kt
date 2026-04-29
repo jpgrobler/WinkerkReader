@@ -5,7 +5,6 @@ import za.co.jpsoft.winkerkreader.widget.WinkerkReaderWidgetProvider
 import za.co.jpsoft.winkerkreader.utils.Utils.parseDate
 import za.co.jpsoft.winkerkreader.data.WinkerkContract
 import za.co.jpsoft.winkerkreader.ui.activities.VerjaarSmsActivity
-import za.co.jpsoft.winkerkreader.utils.AppSessionState
 import za.co.jpsoft.winkerkreader.widget.WidgetQueryBuilder
 
 import android.appwidget.AppWidgetManager
@@ -27,9 +26,10 @@ import android.util.Log
 import android.widget.RemoteViews
 import android.widget.RemoteViewsService
 import com.readystatesoftware.sqliteasset.SQLiteAssetHelper
-import org.joda.time.DateTime
-import org.joda.time.MonthDay
-import org.joda.time.Years
+import za.co.jpsoft.winkerkreader.data.WinkerkDbHelper
+import java.time.LocalDate
+import java.time.MonthDay
+import java.time.temporal.ChronoUnit
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
 import java.util.concurrent.locks.ReentrantLock
@@ -45,14 +45,8 @@ class ListViewWidgetService : RemoteViewsService() {
     override fun onGetViewFactory(intent: Intent): RemoteViewsFactory {
         Log.d(TAG, "Creating RemoteViewsFactory")
 
-        try {
-            AppSessionState.deviceId = Settings.Secure.getString(
-                applicationContext.contentResolver,
-                Settings.Secure.ANDROID_ID
-            ) ?: ""
-        } catch (e: Exception) {
-            Log.e(TAG, "Error getting device ID", e)
-        }
+        // Device ID is no longer stored in global AppSessionState singleton
+        // RemoteViewsFactory can obtain it via DeviceIdManager if needed.
 
         return WidgetViewsFactory(applicationContext, intent)
     }
@@ -160,7 +154,7 @@ class WidgetViewsFactory(
     private fun initializeDatabase() {
         try {
             if (databaseHelper == null) {
-                databaseHelper = SQLiteAssetHelper(context, WinkerkContract.winkerkEntry.WINKERK_DB, null, 1)
+                databaseHelper = WinkerkDbHelper.getInstance(context, WinkerkContract.winkerkEntry.WINKERK_DB)
             }
             if (database == null || database?.isOpen != true) {
                 database = databaseHelper?.readableDatabase
@@ -232,7 +226,7 @@ class WidgetViewsFactory(
     }
 
 //    private fun buildCombinedQuery(): String {
-//        val today = DateTime.now()
+//        val today = LocalDate.now()
 //        val futureDate = today.plusDays(LOOK_AHEAD_DAYS)
 //
 //        val currentDay = today.dayOfMonth
@@ -332,7 +326,7 @@ class WidgetViewsFactory(
             return
         }
 
-        val today = DateTime.now()
+        val today = LocalDate.now()
         cursor.moveToFirst()
         while (!cursor.isAfterLast) {
             try {
@@ -348,7 +342,7 @@ class WidgetViewsFactory(
         }
     }
 
-    private fun processCurrentRow(cursor: Cursor, today: DateTime) {
+    private fun processCurrentRow(cursor: Cursor, today: LocalDate) {
         val firstNameIdx = cursor.getColumnIndex(WinkerkContract.winkerkEntry.LIDMATE_NOEMNAAM)
         val lastNameIdx = cursor.getColumnIndex(WinkerkContract.winkerkEntry.LIDMATE_VAN)
         val gemeenteIdx = cursor.getColumnIndex(WinkerkContract.winkerkEntry.LIDMATE_GEMEENTE)
@@ -383,15 +377,15 @@ class WidgetViewsFactory(
         }
 
         val ageDisplay = try {
-            val years = Years.yearsBetween(eventDate, today).years
+            val years = ChronoUnit.YEARS.between(eventDate, today).toInt()
             getAgeDisplayText(reason, years)
         } catch (e: Exception) {
             Log.w(tag, "Error calculating age", e)
             "(?)"
         }
 
-        val eventMonthDay = MonthDay.fromDateFields(eventDate.toDate())
-        val todayMonthDay = MonthDay.fromDateFields(today.toDate())
+        val eventMonthDay = MonthDay.of(eventDate.monthValue, eventDate.dayOfMonth)
+        val todayMonthDay = MonthDay.from(today)
         val shouldShow = eventMonthDay.isAfter(todayMonthDay) || eventMonthDay == todayMonthDay
 
         if (shouldShow) {
@@ -430,7 +424,7 @@ class WidgetViewsFactory(
     private fun createViewForPosition(position: Int): RemoteViews {
         val row = RemoteViews(context.packageName, R.layout.row)
 
-        val today = DateTime.now()
+        val today = LocalDate.now()
         val name = records[position]
         val day = records2[position]
         val month = records3[position]
@@ -439,10 +433,11 @@ class WidgetViewsFactory(
         // Determine background color based on gemeente
         var backgroundColor = Color.WHITE
         if (gemeente.isNotEmpty()) {
-            when {
-                gemeente == za.co.jpsoft.winkerkreader.utils.SettingsManager(context).gemeenteNaam -> backgroundColor = za.co.jpsoft.winkerkreader.utils.SettingsManager(context).gemeenteKleur
-                gemeente == za.co.jpsoft.winkerkreader.utils.SettingsManager(context).gemeente2Naam -> backgroundColor = za.co.jpsoft.winkerkreader.utils.SettingsManager(context).gemeente2Kleur
-                gemeente == za.co.jpsoft.winkerkreader.utils.SettingsManager(context).gemeente3Naam -> backgroundColor = za.co.jpsoft.winkerkreader.utils.SettingsManager(context).gemeente3Kleur
+            val settings = SettingsManager.getInstance(context)
+            when (gemeente) {
+                settings.gemeenteNaam -> backgroundColor = settings.gemeenteKleur
+                settings.gemeente2Naam -> backgroundColor = settings.gemeente2Kleur
+                settings.gemeente3Naam -> backgroundColor = settings.gemeente3Kleur
             }
         }
         row.setInt(android.R.id.text1, "setBackgroundColor", backgroundColor)
@@ -499,10 +494,10 @@ class WidgetViewsFactory(
     }
 
     private fun addErrorItem(message: String) {
-        val now = DateTime.now()
+        val now = LocalDate.now()
         records.add(message)
         records2.add(String.format("%02d", now.dayOfMonth))
-        records3.add(String.format("%02d", now.monthOfYear))
+        records3.add(String.format("%02d", now.monthValue))
         records4.add("Error")
         records5.add("")
         Log.w(tag, "Added error item: $message")

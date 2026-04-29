@@ -11,7 +11,9 @@ import android.provider.CalendarContract
 import android.util.Log
 import za.co.jpsoft.winkerkreader.data.models.CalendarInfo
 import za.co.jpsoft.winkerkreader.data.models.CallType
-import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 class CalendarManager(private val context: Context) {
@@ -200,6 +202,7 @@ class CalendarManager(private val context: Context) {
             CallType.OUTGOING -> "📤"
             CallType.MISSED -> "📵"
             CallType.ENDED -> "📞"
+            CallType.UNKNOWN -> "?"
         }
 
         val sourceEmoji = when {
@@ -230,8 +233,11 @@ class CalendarManager(private val context: Context) {
             sb.append("Duur: ").append(minutes).append("m ").append(seconds).append("s\n")
         }
 
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-        sb.append("Tyd: ").append(dateFormat.format(Date(timestamp))).append("\n")
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+        val dateTime = Instant.ofEpochMilli(timestamp)
+            .atZone(ZoneId.systemDefault())
+            .format(formatter)
+        sb.append("Tyd: ").append(dateTime).append("\n")
         sb.append("\nBygevoeg deur WinkerkReader App")
 
         return sb.toString()

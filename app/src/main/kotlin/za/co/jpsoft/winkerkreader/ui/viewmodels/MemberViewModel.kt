@@ -1,6 +1,5 @@
 package za.co.jpsoft.winkerkreader.ui.viewmodels
 
-import za.co.jpsoft.winkerkreader.utils.AppSessionState
 import za.co.jpsoft.winkerkreader.utils.SQLiteStatementValidator
 import za.co.jpsoft.winkerkreader.ui.components.SearchCheckBox
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
@@ -9,17 +8,20 @@ import za.co.jpsoft.winkerkreader.data.models.FilterBox
 
 import android.content.Context
 import android.database.Cursor
-import android.os.Handler
-import android.os.Looper
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.col
+import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import za.co.jpsoft.winkerkreader.utils.getIntOrDefault
 import za.co.jpsoft.winkerkreader.utils.getStringOrEmpty
-import org.joda.time.DateTime
-import org.joda.time.Years
+import java.time.LocalDate
+import java.time.temporal.ChronoUnit
+import za.co.jpsoft.winkerkreader.ui.models.MainQueryMode
 // import java.text.Spannable
 // import android.text.SpannableString
 // import android.text.style.RelativeSizeSpan
@@ -68,8 +70,29 @@ class MemberViewModel : ViewModel() {
     fun getVerjaarFLag(): LiveData<Boolean> = verjaarFlag
 
     // -------------------------------------------------------------------------
-    // Search / filter state
+    // Session State (Migrated from AppSessionState)
     // -------------------------------------------------------------------------
+    private var _sortOrder: String = "VAN"
+    private var _soek: String = ""
+    private var _soekList: Boolean = false
+    private var _recordStatus: String = "0"
+
+    var sortOrder: String
+        get() = _sortOrder
+        set(value) { _sortOrder = value }
+
+    var soek: String
+        get() = _soek
+        set(value) { _soek = value }
+
+    var soekList: Boolean
+        get() = _soekList
+        set(value) { _soekList = value }
+
+    var recordStatus: String
+        get() = _recordStatus
+        set(value) { _recordStatus = value }
+
     private var searchList: List<SearchCheckBox>? = null
 
     fun setSearchList(list: List<SearchCheckBox>) { searchList = list }
@@ -84,12 +107,37 @@ class MemberViewModel : ViewModel() {
     private var currentFilterList: ArrayList<FilterBox>? = null
     private var lastFilterListSnapshot: ArrayList<FilterBox>? = null
 
-    private val queryCache = mutableMapOf<String, String>()
+    data class SqlRequest(val sql: String, val args: Array<String>) {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+            other as SqlRequest
+            if (sql != other.sql) return false
+            if (!args.contentEquals(other.args)) return false
+            return true
+        }
+        override fun hashCode(): Int {
+            var result = sql.hashCode()
+            result = 31 * result + args.contentHashCode()
+            return result
+        }
+    }
+
+    private val queryCache = mutableMapOf<String, SqlRequest>()
 
     // -------------------------------------------------------------------------
     // Public API
     // -------------------------------------------------------------------------
 
+    fun loadData(context: Context, mode: MainQueryMode) {
+        val request = mode.toQueryRequest()
+        if (request.eventType == "FILTER_DATA") {
+            currentFilterList = request.filterList ?: arrayListOf()
+        }
+        fetchData(context, request.eventType)
+    }
+
+    @Deprecated("Use loadData(context, mode) with MainQueryMode")
     fun loadData(context: Context, eventType: String, filterLys: ArrayList<FilterBox>? = null) {
         if (eventType == "FILTER_DATA") {
             currentFilterList = filterLys ?: arrayListOf()
@@ -97,66 +145,104 @@ class MemberViewModel : ViewModel() {
         fetchData(context, eventType)
     }
 
+    private data class QueryRequest(
+        val eventType: String,
+        val filterList: ArrayList<FilterBox>? = null
+    )
+
+    private fun MainQueryMode.toQueryRequest(): QueryRequest = when (this) {
+        MainQueryMode.Search -> QueryRequest("SOEK_DATA")
+        is MainQueryMode.Filter -> QueryRequest("FILTER_DATA", filters)
+        MainQueryMode.Address -> QueryRequest("LIDMAAT_DATA_ADRES")
+        MainQueryMode.Family -> QueryRequest("GESINNE_DATA")
+        MainQueryMode.Wedding -> QueryRequest("HUWELIK_DATA")
+        MainQueryMode.Age -> QueryRequest("OUDERDOM_DATA")
+        MainQueryMode.Surname -> QueryRequest("LIDMAAT_DATA")
+        MainQueryMode.Birthday -> QueryRequest("LIDMAAT_DATA_VERJAAR")
+        MainQueryMode.Ward -> QueryRequest("LIDMAAT_DATA_WYK")
+        is MainQueryMode.Raw -> QueryRequest(layout)
+    }
+
     // -------------------------------------------------------------------------
     // Fetch pipeline
     // -------------------------------------------------------------------------
 
     private fun fetchData(context: Context, eventType: String) {
-        if (!isProcessing.compareAndSet(false, true)) {
+        val settingsManager = SettingsManager.getInstance(context)
+//        if (!isProcessing.compareAndSet(false, true)) {
+//            Log.d(TAG, "Fetch already in progress, skipping: $eventType")
+//            return
+//        }
+
+        // For SOEK_DATA, we want to process even if already processing
+        if (eventType != "SOEK_DATA" && !isProcessing.compareAndSet(false, true)) {
             Log.d(TAG, "Fetch already in progress, skipping: $eventType")
             return
         }
+        // Signal the birthday flag reset immediately on the main thread before
+        // launching the coroutine so the UI clears the scroll-trigger right away.
+        verjaarFlag.postValue(false)
 
-        try {
-            verjaarFlag.postValue(false)
+        // All heavy work — query building, SQL validation, ContentResolver I/O and
+        // cursor-to-list conversion — runs on Dispatchers.IO.
+        // postValue() is safe from any thread, so LiveData updates need no hop.
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val cacheKey    = buildCacheKey(eventType)
+                val cachedQuery = queryCache[cacheKey]
 
-            val cacheKey     = buildCacheKey(eventType)
-            val cachedQuery  = queryCache[cacheKey]
-
-            val selection = if (cachedQuery != null && !needsQueryRebuild(eventType)) {
-                cachedQuery
-            } else {
-                buildQuery(context, eventType)?.also {
-                    queryCache[cacheKey] = it
-                    updateLastState(eventType)
-                } ?: run {
-                    Log.e(TAG, "Failed to build query for: $eventType")
-                    return
+                val sqlRequest = if (cachedQuery != null && !needsQueryRebuild(eventType)) {
+                    cachedQuery
+                } else {
+                    buildQuery(context, eventType)?.also {
+                        queryCache[cacheKey] = it
+                        updateLastState(eventType)
+                    } ?: run {
+                        Log.e(TAG, "Failed to build query for: $eventType")
+                        return@launch
+                    }
                 }
+
+                // Validate / sanitise the SQL
+                val result = SQLiteStatementValidator.validateAndFixSQLiteStatement(sqlRequest.sql)
+                val finalSelection = if (result.isValid) {
+                    result.fixedSql ?: error("fixedSql cannot be null when isValid is true")
+                } else {
+                    Log.e(TAG, "Could not fix SQL: ${result.errorMessage}")
+                    return@launch
+                }
+
+                // Snapshot sort order on the IO thread before the query so that a
+                // concurrent main-thread write does not affect the
+                // separator computation mid-flight.
+                val sortOrderSnapshot = sortOrder
+
+                // Execute query and convert cursor → list, closing cursor immediately
+                queryDatabase(context.applicationContext, finalSelection, sqlRequest.args, sortOrderSnapshot)?.use { cursor ->
+                    val items  = cursorToList(cursor, sortOrderSnapshot)
+                    rowCount.postValue(items.size)
+                    _memberList.postValue(items)
+                }
+
+                // Update UI-state LiveData for search/filter banners
+                when (eventType) {
+                    "SOEK_DATA"   -> textLiveData.postValue(soek)
+                    "FILTER_DATA" -> textLiveData.postValue(buildFilterText())
+                }
+
+                // Signal birthday auto-scroll
+                if (eventType == "LIDMAAT_DATA_VERJAAR") {
+                    verjaarFlag.postValue(true)
+                }
+
+            } catch (e: Exception) {
+                Log.e(TAG, "Unexpected error in fetchData: ${e.message}", e)
+            } finally {
+                // Reset the guard inside the coroutine's finally so that the next
+                // call can proceed only after this one has fully completed, not
+                // merely been scheduled.
+                isProcessing.set(false)
             }
-
-            // Validate / sanitise the SQL
-            val result = SQLiteStatementValidator.validateAndFixSQLiteStatement(selection)
-            val finalSelection = if (result.isValid) {
-                result.fixedSql ?: error("fixedSql cannot be null when isValid is true")
-            } else {
-                Log.e(TAG, "Could not fix SQL: ${result.errorMessage}")
-                return
-            }
-
-            // Execute query and convert cursor → list, closing cursor immediately
-            val cursor = queryDatabase(context.applicationContext, finalSelection)
-            val items  = cursorToList(cursor, AppSessionState.sortOrder)
-            cursor?.close()
-
-            rowCount.postValue(items.size)
-            _memberList.postValue(items)
-
-            // Update UI-state LiveData for search/filter banners
-            when (eventType) {
-                "SOEK_DATA"   -> textLiveData.postValue(AppSessionState.soek)
-                "FILTER_DATA" -> textLiveData.postValue(buildFilterText())
-            }
-
-            // Signal birthday auto-scroll
-            if (eventType == "LIDMAAT_DATA_VERJAAR") {
-                verjaarFlag.postValue(true)
-            }
-
-        } catch (e: Exception) {
-            Log.e(TAG, "Unexpected error in fetchData: ${e.message}", e)
-        } finally {
-            isProcessing.set(false)
         }
     }
 
@@ -200,7 +286,7 @@ class MemberViewModel : ViewModel() {
             try {
                 val dt = parseDate(birthday.substring(0, 10))
                 if (dt != null) {
-                    val y = Years.yearsBetween(dt, DateTime.now()).years
+                    val y = ChronoUnit.YEARS.between(dt, LocalDate.now())
                     if (y >= 0) age = y.toString()
                 }
             } catch (_: Exception) {}
@@ -209,7 +295,7 @@ class MemberViewModel : ViewModel() {
             try {
                 val dt = parseDate(weddingDate.substring(0, 10))
                 if (dt != null) {
-                    val y = Years.yearsBetween(dt, DateTime.now()).years
+                    val y = ChronoUnit.YEARS.between(dt, LocalDate.now())
                     if (y >= 0) weddingYears = y.toString()
                 }
             } catch (_: Exception) {}
@@ -338,10 +424,10 @@ class MemberViewModel : ViewModel() {
         else -> ""
     }
 
-    private fun parseDate(dateStr: String): DateTime? = try {
+    private fun parseDate(dateStr: String): LocalDate? = try {
         // Expected format: dd-MM-yyyy or dd/MM/yyyy
         val parts = dateStr.split("-", "/")
-        if (parts.size == 3) DateTime(parts[2].toInt(), parts[1].toInt(), parts[0].toInt(), 0, 0)
+        if (parts.size == 3) LocalDate.of(parts[2].toInt(), parts[1].toInt(), parts[0].toInt())
         else null
     } catch (_: Exception) { null }
 
@@ -351,11 +437,12 @@ class MemberViewModel : ViewModel() {
 
     private fun buildCacheKey(eventType: String): String = buildString {
         append(eventType)
-        append("_status_").append(AppSessionState.recordStatus)
+        append("_status_").append(recordStatus)
         when (eventType) {
             "SOEK_DATA" -> {
-                append("_").append(AppSessionState.soek)
-                append("_").append(AppSessionState.sortOrder)
+                append("_soek_").append(soek)  // Add this line
+                append("_").append(soek)
+                append("_").append(sortOrder)
                 searchList?.filter { it.isChecked }?.forEach { append("_").append(it.columnName) }
             }
             "FILTER_DATA" -> {
@@ -366,10 +453,17 @@ class MemberViewModel : ViewModel() {
         }
     }
 
+//    private fun needsQueryRebuild(eventType: String): Boolean = when {
+//        eventType != lastEventType -> true
+//        recordStatus != lastRecordStatus -> true
+//        eventType == "SOEK_DATA"   && soek != lastSearchTerm -> true
+//        eventType == "FILTER_DATA" && !filterListsEqual(currentFilterList, lastFilterListSnapshot) -> true
+//        else -> false
+//    }
     private fun needsQueryRebuild(eventType: String): Boolean = when {
         eventType != lastEventType -> true
-        AppSessionState.recordStatus != lastRecordStatus -> true  // ✅ ADD THIS LINE
-        eventType == "SOEK_DATA"   && AppSessionState.soek != lastSearchTerm -> true
+        recordStatus != lastRecordStatus -> true
+        eventType == "SOEK_DATA" && soek != lastSearchTerm -> true  // This line is correct
         eventType == "FILTER_DATA" && !filterListsEqual(currentFilterList, lastFilterListSnapshot) -> true
         else -> false
     }
@@ -382,13 +476,13 @@ class MemberViewModel : ViewModel() {
 
     private fun updateLastState(eventType: String) {
         lastEventType = eventType
-        lastRecordStatus = AppSessionState.recordStatus  // ✅ ADD THIS LINE
-        if (eventType == "SOEK_DATA") lastSearchTerm = AppSessionState.soek
+        lastRecordStatus = recordStatus
+        if (eventType == "SOEK_DATA") lastSearchTerm = soek
         if (eventType == "FILTER_DATA") lastFilterListSnapshot =
             currentFilterList?.let { ArrayList(it) }
     }
 
-    private fun buildQuery(context: Context, eventType: String): String? = when (eventType) {
+    private fun buildQuery(context: Context, eventType: String): SqlRequest? = when (eventType) {
         "GESINNE_DATA", "FILTER_DATA", "LIDMAAT_DATA", "LIDMAAT_DATA_WYK",
         "SOEK_DATA", "LIDMAAT_DATA_VERJAAR", "OUDERDOM_DATA", "LIDMAAT_DATA_ADRES",
         "HUWELIK_DATA" -> buildMemberQuery(context, eventType)
@@ -403,17 +497,18 @@ class MemberViewModel : ViewModel() {
         Log.d(TAG, "Cache cleared")
     }
 
-    private fun buildMemberQuery(context: Context, eventType: String): String {
-        AppSessionState.soekList = false
+    private fun buildMemberQuery(context: Context, eventType: String): SqlRequest {
+        soekList = false
         val selectionBase = winkerkEntry.SELECTION_LIDMAAT_INFO
         val from = " Members "
         val where = StringBuilder()
-        val sortOrder = StringBuilder()
+        val sortOrderBuilder = StringBuilder()
+        val argsList = mutableListOf<String>()
 
-        if (AppSessionState.recordStatus != "*") {
+        if (recordStatus != "*") {
             where.append(" (").append(winkerkEntry.LIDMATE_TABLE_NAME).append(".")
                 .append(col(winkerkEntry.LIDMATE_REKORDSTATUS)).append(" = '")
-                .append(AppSessionState.recordStatus).append("' )")
+                .append(recordStatus).append("' )")
         } else {
             where.append(" ((").append(winkerkEntry.LIDMATE_TABLE_NAME).append(".")
                 .append(col(winkerkEntry.LIDMATE_REKORDSTATUS)).append(" = '0' ) OR ")
@@ -422,8 +517,8 @@ class MemberViewModel : ViewModel() {
         }
 
 
-        appendWhereClause(context, eventType, where)
-        appendOrderByClause(eventType, sortOrder)
+        appendWhereClause(context, eventType, where, argsList)
+        appendOrderByClause(eventType, sortOrderBuilder)
 
         val finalFrom: String
         val finalSelection: String
@@ -435,11 +530,13 @@ class MemberViewModel : ViewModel() {
             finalFrom = from
         }
 
-        return if (where.isEmpty()) "$finalSelection From $finalFrom ORDER BY $sortOrder;"
-        else "$finalSelection From $finalFrom WHERE $where ORDER BY $sortOrder;"
+        val sql = if (where.isEmpty()) "$finalSelection From $finalFrom ORDER BY $sortOrderBuilder;"
+        else "$finalSelection From $finalFrom WHERE $where ORDER BY $sortOrderBuilder;"
+
+        return SqlRequest(sql, argsList.toTypedArray())
     }
 
-    private fun appendWhereClause(context: Context, eventType: String, where: StringBuilder) {
+    private fun appendWhereClause(context: Context, eventType: String, where: StringBuilder, argsList: MutableList<String>) {
         when (eventType) {
             "HUWELIK_DATA" -> where.append(" AND ").append(winkerkEntry.SELECTION_HUWELIK_WHERE)
             "SOEK_DATA" -> {
@@ -450,12 +547,13 @@ class MemberViewModel : ViewModel() {
                         where.append(" AND (")
                         checkedFields.forEachIndexed { i, item ->
                             if (i > 0) where.append(" OR ")
-                            where.append(col(item.columnName)).append(" LIKE '%").append(AppSessionState.soek).append("%'")
+                            where.append(col(item.columnName)).append(" LIKE ?")
+                            argsList.add("%${soek}%")
                         }
                         where.append(" )")
                     }
                 }
-                AppSessionState.soekList = true
+                soekList = true
             }
             "FILTER_DATA" -> {
                 val list = currentFilterList
@@ -467,25 +565,59 @@ class MemberViewModel : ViewModel() {
                             if (i > 0) where.append(") AND (")
                             val toets = filter.text3
                             when {
-                                toets == "gelyk aan"     -> where.append(col(filter.title)).append(" = '").append(filter.text1).append("'")
-                                toets == "is nie" || toets == "nie gelyk aan" -> where.append(col(filter.title)).append(" != '").append(filter.text1).append("'")
-                                toets == "begin met"     -> where.append(col(filter.title)).append(" Like '").append(filter.text1).append("%'")
-                                toets == "eindig met"    -> where.append(col(filter.title)).append(" Like '%").append(filter.text1).append("'")
+                                toets == "gelyk aan"     -> {
+                                    where.append(col(filter.title)).append(" = ?")
+                                    argsList.add(filter.text1)
+                                }
+                                toets == "is nie" || toets == "nie gelyk aan" -> {
+                                    where.append(col(filter.title)).append(" != ?")
+                                    argsList.add(filter.text1)
+                                }
+                                toets == "begin met"     -> {
+                                    where.append(col(filter.title)).append(" LIKE ?")
+                                    argsList.add("${filter.text1}%")
+                                }
+                                toets == "eindig met"    -> {
+                                    where.append(col(filter.title)).append(" LIKE ?")
+                                    argsList.add("%${filter.text1}")
+                                }
                                 toets == "leeg"          -> where.append(col(filter.title)).append(" IS NULL ")
-                                toets == "kleiner as"    -> where.append("((strftime('%Y', 'now') - strftime('%Y', birthdate)) - (strftime('%m-%d', 'now') < strftime('%m-%d', birthdate))) < ").append(filter.text1)
-                                toets == "groter as"     -> where.append("((strftime('%Y', 'now') - strftime('%Y', birthdate)) - (strftime('%m-%d', 'now') < strftime('%m-%d', birthdate))) > ").append(filter.text1)
-                                toets == "tussen" && filter.title == "Ouderdom" -> where.append(" ( ((strftime('%Y', 'now') - strftime('%Y', birthdate)) - (strftime('%m-%d', 'now') < strftime('%m-%d', birthdate))) >= ").append(filter.text1).append(" ) AND ( ((strftime('%Y', 'now') - strftime('%Y', birthdate)) - (strftime('%m-%d', 'now') < strftime('%m-%d', birthdate))) <= ").append(filter.text2).append(" )")
-                                toets == "gelyk" && filter.title == "Ouderdom" -> where.append("((strftime('%Y', 'now') - strftime('%Y', birthdate)) - (strftime('%m-%d', 'now') < strftime('%m-%d', birthdate))) = ").append(filter.text1)
-                                filter.title == "Geslag"        -> where.append(col(winkerkEntry.LIDMATE_GESLAG)).append(" = '").append(if (toets == "manlik") "Manlik" else "Vroulik").append("'")
+                                toets == "kleiner as"    -> {
+                                    where.append("((strftime('%Y', 'now') - strftime('%Y', birthdate)) - (strftime('%m-%d', 'now') < strftime('%m-%d', birthdate))) < ?")
+                                    argsList.add(filter.text1)
+                                }
+                                toets == "groter as"     -> {
+                                    where.append("((strftime('%Y', 'now') - strftime('%Y', birthdate)) - (strftime('%m-%d', 'now') < strftime('%m-%d', birthdate))) > ?")
+                                    argsList.add(filter.text1)
+                                }
+                                toets == "tussen" && filter.title == "Ouderdom" -> {
+                                    where.append(" ( ((strftime('%Y', 'now') - strftime('%Y', birthdate)) - (strftime('%m-%d', 'now') < strftime('%m-%d', birthdate))) >= ? ) AND ( ((strftime('%Y', 'now') - strftime('%Y', birthdate)) - (strftime('%m-%d', 'now') < strftime('%m-%d', birthdate))) <= ? )")
+                                    argsList.add(filter.text1)
+                                    argsList.add(filter.text2)
+                                }
+                                toets == "gelyk" && filter.title == "Ouderdom" -> {
+                                    where.append("((strftime('%Y', 'now') - strftime('%Y', birthdate)) - (strftime('%m-%d', 'now') < strftime('%m-%d', birthdate))) = ?")
+                                    argsList.add(filter.text1)
+                                }
+                                filter.title == "Geslag"        -> {
+                                    where.append(col(winkerkEntry.LIDMATE_GESLAG)).append(" = ?")
+                                    argsList.add(if (toets == "manlik") "Manlik" else "Vroulik")
+                                }
                                 filter.title == "Selfoon"       -> where.append(" ( ").append(col(winkerkEntry.LIDMATE_SELFOON)).append(" IS NOT NULL AND ").append(col(winkerkEntry.LIDMATE_SELFOON)).append(" != '' )")
                                 filter.title == "E-pos"         -> where.append(" ( ").append(col(winkerkEntry.LIDMATE_EPOS)).append(" IS NOT NULL AND ").append(col(winkerkEntry.LIDMATE_EPOS)).append(" != '' )")
                                 filter.title == "Landlyn"       -> where.append(" ( ").append(col(winkerkEntry.LIDMATE_LANDLYN)).append(" IS NOT NULL AND ").append(col(winkerkEntry.LIDMATE_LANDLYN)).append(" != '' )")
-                                filter.title == "Huwelikstatus" -> where.append(col(winkerkEntry.LIDMATE_HUWELIKSTATUS)).append(" = '").append(filter.text3).append("'")
+                                filter.title == "Huwelikstatus" -> {
+                                    where.append(col(winkerkEntry.LIDMATE_HUWELIKSTATUS)).append(" = ?")
+                                    argsList.add(filter.text3)
+                                }
                                 filter.title == "Lidmaatskap"   -> {
-                                    if (filter.text3 == "Belydend")
-                                        where.append(col(winkerkEntry.LIDMATE_LIDMAATSTATUS)).append(" LIKE 'Bely%'")
-                                    else
-                                        where.append(col(winkerkEntry.LIDMATE_LIDMAATSTATUS)).append(" LIKE '").append(filter.text3).append("'")
+                                    if (filter.text3 == "Belydend") {
+                                        where.append(col(winkerkEntry.LIDMATE_LIDMAATSTATUS)).append(" LIKE ?")
+                                        argsList.add("Bely%")
+                                    } else {
+                                        where.append(col(winkerkEntry.LIDMATE_LIDMAATSTATUS)).append(" LIKE ?")
+                                        argsList.add(filter.text3)
+                                    }
                                 }
                                 filter.title == "Gesinshoof"    -> where.append(" quote(").append(col(winkerkEntry.LIDMATE_GESINSHOOFGUID)).append(") = quote(").append(col(winkerkEntry.LIDMATE_LIDMAATGUID)).append(")")
                             }
@@ -493,69 +625,69 @@ class MemberViewModel : ViewModel() {
                         where.append(" )")
                     }
                 }
-                AppSessionState.soekList = true
+                soekList = true
             }
         }
     }
 
-    private fun appendOrderByClause(eventType: String, sortOrder: StringBuilder) {
+    private fun appendOrderByClause(eventType: String, sortOrderBuilder: StringBuilder) {
         when (eventType) {
             "LIDMAAT_DATA" -> {
-                AppSessionState.sortOrder = "VAN"
-                sortOrder.append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ")
+                sortOrder = "VAN"
+                sortOrderBuilder.append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ")
                     .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
             }
             "GESINNE_DATA" -> {
-                AppSessionState.sortOrder = "GESINNE"
-                sortOrder.append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ")
+                sortOrder = "GESINNE"
+                sortOrderBuilder.append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ")
                     .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_GESINSHOOFGUID)).append(" DESC, ")
                     .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_GESINSROL)).append(" ASC, ")
                     .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
             }
             "LIDMAAT_DATA_WYK" -> {
-                AppSessionState.sortOrder = "WYK"
-                sortOrder.append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_WYK)).append(" ASC, ")
+                sortOrder = "WYK"
+                sortOrderBuilder.append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_WYK)).append(" ASC, ")
                     .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ")
                     .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_GESINSHOOFGUID)).append(" DESC, ")
                     .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_GESINSROL)).append(" ASC, ")
                     .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
             }
             "LIDMAAT_DATA_ADRES" -> {
-                AppSessionState.sortOrder = "ADRES"
-                sortOrder.append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_STRAATADRES)).append(" ASC, ")
+                sortOrder = "ADRES"
+                sortOrderBuilder.append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_STRAATADRES)).append(" ASC, ")
                     .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ")
                     .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_GESINSHOOFGUID)).append(" DESC, ")
                     .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_GESINSROL)).append(" ASC, ")
                     .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
             }
             "HUWELIK_DATA" -> {
-                AppSessionState.sortOrder = "HUWELIK"
-                sortOrder.append(" strftime('%m', ").append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_HUWELIKSDATUM)).append(") ASC,  strftime('%d', ")
+                sortOrder = "HUWELIK"
+                sortOrderBuilder.append(" strftime('%m', ").append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_HUWELIKSDATUM)).append(") ASC,  strftime('%d', ")
                     .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_HUWELIKSDATUM)).append(") ASC, ")
                     .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ")
                     .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_GESINSHOOFGUID)).append(" ASC, ")
                     .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_GESLAG)).append(" DESC")
             }
             "SOEK_DATA" -> {
-                when (AppSessionState.sortOrder) {
-                    "GESINNE" -> sortOrder.append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ").append(col(winkerkEntry.LIDMATE_GESINSHOOFGUID)).append(" ASC, ").append(" strftime('%Y', birthdate) DESC, strftime('%m', birthdate) DESC, strftime('%d', birthdate) DESC,").append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
-                    "VAN"     -> sortOrder.append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ").append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
-                    "ADRES"   -> sortOrder.append(col(winkerkEntry.LIDMATE_STRAATADRES)).append(" ASC, ").append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ").append(col(winkerkEntry.LIDMATE_GESINSHOOFGUID)).append(" ASC, ").append(" strftime('%Y', birthdate) DESC, strftime('%m', birthdate) DESC, strftime('%d', birthdate) DESC,").append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
-                    "WYK"     -> sortOrder.append(col(winkerkEntry.LIDMATE_WYK)).append(" ASC, ").append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ").append(col(winkerkEntry.LIDMATE_GESINSHOOFGUID)).append(" ASC, ").append(" strftime('%Y', birthdate) DESC, strftime('%m', birthdate) DESC, strftime('%d', birthdate) DESC,").append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
-                    "VERJAAR" -> sortOrder.append(" strftime('%m', birthdate) ASC, strftime('%d', birthdate) ASC")
-                    "OUDERDOM"-> sortOrder.append(" strftime('%Y', birthdate) DESC, strftime('%m', birthdate) DESC, strftime('%d', birthdate) DESC")
-                    else      -> sortOrder.append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ").append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
+                when (sortOrder) {
+                    "GESINNE" -> sortOrderBuilder.append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ").append(col(winkerkEntry.LIDMATE_GESINSHOOFGUID)).append(" ASC, ").append(" strftime('%Y', birthdate) DESC, strftime('%m', birthdate) DESC, strftime('%d', birthdate) DESC,").append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
+                    "VAN"     -> sortOrderBuilder.append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ").append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
+                    "ADRES"   -> sortOrderBuilder.append(col(winkerkEntry.LIDMATE_STRAATADRES)).append(" ASC, ").append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ").append(col(winkerkEntry.LIDMATE_GESINSHOOFGUID)).append(" ASC, ").append(" strftime('%Y', birthdate) DESC, strftime('%m', birthdate) DESC, strftime('%d', birthdate) DESC,").append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
+                    "WYK"     -> sortOrderBuilder.append(col(winkerkEntry.LIDMATE_WYK)).append(" ASC, ").append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ").append(col(winkerkEntry.LIDMATE_GESINSHOOFGUID)).append(" ASC, ").append(" strftime('%Y', birthdate) DESC, strftime('%m', birthdate) DESC, strftime('%d', birthdate) DESC,").append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
+                    "VERJAAR" -> sortOrderBuilder.append(" strftime('%m', birthdate) ASC, strftime('%d', birthdate) ASC")
+                    "OUDERDOM"-> sortOrderBuilder.append(" strftime('%Y', birthdate) DESC, strftime('%m', birthdate) DESC, strftime('%d', birthdate) DESC")
+                    else      -> sortOrderBuilder.append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ").append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
                 }
             }
             "FILTER_DATA" -> {
-                AppSessionState.sortOrder = "Filter"
-                if (sortOrder.isEmpty()) sortOrder.append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ").append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
-                else sortOrder.append(", ").append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ").append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
+                sortOrder = "Filter"
+                if (sortOrderBuilder.isEmpty()) sortOrderBuilder.append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ").append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
+                else sortOrderBuilder.append(", ").append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ").append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
             }
-            "LIDMAAT_DATA_VERJAAR" -> sortOrder.append(" strftime('%m', birthdate) ASC, strftime('%d', birthdate) ASC")
+            "LIDMAAT_DATA_VERJAAR" -> sortOrderBuilder.append(" strftime('%m', birthdate) ASC, strftime('%d', birthdate) ASC")
             "OUDERDOM_DATA" -> {
-                AppSessionState.sortOrder = "OUDERDOM"
-                sortOrder.append(" strftime('%Y', birthdate) DESC, strftime('%m', birthdate) DESC, strftime('%d', birthdate) DESC")
+                sortOrder = "OUDERDOM"
+                sortOrderBuilder.append(" strftime('%Y', birthdate) DESC, strftime('%m', birthdate) DESC, strftime('%d', birthdate) DESC")
             }
         }
     }
@@ -601,8 +733,8 @@ class MemberViewModel : ViewModel() {
     // DB query execution (unchanged)
     // -------------------------------------------------------------------------
 
-    private fun queryDatabase(context: Context, query: String): Cursor? = try {
-        context.contentResolver.query(winkerkEntry.CONTENT_URI, null, query, null, null)
+    private fun queryDatabase(context: Context, query: String, args: Array<String>? = null, sortOrder: String? = null): Cursor? = try {
+        context.contentResolver.query(winkerkEntry.CONTENT_URI, null, query, args, sortOrder)
     } catch (e: Exception) {
         Log.e(TAG, "Error executing query: ${e.message}", e)
         null

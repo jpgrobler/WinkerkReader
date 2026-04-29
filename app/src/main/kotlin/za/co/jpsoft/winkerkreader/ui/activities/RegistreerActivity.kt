@@ -1,7 +1,6 @@
 package za.co.jpsoft.winkerkreader.ui.activities
 
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
-import za.co.jpsoft.winkerkreader.utils.AppSessionState
 import za.co.jpsoft.winkerkreader.WinkerkReader
 import za.co.jpsoft.winkerkreader.R
 import android.os.Bundle
@@ -39,8 +38,8 @@ class RegistreerActivity : AppCompatActivity() {
 
     private fun initializeUI() {
 
-        // Set device ID
-        AppSessionState.deviceId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
+        // Get device ID using privacy-compliant manager
+        val deviceId = za.co.jpsoft.winkerkreader.utils.DeviceIdManager.getDeviceId(this)
 
         // Set about text
         findViewById<TextView>(R.id.reg_about).text = getAboutText()
@@ -66,9 +65,10 @@ class RegistreerActivity : AppCompatActivity() {
         setTextIfNotEmpty(R.id.reg_selno, settings.getString("Selfoon", ""))
 
         // Populate gemeente fields if available
-        if (za.co.jpsoft.winkerkreader.utils.SettingsManager(this).gemeenteNaam != "Onbekend") {
-            findViewById<EditText>(R.id.reg_gemeente).setText(za.co.jpsoft.winkerkreader.utils.SettingsManager(this).gemeenteNaam)
-            findViewById<EditText>(R.id.reg_gemeente_epos).setText(za.co.jpsoft.winkerkreader.utils.SettingsManager(this).gemeenteEpos)
+        val settingsManager = SettingsManager.getInstance(this)
+        if (settingsManager.gemeenteNaam != "Onbekend") {
+            findViewById<EditText>(R.id.reg_gemeente).setText(settingsManager.gemeenteNaam)
+            findViewById<EditText>(R.id.reg_gemeente_epos).setText(settingsManager.gemeenteEpos)
         }
     }
 
@@ -101,9 +101,10 @@ class RegistreerActivity : AppCompatActivity() {
 
     private fun saveUserData(userData: UserData) {
         // Update global gemeente data if changed
-        za.co.jpsoft.winkerkreader.utils.SettingsManager(this).gemeenteEpos = userData.gemEpos
-        if (userData.gemNaam.isNotEmpty() && za.co.jpsoft.winkerkreader.utils.SettingsManager(this).gemeenteNaam != userData.gemNaam) {
-            za.co.jpsoft.winkerkreader.utils.SettingsManager(this).gemeenteNaam = userData.gemNaam
+        val settingsManager = SettingsManager.getInstance(this)
+        settingsManager.gemeenteEpos = userData.gemEpos
+        if (userData.gemNaam.isNotEmpty() && settingsManager.gemeenteNaam != userData.gemNaam) {
+            settingsManager.gemeenteNaam = userData.gemNaam
         }
 
         // Save to SharedPreferences

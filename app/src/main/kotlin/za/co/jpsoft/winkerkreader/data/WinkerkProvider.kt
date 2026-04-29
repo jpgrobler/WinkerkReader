@@ -1,6 +1,5 @@
 package za.co.jpsoft.winkerkreader.data
 
-import za.co.jpsoft.winkerkreader.utils.AppSessionState
 import za.co.jpsoft.winkerkreader.WinkerkReader
 import za.co.jpsoft.winkerkreader.data.WinkerkContract
 
@@ -154,7 +153,7 @@ class WinkerkProvider : ContentProvider() {
                             val baseQuery = "SELECT *, _rowid_ as _id FROM ${winkerkEntry.LIDMATE_TABLE_NAME} WHERE _rowid_ = ?"
 
                             // Apply sort order if needed (though for a single record, sort order doesn't matter)
-                            finalQuery = when (AppSessionState.sortOrder) {
+                            finalQuery = when (sortOrder) {
                                 "VAN" -> "$baseQuery ORDER BY ${winkerkEntry.LIDMATE_VAN} ASC, ${winkerkEntry.LIDMATE_TABLE_NAME}.${winkerkEntry.LIDMATE_NOEMNAAM} ASC"
                                 "WYK" -> "$baseQuery ORDER BY ${winkerkEntry.LIDMATE_WYK} ASC, ${winkerkEntry.LIDMATE_VAN} ASC, ${winkerkEntry.LIDMATE_TABLE_NAME}.${winkerkEntry.LIDMATE_NOEMNAAM} ASC"
                                 else -> baseQuery
@@ -169,10 +168,10 @@ class WinkerkProvider : ContentProvider() {
                         }
                     }
                     else -> {
-                        // For other matches, apply sort order if needed
-                        if (AppSessionState.sortOrder == "VAN" && selection != null) {
+                        // For other matches, apply sort order if provided
+                        if (sortOrder == "VAN" && selection != null) {
                             finalQuery = "$selection ORDER BY ${winkerkEntry.LIDMATE_VAN} ASC, ${winkerkEntry.LIDMATE_TABLE_NAME}.${winkerkEntry.LIDMATE_NOEMNAAM} ASC ;"
-                        } else if (AppSessionState.sortOrder == "WYK" && selection != null) {
+                        } else if (sortOrder == "WYK" && selection != null) {
                             finalQuery = "$selection ORDER BY ${winkerkEntry.LIDMATE_WYK} ASC, ${winkerkEntry.LIDMATE_VAN} ASC, ${winkerkEntry.LIDMATE_TABLE_NAME}.${winkerkEntry.LIDMATE_NOEMNAAM} ASC ;"
                         }
                     }

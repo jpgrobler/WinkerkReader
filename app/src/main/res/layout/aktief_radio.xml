@@ -1,23 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:orientation="horizontal"
-        android:gravity="center_vertical">
-    <RadioButton
-        android:id="@+id/filter_aktief2"
-        android:layout_height="20dp"
-        android:layout_width="wrap_content"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center_vertical">
 
-        android:text="@string/filter_aktief_text"/>
-    <RadioButton
-        android:id="@+id/filter_onaktief2"
-        android:layout_height="20dp"
-        android:layout_width="wrap_content"
-        android:text="@string/filter_onaktief_text"/>
-    <RadioButton
-        android:id="@+id/filter_beide"
-        android:text="Beide"
-        android:layout_height="20dp"
-        android:layout_width="wrap_content"/>
-</RadioGroup>
+<CheckBox
+android:id="@+id/filter_aktief2"
+android:layout_height="wrap_content"
+android:layout_width="wrap_content"
+android:text="@string/filter_aktief_text"
+android:paddingEnd="8dp"
+android:paddingRight="8dp" />
+
+<CheckBox
+android:id="@+id/filter_onaktief2"
+android:layout_height="wrap_content"
+android:layout_width="wrap_content"
+android:text="@string/filter_onaktief_text" />
+
+    </LinearLayout>

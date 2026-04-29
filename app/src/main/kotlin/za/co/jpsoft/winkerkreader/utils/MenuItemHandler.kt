@@ -9,6 +9,7 @@ import za.co.jpsoft.winkerkreader.ui.activities.UitlegActivity
 import za.co.jpsoft.winkerkreader.ui.activities.SettingsActivity
 import za.co.jpsoft.winkerkreader.ui.activities.LaaiDatabasisActivity
 import za.co.jpsoft.winkerkreader.ui.activities.CallLogActivity
+import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel
 
 import android.content.ContentValues
 import android.content.Intent
@@ -25,7 +26,8 @@ import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.LIDMATE_TAG
 
 class MenuItemHandler(
     private val activity: AppCompatActivity,
-    private val settings: SettingsManager
+    private val settings: SettingsManager,
+    private val viewModel: MemberViewModel
 ) {
     private lateinit var permissionManager: PermissionManager
 
@@ -87,8 +89,8 @@ class MenuItemHandler(
     private fun handleTagged(sortOrderView: TextView): Boolean {
         sortOrderView.background = null
         settings.defLayout = "VAN"
-        AppSessionState.sortOrder = "VAN"
-        AppSessionState.soekList = false
+        viewModel.sortOrder = "VAN"
+        viewModel.soekList = false
         (activity as MainActivity).observeDataset()
         return true
     }
@@ -96,8 +98,8 @@ class MenuItemHandler(
     private fun handleSortVan(sortOrderView: TextView): Boolean {
         sortOrderView.background = null
         settings.defLayout =  "VAN"
-        AppSessionState.sortOrder = "VAN"
-        AppSessionState.soekList = false
+        viewModel.sortOrder = "VAN"
+        viewModel.soekList = false
         (activity as MainActivity).observeDataset()
         return true
     }
@@ -105,8 +107,8 @@ class MenuItemHandler(
     private fun handleSortWyk(sortOrderView: TextView): Boolean {
         sortOrderView.background = null
         settings.defLayout =  "WYK"
-        AppSessionState.sortOrder = "WYK"
-        AppSessionState.soekList = false
+        viewModel.sortOrder = "WYK"
+        viewModel.soekList = false
         (activity as MainActivity).observeDataset()
         return true
     }
@@ -114,8 +116,8 @@ class MenuItemHandler(
     private fun handleSortOuderdom(sortOrderView: TextView): Boolean {
         sortOrderView.background = null
         settings.defLayout = "OUDERDOM"
-        AppSessionState.sortOrder = "OUDERDOM"
-        AppSessionState.soekList = false
+        viewModel.sortOrder = "OUDERDOM"
+        viewModel.soekList = false
         (activity as MainActivity).observeDataset()
         return true
     }
@@ -123,8 +125,8 @@ class MenuItemHandler(
     private fun handleVerjaar(sortOrderView: TextView): Boolean {
         sortOrderView.background = null
         settings.defLayout = "VERJAAR"
-        AppSessionState.sortOrder = "VERJAAR"
-        AppSessionState.soekList = false
+        viewModel.sortOrder = "VERJAAR"
+        viewModel.soekList = false
         (activity as MainActivity).observeDataset()
         return true
     }
@@ -132,8 +134,8 @@ class MenuItemHandler(
     private fun handleSortAdres(sortOrderView: TextView): Boolean {
         sortOrderView.background = null
         settings.defLayout = "ADRES"
-        AppSessionState.sortOrder = "ADRES"
-        AppSessionState.soekList = false
+        viewModel.sortOrder = "ADRES"
+        viewModel.soekList = false
         (activity as MainActivity).observeDataset()
         return true
     }
@@ -141,8 +143,8 @@ class MenuItemHandler(
     private fun handleSortGesin(sortOrderView: TextView): Boolean {
         sortOrderView.background = null
         settings.defLayout = "GESINNE"
-        AppSessionState.sortOrder = "GESINNE"
-        AppSessionState.soekList = false
+        viewModel.sortOrder = "GESINNE"
+        viewModel.soekList = false
         (activity as MainActivity).observeDataset()
         return true
     }
@@ -172,7 +174,7 @@ class MenuItemHandler(
 
     private fun handleFilterOptions(): Boolean {
         return try {
-            val filterHandler = FilterHandler(activity)
+            val filterHandler = FilterHandler(activity, viewModel)
             filterHandler.showFilterDialog()
             true
         } catch (_: Exception) {

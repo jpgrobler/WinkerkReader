@@ -17,7 +17,8 @@ import android.media.RingtoneManager
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import za.co.jpsoft.winkerkreader.R
-import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 class AlarmReceiver : BroadcastReceiver() {
@@ -47,8 +48,9 @@ class AlarmReceiver : BroadcastReceiver() {
                         PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
                     )
                     val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-                    val now = Date()
-                    val id = SimpleDateFormat("ddHHmmss", Locale.US).format(now).toInt()
+                    val now = LocalDateTime.now()
+                    val formatter = DateTimeFormatter.ofPattern("ddHHmmss", Locale.US)
+                    val id = now.format(formatter).toInt()
 
                     val builder = NotificationCompat.Builder(context, channelId)
                         .setSmallIcon(R.mipmap.ic_stat_family_roof)
@@ -71,8 +73,9 @@ class AlarmReceiver : BroadcastReceiver() {
                         PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
                     )
                     val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-                    val now = Date()
-                    val id = SimpleDateFormat("ddHHmmss", Locale.US).format(now).toInt()
+                    val now = LocalDateTime.now()
+                    val formatter = DateTimeFormatter.ofPattern("ddHHmmss", Locale.US)
+                    val id = now.format(formatter).toInt()
 
                     val builder = NotificationCompat.Builder(context, channelId)
                         .setSmallIcon(R.mipmap.ic_stat_family_roof)

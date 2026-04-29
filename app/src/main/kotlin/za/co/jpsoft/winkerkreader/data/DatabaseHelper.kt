@@ -7,16 +7,20 @@ import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import android.util.Log
 import za.co.jpsoft.winkerkreader.data.models.CallLog
 import za.co.jpsoft.winkerkreader.data.models.CallType
 import za.co.jpsoft.winkerkreader.utils.CursorDataExtractor.getSafeLong
 import za.co.jpsoft.winkerkreader.utils.CursorDataExtractor.getSafeString
-import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
     companion object {
+        private const val TAG = "DatabaseHelper"  // Add this line
         const val DATABASE_NAME = "whatsapp_call_logs.db"
         const val DATABASE_VERSION = 2
 
@@ -62,6 +66,23 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         }
     }
 
+    private fun isDuplicateCall(callerInfo: String, timestamp: Long, source: String, timeWindowMs: Long = 3000): Boolean {
+        val query = """
+        SELECT COUNT(*) FROM $TABLE_CALL_LOGS 
+        WHERE $COLUMN_CALLER_INFO = ? 
+        AND ABS($COLUMN_TIMESTAMP - ?) < ?
+        AND $COLUMN_SOURCE = ?
+    """.trimIndent()
+
+        readableDatabase.rawQuery(query, arrayOf(callerInfo, timestamp.toString(), timeWindowMs.toString(), source)).use { cursor ->
+            if (cursor.moveToFirst()) {
+                return cursor.getInt(0) > 0
+            }
+        }
+        return false
+    }
+
+    // Update your insertCallLogWithType method to check for duplicates
     fun insertCallLogWithType(
         callerInfo: String,
         timestamp: Long,
@@ -69,9 +90,23 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         source: String,
         duration: Long
     ): Boolean {
-        val db = writableDatabase
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-        val formattedDateTime = dateFormat.format(Date(timestamp))
+        // Skip UNKNOWN types for VoIP
+        if (callType == CallType.UNKNOWN && source != "Phone Call") {
+            Log.d(TAG, "Skipping UNKNOWN call type for source: $source")
+            return false
+        }
+
+        // Check for duplicate
+        if (isDuplicateCall(callerInfo, timestamp, source)) {
+            Log.d(TAG, "Duplicate call detected, skipping insert: $callerInfo")
+            return false
+        }
+
+        // Proceed with insertion...
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+        val formattedDateTime = Instant.ofEpochMilli(timestamp)
+            .atZone(ZoneId.systemDefault())
+            .format(formatter)
 
         val values = ContentValues().apply {
             put(COLUMN_CALLER_INFO, callerInfo)
@@ -82,8 +117,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             put(COLUMN_DURATION, duration)
         }
 
-        val result = db.insert(TABLE_CALL_LOGS, null, values)
-        db.close()
+        val result = writableDatabase.insert(TABLE_CALL_LOGS, null, values)
         return result != -1L
     }
 
@@ -98,10 +132,9 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
 
     fun getAllCallLogs(): List<CallLog> {
         val callLogs = mutableListOf<CallLog>()
-        val db = readableDatabase
         val query = "SELECT * FROM $TABLE_CALL_LOGS ORDER BY $COLUMN_TIMESTAMP DESC"
 
-        db.rawQuery(query, null).use { cursor ->
+        readableDatabase.rawQuery(query, null).use { cursor ->
             if (cursor.moveToFirst()) {
                 do {
                     val id = getSafeLong(cursor, COLUMN_ID, -1L)
@@ -130,23 +163,18 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
     }
 
     fun deleteCallLog(id: Long): Boolean {
-        val db = writableDatabase
-        val result = db.delete(TABLE_CALL_LOGS, "$COLUMN_ID = ?", arrayOf(id.toString()))
-        db.close()
+        val result = writableDatabase.delete(TABLE_CALL_LOGS, "$COLUMN_ID = ?", arrayOf(id.toString()))
         return result > 0
     }
 
     fun clearAllCallLogs(): Boolean {
-        val db = writableDatabase
-        val result = db.delete(TABLE_CALL_LOGS, null, null)
-        db.close()
+        val result = writableDatabase.delete(TABLE_CALL_LOGS, null, null)
         return result > 0
     }
 
     fun getCallLogsCount(): Int {
-        val db = readableDatabase
         var count = 0
-        db.rawQuery("SELECT COUNT(*) FROM $TABLE_CALL_LOGS", null).use { cursor ->
+        readableDatabase.rawQuery("SELECT COUNT(*) FROM $TABLE_CALL_LOGS", null).use { cursor ->
             if (cursor.moveToFirst()) {
                 count = cursor.getInt(0)
             }
@@ -156,12 +184,11 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
 
     fun getRecentCallLogs(timeWindowMs: Long): List<CallLog> {
         val recentCalls = mutableListOf<CallLog>()
-        val db = readableDatabase
         val currentTime = System.currentTimeMillis()
         val cutoffTime = currentTime - timeWindowMs
 
         val query = "SELECT * FROM $TABLE_CALL_LOGS WHERE $COLUMN_TIMESTAMP > ? ORDER BY $COLUMN_TIMESTAMP DESC"
-        db.rawQuery(query, arrayOf(cutoffTime.toString())).use { cursor ->
+        readableDatabase.rawQuery(query, arrayOf(cutoffTime.toString())).use { cursor ->
             if (cursor.moveToFirst()) {
                 do {
                     val id = getSafeLong(cursor, COLUMN_ID, -1L)
