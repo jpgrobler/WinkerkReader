@@ -39,7 +39,7 @@ class MenuItemHandler(
 
         return when (item.itemId) {
             R.id.aktief_radio_group -> handleAktiefRadioGroup()
-            R.id.select_options -> handleSelectOptions()
+            //R.id.select_options -> handleSelectOptions()
             R.id.tagged -> handleTagged(sortOrderView)
             R.id.sort_van -> handleSortVan(sortOrderView)
             R.id.sort_wyk -> handleSortWyk(sortOrderView)

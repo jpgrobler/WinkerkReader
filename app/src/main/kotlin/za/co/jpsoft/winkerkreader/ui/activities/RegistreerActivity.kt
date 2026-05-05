@@ -13,18 +13,19 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
-
 import androidx.core.content.edit
-import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
 
-/**
- * Created by Pieter Grobler on 21/08/2017.
- */
+import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
+import za.co.jpsoft.winkerkreader.databinding.RegistreerBinding
+
 class RegistreerActivity : AppCompatActivity() {
+
+    private lateinit var binding: RegistreerBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.registreer)
+        binding = RegistreerBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         initializeUI()
         populateUserData()
@@ -42,7 +43,7 @@ class RegistreerActivity : AppCompatActivity() {
         val deviceId = za.co.jpsoft.winkerkreader.utils.DeviceIdManager.getDeviceId(this)
 
         // Set about text
-        findViewById<TextView>(R.id.reg_about).text = getAboutText()
+        binding.regAbout.text = getAboutText()
 
     }
 
@@ -59,27 +60,22 @@ class RegistreerActivity : AppCompatActivity() {
         val settings = getSharedPreferences(PREFS_USER_INFO, 0)
 
         // Populate user fields with saved data
-        setTextIfNotEmpty(R.id.reg_naam, settings.getString("Naam", ""))
-        setTextIfNotEmpty(R.id.reg_van, settings.getString("Van", ""))
-        setTextIfNotEmpty(R.id.reg_epos, settings.getString("E-Pos", ""))
-        setTextIfNotEmpty(R.id.reg_selno, settings.getString("Selfoon", ""))
+        binding.regNaam.setText(settings.getString("Naam", ""))
+        binding.regVan.setText(settings.getString("Van", ""))
+        binding.regEpos.setText(settings.getString("E-Pos", ""))
+        binding.regSelno.setText(settings.getString("Selfoon", ""))
 
         // Populate gemeente fields if available
         val settingsManager = SettingsManager.getInstance(this)
         if (settingsManager.gemeenteNaam != "Onbekend") {
-            findViewById<EditText>(R.id.reg_gemeente).setText(settingsManager.gemeenteNaam)
-            findViewById<EditText>(R.id.reg_gemeente_epos).setText(settingsManager.gemeenteEpos)
+            binding.regGemeente.setText(settingsManager.gemeenteNaam)
+            binding.regGemeenteEpos.setText(settingsManager.gemeenteEpos)
         }
     }
 
-    private fun setTextIfNotEmpty(viewId: Int, text: String?) {
-        if (!text.isNullOrEmpty()) {
-            findViewById<EditText>(viewId).setText(text)
-        }
-    }
 
     private fun setupClickListeners() {
-        findViewById<ImageView>(R.id.reg_opdateer).setOnClickListener(::handleUpdateClick)
+        binding.regOpdateer.setOnClickListener(::handleUpdateClick)
     }
 
     private fun handleUpdateClick(view: View) {
@@ -90,12 +86,12 @@ class RegistreerActivity : AppCompatActivity() {
 
     private fun collectUserData(): UserData {
         return UserData(
-            naam = findViewById<EditText>(R.id.reg_naam).text.toString().trim(),
-            van = findViewById<EditText>(R.id.reg_van).text.toString().trim(),
-            epos = findViewById<EditText>(R.id.reg_epos).text.toString().trim(),
-            selNo = findViewById<EditText>(R.id.reg_selno).text.toString().trim(),
-            gemNaam = findViewById<EditText>(R.id.reg_gemeente).text.toString().trim(),
-            gemEpos = findViewById<EditText>(R.id.reg_gemeente_epos).text.toString().trim()
+            naam = binding.regNaam.text.toString().trim(),
+            van = binding.regVan.text.toString().trim(),
+            epos = binding.regEpos.text.toString().trim(),
+            selNo = binding.regSelno.text.toString().trim(),
+            gemNaam = binding.regGemeente.text.toString().trim(),
+            gemEpos = binding.regGemeenteEpos.text.toString().trim()
         )
     }
 

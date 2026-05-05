@@ -115,9 +115,6 @@
             android:windowSoftInputMode="adjustResize"
             android:label="Argief"
             android:parentActivityName="za.co.jpsoft.winkerkreader.ui.activities.MainActivity">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="za.co.jpsoft.winkerkreader.ui.activities.MainActivity"/>
         </activity>
 
         <activity android:name="za.co.jpsoft.winkerkreader.ui.activities.RegistreerActivity"
@@ -126,18 +123,12 @@
             android:label="Gebruiker Inligting"
             android:windowSoftInputMode="adjustPan|adjustResize"
             android:parentActivityName="za.co.jpsoft.winkerkreader.ui.activities.MainActivity">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="za.co.jpsoft.winkerkreader.ui.activities.MainActivity"/>
         </activity>
 
         <activity android:name="za.co.jpsoft.winkerkreader.ui.activities.LaaiDatabasisActivity"
             android:exported="true"
             android:icon="@mipmap/ic_shortcut_family_roof"
             android:label="Laai nuwe data">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="za.co.jpsoft.winkerkreader.ui.activities.MainActivity"/>
         </activity>
 
         <activity android:name="za.co.jpsoft.winkerkreader.ui.activities.UitlegActivity"
@@ -145,9 +136,6 @@
             android:label="Uitleg Opsies"
             android:windowSoftInputMode="adjustPan|adjustResize"
             android:parentActivityName="za.co.jpsoft.winkerkreader.ui.activities.MainActivity">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="za.co.jpsoft.winkerkreader.ui.activities.MainActivity"/>
         </activity>
 
         <activity android:name="za.co.jpsoft.winkerkreader.ui.activities.VerjaarSmsActivity"
@@ -155,9 +143,6 @@
             android:icon="@mipmap/ic_shortcut_family_roof"
             android:label="Stuur Verjaarsdasg SMS"
             android:parentActivityName="za.co.jpsoft.winkerkreader.ui.activities.MainActivity">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="za.co.jpsoft.winkerkreader.ui.activities.MainActivity"/>
         </activity>
 
         <activity android:name="za.co.jpsoft.winkerkreader.ui.activities.SettingsActivity"
@@ -165,9 +150,6 @@
             android:windowSoftInputMode="adjustPan|adjustResize"
             android:theme="@android:style/Theme.DeviceDefault.Dialog"
             android:parentActivityName="za.co.jpsoft.winkerkreader.ui.activities.MainActivity">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="za.co.jpsoft.winkerkreader.ui.activities.MainActivity" />
         </activity>
 
         <activity
@@ -175,9 +157,6 @@
             android:label="Call Log History"
             android:parentActivityName="za.co.jpsoft.winkerkreader.ui.activities.MainActivity"
             android:exported="false">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="za.co.jpsoft.winkerkreader.ui.activities.MainActivity" />
         </activity>
 
         <!-- Receivers -->
@@ -212,11 +191,8 @@
 
         <receiver
             android:name="za.co.jpsoft.winkerkreader.services.receivers.AlarmReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="za.co.jpsoft.winkerkreader.AlarmReceiver" />
-            </intent-filter>
-        </receiver>
+            android:exported="false" />
+
 
         <!-- Services -->
         <service
@@ -249,16 +225,6 @@
         <service
             android:name="za.co.jpsoft.winkerkreader.services.ListViewWidgetService"
             android:permission="android.permission.BIND_REMOTEVIEWS" />
-
-        <!-- VoIP Call Detection Service - ADD THIS -->
-        <service
-            android:name="za.co.jpsoft.winkerkreader.utils.VoIPCallDetector"
-            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.service.notification.NotificationListenerService" />
-            </intent-filter>
-        </service>
 
         <!-- Providers -->
         <provider

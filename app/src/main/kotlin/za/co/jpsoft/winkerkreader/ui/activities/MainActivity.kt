@@ -44,21 +44,13 @@ import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import za.co.jpsoft.winkerkreader.utils.Utils
 import za.co.jpsoft.winkerkreader.utils.WhatsAppContactLoader
 import za.co.jpsoft.winkerkreader.utils.WorkManagerHelper
+import za.co.jpsoft.winkerkreader.databinding.ActivityMainBinding
 
 
 class MainActivity : AppCompatActivity() {
 
-    // Views
+    private lateinit var binding: ActivityMainBinding
     private lateinit var memberListAdapter: MemberListAdapter
-    private lateinit var memberListView: RecyclerView
-
-    private lateinit var sortOrderView: TextView
-    private lateinit var memberCountView: TextView
-    private lateinit var searchTextView: TextView
-    private lateinit var progressBar1: ProgressBar
-    private lateinit var progressBar2: ProgressBar
-    private lateinit var churchNameView: TextView
-    private lateinit var searchItemBlock: View
 
     // Data
     private lateinit var viewModel: MemberViewModel
@@ -155,13 +147,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-
         super.onCreate(savedInstanceState)
         settingsManager = SettingsManager.getInstance(this)
-        permissionManager = PermissionManager(this)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        setContentView(R.layout.activity_main)
-        initializeComponents()
+        initializeViews()
+        permissionManager = PermissionManager(this)
+        backgroundExecutor = Executors.newSingleThreadExecutor()
+        gestureDetector = GestureDetector(this, SwipeGestureDetector())
+
         startupCoordinator =
                 MainStartupCoordinator(
                         tag = TAG,
@@ -169,8 +164,7 @@ class MainActivity : AppCompatActivity() {
                         lifecycleScope = lifecycleScope,
                         settingsManager = settingsManager,
                         permissionManager = permissionManager,
-                        progressBar1 = progressBar1,
-                        progressBar2 = progressBar2,
+                        binding = binding,
                         checkAndRequestPermissions = ::checkAndRequestPermissions,
                         startMonitoringServiceIfEnabled = ::startMonitoringServiceIfEnabled,
                         setupViewModel = ::setupViewModel,
@@ -196,8 +190,7 @@ class MainActivity : AppCompatActivity() {
                 }
         )
 
-        val mainView = findViewById<View>(R.id.lidmaat_list)
-        ViewCompat.setOnApplyWindowInsetsListener(mainView) { view, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(binding.lidmaatList) { view, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             view.setPadding(0, 0, 0, systemBars.bottom)
             insets
@@ -320,51 +313,27 @@ class MainActivity : AppCompatActivity() {
         notificationManager?.createNotificationChannel(serviceChannel)
     }
 
-    // -------------------------------------------------------------------------
-    // Component initialisation — RecyclerView replaces ListView
-    // -------------------------------------------------------------------------
+    private fun initializeViews() {
+        memberListAdapter = MemberListAdapter(
+            onItemClick = { view, item, _ ->
+                if (::listInteractionController.isInitialized) {
+                    listInteractionController.showMemberPopupMenu(view, item)
+                }
+            },
+            onItemLongClick = { item, _ ->
+                if (::listInteractionController.isInitialized) {
+                    listInteractionController.onMemberLongClick(item)
+                } else {
+                    false
+                }
+            }
+        )
 
-    private fun initializeComponents() {
-        backgroundExecutor = Executors.newSingleThreadExecutor()
-
-        sortOrderView = findViewById(R.id.sortorder)
-        memberCountView = findViewById(R.id.main_Count)
-        searchTextView = findViewById(R.id.search_text)
-        churchNameView = findViewById(R.id.main_gemeentenaam)
-        searchItemBlock = findViewById(R.id.search_item_block)
-        memberListView = findViewById(R.id.lidmaat_list)
-        progressBar1 = findViewById(R.id.indeterminateBar)
-        progressBar2 = findViewById(R.id.main_indeterminateBar3)
-
-        progressBar1.visibility = View.GONE
-        progressBar2.visibility = View.GONE
-
-        // Build adapter with click lambdas — no more AdapterView listeners
-        memberListAdapter =
-                MemberListAdapter(
-                        onItemClick = { view, item, _ ->
-                            if (::listInteractionController.isInitialized) {
-                                listInteractionController.showMemberPopupMenu(view, item)
-                            }
-                        },
-                        onItemLongClick = { item, _ ->
-                            if (::listInteractionController.isInitialized) {
-                                listInteractionController.onMemberLongClick(item)
-                            } else {
-                                false
-                            }
-                        }
-                )
-
-        memberListView.layoutManager = LinearLayoutManager(this)
-        memberListView.adapter = memberListAdapter
-
-        gestureDetector = GestureDetector(this, SwipeGestureDetector())
+        binding.lidmaatList.apply {
+            layoutManager = LinearLayoutManager(this@MainActivity)
+            adapter = memberListAdapter
+        }
     }
-
-    // -------------------------------------------------------------------------
-    // ViewModel — single observer replaces the previous 9 cursor observers
-    // -------------------------------------------------------------------------
 
     private fun setupViewModel() {
         viewModel = ViewModelProvider(this)[MemberViewModel::class.java]
@@ -373,15 +342,12 @@ class MainActivity : AppCompatActivity() {
                 tag = TAG,
                 viewModel = viewModel,
                 settingsManager = settingsManager,
-                sortOrderView = sortOrderView,
-                searchItemBlock = searchItemBlock,
-                searchTextView = searchTextView,
+                binding = binding,
                 memberListAdapter = memberListAdapter,
                 findSearchView = ::findSearchView,
                 hideFilterPanel = {
-                    val filterPanel = findViewById<LinearLayout>(R.id.main_filter)
-                    if (filterPanel.visibility == View.VISIBLE) {
-                        filterPanel.visibility = View.GONE
+                    if (binding.mainFilter.visibility == View.VISIBLE) {
+                        binding.mainFilter.visibility = View.GONE
                     }
                 },
                 observeDataset = ::observeDataset
@@ -404,10 +370,10 @@ class MainActivity : AppCompatActivity() {
                 observeDataset = ::observeDataset
             )
 
-        viewModel.getRowCount().observe(this) { count -> memberCountView.text = "[$count]" }
+        viewModel.getRowCount().observe(this) { count -> binding.mainCount.text = "[$count]" }
         viewModel.getTextLiveData().observe(this) { searchText ->
-            searchTextView.text = searchText
-            searchItemBlock.visibility = if (searchText.isEmpty()) View.GONE else View.VISIBLE
+            binding.searchText.text = searchText
+            binding.searchItemBlock.visibility = if (searchText.isEmpty()) View.GONE else View.VISIBLE
         }
         viewModel.getVerjaarFLag().observe(this) { showBirthday ->
             // Flag fires after VERJAAR list is committed; scroll is handled in the
@@ -459,16 +425,14 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupVersionInfo() {
         try {
-            val manager = packageManager
-            val info = manager.getPackageInfo(packageName, 0)
-            val versionName = "v${info.versionName}"
-            // findViewById<TextView>(R.id.version).text = versionName
-            supportActionBar?.let { actionBar ->
-                // This adds version to the title while keeping radio buttons separate
-                actionBar.title = "${versionName}"
+            val versionName = packageManager.getPackageInfo(packageName, 0).versionName
+            supportActionBar?.apply {
+                title = "WinkerkReader"          // main title
+                subtitle = "v$versionName"       // smaller text below title
             }
         } catch (e: PackageManager.NameNotFoundException) {
             Log.e(TAG, "Failed to get package info", e)
+            supportActionBar?.title = "WinkerkReader"
         }
     }
 
@@ -527,7 +491,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupSearchCloseHandler() {
-        findViewById<ImageView>(R.id.main_search_text_close).setOnClickListener {
+        binding.mainSearchTextClose.setOnClickListener {
             resetAllFiltersAndSearch()
         }
     }
@@ -538,7 +502,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupSortOrderClickHandler() {
-        sortOrderView.setOnClickListener { v ->
+        binding.sortorder.setOnClickListener { v ->
             val background = v.background
             if (background is ColorDrawable) {
                 v.background = null
@@ -550,7 +514,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupChurchNameClickHandler() {
-        churchNameView.setOnClickListener { view ->
+        binding.mainGemeentenaam.setOnClickListener { view ->
             if (::listInteractionController.isInitialized) {
                 listInteractionController.showGroupFunctionMenu(view)
             }
@@ -613,10 +577,10 @@ class MainActivity : AppCompatActivity() {
             imm.hideSoftInputFromWindow(it.windowToken, 0)
         }
 
-        searchItemBlock.visibility = View.GONE
-        sortOrderView.text = viewModel.sortOrder
-        sortOrderView.tag = viewModel.sortOrder
-        memberCountView.text = "[0]"
+        binding.searchItemBlock.visibility = View.GONE
+        binding.sortorder.text = viewModel.sortOrder
+        binding.sortorder.tag = viewModel.sortOrder
+        binding.mainCount.text = "[0]"
 
         backgroundExecutor.execute {
             WinkerkDbHelper.setDatabaseDate(this)
@@ -624,12 +588,12 @@ class MainActivity : AppCompatActivity() {
             runOnUiThread {
                 val churchText =
                         "${settingsManager.gemeenteNaam} ${settingsManager.gemeente2Naam} ${settingsManager.gemeente3Naam}".trim()
-                churchNameView.text = churchText
+                binding.mainGemeentenaam.text = churchText
                 // Apply the background color properly if set
                 if (settingsManager.gemeenteKleur != -1) {
-                    churchNameView.setBackgroundColor(settingsManager.gemeenteKleur)
+                    binding.mainGemeentenaam.setBackgroundColor(settingsManager.gemeenteKleur)
                     // Ensure text is readable
-                    churchNameView.setTextColor(
+                    binding.mainGemeentenaam.setTextColor(
                         if (isColorDark(settingsManager.gemeenteKleur))
                             android.graphics.Color.WHITE
                         else
@@ -651,13 +615,13 @@ class MainActivity : AppCompatActivity() {
     }
     fun observeDataset() {
         // Only show search block if we're actually searching and have search text
-        searchItemBlock.visibility =
+        binding.searchItemBlock.visibility =
                 if (viewModel.soekList && viewModel.soek.isNotEmpty()) View.VISIBLE else View.GONE
 
-        // Don't override sortOrderView text if we're searching
+        // Don't override binding.sortorder.text if we're searching
         if (!viewModel.soekList || viewModel.soek.isEmpty()) {
-            sortOrderView.text = viewModel.sortOrder
-            sortOrderView.tag = viewModel.sortOrder
+            binding.sortorder.text = viewModel.sortOrder
+            binding.sortorder.tag = viewModel.sortOrder
         }
 
         when (val mode = resolveQueryMode(settingsManager.defLayout)) {
@@ -680,7 +644,7 @@ class MainActivity : AppCompatActivity() {
             }
             is MainQueryMode.Filter -> {
                 viewModel.soekList = false
-                searchItemBlock.visibility = View.VISIBLE
+                binding.searchItemBlock.visibility = View.VISIBLE
                 loadQueryMode(mode)
             }
             else -> loadQueryMode(mode)
@@ -719,7 +683,7 @@ class MainActivity : AppCompatActivity() {
                 val targetPosition = findNextBirthdayPosition(items, currentMonth, currentDay)
                 if (targetPosition != -1) {
                     runOnUiThread {
-                        memberListView.post { memberListView.scrollToPosition(targetPosition) }
+                        binding.lidmaatList.post { binding.lidmaatList.scrollToPosition(targetPosition) }
                     }
                 }
             } catch (e: Exception) {
@@ -837,9 +801,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun onLeftSwipe() {
-        NavigationHandler.handleLeftSwipe(this, sortOrderView, viewModel)
+        NavigationHandler.handleLeftSwipe(this, binding.sortorder, viewModel)
     }
+
     private fun onRightSwipe() {
-        NavigationHandler.handleRightSwipe(this, sortOrderView, viewModel)
+        NavigationHandler.handleRightSwipe(this, binding.sortorder, viewModel)
     }
 }

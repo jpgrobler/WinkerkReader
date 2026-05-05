@@ -35,8 +35,8 @@ class DeviceBootReceiver : BroadcastReceiver() {
         when (action) {
             Intent.ACTION_BOOT_COMPLETED,
             Intent.ACTION_MY_PACKAGE_REPLACED,
-            Intent.ACTION_PACKAGE_REPLACED,
             "android.intent.action.QUICKBOOT_POWERON" -> {
+
 
                 val settings = SettingsManager.getInstance(context)
 
@@ -87,18 +87,9 @@ class DeviceBootReceiver : BroadcastReceiver() {
                 Log.e(TAG, "Failed to start CallMonitoringService", e)
             }
 
-            // Start IncomingCall service
-            try {
-                val intent = Intent(context, IncomingCall::class.java)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    context.startForegroundService(intent)
-                } else {
-                    context.startService(intent)
-                }
-                Log.d(TAG, "IncomingCall service started successfully")
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to start IncomingCall service", e)
-            }
+            // Note: IncomingCall is a BroadcastReceiver, not a Service.
+            // It is registered in the manifest and triggered automatically
+            // by phone state change intents — do NOT start it as a service.
         }
     }
 

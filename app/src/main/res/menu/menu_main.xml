@@ -16,10 +16,6 @@
         app:showAsAction="collapseActionView"
         app:actionViewClass="androidx.appcompat.widget.SearchView"
          />
-    <item android:id="@+id/select_options"
-        android:icon="@android:drawable/ic_search_category_default"
-        android:title="@string/mainmenu_soek_opsies">
-    </item>
     <item
         android:id="@+id/filter_options"
         android:icon="@drawable/filter3s"

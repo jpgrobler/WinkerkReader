@@ -15,6 +15,7 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.col
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import za.co.jpsoft.winkerkreader.utils.getIntOrDefault
@@ -190,7 +191,12 @@ class MemberViewModel : ViewModel() {
             try {
                 val cacheKey    = buildCacheKey(eventType)
                 val cachedQuery = queryCache[cacheKey]
-
+                if (eventType == "SOEK_DATA") {
+                    withContext(Dispatchers.Main) {
+                        _memberList.value = emptyList()
+                        rowCount.value = 0
+                    }
+                }
                 val sqlRequest = if (cachedQuery != null && !needsQueryRebuild(eventType)) {
                     cachedQuery
                 } else {
@@ -443,7 +449,7 @@ class MemberViewModel : ViewModel() {
                 append("_soek_").append(soek)  // Add this line
                 append("_").append(soek)
                 append("_").append(sortOrder)
-                searchList?.filter { it.isChecked }?.forEach { append("_").append(it.columnName) }
+                //searchList?.filter { it.isChecked }?.forEach { append("_").append(it.columnName) }
             }
             "FILTER_DATA" -> {
                 currentFilterList?.filter { it.checked }?.forEach { f ->
@@ -540,18 +546,27 @@ class MemberViewModel : ViewModel() {
         when (eventType) {
             "HUWELIK_DATA" -> where.append(" AND ").append(winkerkEntry.SELECTION_HUWELIK_WHERE)
             "SOEK_DATA" -> {
-                val list = searchList
-                if (!list.isNullOrEmpty()) {
-                    val checkedFields = list.filter { it.isChecked }
-                    if (checkedFields.isNotEmpty()) {
-                        where.append(" AND (")
-                        checkedFields.forEachIndexed { i, item ->
-                            if (i > 0) where.append(" OR ")
-                            where.append(col(item.columnName)).append(" LIKE ?")
-                            argsList.add("%${soek}%")
-                        }
-                        where.append(" )")
+                // Always search all relevant columns, ignoring searchList
+                val allSearchColumns = listOf(
+                    winkerkEntry.LIDMATE_VAN,
+                    winkerkEntry.LIDMATE_NOEMNAAM,
+                    winkerkEntry.LIDMATE_VOORNAME,
+                    winkerkEntry.LIDMATE_WYK,
+                    winkerkEntry.LIDMATE_SELFOON,
+                    winkerkEntry.LIDMATE_LANDLYN,
+                    winkerkEntry.LIDMATE_NOOIENSVAN,
+                    winkerkEntry.LIDMATE_BEROEP,
+                    winkerkEntry.LIDMATE_EPOS,
+                    winkerkEntry.LIDMATE_STRAATADRES
+                )
+                if (soek.isNotBlank()) {
+                    where.append(" AND (")
+                    allSearchColumns.forEachIndexed { i, column ->
+                        if (i > 0) where.append(" OR ")
+                        where.append(col(column)).append(" LIKE ?")
+                        argsList.add("%${soek}%")
                     }
+                    where.append(" )")
                 }
                 soekList = true
             }

@@ -29,7 +29,9 @@ class IncomingCall : BroadcastReceiver() {
     }
 
     override fun onReceive(context: Context, intent: Intent) {
-        if (context == null || intent == null) return
+        if (intent.action != TelephonyManager.ACTION_PHONE_STATE_CHANGED) {
+            return
+        }
 
         val state = intent.getStringExtra(TelephonyManager.EXTRA_STATE)
         val incomingNumber = intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER)

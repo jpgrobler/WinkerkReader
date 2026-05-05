@@ -7,8 +7,6 @@ import android.app.Service
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.ContentUris
-import android.content.ContentValues.TAG
-import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
@@ -33,6 +31,7 @@ import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.WinkerkContract
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
+import za.co.jpsoft.winkerkreader.utils.CallerInfoResolver
 import za.co.jpsoft.winkerkreader.utils.OproepUtils
 import java.lang.ref.WeakReference
 
@@ -42,7 +41,7 @@ class OproepDetailService : Service() {
         @Volatile
         var isOn = false
             private set
-
+        private const val TAG = "OproepDetailService"
         private var serviceInstance: WeakReference<OproepDetailService>? = null
 
         fun isServiceActive(): Boolean = serviceInstance?.get() != null
@@ -54,7 +53,7 @@ class OproepDetailService : Service() {
         fun canProcessCall(number: String): Boolean {
             synchronized(this) {
                 val now = System.currentTimeMillis()
-                return if (lastProcessedNumber == number && now - lastProcessedTime < 3000) {
+                return if (lastProcessedNumber == number && now - lastProcessedTime < 500) {
                     Log.d("OproepDetailService", "Duplicate call number detected, skipping: $number")
                     false
                 } else {
@@ -154,33 +153,10 @@ class OproepDetailService : Service() {
     }
 
     private fun processIncomingCall(incomingNumber: String, settings: SharedPreferences) {
-        var cursor: Cursor? = null
-        try {
-            cursor = searchForCaller(incomingNumber)
-            val callerInfo = if (cursor != null && cursor.count > 0) {
-                buildCallerInfo(cursor, incomingNumber)
-            } else {
-                incomingNumber
-            }
-            createFloatingView(callerInfo, settings)
-        } catch (e: SQLException) {
-            Log.e("WinkerkReader", "Error querying caller info: ${e.message}")
-            createFloatingView(incomingNumber, settings)
-        } finally {
-            cursor?.close()
-        }
+        val callerInfo = CallerInfoResolver.getCallerDisplayInfo(contentResolver, incomingNumber)
+        createFloatingView(callerInfo, settings)
     }
 
-    private fun searchForCaller(phoneNumber: String): Cursor? {
-        val projection = arrayOf("")
-        val numberLength = phoneNumber.length
-        val searchStart = maxOf(0, numberLength - 9)
-        val searchNumber = phoneNumber.substring(searchStart, numberLength)
-        val queryUri = ContentUris.withAppendedId(winkerkEntry.CONTENT_FOON_URI, 0)
-        val selection = buildSearchQuery(searchNumber)
-        Log.d("WinkerkReader", "Search query: $selection")
-        return contentResolver.query(queryUri, projection, selection, null, null)
-    }
 
     private fun buildSearchQuery(searchNumber: String): String {
         val baseQuery = winkerkEntry.SELECTION_LIDMAAT_INFO + " FROM " + WinkerkContract.winkerkEntry.SELECTION_LIDMAAT_FROM + " WHERE "
@@ -193,32 +169,6 @@ class OproepDetailService : Service() {
         return " $baseQuery$phoneConditions;"
     }
 
-    private fun buildCallerInfo(cursor: Cursor, phoneNumber: String): String {
-        val output = StringBuilder(phoneNumber).append("\r\n")
-        val nameIndex = cursor.getColumnIndex(winkerkEntry.LIDMATE_NOEMNAAM)
-        val surnameIndex = cursor.getColumnIndex(winkerkEntry.LIDMATE_VAN)
-
-        // Use Set to prevent duplicate contact entries
-        val uniqueContacts = LinkedHashSet<String>()
-
-        cursor.moveToPosition(-1)
-        while (cursor.moveToNext()) {
-            if (!cursor.isNull(nameIndex) && !cursor.isNull(surnameIndex)) {
-                val name = cursor.getString(nameIndex)
-                val surname = cursor.getString(surnameIndex)
-                val contact = "$name $surname"
-                uniqueContacts.add(contact)
-            }
-        }
-
-        // Append unique contacts
-        uniqueContacts.forEach { contact ->
-            output.append(contact).append("\r\n")
-        }
-
-        return output.toString()
-    }
-
     private fun createFloatingView(callerInfo: String, prefs: SharedPreferences) {
         // Check if already initialized and showing
         if (::floatingView.isInitialized) {
@@ -229,9 +179,6 @@ class OproepDetailService : Service() {
         floatingView = LayoutInflater.from(this).inflate(R.layout.oproepfloat, null)
         val callerTextView = floatingView.findViewById<TextView>(R.id.oproepnommer)
         callerTextView.text = callerInfo
-
-        val utils = OproepUtils(prefs, this)
-        utils.copyNewCallsToCalendar(callerInfo)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
             val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))

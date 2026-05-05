@@ -13,13 +13,15 @@ import androidx.cursoradapter.widget.CursorAdapter
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import za.co.jpsoft.winkerkreader.R
+import za.co.jpsoft.winkerkreader.utils.getStringOrNull
+import za.co.jpsoft.winkerkreader.databinding.ArgiefBinding
+import za.co.jpsoft.winkerkreader.databinding.ArgiefItemBinding
 import za.co.jpsoft.winkerkreader.ui.viewmodels.ArgiefViewModel
 import za.co.jpsoft.winkerkreader.utils.getStringOrEmpty
-import za.co.jpsoft.winkerkreader.utils.getStringOrNull
 
 class ArgiefListActivity : AppCompatActivity() {
 
-    private lateinit var argiefListView: ListView
+    private lateinit var binding: ArgiefBinding
     private lateinit var mCursorAdapter: ArgiefLysAdapter
     private lateinit var viewModel: ArgiefViewModel
     private val searchHandler = Handler(Looper.getMainLooper())
@@ -29,14 +31,14 @@ class ArgiefListActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.argief)
+        binding = ArgiefBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        argiefListView = findViewById(R.id.argief_list)
         mCursorAdapter = ArgiefLysAdapter(this, null)
         mCursorAdapter.keuse = keuse
-        argiefListView.adapter = mCursorAdapter
-        argiefListView.isFastScrollEnabled = true
-        argiefListView.isClickable = true
+        binding.argiefList.adapter = mCursorAdapter
+        binding.argiefList.isFastScrollEnabled = true
+        binding.argiefList.isClickable = true
 
         viewModel = ViewModelProvider(this)[ArgiefViewModel::class.java]
 
@@ -58,22 +60,17 @@ class ArgiefListActivity : AppCompatActivity() {
     }
 
     private fun setupSortRadioGroup() {
-        val sortvan = findViewById<RadioButton>(R.id.argief_sort_van)
-        val sortdatum = findViewById<RadioButton>(R.id.argief_sort_datum)
-        val sortrede = findViewById<RadioButton>(R.id.argief_sort_rede)
-
         when (keuse) {
-            "Van" -> sortvan.isChecked = true
-            "Rede" -> sortrede.isChecked = true
-            "Datum" -> sortdatum.isChecked = true
+            "Van" -> binding.argiefSortVan.isChecked = true
+            "Rede" -> binding.argiefSortRede.isChecked = true
+            "Datum" -> binding.argiefSortDatum.isChecked = true
             else -> {
-                sortvan.isChecked = true
+                binding.argiefSortVan.isChecked = true
                 keuse = "Van"
             }
         }
 
-        val radioGroup = findViewById<RadioGroup>(R.id.argief_sort)
-        radioGroup.setOnCheckedChangeListener { _, checkedId ->
+        binding.argiefSort.setOnCheckedChangeListener { _, checkedId ->
             keuse = when (checkedId) {
                 R.id.argief_sort_van -> "Van"
                 R.id.argief_sort_datum -> "Datum"
@@ -156,15 +153,7 @@ class ArgiefLysAdapter(context: Context, cursor: Cursor?) : CursorAdapter(contex
 
     var keuse: String = "Van"
 
-    class ViewHolder2(view: View) {
-        val redeTextView: TextView = view.findViewById(R.id.argief_rede)
-        val nameTextView: TextView = view.findViewById(R.id.argief_name)
-        val geboortedatumTextView: TextView = view.findViewById(R.id.argief_geboortedatum)
-        val vanTextView: TextView = view.findViewById(R.id.argief_van)
-        val bestemmingTextView: TextView = view.findViewById(R.id.argief_bestemming)
-        val vertrekTextview: TextView = view.findViewById(R.id.argief_vertrekdatum)
-        val separatorView: TextView = view.findViewById(R.id.argief_list_separator)
-    }
+    class ViewHolder2(val binding: ArgiefItemBinding)
 
     override fun swapCursor(newCursor: Cursor?): Cursor? {
         // Don't swap if it's the same cursor object
@@ -176,10 +165,11 @@ class ArgiefLysAdapter(context: Context, cursor: Cursor?) : CursorAdapter(contex
     }
 
     override fun newView(context: Context, cursor: Cursor, parent: ViewGroup): View {
-        val view = LayoutInflater.from(context).inflate(R.layout.argief_item, parent, false)
-        val viewHolder = ViewHolder2(view)
-        view.tag = viewHolder
-        return view
+        val inflater = LayoutInflater.from(context)
+        val binding = ArgiefItemBinding.inflate(inflater, parent, false)
+        val viewHolder = ViewHolder2(binding)
+        binding.root.tag = viewHolder
+        return binding.root
     }
 
     override fun bindView(view: View, context: Context, cursor: Cursor) {
@@ -190,7 +180,8 @@ class ArgiefLysAdapter(context: Context, cursor: Cursor?) : CursorAdapter(contex
         }
 
         try {
-            val viewHolder2 = view.tag as ViewHolder2
+            val viewHolder = view.tag as ViewHolder2
+            val itemBinding = viewHolder.binding
 
             val lidNaam = cursor.getStringOrEmpty("Name")
             val lidVan = cursor.getStringOrEmpty("Surname")
@@ -199,14 +190,14 @@ class ArgiefLysAdapter(context: Context, cursor: Cursor?) : CursorAdapter(contex
             val bestemming = cursor.getStringOrEmpty("DepartureTo")
             val vertrekDatum = cursor.getStringOrEmpty("DepartureDate")
 
-            viewHolder2.nameTextView.text = lidNaam
-            viewHolder2.vanTextView.text = lidVan
-            viewHolder2.geboortedatumTextView.text = lidGeboortedatum
-            viewHolder2.redeTextView.text = rede
-            viewHolder2.bestemmingTextView.text = bestemming
-            viewHolder2.vertrekTextview.text = vertrekDatum
-            viewHolder2.separatorView.text = keuse
-            viewHolder2.separatorView.visibility = View.GONE
+            itemBinding.argiefName.text = lidNaam
+            itemBinding.argiefVan.text = lidVan
+            itemBinding.argiefGeboortedatum.text = lidGeboortedatum
+            itemBinding.argiefRede.text = rede
+            itemBinding.argiefBestemming.text = bestemming
+            itemBinding.argiefVertrekdatum.text = vertrekDatum
+            itemBinding.argiefListSeparator.text = keuse
+            itemBinding.argiefListSeparator.visibility = View.GONE
 
             val position = cursor.position
             val current = when (keuse) {
@@ -217,8 +208,8 @@ class ArgiefLysAdapter(context: Context, cursor: Cursor?) : CursorAdapter(contex
             }
 
             if (position == 0) {
-                viewHolder2.separatorView.visibility = View.VISIBLE
-                viewHolder2.separatorView.text = context.getString(R.string.separator_format, keuse, current)
+                itemBinding.argiefListSeparator.visibility = View.VISIBLE
+                itemBinding.argiefListSeparator.text = context.getString(R.string.separator_format, keuse, current)
             } else {
                 cursor.moveToPosition(position - 1)
                 val previous = when (keuse) {
@@ -230,8 +221,8 @@ class ArgiefLysAdapter(context: Context, cursor: Cursor?) : CursorAdapter(contex
                 cursor.moveToPosition(position)
 
                 if (previous != null && current != null && previous != current) {
-                    viewHolder2.separatorView.visibility = View.VISIBLE
-                    viewHolder2.separatorView.text = "${keuse} $current"
+                    itemBinding.argiefListSeparator.visibility = View.VISIBLE
+                    itemBinding.argiefListSeparator.text = "${keuse} $current"
                 }
             }
         } catch (e: Exception) {

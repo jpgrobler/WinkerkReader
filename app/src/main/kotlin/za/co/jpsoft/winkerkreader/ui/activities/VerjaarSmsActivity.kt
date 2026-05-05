@@ -3,11 +3,14 @@ package za.co.jpsoft.winkerkreader.ui.activities
 import android.Manifest
 import android.app.AlarmManager
 import android.app.PendingIntent
+import android.app.ProgressDialog
 import android.content.*
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.os.SystemClock
 import android.provider.Telephony
 import android.telephony.SmsManager
@@ -24,8 +27,13 @@ import androidx.appcompat.widget.PopupMenu
 import androidx.core.app.ActivityCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.WinkerkContract
 import za.co.jpsoft.winkerkreader.data.models.MemberItem
@@ -33,6 +41,7 @@ import za.co.jpsoft.winkerkreader.services.receivers.AlarmReceiver
 import za.co.jpsoft.winkerkreader.ui.adapters.MemberListAdapter
 import za.co.jpsoft.winkerkreader.ui.viewmodels.EventViewModel
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel
+import za.co.jpsoft.winkerkreader.databinding.VerjaarBinding
 import za.co.jpsoft.winkerkreader.utils.MemberActionHandler
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import za.co.jpsoft.winkerkreader.utils.Utils
@@ -47,33 +56,30 @@ class VerjaarSmsActivity : AppCompatActivity() {
         private const val MAX_SMS_MESSAGE_LENGTH = 160
     }
 
-    private lateinit var recyclerView: RecyclerView
+    private lateinit var binding: VerjaarBinding
     private lateinit var memberListAdapter: MemberListAdapter
     private lateinit var eventViewModel: EventViewModel
     private lateinit var memberViewModel: MemberViewModel
-    private lateinit var messageEdit: EditText
-    private lateinit var charCountTextView: TextView
-    private lateinit var radioGroup: RadioGroup
     private var autoSms = false
     private var keuse: String = "Verjaar"
-
+    private val saveHandler = Handler(Looper.getMainLooper())
+    private var saveRunnable: Runnable? = null
     // Permission launchers
     private val smsPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
         if (!isGranted) Toast.makeText(this, "SMS permission required to send greetings.", Toast.LENGTH_LONG).show()
     }
     private val notificationPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
-    private val textWatcher = object : TextWatcher {
-        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-            charCountTextView.text = (MAX_SMS_MESSAGE_LENGTH - (s?.length ?: 0)).toString()
-        }
-        override fun afterTextChanged(s: Editable?) {}
+        // Also save in onPause as a fallback
+    override fun onPause() {
+        super.onPause()
+        saveCurrentMessage()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.verjaar)
+        binding = VerjaarBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         initializeComponents()
 
@@ -129,33 +135,25 @@ class VerjaarSmsActivity : AppCompatActivity() {
     private fun initializeSharedPreferences() {
         val prefs = getSharedPreferences(WinkerkContract.PREFS_USER_INFO, Context.MODE_PRIVATE)
         autoSms = prefs.getBoolean("AUTO_SMS", false)
-        findViewById<EditText>(R.id.time_hour).setText(prefs.getString("SMS-HOUR", "08"))
-        findViewById<EditText>(R.id.time_minute).setText(prefs.getString("SMS-MINUTE", "00"))
+        binding.timeHour.setText(prefs.getString("SMS-HOUR", "08"))
+        binding.timeMinute.setText(prefs.getString("SMS-MINUTE", "00"))
     }
 
     private fun initializeViews() {
-        charCountTextView = findViewById(R.id.char_count)
-        radioGroup = findViewById(R.id.keuse)
-        messageEdit = findViewById(R.id.boodskap)
-        messageEdit.addTextChangedListener(textWatcher)
-
-        val autoSmsCheck = findViewById<CheckBox>(R.id.autosms_radio)
-        val reminderCheck = findViewById<CheckBox>(R.id.herinner_radio)
         val prefs = getSharedPreferences(WinkerkContract.PREFS_USER_INFO, Context.MODE_PRIVATE)
-        autoSmsCheck.isChecked = autoSms
-        reminderCheck.isChecked = prefs.getBoolean("HERINNER", false)
+        binding.autosmsRadio.isChecked = autoSms
+        binding.herinnerRadio.isChecked = prefs.getBoolean("HERINNER", false)
 
-        autoSmsCheck.setOnClickListener {
-            prefs.edit().putBoolean("AUTO_SMS", autoSmsCheck.isChecked).apply()
+        binding.autosmsRadio.setOnClickListener {
+            prefs.edit().putBoolean("AUTO_SMS", binding.autosmsRadio.isChecked).apply()
         }
-        reminderCheck.setOnClickListener {
-            prefs.edit().putBoolean("HERINNER", reminderCheck.isChecked).apply()
+        binding.herinnerRadio.setOnClickListener {
+            prefs.edit().putBoolean("HERINNER", binding.herinnerRadio.isChecked).apply()
         }
     }
 
     private fun setupRecyclerView() {
-        recyclerView = findViewById(R.id.lidmaat_list)  // Ensure your layout uses RecyclerView with this id
-        recyclerView.layoutManager = LinearLayoutManager(this)
+        binding.lidmaatList.layoutManager = LinearLayoutManager(this)
         memberListAdapter = MemberListAdapter(
             onItemClick = { _, item, _ -> showPopupMenuForMember(item) },
             onItemLongClick = { item, _ ->
@@ -163,12 +161,25 @@ class VerjaarSmsActivity : AppCompatActivity() {
                 true
             }
         )
-        recyclerView.adapter = memberListAdapter
+        binding.lidmaatList.adapter = memberListAdapter
+
 
         eventViewModel = ViewModelProvider(this)[EventViewModel::class.java]
         memberViewModel = ViewModelProvider(this)[MemberViewModel::class.java]
 
+        memberListAdapter.updateState(
+            listView = 2, // or settingsManager.listView
+            soekList = false,
+            soek = "",
+            recordStatus = "0",
+            sortOrder = "VERJAAR"
+        )
+
         eventViewModel.eventList.observe(this) { members ->
+            Log.d(TAG, "Observer received ${members.size} members")
+            if (members.isNotEmpty()) {
+                Log.d(TAG, "First member: ${members[0].name} ${members[0].surname}")
+            }
             memberListAdapter.submitList(members)
         }
     }
@@ -178,18 +189,13 @@ class VerjaarSmsActivity : AppCompatActivity() {
     // ------------------------------------------------------------------------
 
     private fun setupEventTypeSelection() {
-        val birthdayRadio = findViewById<RadioButton>(R.id.Keuse_Verjaar)
-        val baptismRadio = findViewById<RadioButton>(R.id.Keuse_Doop)
-        val marriageRadio = findViewById<RadioButton>(R.id.Keuse_Huwelik)
-        val confessionRadio = findViewById<RadioButton>(R.id.Keuse_Belydenis)
+        setRadioButtonSelection(binding.KeuseVerjaar, binding.KeuseDoop, binding.KeuseHuwelik, binding.KeuseBelydenis)
 
-        setRadioButtonSelection(birthdayRadio, baptismRadio, marriageRadio, confessionRadio)
-
-        radioGroup.setOnCheckedChangeListener { _, checkedId ->
+        binding.keuse.setOnCheckedChangeListener { _, checkedId ->
             handleEventTypeChange(checkedId)
         }
         // Load initial data
-        handleEventTypeChange(radioGroup.checkedRadioButtonId)
+        handleEventTypeChange(binding.keuse.checkedRadioButtonId)
     }
 
     private fun setRadioButtonSelection(birthday: RadioButton, baptism: RadioButton, marriage: RadioButton, confession: RadioButton) {
@@ -207,7 +213,6 @@ class VerjaarSmsActivity : AppCompatActivity() {
     }
 
     private fun handleEventTypeChange(checkedId: Int) {
-        val imageView = findViewById<ImageView>(R.id.verjaar_sms)
         val prefs = getSharedPreferences(WinkerkContract.PREFS_USER_INFO, Context.MODE_PRIVATE)
 
         when (checkedId) {
@@ -215,35 +220,35 @@ class VerjaarSmsActivity : AppCompatActivity() {
                 keuse = "Verjaar"
                 setMessageForEventType(prefs, "VerjaarBoodskap",
                     "<<<naam>>>\nBaie geluk met jou verjaarsdag!\nMag die Here se genade jou daagliks vervul!\nGroete Ds ")
-                imageView.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.bdaysms, null))
+                binding.verjaarSms.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.bdaysms, null))
                 eventViewModel.loadEventData(this, "Verjaar")
             }
             R.id.Keuse_Doop -> {
                 keuse = "Doop"
                 setMessageForEventType(prefs, "DoopBoodskap",
                     "<<<naam>>>\nBaie geluk met jou doopherdenking!\nMag die Here se genade jou daagliks vervul!\nGroete Ds ")
-                imageView.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.doopsms, null))
+                binding.verjaarSms.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.doopsms, null))
                 eventViewModel.loadEventData(this, "Doop")
             }
             R.id.Keuse_Huwelik -> {
                 keuse = "Huwelik"
                 setMessageForEventType(prefs, "HuwelikBoodskap",
                     "<<<naam>>>\nBaie geluk met jou huweliksherdenking!\nMag die Here se genade jou daagliks vervul!\nGroete Ds ")
-                imageView.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.huweliksms, null))
+                binding.verjaarSms.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.huweliksms, null))
                 eventViewModel.loadEventData(this, "Huwelik")
             }
             R.id.Keuse_Belydenis -> {
                 keuse = "Bely"
                 setMessageForEventType(prefs, "BelyBoodskap",
                     "<<<naam>>>\nBaie geluk met jou herdenking van jou belydenis van geloof!\nMag die Here se genade jou daagliks vervul!\nGroete Ds ")
-                imageView.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.bely, null))
+                binding.verjaarSms.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.bely, null))
                 eventViewModel.loadEventData(this, "Bely")
             }
         }
     }
 
     private fun setMessageForEventType(prefs: SharedPreferences, key: String, default: String) {
-        messageEdit.setText(prefs.getString(key, default))
+        binding.boodskap.setText(prefs.getString(key, default))
     }
 
     private fun saveCurrentMessage() {
@@ -254,7 +259,7 @@ class VerjaarSmsActivity : AppCompatActivity() {
             else      -> "VerjaarBoodskap"
         }
         getSharedPreferences(WinkerkContract.PREFS_USER_INFO, Context.MODE_PRIVATE)
-            .edit().putString(key, messageEdit.text.toString()).apply()
+            .edit().putString(key, binding.boodskap.text.toString()).apply()
     }
 
     // ------------------------------------------------------------------------
@@ -262,37 +267,45 @@ class VerjaarSmsActivity : AppCompatActivity() {
     // ------------------------------------------------------------------------
 
     private fun setupMessageInput() {
-        messageEdit.addTextChangedListener(object : TextWatcher {
+        binding.boodskap.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            override fun afterTextChanged(s: Editable?) { saveCurrentMessage() }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                // Update character count
+                val remaining = MAX_SMS_MESSAGE_LENGTH - (s?.length ?: 0)
+                binding.charCount.text = remaining.toString()
+
+                // Debounce save
+                saveRunnable?.let { saveHandler.removeCallbacks(it) }
+                saveRunnable = Runnable { saveCurrentMessage() }
+                saveHandler.postDelayed(saveRunnable!!, 500)
+            }
+
+            override fun afterTextChanged(s: Editable?) {}
         })
     }
 
     private fun setupTimeInput() {
-        val hourEdit = findViewById<EditText>(R.id.time_hour)
-        val minuteEdit = findViewById<EditText>(R.id.time_minute)
-
-        hourEdit.setOnFocusChangeListener { _, hasFocus ->
-            if (!hasFocus && hourEdit.length() < 2) hourEdit.setText("0${hourEdit.text}")
+        binding.timeHour.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus && binding.timeHour.length() < 2) binding.timeHour.setText("0${binding.timeHour.text}")
         }
-        minuteEdit.setOnFocusChangeListener { _, hasFocus ->
-            if (!hasFocus && minuteEdit.length() < 2) minuteEdit.setText("0${minuteEdit.text}")
+        binding.timeMinute.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus && binding.timeMinute.length() < 2) binding.timeMinute.setText("0${binding.timeMinute.text}")
         }
     }
 
     private fun setupButtons() {
-        findViewById<Button>(R.id.set_time).setOnClickListener(::handleSetTimeClick)
-        findViewById<ImageView>(R.id.verjaar_sms).setOnClickListener { sendSmsToSelectedMembers() }
-        findViewById<Button>(R.id.opdateerBoodskap).setOnClickListener {
+        binding.setTime.setOnClickListener(::handleSetTimeClick)
+        binding.verjaarSms.setOnClickListener { sendSmsToSelectedMembers() }
+        binding.opdateerBoodskap.setOnClickListener {
             saveCurrentMessage()
             Toast.makeText(this, "Boodskap opgedateer", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun handleSetTimeClick(view: View) {
-        val hour = formatTimeUnit(findViewById<EditText>(R.id.time_hour).text.toString())
-        val minute = formatTimeUnit(findViewById<EditText>(R.id.time_minute).text.toString())
+        val hour = formatTimeUnit(binding.timeHour.text.toString())
+        val minute = formatTimeUnit(binding.timeMinute.text.toString())
         saveTimeSettings(hour, minute)
         setupAlarm(hour, minute)
         navigateToMainActivity()
@@ -343,9 +356,29 @@ class VerjaarSmsActivity : AppCompatActivity() {
     // SMS sending (unchanged logic, adapted to MemberItem list)
     // ------------------------------------------------------------------------
 
+    private suspend fun sendSmsToMemberSuspend(
+        member: MemberItem,
+        template: String,
+        smsManager: SmsManager
+    ): Boolean = withContext(Dispatchers.IO) {
+        val phone = fixphonenumber(member.cellphone)
+        if (phone.isNullOrEmpty()) return@withContext false
+
+        val personalized = template.replace("<<<naam>>>", member.name)
+        return@withContext try {
+            val parts = smsManager.divideMessage(personalized)
+            smsManager.sendMultipartTextMessage(phone, null, parts, null, null)
+            logSentMessage(phone, personalized)
+            true
+        } catch (e: Exception) {
+            Log.e(TAG, "SMS failed: ${e.message}")
+            false
+        }
+    }
+
     private fun sendSmsToSelectedMembers() {
         saveCurrentMessage()
-        val messageTemplate = messageEdit.text.toString()
+        val messageTemplate = binding.boodskap.text.toString()
         val smsManager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             getSystemService(SmsManager::class.java)
         } else {
@@ -362,14 +395,30 @@ class VerjaarSmsActivity : AppCompatActivity() {
             return
         }
 
-        var sentCount = 0
-        for (member in members) {
-            if (shouldSendSmsToMember(member)) {
-                if (sendSmsToMember(member, messageTemplate, smsManager)) sentCount++
-                SystemClock.sleep(1000)
+        // Show a progress dialog (optional)
+        val progressDialog = ProgressDialog(this).apply {
+            setMessage("Besig om SMS'e te stuur...")
+            setCancelable(false)
+            show()
+        }
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            var sentCount = 0
+            for (member in members) {
+                if (shouldSendSmsToMember(member)) {
+                    val success = sendSmsToMemberSuspend(member, messageTemplate, smsManager)
+                    if (success) sentCount++
+                    // Delay 1 second without blocking the thread
+                    delay(1000)
+                }
+            }
+            // Switch back to main thread to update UI
+            withContext(Dispatchers.Main) {
+                progressDialog.dismiss()
+                Toast.makeText(this@VerjaarSmsActivity,
+                    "$sentCount SMS'e is gestuur!", Toast.LENGTH_LONG).show()
             }
         }
-        Toast.makeText(this, "$sentCount SMS'e is gestuur!", Toast.LENGTH_SHORT).show()
     }
 
     private fun shouldSendSmsToMember(member: MemberItem) = member.tag == 1 || autoSms
@@ -412,14 +461,20 @@ class VerjaarSmsActivity : AppCompatActivity() {
     private fun toggleMemberTag(member: MemberItem) {
         val newTag = if (member.tag == 1) 0 else 1
         val values = ContentValues().apply { put(WinkerkContract.winkerkEntry.LIDMATE_TAG, newTag) }
-        val uri = ContentUris.withAppendedId(WinkerkContract.winkerkEntry.CONTENT_URI, member.id)
-        contentResolver.update(uri, values, null, null)
-        // Reload data to reflect tag change
+        val selection = "${WinkerkContract.winkerkEntry.LIDMATE_TABLE_NAME}._rowid_ = ?"
+        val selectionArgs = arrayOf(member.id.toString())
+        contentResolver.update(
+            WinkerkContract.winkerkEntry.CONTENT_URI,  // base URI, not the appended one
+            values,
+            selection,
+            selectionArgs
+        )
+        // Reload data to refresh the list
         eventViewModel.loadEventData(this, keuse)
     }
 
     private fun showPopupMenuForMember(member: MemberItem) {
-        val anchor = recyclerView
+        val anchor = binding.lidmaatList
         val popup = PopupMenu(this, anchor)
         popup.menuInflater.inflate(R.menu.lidmaatlist_menu, popup.menu)
         popup.forceShowIcons()
@@ -464,7 +519,7 @@ class VerjaarSmsActivity : AppCompatActivity() {
                         Toast.makeText(this, "Geen selfoonnommer beskikbaar", Toast.LENGTH_SHORT).show()
                         return@setOnMenuItemClickListener false
                     }
-                    val msg = messageEdit.text.toString().replace("<<<naam>>>", member.name)
+                    val msg = binding.boodskap.text.toString().replace("<<<naam>>>", member.name)
                     sendWhatsApp(phone, item.itemId, msg)
                     true
                 }
@@ -527,7 +582,7 @@ class VerjaarSmsActivity : AppCompatActivity() {
         autoSms = prefs.getBoolean("AUTO_SMS", false)
         val fromMenu = prefs.getBoolean("FROM_MENU", false)
         if (!fromMenu && autoSms) {
-            findViewById<ImageView>(R.id.verjaar_sms).performClick()
+            binding.verjaarSms.performClick()
             prefs.edit().putBoolean("FROM_MENU", false).apply()
             finish()
         }

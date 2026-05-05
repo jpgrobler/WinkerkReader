@@ -6,23 +6,18 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.database.Cursor
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.provider.CallLog
 import android.telephony.PhoneStateListener
+import android.telephony.TelephonyCallback
 import android.telephony.TelephonyManager
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import za.co.jpsoft.winkerkreader.data.DatabaseHelper
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
 import za.co.jpsoft.winkerkreader.data.models.CallType
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.*
 
 
 class PhoneCallMonitor(
@@ -34,6 +29,7 @@ class PhoneCallMonitor(
 
     private var telephonyManager: TelephonyManager? = null
     private var phoneStateListener: PhoneStateListener? = null
+    private var telephonyCallback: Any? = null // TelephonyCallback on API 31+
 
     private var currentIncomingNumber: String? = null
     private var currentOutgoingNumber: String? = null
@@ -47,8 +43,10 @@ class PhoneCallMonitor(
     private var unifiedMonitor: UnifiedCallMonitor? = null
 
     init {
-        unifiedMonitor = UnifiedCallMonitor(context, databaseHelper, calendarManager, calendarId)
+        telephonyManager = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+        unifiedMonitor = UnifiedCallMonitor.getInstance(context, databaseHelper, calendarManager, calendarId)
     }
+
 
     fun getUnifiedMonitor(): UnifiedCallMonitor? = unifiedMonitor
 
@@ -62,25 +60,55 @@ class PhoneCallMonitor(
             return
         }
 
-        phoneStateListener = object : PhoneStateListener() {
-            override fun onCallStateChanged(state: Int, phoneNumber: String?) {
-                super.onCallStateChanged(state, phoneNumber)
-                Log.d(TAG, "Call state changed: ${getCallStateName(state)}, Number: $phoneNumber")
-                when (state) {
-                    TelephonyManager.CALL_STATE_RINGING -> handleRingingState(phoneNumber)
-                    TelephonyManager.CALL_STATE_OFFHOOK -> handleOffHookState(phoneNumber)
-                    TelephonyManager.CALL_STATE_IDLE -> handleIdleState()
+        if (telephonyManager == null) {
+            telephonyManager = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val callback = CallStateCallback()
+            telephonyCallback = callback
+            telephonyManager?.registerTelephonyCallback(context.mainExecutor, callback)
+            Log.d(TAG, "TelephonyCallback registered (API 31+)")
+        } else {
+            phoneStateListener = object : PhoneStateListener() {
+                @Suppress("OVERRIDE_DEPRECATION")
+                override fun onCallStateChanged(state: Int, phoneNumber: String?) {
+                    super.onCallStateChanged(state, phoneNumber)
+                    handleStateChanged(state, phoneNumber)
                 }
             }
+            telephonyManager?.listen(phoneStateListener, PhoneStateListener.LISTEN_CALL_STATE)
+            Log.d(TAG, "PhoneStateListener registered (Legacy)")
         }
-        telephonyManager?.listen(phoneStateListener, PhoneStateListener.LISTEN_CALL_STATE)
-        Log.d(TAG, "Phone call monitoring started")
+    }
+
+    private fun handleStateChanged(state: Int, phoneNumber: String?) {
+        Log.d(TAG, "Call state changed: ${getCallStateName(state)}, Number: $phoneNumber")
+        when (state) {
+            TelephonyManager.CALL_STATE_RINGING -> handleRingingState(phoneNumber)
+            TelephonyManager.CALL_STATE_OFFHOOK -> handleOffHookState(phoneNumber)
+            TelephonyManager.CALL_STATE_IDLE -> handleIdleState()
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.S)
+    private inner class CallStateCallback : TelephonyCallback(), TelephonyCallback.CallStateListener {
+        override fun onCallStateChanged(state: Int) {
+            handleStateChanged(state, null) // Number comes from BroadcastReceiver
+        }
     }
 
     fun stopMonitoring() {
         try {
-            telephonyManager?.listen(phoneStateListener, PhoneStateListener.LISTEN_NONE)
-            phoneStateListener = null
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                (telephonyCallback as? TelephonyCallback)?.let {
+                    telephonyManager?.unregisterTelephonyCallback(it)
+                }
+                telephonyCallback = null
+            } else {
+                telephonyManager?.listen(phoneStateListener, PhoneStateListener.LISTEN_NONE)
+                phoneStateListener = null
+            }
             telephonyManager = null
             Log.d(TAG, "Phone call monitoring stopped")
         } catch (e: Exception) {
@@ -99,17 +127,20 @@ class PhoneCallMonitor(
         val callId = "phone_$callStartTime"
         currentCallId = callId
 
+        val displayInfo = CallerInfoResolver.getCallerDisplayInfo(context.contentResolver, number)
         unifiedMonitor?.onCallDetected(
             callId = callId,
             number = number,
             direction = "incoming",
             source = "Phone Call",
-            timestamp = callStartTime
+            timestamp = callStartTime,
+            displayName = displayInfo
         )
 
-        // Store for legacy handling
         currentIncomingNumber = if (!number.isNullOrBlank()) number else "Unknown Number"
         currentCallType = CallType.INCOMING
+
+        // DO NOT call syncRecentCallsToCalendar here – UnifiedMonitor will handle logging.
 
         val settings = context.getSharedPreferences(PREFS_USER_INFO, 0)
         settings.edit().putString("CallerNumber", number).apply()
@@ -126,12 +157,14 @@ class PhoneCallMonitor(
             val callId = "phone_$callStartTime"
             currentCallId = callId
 
+            val displayInfo = CallerInfoResolver.getCallerDisplayInfo(context.contentResolver, phoneNumber)
             unifiedMonitor?.onCallDetected(
                 callId = callId,
                 number = phoneNumber,
                 direction = "outgoing",
                 source = "Phone Call",
-                timestamp = callStartTime
+                timestamp = callStartTime,
+                displayName = displayInfo
             )
 
             currentOutgoingNumber = if (!phoneNumber.isNullOrBlank()) phoneNumber else "Unknown Number"

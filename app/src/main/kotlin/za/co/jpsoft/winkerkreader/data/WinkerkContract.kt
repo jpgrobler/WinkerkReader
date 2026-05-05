@@ -1,10 +1,8 @@
 package za.co.jpsoft.winkerkreader.data
 
-import za.co.jpsoft.winkerkreader.WinkerkReader
 import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
-import android.os.Environment
 import android.provider.BaseColumns
 import java.io.File
 
@@ -347,8 +345,8 @@ object WinkerkContract {
                     LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_GESINSHOOFGUID) + ", " +
                     LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_LIDMAATGUID) + ", " +
                     "date(SUBSTR(" + WinkerkContract.col(LIDMATE_GEBOORTEDATUM) + ", 7,4) || '-' || SUBSTR(" + WinkerkContract.col(LIDMATE_GEBOORTEDATUM) + ", 4, 2) || '-' || SUBSTR(" + WinkerkContract.col(LIDMATE_GEBOORTEDATUM) + ", 1, 2)) AS birthdate, " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_GEMEENTE) + ", " +
                     LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_GEMEENTE)
+
 
         const val SELECTION_LIDMAAT_FROM_GESINSHOOF = " Members "
         const val SELECTION_LIDMAAT_FROM = LIDMATE_TABLE_NAME
@@ -475,12 +473,8 @@ object WinkerkContract {
 
         const val KEY_LOG_VOIP = "LOG_VOIP"
 
-        @Deprecated("Use getWkrDir(context) for modern Scoped Storage compatibility")
-        @JvmField val WkrDir = Environment.getExternalStorageDirectory().toString() + "/WinkerkReader/"
-        @Deprecated("Use getFotoDir(context) for modern Scoped Storage compatibility")
-        @JvmField val FotoDir = Environment.getExternalStorageDirectory().toString() + "/WinkerkReader/Fotos/"
-        @Deprecated("Use getCacheDir(context) for modern Scoped Storage compatibility")
-        @JvmField val CacheDir = Environment.getExternalStorageDirectory().toString() + "/WinkerkReader/Fotos/Cache/"
+        // Legacy static fields removed — use getWkrDir(context), getFotoDir(context),
+        // getCacheDir(context) instead for Scoped Storage compliance.
 
         @JvmStatic
         fun getWkrDir(context: Context): String {

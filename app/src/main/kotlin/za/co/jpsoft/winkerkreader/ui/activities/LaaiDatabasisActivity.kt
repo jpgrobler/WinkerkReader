@@ -17,6 +17,7 @@ import android.util.Log
 import android.view.MenuItem
 import android.view.View
 import android.widget.*
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.LinearLayoutCompat
@@ -35,6 +36,7 @@ import za.co.jpsoft.winkerkreader.services.receivers.AlarmReceiver
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import za.co.jpsoft.winkerkreader.workers.FileDownloadWorker
 import za.co.jpsoft.winkerkreader.workers.PhotoDownloadWorker
+import za.co.jpsoft.winkerkreader.databinding.LaaidatabasisBinding
 import java.io.*
 import java.net.Socket
 import java.nio.file.Files
@@ -51,24 +53,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
     private var currentWorkInfoLiveData: LiveData<WorkInfo?>? = null
     private var workInfoObserver: Observer<WorkInfo?> = Observer { }
 
-    private lateinit var syncPhotosCheck: CheckBox
-    private lateinit var startPhotoSyncBtn: Button
-    private lateinit var photoProgress: ProgressBar
-    private lateinit var photoStatus: TextView
-    private var syncPhotosAfterDb = false
-
-    private var SERVER_IP: String? = null
-    private var SERVER_PORT = 49514
-
-    private var myDownloadReference: Long = 0
-    private var recieverDownloadComplete: BroadcastReceiver? = null
-
-    private val fileList = ArrayList<HashMap<String, String>>()
-    private var delete = false
-
-    private lateinit var laai_boodskap: TextView
-
-    private lateinit var eText: EditText
+    private lateinit var binding: LaaidatabasisBinding
     private var AutoDL = false
 
     private val weeksdagArray = arrayOf("Sondag", "Maandag", "Dinsdag", "Woensdag", "Donderdag", "Vrydag", "Saterdag")
@@ -77,6 +62,13 @@ class LaaiDatabasisActivity : AppCompatActivity() {
 
     // Track ongoing file download work
     private var fileDownloadWorkId: UUID? = null
+    private var recieverDownloadComplete: BroadcastReceiver? = null
+    private var myDownloadReference: Long = 0L
+    private var SERVER_IP: String = ""
+    private var SERVER_PORT: Int = 49514
+    private var fileList: ArrayList<HashMap<String, String>> = ArrayList()
+    private var delete: Boolean = false
+    private var syncPhotosAfterDb: Boolean = false
 
     private val notificationPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
         if (isGranted) Log.d("LaaiDatabasis", "Notification permission granted")
@@ -101,7 +93,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                 }
 
                 try {
-                    unregisterReceiver(recieverDownloadComplete)
+                    recieverDownloadComplete?.let { unregisterReceiver(it) }
                 } catch (_: IllegalArgumentException) {}
 
                 reloadDatabaseAndFinish()
@@ -112,7 +104,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         }
     }
 
-    override fun onBackPressed() {
+    private fun cancelOngoingDownloads() {
         // Cancel ongoing file download work if any
         fileDownloadWorkId?.let { workId ->
             WorkManager.getInstance(this).cancelWorkById(workId)
@@ -121,14 +113,12 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         if (myDownloadReference != 0L) {
             getSystemService(Context.DOWNLOAD_SERVICE)?.let {
                 (it as DownloadManager).remove(myDownloadReference)
-                myDownloadReference = 0
+                myDownloadReference = 0L
             }
         }
         try {
             recieverDownloadComplete?.let { unregisterReceiver(it) }
         } catch (e: Exception) { }
-        navigateBackToMain()
-        // Do NOT call super.onBackPressed() because navigateBackToMain already finishes the activity
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -147,12 +137,20 @@ class LaaiDatabasisActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.laaidatabasis)
+        binding = LaaidatabasisBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         settings = getSharedPreferences(WinkerkContract.PREFS_USER_INFO, MODE_PRIVATE)
         settingsManager = SettingsManager.getInstance(this)
         initializeSettings()
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                cancelOngoingDownloads()
+                navigateBackToMain()
+            }
+        })
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
                 notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -169,19 +167,16 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         setupFileListUI()
         handleIntentExtras()
 
-        syncPhotosCheck = findViewById(R.id.sync_photos)
-        startPhotoSyncBtn = findViewById(R.id.start_photo_sync)
-        photoProgress = findViewById(R.id.photo_sync_progress)
-        photoStatus = findViewById(R.id.photo_sync_status)
+        handleIntentExtras()
 
         syncPhotosAfterDb = settings.getBoolean("SYNC_PHOTOS", false)
-        syncPhotosCheck.isChecked = syncPhotosAfterDb
-        syncPhotosCheck.setOnCheckedChangeListener { _, isChecked ->
+        binding.syncPhotos.isChecked = syncPhotosAfterDb
+        binding.syncPhotos.setOnCheckedChangeListener { _, isChecked ->
             settings.edit().putBoolean("SYNC_PHOTOS", isChecked).apply()
             syncPhotosAfterDb = isChecked
         }
 
-        startPhotoSyncBtn.setOnClickListener { startPhotoSync() }
+        binding.startPhotoSync.setOnClickListener { startPhotoSync() }
 
         handleAutomaticDownload()
     }
@@ -214,12 +209,11 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         val hour = settings.getString("DL-HOUR", "12") ?: "12"
         val minute = settings.getString("DL-MINUTE", "00") ?: "00"
 
-        eText = findViewById(R.id.tydText)
-        eText.inputType = InputType.TYPE_NULL
-        eText.setText("$hour:$minute")
-        eText.setOnClickListener { showTimePicker() }
+        binding.tydText.inputType = InputType.TYPE_NULL
+        binding.tydText.setText("$hour:$minute")
+        binding.tydText.setOnClickListener { showTimePicker() }
 
-        findViewById<EditText>(R.id.server_ip).setText(settings.getString("IP", ""))
+        binding.serverIp.setText(settings.getString("IP", ""))
     }
 
     private fun showTimePicker() {
@@ -229,7 +223,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
 
         val picker = TimePickerDialog(this, { _, selectedHour, selectedMinute ->
             val timeText = "$selectedHour:$selectedMinute"
-            eText.setText(timeText)
+            binding.tydText.setText(timeText)
             saveTimeSettings(selectedHour, selectedMinute)
             Toast.makeText(this, "Tyd opgedateer", Toast.LENGTH_SHORT).show()
         }, currentHour, currentMinutes, true)
@@ -247,11 +241,10 @@ class LaaiDatabasisActivity : AppCompatActivity() {
 
     private fun initializeSpinnerUI() {
         val day = settings.getInt("DL-DAY", 6)
-        val weeksDag = findViewById<Spinner>(R.id.weeksdag)
         val weeksdagStatusAdapter = za.co.jpsoft.winkerkreader.ui.adapters.SpinnerAdapter(this, null, weeksdagArray)
-        weeksDag.adapter = weeksdagStatusAdapter
-        weeksDag.setSelection(day - 1)
-        weeksDag.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+        binding.weeksdag.adapter = weeksdagStatusAdapter
+        binding.weeksdag.setSelection(day - 1)
+        binding.weeksdag.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 saveDaySelection(position + 1)
             }
@@ -264,10 +257,9 @@ class LaaiDatabasisActivity : AppCompatActivity() {
     }
 
     private fun initializeCheckboxUI() {
-        val autoDLCheck = findViewById<CheckBox>(R.id.alDropBox)
-        autoDLCheck.isChecked = AutoDL
-        autoDLCheck.setOnClickListener {
-            AutoDL = autoDLCheck.isChecked
+        binding.alDropBox.isChecked = AutoDL
+        binding.alDropBox.setOnClickListener {
+            AutoDL = binding.alDropBox.isChecked
             settings.edit().putBoolean("AUTO_DL", AutoDL).apply()
             if (AutoDL) {
                 setupAlarmForDownload()
@@ -326,17 +318,16 @@ class LaaiDatabasisActivity : AppCompatActivity() {
     }
 
     private fun initializeButtons() {
-        findViewById<Button>(R.id.button1).setOnClickListener { handleSetTimeClick() }
-        findViewById<Button>(R.id.dbLinkButton).setOnClickListener { handleDropboxDownload() }
-        findViewById<Button>(R.id.laai_laai).setOnClickListener { handleLoadDatabase() }
-        findViewById<Button>(R.id.laai_picker).setOnClickListener { handlePickFile() }
-        findViewById<Button>(R.id.laai_socket).setOnClickListener { handleNetworkTransfer() }
-        findViewById<Button>(R.id.laai_USB).setOnClickListener { handleUSBTransfer() }
+        binding.button1.setOnClickListener { handleSetTimeClick() }
+        binding.dbLinkButton.setOnClickListener { handleDropboxDownload() }
+        binding.laaiLaai.setOnClickListener { handleLoadDatabase() }
+        binding.laaiPicker.setOnClickListener { handlePickFile() }
+        binding.laaiSocket.setOnClickListener { handleNetworkTransfer() }
+        binding.laaiUSB.setOnClickListener { handleUSBTransfer() }
     }
 
     private fun startPhotoSync() {
-        val forceSyncCheck = findViewById<CheckBox>(R.id.force_sync_check)
-        val forceSync = forceSyncCheck.isChecked
+        val forceSync = binding.forceSyncCheck.isChecked
 
         WorkManager.getInstance(this).cancelAllWorkByTag("photo_sync")
 
@@ -346,11 +337,11 @@ class LaaiDatabasisActivity : AppCompatActivity() {
             return
         }
 
-        photoProgress.visibility = View.VISIBLE
-        photoStatus.visibility = View.VISIBLE
-        photoProgress.progress = 0
-        photoStatus.text = "Begin foto-sinkronisasie..."
-        startPhotoSyncBtn.isEnabled = false
+        binding.photoSyncProgress.visibility = View.VISIBLE
+        binding.photoSyncStatus.visibility = View.VISIBLE
+        binding.photoSyncProgress.progress = 0
+        binding.photoSyncStatus.text = "Begin foto-sinkronisasie..."
+        binding.startPhotoSync.isEnabled = false
 
         val inputData = Data.Builder()
             .putString("SERVER_IP", ip)
@@ -364,25 +355,25 @@ class LaaiDatabasisActivity : AppCompatActivity() {
 
         WorkManager.getInstance(this).enqueue(photoWorkRequest)
 
-        currentWorkInfoLiveData?.removeObserver(workInfoObserver ?: return)
+        currentWorkInfoLiveData?.removeObserver(workInfoObserver)
         currentWorkInfoLiveData = WorkManager.getInstance(this).getWorkInfoByIdLiveData(photoWorkRequest.id)
         workInfoObserver = Observer { workInfo ->
             if (workInfo != null) {
                 if (workInfo.state.isFinished) {
-                    photoProgress.visibility = View.GONE
-                    startPhotoSyncBtn.isEnabled = true
+                    binding.photoSyncProgress.visibility = View.GONE
+                    binding.startPhotoSync.isEnabled = true
 
                     if (workInfo.state == WorkInfo.State.SUCCEEDED) {
                         val output = workInfo.outputData
                         val success = output.getInt("SUCCESS_COUNT", 0)
                         val fail = output.getInt("FAIL_COUNT", 0)
                         val message = "Klaar: $success sukses, $fail misluk"
-                        photoStatus.text = message
-                        photoStatus.visibility = View.VISIBLE
+                        binding.photoSyncStatus.text = message
+                        binding.photoSyncStatus.visibility = View.VISIBLE
                         Toast.makeText(this@LaaiDatabasisActivity, message, Toast.LENGTH_LONG).show()
                     } else if (workInfo.state == WorkInfo.State.FAILED) {
-                        photoStatus.text = "Misluk"
-                        photoStatus.visibility = View.VISIBLE
+                        binding.photoSyncStatus.text = "Misluk"
+                        binding.photoSyncStatus.visibility = View.VISIBLE
                         Toast.makeText(this@LaaiDatabasisActivity, "Foto-sinkronisasie het misluk", Toast.LENGTH_SHORT).show()
                     }
                 } else {
@@ -391,10 +382,10 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                     val tot = progress.getInt("total", 0)
                     val guid = progress.getString("currentGuid")
                     if (tot > 0) {
-                        photoProgress.max = tot
-                        photoProgress.progress = prog
-                        photoStatus.text = "Sinchroniseer foto's: $prog/$tot (${guid ?: ""})"
-                        photoStatus.visibility = View.VISIBLE
+                        binding.photoSyncProgress.max = tot
+                        binding.photoSyncProgress.progress = prog
+                        binding.photoSyncStatus.text = "Sinchroniseer foto's: $prog/$tot (${guid ?: ""})"
+                        binding.photoSyncStatus.visibility = View.VISIBLE
                     }
                 }
             }
@@ -405,11 +396,10 @@ class LaaiDatabasisActivity : AppCompatActivity() {
     }
 
     private fun handleSetTimeClick() {
-        val hourEdit = findViewById<EditText>(R.id.time_hour)
-        val minuteEdit = findViewById<EditText>(R.id.time_minute)
-
-        var hour = hourEdit.text.toString()
-        var minute = minuteEdit.text.toString()
+        val timeStr = binding.tydText.text.toString()
+        val parts = timeStr.split(":")
+        var hour = if (parts.isNotEmpty()) parts[0] else "12"
+        var minute = if (parts.size > 1) parts[1] else "00"
 
         if (hour.length < 2) hour = "0$hour"
         if (minute.length < 2) minute = "0$minute"
@@ -466,20 +456,17 @@ class LaaiDatabasisActivity : AppCompatActivity() {
     }
 
     private fun handleDropboxDownload() {
-        findViewById<Button>(R.id.dbLinkButton).apply {
-            setBackgroundColor(Color.GREEN)
-        }
+        binding.dbLinkButton.setBackgroundColor(Color.GREEN)
 
-        val dbLinkView = findViewById<EditText>(R.id.db_link)
-        val downloadUrl = processDownloadUrl(dbLinkView.text.toString())
+        val downloadUrl = processDownloadUrl(binding.dbLink.text.toString())
 
         downloadFromDropBoxUrl(downloadUrl)
 
         settings.edit().putString("DropBox", downloadUrl).apply()
 
-        findViewById<TextView>(R.id.laai_boodskap).text = "WKR - Databasis word nou van Dropbox afgelaai\nMoenie die skerm toemaak nie!!"
-        findViewById<Button>(R.id.dbLinkButton).visibility = View.INVISIBLE
-        findViewById<View>(R.id.laai_local).visibility = View.GONE
+        binding.laaiBoodskap.text = "WKR - Databasis word nou van Dropbox afgelaai\nMoenie die skerm toemaak nie!!"
+        binding.dbLinkButton.visibility = View.INVISIBLE
+        binding.laaiLocal.visibility = View.GONE
     }
 
     private fun processDownloadUrl(url: String): String {
@@ -493,16 +480,14 @@ class LaaiDatabasisActivity : AppCompatActivity() {
     }
 
     private fun handleLoadDatabase() {
-        val radioGroup = findViewById<RadioGroup>(R.id.laai_filelist)
-        val radioButtonID = radioGroup.checkedRadioButtonId
+        val radioButtonID = binding.laaiFilelist.checkedRadioButtonId
 
         if (radioButtonID == -1) {
             Toast.makeText(this, "Kies asseblief 'n databasis", Toast.LENGTH_SHORT).show()
             return
         }
 
-        val deleteButton = findViewById<RadioButton>(R.id.laai_wisuit)
-        delete = deleteButton.isChecked
+        delete = binding.laaiWisuit.isChecked
 
         val filePath = fileList[radioButtonID]["Path"]
         if (LaaiNuweData(filePath!!)) {
@@ -514,8 +499,8 @@ class LaaiDatabasisActivity : AppCompatActivity() {
             navigateToMainActivity()
         }
 
-        deleteButton.isChecked = false
-        radioGroup.clearCheck()
+        binding.laaiWisuit.isChecked = false
+        binding.laaiFilelist.clearCheck()
     }
 
     private fun resetGemeenteSettings() {
@@ -531,7 +516,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
 
     private fun handlePickFile() {
         pickFileLauncher.launch(arrayOf("application/octet-stream", "application/x-sqlite3", "application/vnd.sqlite3"))
-        findViewById<Button>(R.id.laai_picker).setBackgroundColor(Color.GREEN)
+        binding.laaiPicker.setBackgroundColor(Color.GREEN)
     }
 
     // -------------------------------------------------------------------------
@@ -539,56 +524,48 @@ class LaaiDatabasisActivity : AppCompatActivity() {
     // -------------------------------------------------------------------------
 
     private fun handleNetworkTransfer() {
-        val networkButton = findViewById<Button>(R.id.laai_socket)
-        val ipAddress = findViewById<EditText>(R.id.server_ip)
-        laai_boodskap = findViewById(R.id.laai_boodskap)
-
         if (FlagCancelledWiFi) {
             // Cancel ongoing work
             fileDownloadWorkId?.let { WorkManager.getInstance(this).cancelWorkById(it) }
             fileDownloadWorkId = null
-            networkButton.background.clearColorFilter()
-            laai_boodskap.text = "Aflaai gekanselleer"
+            binding.laaiSocket.background.clearColorFilter()
+            binding.laaiBoodskap.text = "Aflaai gekanselleer"
             FlagCancelledWiFi = false
         } else {
-            val ipText = ipAddress.text.toString()
+            val ipText = binding.serverIp.text.toString()
             if (ipText.isNotEmpty() && checkIPv4(ipText)) {
-                networkButton.background.setColorFilter(Color.YELLOW, PorterDuff.Mode.DARKEN)
+                binding.laaiSocket.background.setColorFilter(Color.YELLOW, PorterDuff.Mode.DARKEN)
                 saveIPAddress(ipText)
                 SERVER_IP = ipText
                 SERVER_PORT = 49514
-                startFileDownload(ipText, SERVER_PORT, networkButton, isWiFi = true)
+                startFileDownload(ipText, SERVER_PORT, binding.laaiSocket, isWiFi = true)
                 FlagCancelledWiFi = true
             } else {
-                laai_boodskap.text = "Voer geldige IP adres in asb"
+                binding.laaiBoodskap.text = "Voer geldige IP adres in asb"
             }
         }
     }
 
     private fun handleUSBTransfer() {
-        val usbButton = findViewById<Button>(R.id.laai_USB)
-        val ipAddress = findViewById<EditText>(R.id.server_ip)
-        laai_boodskap = findViewById(R.id.laai_boodskap)
-
         if (FlagCancelledUSB) {
             fileDownloadWorkId?.let { WorkManager.getInstance(this).cancelWorkById(it) }
             fileDownloadWorkId = null
-            usbButton.background.clearColorFilter()
-            ipAddress.setText("")
-            laai_boodskap.text = "Aflaai gekanselleer"
+            binding.laaiUSB.background.clearColorFilter()
+            binding.serverIp.setText("")
+            binding.laaiBoodskap.text = "Aflaai gekanselleer"
             FlagCancelledUSB = false
         } else {
-            usbButton.background.setColorFilter(Color.YELLOW, PorterDuff.Mode.DARKEN)
-            ipAddress.setText("127.0.0.1")
+            binding.laaiUSB.background.setColorFilter(Color.YELLOW, PorterDuff.Mode.DARKEN)
+            binding.serverIp.setText("127.0.0.1")
             SERVER_IP = "localhost"
             SERVER_PORT = 49514
-            startFileDownload("127.0.0.1", SERVER_PORT, usbButton, isWiFi = false)
+            startFileDownload("127.0.0.1", SERVER_PORT, binding.laaiUSB, isWiFi = false)
             FlagCancelledUSB = true
         }
     }
 
     private fun startFileDownload(serverIp: String, port: Int, button: Button, isWiFi: Boolean) {
-        laai_boodskap.text = "Begin aflaai..."
+        binding.laaiBoodskap.text = "Begin aflaai..."
 
         val inputData = Data.Builder()
             .putString(FileDownloadWorker.KEY_SERVER_IP, serverIp)
@@ -610,20 +587,20 @@ class LaaiDatabasisActivity : AppCompatActivity() {
             // Update progress
             val progress = workInfo.progress.getInt(FileDownloadWorker.KEY_PROGRESS, 0)
             if (progress > 0) {
-                laai_boodskap.text = "Ontvang: $progress%"
+                binding.laaiBoodskap.text = "Ontvang: $progress%"
             }
 
             if (workInfo.state.isFinished) {
                 button.background.clearColorFilter()
                 if (workInfo.state == WorkInfo.State.SUCCEEDED) {
-                    laai_boodskap.text = "Aflaai voltooi"
+                    binding.laaiBoodskap.text = "Aflaai voltooi"
                     Toast.makeText(this, "Databasis suksesvol ontvang", Toast.LENGTH_SHORT).show()
                     // Worker already called reloadDatabase, just delay then finish
                     Handler(Looper.getMainLooper()).postDelayed({
                         navigateBackToMain()
                     }, 1500)
                 } else {
-                    laai_boodskap.text = "Aflaai misluk"
+                    binding.laaiBoodskap.text = "Aflaai misluk"
                     Toast.makeText(this, "Kon nie databasis aflaai nie", Toast.LENGTH_LONG).show()
                 }
                 // Reset flags
@@ -638,16 +615,15 @@ class LaaiDatabasisActivity : AppCompatActivity() {
     }
 
     private fun initializeProgressBars() {
-        findViewById<ProgressBar>(R.id.laai_indeterminateBar).visibility = View.GONE
-        findViewById<ProgressBar>(R.id.laai_indeterminateBar2).visibility = View.GONE
+        binding.laaiIndeterminateBar.visibility = View.GONE
+        binding.laaiIndeterminateBar2.visibility = View.GONE
     }
 
     private fun initializeDataInfo() {
-        findViewById<TextView>(R.id.datadate).text = "Huidige Data: ${settingsManager.dataDatum}"
-        val dbLinkView = findViewById<EditText>(R.id.db_link)
+        binding.datadate.text = "Huidige Data: ${settingsManager.dataDatum}"
         val dropBoxUrl = settings.getString("DropBox", "")
         if (!dropBoxUrl.isNullOrEmpty()) {
-            dbLinkView.setText(dropBoxUrl)
+            binding.dbLink.setText(dropBoxUrl)
         }
     }
 
@@ -684,18 +660,15 @@ class LaaiDatabasisActivity : AppCompatActivity() {
     }
 
     private fun setupFileListUI() {
-        val fileListGroup = findViewById<RadioGroup>(R.id.laai_filelist)
-        val loadButton = findViewById<Button>(R.id.laai_laai)
-
         if (this.fileList.isEmpty()) {
-            loadButton.visibility = View.GONE
+            binding.laaiLaai.visibility = View.GONE
             return
         }
 
-        loadButton.visibility = View.VISIBLE
+        binding.laaiLaai.visibility = View.VISIBLE
 
         for (i in this.fileList.indices) {
-            addFileRadioButton(fileListGroup, i)
+            addFileRadioButton(binding.laaiFilelist, i)
         }
     }
 
@@ -777,11 +750,10 @@ class LaaiDatabasisActivity : AppCompatActivity() {
 
     private fun handleAutomaticDownload() {
         val fromMenu = settings.getBoolean("FROM_MENU", false)
-        val dbLinkView = findViewById<EditText>(R.id.db_link)
 
-        if (!fromMenu && AutoDL && dbLinkView.text.toString() != getString(R.string.dbLink)) {
+        if (!fromMenu && AutoDL && binding.dbLink.text.toString() != getString(R.string.dbLink)) {
             settings.edit().putBoolean("FROM_MENU", false).apply()
-            findViewById<Button>(R.id.dbLinkButton).performClick()
+            binding.dbLinkButton.performClick()
         }
     }
 
@@ -921,7 +893,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                                         return
                                     }
 
-                                    findViewById<Button>(R.id.dbLinkButton).visibility = View.VISIBLE
+                                    binding.dbLinkButton.visibility = View.VISIBLE
                                     contentResolver.call(WinkerkContract.winkerkEntry.CONTENT_URI, "closeDatabase", null, null)
 
                                     var input: InputStream? = null
@@ -945,7 +917,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                                         input?.close()
                                         output?.close()
                                     }
-                                    try { unregisterReceiver(recieverDownloadComplete) } catch (_: IllegalArgumentException) {}
+                                    try { recieverDownloadComplete?.let { unregisterReceiver(it) } } catch (_: IllegalArgumentException) {}
                                     reloadDatabaseAndFinish()
                                     return
                                 }
@@ -957,7 +929,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                         }
                     }
                 }
-                try { unregisterReceiver(recieverDownloadComplete) } catch (_: IllegalArgumentException) {}
+                try { recieverDownloadComplete?.let { unregisterReceiver(it) } } catch (_: IllegalArgumentException) {}
             }
         }
         registerReceiver(recieverDownloadComplete, intentFilter, RECEIVER_EXPORTED)
@@ -978,7 +950,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
     private fun showError(message: String) {
         runOnUiThread {
             Toast.makeText(this, message, Toast.LENGTH_LONG).show()
-            laai_boodskap.text = message
+            binding.laaiBoodskap.text = message
         }
     }
 

@@ -1,5 +1,6 @@
 package za.co.jpsoft.winkerkreader.data
 
+import za.co.jpsoft.winkerkreader.BuildConfig   
 import za.co.jpsoft.winkerkreader.WinkerkReader
 import za.co.jpsoft.winkerkreader.data.WinkerkContract
 
@@ -107,21 +108,27 @@ class WinkerkProvider : ContentProvider() {
         selectionArgs: Array<out String>?,
         sortOrder: String?
     ): Cursor? {
-        Log.e("DEBUG_PROVIDER", "=== QUERY START ===")
-        Log.e("DEBUG_PROVIDER", "uri: $uri")
-        Log.e("DEBUG_PROVIDER", "selection: $selection")
-        Log.e("DEBUG_PROVIDER", "selectionArgs: ${selectionArgs?.joinToString()}")
-        Log.e("DEBUG_PROVIDER", "sortOrder: $sortOrder")
+        if (BuildConfig.DEBUG) {
+            Log.e("DEBUG_PROVIDER", "=== QUERY START ===")
+            Log.e("DEBUG_PROVIDER", "uri: $uri")
+            Log.e("DEBUG_PROVIDER", "selection: $selection")
+            Log.e("DEBUG_PROVIDER", "selectionArgs: ${selectionArgs?.joinToString()}")
+            Log.e("DEBUG_PROVIDER", "sortOrder: $sortOrder")
+        }
 
         var cursor: Cursor? = null
         val match = uriMatcher.match(uri)
-        Log.e("DEBUG_PROVIDER", "match code: $match")
+        if (BuildConfig.DEBUG) {
+            Log.e("DEBUG_PROVIDER", "match code: $match")
+        }
 
         var count = 0
 
         when (match) {
             GEMEENTE_NAAM -> {
-                Log.e("DEBUG_PROVIDER", "Case: GEMEENTE_NAAM")
+                if (BuildConfig.DEBUG) {
+                    Log.e("DEBUG_PROVIDER", "Case: GEMEENTE_NAAM")
+                }
                 val db = mDbHelper?.readableDatabase ?: return null
                 Log.v(tag, "GEMEENTE_NAAM ${db.isOpen}")
                 try {
@@ -204,9 +211,8 @@ class WinkerkProvider : ContentProvider() {
                     db.execSQL("ATTACH '$dbPath' as INFO;")
                     cursor = db.rawQuery(selection ?: "", selectionArgs)
                     count = try { cursor?.count ?: 0 } catch (e: SQLiteException) { 0 }
-                    db.execSQL("detach database INFO")
-                } catch (e: SQLException) {
-                    Log.e("WinkerkReader", "FOTO_SYNC >> $e")
+                } finally {
+                    try { db.execSQL("detach database INFO") } catch (_: Exception) {}
                 }
             }
 
@@ -293,12 +299,12 @@ class WinkerkProvider : ContentProvider() {
                 mInfoDbHelper = null
             }
             "reloadDatabase" -> {
-                mDbHelper = null
-                mInfoDbHelper = null
                 Log.d(tag, "reloadDatabase called")
                 // Close existing helpers and remove them from the map
-                mDbHelper?.let { WinkerkDbHelper.closeInstance(WINKERK_DB) }
-                mInfoDbHelper?.let { WinkerkDbHelper.closeInstance(INFO_DB) }
+                WinkerkDbHelper.closeInstance(WINKERK_DB)
+                WinkerkDbHelper.closeInstance(INFO_DB)
+                mDbHelper = null
+                mInfoDbHelper = null
 
                 // Obtain fresh instances
                 val ctx = context ?: return Bundle.EMPTY
@@ -346,7 +352,6 @@ class WinkerkProvider : ContentProvider() {
         if (rowsUpdated != 0) {
             context?.contentResolver?.notifyChange(uri, null)
         }
-        db.close()
         return rowsUpdated
     }
 
@@ -360,7 +365,6 @@ class WinkerkProvider : ContentProvider() {
         if (rowsUpdated != 0) {
             context?.contentResolver?.notifyChange(uri, null)
         }
-        db.close()
         return rowsUpdated
     }
 
@@ -372,10 +376,10 @@ class WinkerkProvider : ContentProvider() {
     ): Int {
         if (values == null || values.size() == 0) return 0
         val db = mDbHelper?.writableDatabase ?: return 0
-        selection?.let { db.execSQL(it) }
-        val rowsUpdated = 1
-        context?.contentResolver?.notifyChange(uri, null)
-        db.close()
+        val rowsUpdated = db.update(winkerkEntry.ADRESSE_TABLENAME, values, selection, selectionArgs)
+        if (rowsUpdated != 0) {
+            context?.contentResolver?.notifyChange(uri, null)
+        }
         return rowsUpdated
     }
 

@@ -44,14 +44,21 @@ class EventViewModel : ViewModel() {
                 queryDatabase(context, selection)?.use { cursor ->
                     buildList {
                         while (cursor.moveToNext()) {
-                            add(MemberItem.fromCursor(cursor))
+                            try {
+                                add(MemberItem.fromCursor(cursor))
+                            } catch (e: Exception) {
+                                Log.e("EventViewModel", "Failed to convert row", e)
+                            }
                         }
                     }
                 } ?: emptyList()
             } else {
                 emptyList()
             }
-
+            Log.d("EventViewModel", "Built ${members.size} members")
+            members.take(3).forEach {
+                Log.d("EventViewModel", "Sample: ${it.name} ${it.surname}, id=${it.id}")
+            }
             _eventList.postValue(members)
         }
     }
@@ -112,7 +119,8 @@ class EventViewModel : ViewModel() {
                 query,
                 null,
                 null
-            )
+            ).also { cursor ->
+                Log.d("EventViewModel", "Query returned ${cursor?.count ?: 0} rows")}
         } catch (e: Exception) {
             Log.e("EventViewModel", "Query failed: ${e.message}\nQuery: $query")
             null

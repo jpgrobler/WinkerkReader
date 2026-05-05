@@ -11,13 +11,15 @@ android {
     defaultConfig {
         applicationId = "za.co.jpsoft.winkerkreader"
         minSdk = 26
-        versionCode = 91
-        versionName = "4.1 test r91"
+        versionCode = 96
+        versionName = "4.1 test r96"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"  // Fixed
         targetSdk = 35
         vectorDrawables.useSupportLibrary = true
     }
-
+    buildFeatures {
+        buildConfig = true
+    }
     viewBinding {
         enabled = true
     }
@@ -29,7 +31,7 @@ android {
             keyAlias = RELEASE_KEY_ALIAS
             keyPassword = RELEASE_KEY_PASSWORD
         }
-    }
+       }
 
     sourceSets {
         main {
@@ -104,6 +106,7 @@ dependencies {
     implementation "androidx.core:core-ktx:1.18.0"
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2"
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2'
 
     // ========== CORE ANDROID LIBRARIES ==========
     implementation 'androidx.appcompat:appcompat:1.7.1'
@@ -121,8 +124,8 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-service:2.10.0'
 
     // ========== NAVIGATION COMPONENTS ==========
-    implementation "androidx.navigation:navigation-fragment-ktx:2.9.7"
-    implementation "androidx.navigation:navigation-ui-ktx:2.9.7"
+    implementation "androidx.navigation:navigation-fragment-ktx:2.9.8"
+    implementation "androidx.navigation:navigation-ui-ktx:2.9.8"
 
     // ========== RECYCLER VIEW ==========
     implementation 'androidx.recyclerview:recyclerview:1.4.0'
@@ -133,7 +136,7 @@ dependencies {
     kapt "androidx.room:room-compiler:$room_version"
 
     // ========== WORK MANAGER ==========
-    implementation 'androidx.work:work-runtime-ktx:2.11.1'
+    implementation 'androidx.work:work-runtime-ktx:2.11.2'
 
     // ========== PREFERENCES ==========
     implementation 'androidx.preference:preference-ktx:1.2.1'
@@ -146,9 +149,9 @@ dependencies {
     implementation 'com.readystatesoftware.sqliteasset:sqliteassethelper:2.0.1'
     implementation 'com.github.yukuku:ambilwarna:2.0.1'
     implementation 'com.googlecode.ez-vcard:ez-vcard:0.12.2'
-    implementation 'com.github.bumptech.glide:glide:5.0.5'
-    kapt 'com.github.bumptech.glide:compiler:5.0.5'
-    implementation 'com.google.code.gson:gson:2.13.2'
+    implementation 'com.github.bumptech.glide:glide:5.0.7'
+    kapt 'com.github.bumptech.glide:compiler:5.0.7'
+    implementation 'com.google.code.gson:gson:2.14.0'
     implementation 'com.squareup.okhttp3:okhttp:5.3.2'
     implementation 'com.squareup.retrofit2:retrofit:3.0.0'
     implementation 'com.squareup.retrofit2:converter-gson:3.0.0'
@@ -167,7 +170,7 @@ dependencies {
     androidTestImplementation "androidx.test.espresso:espresso-core:$espressoCoreVersion"
     androidTestImplementation 'androidx.test.espresso:espresso-intents:3.7.0'
     androidTestImplementation 'androidx.test.espresso:espresso-accessibility:3.7.0'
-    androidTestImplementation 'androidx.work:work-testing:2.11.1'
+    androidTestImplementation 'androidx.work:work-testing:2.11.2'
     androidTestImplementation 'androidx.test:rules:1.7.0'
     androidTestImplementation 'androidx.test:runner:1.7.0'
     androidTestImplementation 'androidx.test.uiautomator:uiautomator:2.3.0'

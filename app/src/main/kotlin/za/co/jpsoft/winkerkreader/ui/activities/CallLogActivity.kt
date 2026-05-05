@@ -4,10 +4,8 @@ import za.co.jpsoft.winkerkreader.ui.adapters.CallLogAdapter
 import za.co.jpsoft.winkerkreader.utils.CallLogExporter
 import za.co.jpsoft.winkerkreader.utils.PhoneCallMonitor
 
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -18,49 +16,43 @@ import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.DatabaseHelper
+import za.co.jpsoft.winkerkreader.databinding.ActivityCallLogBinding
+import za.co.jpsoft.winkerkreader.utils.UnifiedCallMonitor
 
 class CallLogActivity : AppCompatActivity() {
 
-    private lateinit var recyclerView: RecyclerView
+    private lateinit var binding: ActivityCallLogBinding
     private lateinit var callLogAdapter: CallLogAdapter
     private lateinit var databaseHelper: DatabaseHelper
-    private lateinit var progressBar: ProgressBar
     private var currentCallLogs: List<za.co.jpsoft.winkerkreader.data.models.CallLog> = emptyList()
-
-    /** Refreshes the list whenever a call is logged while this screen is visible. */
-    private val callLogReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            loadCallLogs()
-        }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_call_log)
+        binding = ActivityCallLogBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         supportActionBar?.apply {
             setDisplayHomeAsUpEnabled(true)
             title = "Oproeplog"
         }
 
-        val clearButton = findViewById<Button>(R.id.clearButton)
-        clearButton.setOnClickListener { showClearLogsDialog() }
-
-        progressBar = findViewById(R.id.progressBar)
-        recyclerView = findViewById(R.id.recyclerView)
-        databaseHelper = DatabaseHelper(this)
+        binding.clearButton.setOnClickListener { showClearLogsDialog() }
+        databaseHelper = DatabaseHelper.getInstance(this)
 
         setupRecyclerView()
         loadCallLogs()
+        observeCallLogUpdates()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -87,9 +79,9 @@ class CallLogActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView() {
+        binding.recyclerView.layoutManager = LinearLayoutManager(this)
         callLogAdapter = CallLogAdapter(emptyList())
-        recyclerView.layoutManager = LinearLayoutManager(this)
-        recyclerView.adapter = callLogAdapter
+        binding.recyclerView.adapter = callLogAdapter
     }
 
     private fun loadCallLogs() {
@@ -236,22 +228,22 @@ class CallLogActivity : AppCompatActivity() {
     }
 
     private fun showProgress(show: Boolean) {
-        progressBar.visibility = if (show) android.view.View.VISIBLE else android.view.View.GONE
+        binding.progressBar.visibility = if (show) android.view.View.VISIBLE else android.view.View.GONE
+    }
+
+    private fun observeCallLogUpdates() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                UnifiedCallMonitor.getInstance(this@CallLogActivity).callLogUpdates.collect {
+                    loadCallLogs()
+                }
+            }
+        }
     }
 
     override fun onResume() {
         super.onResume()
         // Reload when returning to the screen
         loadCallLogs()
-        // Register for live updates while the activity is visible
-        LocalBroadcastManager.getInstance(this).registerReceiver(
-            callLogReceiver,
-            IntentFilter(PhoneCallMonitor.ACTION_CALL_LOG_UPDATED)
-        )
-    }
-
-    override fun onPause() {
-        super.onPause()
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(callLogReceiver)
     }
 }

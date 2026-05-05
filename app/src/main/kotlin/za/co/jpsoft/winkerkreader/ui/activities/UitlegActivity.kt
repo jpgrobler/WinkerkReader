@@ -19,6 +19,7 @@ import yuku.ambilwarna.AmbilWarnaDialog
 import za.co.jpsoft.winkerkreader.data.models.CalendarInfo
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
+import za.co.jpsoft.winkerkreader.databinding.UitlegBinding
 
 class UitlegActivity : AppCompatActivity() {
 
@@ -41,41 +42,8 @@ class UitlegActivity : AppCompatActivity() {
         )
     }
 
-    // UI Components - Display Settings
-    private lateinit var fotoCheck: CheckBox
-    private lateinit var eposCheck: CheckBox
-    private lateinit var whatsappCheck: CheckBox
-    private lateinit var verjaarsdagCheck: CheckBox
-    private lateinit var ouderdomCheck: CheckBox
-    private lateinit var huweliksdatumCheck: CheckBox
-    private lateinit var wykCheck: CheckBox
-    private lateinit var selfoonCheck: CheckBox
-    private lateinit var telefoonCheck: CheckBox
-
-    // UI Components - Function Settings
-    private lateinit var autoStartSwitch: CheckBox
-    private lateinit var oproepMonitor: CheckBox
-    private lateinit var oproepLog: CheckBox
-    private lateinit var whatsapp1: CheckBox
-    private lateinit var whatsapp2: CheckBox
-    private lateinit var whatsapp3: CheckBox
-    private lateinit var eposHtml: CheckBox
-    private lateinit var uitlegLogVoip: CheckBox
-    private lateinit var defUitleg: Spinner
-
-    // UI Components - Widget Settings
-    private lateinit var showDoop: CheckBox
-    private lateinit var showBelydenis: CheckBox
-    private lateinit var showHuwelik: CheckBox
-    private lateinit var showSterwe: CheckBox
-
-    // UI Components - Color Settings
-    private lateinit var gem1: TextView
-    private lateinit var gem2: TextView
-    private lateinit var gem3: TextView
-
+    private lateinit var binding: UitlegBinding
     // Calendar components
-    private lateinit var calendarSpinner: Spinner
     private var availableCalendars: List<CalendarInfo> = emptyList()
     private var selectedCalendarId: Long = -1
     private var calendarManager: CalendarManager? = null
@@ -93,7 +61,8 @@ class UitlegActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         try {
-            setContentView(R.layout.uitleg)
+            binding = UitlegBinding.inflate(layoutInflater)
+            setContentView(binding.root)
 
             // Initialize settings manager with error handling
             if (!initializeSettingsManager()) {
@@ -119,9 +88,9 @@ class UitlegActivity : AppCompatActivity() {
 
     private fun loadCallLoggingSettings() {
         try {
-            oproepLog.isChecked = settingsManager.callLogEnabled
-            uitlegLogVoip.isChecked = settingsManager.voipLogEnabled
-            Log.d(TAG, "Loaded call logging settings - Telephone: ${oproepLog.isChecked}, VOIP: ${uitlegLogVoip.isChecked}")
+            binding.uitlegLogOproepe.isChecked = settingsManager.callLogEnabled
+            binding.uitlegLogVOIP.isChecked = settingsManager.voipLogEnabled
+            Log.d(TAG, "Loaded call logging settings - Telephone: ${binding.uitlegLogOproepe.isChecked}, VOIP: ${binding.uitlegLogVOIP.isChecked}")
         } catch (e: Exception) {
             Log.e(TAG, "Error loading call logging settings", e)
             Toast.makeText(this, "Error loading settings", Toast.LENGTH_SHORT).show()
@@ -149,46 +118,15 @@ class UitlegActivity : AppCompatActivity() {
 
     private fun initializeComponents() {
         try {
-            fotoCheck = findViewById(R.id.uitleg_foto)
-            eposCheck = findViewById(R.id.uitleg_epos)
-            whatsappCheck = findViewById(R.id.uitleg_whatsap)
-            verjaarsdagCheck = findViewById(R.id.uitleg_verjaarsdag)
-            ouderdomCheck = findViewById(R.id.uitleg_ouderdom)
-            huweliksdatumCheck = findViewById(R.id.uitleg_Huweliksdag)
-            wykCheck = findViewById(R.id.uitleg_wyk)
-            selfoonCheck = findViewById(R.id.uitleg_selfoon)
-            telefoonCheck = findViewById(R.id.uitleg_telefoon)
-
-            autoStartSwitch = findViewById(R.id.autoStartSwitch)
-            oproepMonitor = findViewById(R.id.uitleg_Monitor_Oproepe)
-            oproepLog = findViewById(R.id.uitleg_Log_Oproepe)
-            defUitleg = findViewById(R.id.layoutOpsies)
-            whatsapp1 = findViewById(R.id.uitleg_w1)
-            whatsapp2 = findViewById(R.id.uitleg_w2)
-            whatsapp3 = findViewById(R.id.uitleg_w3)
-            eposHtml = findViewById(R.id.uitleg_html)
-            uitlegLogVoip = findViewById(R.id.uitleg_Log_VOIP)
-
-            showDoop = findViewById(R.id.widget_Doop_select)
-            showBelydenis = findViewById(R.id.widget_Belydenis_select)
-            showHuwelik = findViewById(R.id.widget_Huwelik_select)
-            showSterwe = findViewById(R.id.widget_Sterf)
-
-            gem1 = findViewById(R.id.gem1)
             if (!settingsManager.gemeenteNaam.isNullOrEmpty()) {
-                gem1.setText(settingsManager.gemeenteNaam)
+                binding.gem1.setText(settingsManager.gemeenteNaam)
             }
-            gem2 = findViewById(R.id.gem2)
             if (!settingsManager.gemeente2Naam.isNullOrEmpty()) {
-                gem2.setText(settingsManager.gemeente2Naam)
+                binding.gem2.setText(settingsManager.gemeente2Naam)
             }
-            gem3 = findViewById(R.id.gem3)
             if (!settingsManager.gemeente3Naam.isNullOrEmpty()) {
-                gem3.setText(settingsManager.gemeente3Naam)
+                binding.gem3.setText(settingsManager.gemeente3Naam)
             }
-            calendarSpinner = findViewById(R.id.calendarSpinner)
-
-            validateRequiredComponents()
         } catch (e: Exception) {
             Log.e(TAG, "Error initializing components", e)
             throw RuntimeException("Failed to initialize UI components", e)
@@ -196,21 +134,8 @@ class UitlegActivity : AppCompatActivity() {
     }
 
     private fun validateRequiredComponents() {
-        val missing = mutableListOf<String>()
-        if (!::fotoCheck.isInitialized) missing.add("fotoCheck")
-        if (!::eposCheck.isInitialized) missing.add("eposCheck")
-        if (!::whatsappCheck.isInitialized) missing.add("whatsappCheck")
-        if (!::gem1.isInitialized) missing.add("gem1")
-        if (!::gem2.isInitialized) missing.add("gem2")
-        if (!::gem3.isInitialized) missing.add("gem3")
-        if (!::defUitleg.isInitialized) missing.add("defUitleg")
-
-        if (missing.isNotEmpty()) {
-            val missingStr = missing.joinToString(", ")
-            Log.e(TAG, "Missing required components: $missingStr")
-            throw RuntimeException("Missing required UI components: $missingStr")
-        }
-        Log.d(TAG, "All required components initialized successfully")
+        // Handled by ViewBinding - if binding is initialized, views are present
+        Log.d(TAG, "Components handled by ViewBinding")
     }
 
     private fun loadSavedPreferences(): Boolean {
@@ -229,15 +154,15 @@ class UitlegActivity : AppCompatActivity() {
 
     private fun setDisplayPreferences(): Boolean {
         return try {
-            fotoCheck.isChecked = settingsManager.isListFoto
-            eposCheck.isChecked = settingsManager.isListEpos
-            whatsappCheck.isChecked = settingsManager.isListWhatsapp
-            verjaarsdagCheck.isChecked = settingsManager.isListVerjaarBlok
-            ouderdomCheck.isChecked = settingsManager.isListOuderdom
-            huweliksdatumCheck.isChecked = settingsManager.isListHuwelikBlok
-            wykCheck.isChecked = settingsManager.isListWyk
-            selfoonCheck.isChecked = settingsManager.isListSelfoon
-            telefoonCheck.isChecked = settingsManager.isListTelefoon
+            binding.uitlegFoto.isChecked = settingsManager.isListFoto
+            binding.uitlegEpos.isChecked = settingsManager.isListEpos
+            binding.uitlegWhatsap.isChecked = settingsManager.isListWhatsapp
+            binding.uitlegVerjaarsdag.isChecked = settingsManager.isListVerjaarBlok
+            binding.uitlegOuderdom.isChecked = settingsManager.isListOuderdom
+            binding.uitlegHuweliksdag.isChecked = settingsManager.isListHuwelikBlok
+            binding.uitlegWyk.isChecked = settingsManager.isListWyk
+            binding.uitlegSelfoon.isChecked = settingsManager.isListSelfoon
+            binding.uitlegTelefoon.isChecked = settingsManager.isListTelefoon
             true
         } catch (e: Exception) {
             Log.e(TAG, "Error setting display preferences", e)
@@ -247,15 +172,15 @@ class UitlegActivity : AppCompatActivity() {
 
     private fun setFunctionPreferences(): Boolean {
         return try {
-            oproepMonitor.isChecked = settingsManager.callMonitorEnabled
-            oproepLog.isChecked = settingsManager.callLogEnabled
-            eposHtml.isChecked = settingsManager.eposHtml
-            whatsapp1.isChecked = settingsManager.whatsapp1
-            whatsapp2.isChecked = settingsManager.whatsapp2
-            whatsapp3.isChecked = settingsManager.whatsapp3
-            autoStartSwitch.isChecked = settingsManager.autoStartEnabled
+            binding.uitlegMonitorOproepe.isChecked = settingsManager.callMonitorEnabled
+            binding.uitlegLogOproepe.isChecked = settingsManager.callLogEnabled
+            binding.uitlegHtml.isChecked = settingsManager.eposHtml
+            binding.uitlegW1.isChecked = settingsManager.whatsapp1
+            binding.uitlegW2.isChecked = settingsManager.whatsapp2
+            binding.uitlegW3.isChecked = settingsManager.whatsapp3
+            binding.autoStartSwitch.isChecked = settingsManager.autoStartEnabled
 
-            autoStartSwitch.setOnCheckedChangeListener { _, isChecked ->
+            binding.autoStartSwitch.setOnCheckedChangeListener { _, isChecked ->
                 saveAutoStartSetting(isChecked)
                 settingsManager.autoStartEnabled = isChecked
                 if (isChecked) {
@@ -267,7 +192,7 @@ class UitlegActivity : AppCompatActivity() {
 
             // Set spinner selection with validation
             val defaultLayout = settingsManager.defLayout
-            setSpinnerSelection(defUitleg, defaultLayout)
+            setSpinnerSelection(binding.layoutOpsies, defaultLayout)
 
             true
         } catch (e: Exception) {
@@ -278,10 +203,10 @@ class UitlegActivity : AppCompatActivity() {
 
     private fun setWidgetPreferences(): Boolean {
         return try {
-            showDoop.isChecked = settingsManager.widgetDoop
-            showBelydenis.isChecked = settingsManager.widgetBelydenis
-            showHuwelik.isChecked = settingsManager.widgetHuwelik
-            showSterwe.isChecked = settingsManager.widgetSterf
+            binding.widgetDoopSelect.isChecked = settingsManager.widgetDoop
+            binding.widgetBelydenisSelect.isChecked = settingsManager.widgetBelydenis
+            binding.widgetHuwelikSelect.isChecked = settingsManager.widgetHuwelik
+            binding.widgetSterf.isChecked = settingsManager.widgetSterf
             true
         } catch (e: Exception) {
             Log.e(TAG, "Error setting widget preferences", e)
@@ -292,9 +217,9 @@ class UitlegActivity : AppCompatActivity() {
     private fun setColorPreferences(): Boolean {
         return try {
             // Force update backgrounds with proper context
-            updateTextViewBackground(gem1, settingsManager.gemeenteKleur)
-            updateTextViewBackground(gem2, settingsManager.gemeente2Kleur)
-            updateTextViewBackground(gem3, settingsManager.gemeente3Kleur)
+            updateTextViewBackground(binding.gem1, settingsManager.gemeenteKleur)
+            updateTextViewBackground(binding.gem2, settingsManager.gemeente2Kleur)
+            updateTextViewBackground(binding.gem3, settingsManager.gemeente3Kleur)
             true
         } catch (e: Exception) {
             Log.e(TAG, "Error setting color preferences", e)
@@ -365,16 +290,16 @@ class UitlegActivity : AppCompatActivity() {
     }
 
     private fun setupSaveButtonListeners() {
-        findViewById<View>(R.id.uitleg_stoor).setOnClickListener { saveDisplaySettings() }
-        findViewById<View>(R.id.funksoie_Stoor).setOnClickListener { saveFunctionSettings() }
-        findViewById<View>(R.id.save_widget).setOnClickListener { saveWidgetSettings() }
-        findViewById<View>(R.id.saveColor).setOnClickListener { saveColorSettings() }
+        binding.uitlegStoor.setOnClickListener { saveDisplaySettings() }
+        binding.funksoieStoor.setOnClickListener { saveFunctionSettings() }
+        binding.saveWidget.setOnClickListener { saveWidgetSettings() }
+        binding.saveColor.setOnClickListener { saveColorSettings() }
     }
 
     private fun setupColorPickerListeners() {
-        gem1.setOnClickListener { openColorPickerDialog(it, 1) }
-        gem2.setOnClickListener { openColorPickerDialog(it, 2) }
-        gem3.setOnClickListener { openColorPickerDialog(it, 3) }
+        binding.gem1.setOnClickListener { openColorPickerDialog(it, 1) }
+        binding.gem2.setOnClickListener { openColorPickerDialog(it, 2) }
+        binding.gem3.setOnClickListener { openColorPickerDialog(it, 3) }
     }
 
     private fun saveDisplaySettings() {
@@ -382,15 +307,15 @@ class UitlegActivity : AppCompatActivity() {
             showProgressDialog("Saving display settings...")
 
             // Update settings properties
-            settingsManager.isListFoto = fotoCheck.isChecked
-            settingsManager.isListEpos = eposCheck.isChecked
-            settingsManager.isListWhatsapp = whatsappCheck.isChecked
-            settingsManager.isListVerjaarBlok = verjaarsdagCheck.isChecked
-            settingsManager.isListOuderdom = ouderdomCheck.isChecked
-            settingsManager.isListHuwelikBlok = huweliksdatumCheck.isChecked
-            settingsManager.isListWyk = wykCheck.isChecked
-            settingsManager.isListSelfoon = selfoonCheck.isChecked
-            settingsManager.isListTelefoon = telefoonCheck.isChecked
+            settingsManager.isListFoto = binding.uitlegFoto.isChecked
+            settingsManager.isListEpos = binding.uitlegEpos.isChecked
+            settingsManager.isListWhatsapp = binding.uitlegWhatsap.isChecked
+            settingsManager.isListVerjaarBlok = binding.uitlegVerjaarsdag.isChecked
+            settingsManager.isListOuderdom = binding.uitlegOuderdom.isChecked
+            settingsManager.isListHuwelikBlok = binding.uitlegHuweliksdag.isChecked
+            settingsManager.isListWyk = binding.uitlegWyk.isChecked
+            settingsManager.isListSelfoon = binding.uitlegSelfoon.isChecked
+            settingsManager.isListTelefoon = binding.uitlegTelefoon.isChecked
 
             hideProgressDialog()
             showSuccessToast("Display settings saved successfully")
@@ -406,22 +331,22 @@ class UitlegActivity : AppCompatActivity() {
             showProgressDialog("Saving function settings...")
 
             val calendarId = selectedCalendarId
-            val selectedLayout = defUitleg.selectedItem?.toString() ?: ""
+            val selectedLayout = binding.layoutOpsies.selectedItem?.toString() ?: ""
 
             // Save settings
-            settingsManager.callMonitorEnabled = oproepMonitor.isChecked
-            settingsManager.callLogEnabled = oproepLog.isChecked
-            settingsManager.voipLogEnabled = uitlegLogVoip.isChecked
+            settingsManager.callMonitorEnabled = binding.uitlegMonitorOproepe.isChecked
+            settingsManager.callLogEnabled = binding.uitlegLogOproepe.isChecked
+            settingsManager.voipLogEnabled = binding.uitlegLogVOIP.isChecked
             settingsManager.defLayout = selectedLayout
-            settingsManager.whatsapp1 = whatsapp1.isChecked
-            settingsManager.whatsapp2 = whatsapp2.isChecked
-            settingsManager.whatsapp3 = whatsapp3.isChecked
-            settingsManager.eposHtml = eposHtml.isChecked
+            settingsManager.whatsapp1 = binding.uitlegW1.isChecked
+            settingsManager.whatsapp2 = binding.uitlegW2.isChecked
+            settingsManager.whatsapp3 = binding.uitlegW3.isChecked
+            settingsManager.eposHtml = binding.uitlegHtml.isChecked
             settingsManager.selectedCalendarId = calendarId
 
             hideProgressDialog()
             showSuccessToast("Function settings saved successfully")
-            if (uitlegLogVoip.isChecked) {
+            if (binding.uitlegLogVOIP.isChecked) {
                 showInfoToast("VOIP call logging is now enabled")
             } else {
                 showInfoToast("VOIP call logging is now disabled")
@@ -437,10 +362,10 @@ class UitlegActivity : AppCompatActivity() {
         try {
             showProgressDialog("Saving widget settings...")
 
-            settingsManager.widgetDoop = showDoop.isChecked
-            settingsManager.widgetBelydenis = showBelydenis.isChecked
-            settingsManager.widgetHuwelik = showHuwelik.isChecked
-            settingsManager.widgetSterf = showSterwe.isChecked
+            settingsManager.widgetDoop = binding.widgetDoopSelect.isChecked
+            settingsManager.widgetBelydenis = binding.widgetBelydenisSelect.isChecked
+            settingsManager.widgetHuwelik = binding.widgetHuwelikSelect.isChecked
+            settingsManager.widgetSterf = binding.widgetSterf.isChecked
 
             hideProgressDialog()
             showSuccessToast("Widget settings saved successfully")
@@ -668,8 +593,8 @@ class UitlegActivity : AppCompatActivity() {
             val emptyMessage = listOf(message)
             val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, emptyMessage)
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-            calendarSpinner.adapter = adapter
-            calendarSpinner.isEnabled = false
+            binding.calendarSpinner.adapter = adapter
+            binding.calendarSpinner.isEnabled = false
             Log.w(TAG, "Calendar spinner disabled: $message")
         } catch (e: Exception) {
             Log.e(TAG, "Error setting up empty calendar spinner", e)
@@ -678,7 +603,7 @@ class UitlegActivity : AppCompatActivity() {
 
     private fun setupCalendarSpinner() {
         try {
-            calendarSpinner.isEnabled = true
+            binding.calendarSpinner.isEnabled = true
 
             val calendarNames = availableCalendars.map {
                 "${it.displayName} (${it.accountName})"
@@ -686,11 +611,11 @@ class UitlegActivity : AppCompatActivity() {
 
             val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, calendarNames)
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-            calendarSpinner.adapter = adapter
+            binding.calendarSpinner.adapter = adapter
 
             selectSavedCalendar()
 
-            calendarSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            binding.calendarSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                 override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                     try {
                         if (availableCalendars.isNotEmpty() && position < availableCalendars.size) {
@@ -717,7 +642,7 @@ class UitlegActivity : AppCompatActivity() {
             if (selectedCalendarId != -1L) {
                 for ((index, calendar) in availableCalendars.withIndex()) {
                     if (calendar.id == selectedCalendarId) {
-                        calendarSpinner.setSelection(index)
+                        binding.calendarSpinner.setSelection(index)
                         Log.d(TAG, "Previously saved calendar selected at position: $index")
                         return
                     }

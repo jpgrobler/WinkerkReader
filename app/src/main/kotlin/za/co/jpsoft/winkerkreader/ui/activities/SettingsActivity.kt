@@ -12,41 +12,96 @@ import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.TextView
-import za.co.jpsoft.winkerkreader.data.WinkerkContract
-import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
+import androidx.appcompat.app.AppCompatActivity
 import za.co.jpsoft.winkerkreader.R
+import za.co.jpsoft.winkerkreader.data.WinkerkContract
+import za.co.jpsoft.winkerkreader.databinding.SubMenuBinding
+import za.co.jpsoft.winkerkreader.databinding.SubMenuItemBinding
+
 /**
  * Created by Pieter Grobler on 06/09/2017.
  */
-class SettingsActivity : ListActivity() {
+class SettingsActivity : AppCompatActivity() {
+
+    private lateinit var binding: SubMenuBinding
 
     private lateinit var settingList: ArrayList<SearchCheckBox>
     private val prefsManager by lazy { SearchCheckBoxPreferences(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.sub_menu)
+        binding = SubMenuBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         title = "Soek in velde:"
 
-        // Load saved list or create new one
+        // Load saved list from preferences
         settingList = prefsManager.getSearchCheckBoxList()
 
         if (settingList.isEmpty()) {
+            // No saved data – create fresh default list
             settingList = createDefaultSearchList()
             prefsManager.saveSearchCheckBoxList(settingList)
+        } else {
+            // ... (Repaired logic remains the same)
+            val defaultList = createDefaultSearchList()
+            val defaultMap = defaultList.associateBy { it.columnName }
+            var needsSave = false
+
+            for (savedItem in settingList) {
+                if (savedItem.columnName.isBlank() || savedItem.description.isBlank()) {
+                    needsSave = true
+                    break
+                }
+            }
+
+            if (needsSave) {
+                val repairedList = ArrayList<SearchCheckBox>()
+                for (savedItem in settingList) {
+                    val defaultItem = defaultMap[savedItem.columnName]
+                    if (defaultItem != null && savedItem.columnName.isNotBlank()) {
+                        repairedList.add(
+                            SearchCheckBox(
+                                columnName = defaultItem.columnName,
+                                columnValue = savedItem.columnValue.ifBlank { defaultItem.columnValue },
+                                description = defaultItem.description,
+                                isChecked = savedItem.isChecked
+                            )
+                        )
+                    } else {
+                        val fallback = defaultMap.values.find { it.columnName == savedItem.columnName }
+                        if (fallback != null) {
+                            repairedList.add(
+                                SearchCheckBox(
+                                    columnName = fallback.columnName,
+                                    columnValue = fallback.columnValue,
+                                    description = fallback.description,
+                                    isChecked = savedItem.isChecked
+                                )
+                            )
+                        }
+                    }
+                }
+                for (defaultItem in defaultList) {
+                    if (repairedList.none { it.columnName == defaultItem.columnName }) {
+                        repairedList.add(defaultItem)
+                    }
+                }
+                settingList = repairedList
+                prefsManager.saveSearchCheckBoxList(settingList)
+            }
         }
 
-        findViewById<Button>(R.id.run_filter).setOnClickListener {
+        binding.runFilter.setOnClickListener {
             prefsManager.saveSearchCheckBoxList(settingList)
             finish()
         }
 
-        findViewById<Button>(R.id.cancel_filter).setOnClickListener {
+        binding.cancelFilter.setOnClickListener {
             prefsManager.saveSearchCheckBoxList(settingList)
             finish()
         }
 
-        listAdapter = SettingsAdapter(this, R.layout.sub_menu_item, settingList)
+        binding.list.adapter = SettingsAdapter(this, settingList)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -60,16 +115,16 @@ class SettingsActivity : ListActivity() {
 
     private fun createDefaultSearchList(): ArrayList<SearchCheckBox> {
         return arrayListOf(
-            SearchCheckBox(winkerkEntry.LIDMATE_VAN, "", "Van", true),
-            SearchCheckBox(winkerkEntry.LIDMATE_NOEMNAAM, "", "Noemnaam", true),
-            SearchCheckBox(winkerkEntry.LIDMATE_VOORNAME, "", "Voorname", true),
-            SearchCheckBox(winkerkEntry.LIDMATE_WYK, "", "Wyk", true),
-            SearchCheckBox(winkerkEntry.LIDMATE_SELFOON, "", "Selfoon", true),
-            SearchCheckBox(winkerkEntry.ADRESSE_LANDLYN, "", "Landlyn", true),
-            SearchCheckBox(winkerkEntry.LIDMATE_NOOIENSVAN, "", "Nooiensvan", true),
-            SearchCheckBox(winkerkEntry.LIDMATE_BEROEP, "", "Beroep", true),
-            SearchCheckBox(winkerkEntry.LIDMATE_EPOS, "", "Epos", true),
-            SearchCheckBox(winkerkEntry.LIDMATE_STRAATADRES, "", "Adres", true)
+            SearchCheckBox(WinkerkContract.winkerkEntry.LIDMATE_VAN, "", "Van", true),
+            SearchCheckBox(WinkerkContract.winkerkEntry.LIDMATE_NOEMNAAM, "", "Noemnaam", true),
+            SearchCheckBox(WinkerkContract.winkerkEntry.LIDMATE_VOORNAME, "", "Voorname", true),
+            SearchCheckBox(WinkerkContract.winkerkEntry.LIDMATE_WYK, "", "Wyk", true),
+            SearchCheckBox(WinkerkContract.winkerkEntry.LIDMATE_SELFOON, "", "Selfoon", true),
+            SearchCheckBox(WinkerkContract.winkerkEntry.ADRESSE_LANDLYN, "", "Landlyn", true),
+            SearchCheckBox(WinkerkContract.winkerkEntry.LIDMATE_NOOIENSVAN, "", "Nooiensvan", true),
+            SearchCheckBox(WinkerkContract.winkerkEntry.LIDMATE_BEROEP, "", "Beroep", true),
+            SearchCheckBox(WinkerkContract.winkerkEntry.LIDMATE_EPOS, "", "Epos", true),
+            SearchCheckBox(WinkerkContract.winkerkEntry.LIDMATE_STRAATADRES, "", "Adres", true)
         )
     }
 }
@@ -78,40 +133,32 @@ class SettingsActivity : ListActivity() {
  * Adapter for displaying search checkbox options.
  */
 class SettingsAdapter(
-    context: ListActivity,
-    private val itemResourceId: Int,
+    context: android.content.Context,
     options: List<SearchCheckBox>
-) : ArrayAdapter<SearchCheckBox>(context, itemResourceId, options) {
+) : ArrayAdapter<SearchCheckBox>(context, R.layout.sub_menu_item, options) {
 
     private val inflater = LayoutInflater.from(context)
 
-    private class ViewHolder(val title: TextView, val checkBox: CheckBox)
-
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+        val binding: SubMenuItemBinding
         val rowView: View
-        val viewHolder: ViewHolder
 
         if (convertView == null) {
-            rowView = inflater.inflate(itemResourceId, parent, false)
-            val title = rowView.findViewById<TextView>(R.id.option_title)
-            val checkBox = rowView.findViewById<CheckBox>(R.id.option_checkbox)
-            viewHolder = ViewHolder(title, checkBox)
-            rowView.tag = viewHolder
+            binding = SubMenuItemBinding.inflate(inflater, parent, false)
+            rowView = binding.root
+            rowView.tag = binding
         } else {
             rowView = convertView
-            viewHolder = rowView.tag as ViewHolder
+            binding = rowView.tag as SubMenuItemBinding
         }
 
-        // Position is guaranteed to be valid in ArrayAdapter
         val item = getItem(position)!!
 
-        viewHolder.title.text = item.description
-        viewHolder.checkBox.isChecked = item.isChecked
+        binding.optionTitle.text = item.description
+        binding.optionCheckbox.isChecked = item.isChecked
 
-        // Click listener toggles the checkbox state and updates the model
-        viewHolder.checkBox.setOnClickListener {
-            item.isChecked = !item.isChecked
-            viewHolder.checkBox.isChecked = item.isChecked
+        binding.optionCheckbox.setOnClickListener {
+            item.isChecked = binding.optionCheckbox.isChecked
         }
 
         return rowView

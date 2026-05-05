@@ -33,7 +33,7 @@ class CallMonitoringService : Service() {
         Log.d(TAG, "Call Monitoring Service created")
         isRunning = true
         createNotificationChannel()
-        databaseHelper = DatabaseHelper(this)
+        databaseHelper = DatabaseHelper.getInstance(this)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -135,7 +135,7 @@ class CallMonitoringService : Service() {
             }
 
             if (databaseHelper == null) {
-                databaseHelper = DatabaseHelper(this)
+                databaseHelper = DatabaseHelper.getInstance(this)
             }
 
             phoneCallMonitor = PhoneCallMonitor(this, databaseHelper!!, calendarManager, calendarId)

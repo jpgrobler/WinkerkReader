@@ -24,11 +24,12 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import za.co.jpsoft.winkerkreader.R
+import za.co.jpsoft.winkerkreader.databinding.ActivityPermissionsBinding
+import za.co.jpsoft.winkerkreader.databinding.ItemPermissionBinding
 
 class PermissionsActivity : AppCompatActivity() {
 
-    private lateinit var recyclerView: RecyclerView
+    private lateinit var binding: ActivityPermissionsBinding
     private lateinit var adapter: PermissionsAdapter
     private lateinit var permissionsList: List<PermissionItem>
 
@@ -46,21 +47,21 @@ class PermissionsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_permissions)
+        binding = ActivityPermissionsBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         supportActionBar?.apply {
             title = "App Permissions"
             setDisplayHomeAsUpEnabled(true)
         }
 
-        recyclerView = findViewById(R.id.recyclerViewPermissions)
-        recyclerView.layoutManager = LinearLayoutManager(this)
+        binding.recyclerViewPermissions.layoutManager = LinearLayoutManager(this)
 
         initializePermissionsList()
         adapter = PermissionsAdapter(permissionsList)
-        recyclerView.adapter = adapter
+        binding.recyclerViewPermissions.adapter = adapter
 
-        findViewById<Button>(R.id.btnRequestAllPermissions).setOnClickListener {
+        binding.btnRequestAllPermissions.setOnClickListener {
             requestAllPermissions()
         }
     }
@@ -305,9 +306,10 @@ class PermissionsActivity : AppCompatActivity() {
         RecyclerView.Adapter<PermissionsAdapter.ViewHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-            val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.item_permission, parent, false)
-            return ViewHolder(view)
+            val binding = ItemPermissionBinding.inflate(
+                LayoutInflater.from(parent.context), parent, false
+            )
+            return ViewHolder(binding)
         }
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -316,35 +318,32 @@ class PermissionsActivity : AppCompatActivity() {
 
         override fun getItemCount(): Int = items.size
 
-        inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-            private val tvName: TextView = itemView.findViewById(R.id.tvPermissionName)
-            private val tvDescription: TextView = itemView.findViewById(R.id.tvPermissionDescription)
-            private val ivStatus: ImageView = itemView.findViewById(R.id.ivPermissionStatus)
-            private val btnRequest: Button = itemView.findViewById(R.id.btnRequestPermission)
+        inner class ViewHolder(private val itemBinding: ItemPermissionBinding) : 
+            RecyclerView.ViewHolder(itemBinding.root) {
 
             fun bind(item: PermissionItem) {
-                tvName.text = item.name
-                tvDescription.text = item.description
+                itemBinding.tvPermissionName.text = item.name
+                itemBinding.tvPermissionDescription.text = item.description
 
                 if (item.isGranted) {
-                    ivStatus.setImageResource(android.R.drawable.checkbox_on_background)
-                    ivStatus.setColorFilter(ContextCompat.getColor(this@PermissionsActivity, android.R.color.holo_green_dark))
-                    btnRequest.isEnabled = false
-                    btnRequest.text = "Granted"
+                    itemBinding.ivPermissionStatus.setImageResource(android.R.drawable.checkbox_on_background)
+                    itemBinding.ivPermissionStatus.setColorFilter(ContextCompat.getColor(this@PermissionsActivity, android.R.color.holo_green_dark))
+                    itemBinding.btnRequestPermission.isEnabled = false
+                    itemBinding.btnRequestPermission.text = "Granted"
                 } else {
-                    ivStatus.setImageResource(android.R.drawable.ic_delete)
-                    ivStatus.setColorFilter(ContextCompat.getColor(this@PermissionsActivity, android.R.color.holo_red_dark))
-                    btnRequest.isEnabled = true
-                    btnRequest.text = "Request"
+                    itemBinding.ivPermissionStatus.setImageResource(android.R.drawable.ic_delete)
+                    itemBinding.ivPermissionStatus.setColorFilter(ContextCompat.getColor(this@PermissionsActivity, android.R.color.holo_red_dark))
+                    itemBinding.btnRequestPermission.isEnabled = true
+                    itemBinding.btnRequestPermission.text = "Request"
                 }
 
-                btnRequest.setOnClickListener {
+                itemBinding.btnRequestPermission.setOnClickListener {
                     if (!item.isGranted) {
                         requestSpecialPermission(item)
                     }
                 }
 
-                itemView.setOnClickListener {
+                itemBinding.root.setOnClickListener {
                     if (!item.isGranted) {
                         requestSpecialPermission(item)
                     } else {

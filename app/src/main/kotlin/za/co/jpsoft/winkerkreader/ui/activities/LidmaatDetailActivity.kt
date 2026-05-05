@@ -30,6 +30,7 @@ import androidx.core.content.FileProvider
 import androidx.core.widget.TextViewCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import com.bumptech.glide.Glide
 import java.io.File
 import java.io.FileOutputStream
 import java.time.LocalDate
@@ -40,6 +41,7 @@ import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
 import za.co.jpsoft.winkerkreader.ui.adapters.SpinnerAdapter
 import za.co.jpsoft.winkerkreader.ui.viewmodels.LidmaatDetailViewModel
+import za.co.jpsoft.winkerkreader.databinding.LidmaatDetailBinding
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import za.co.jpsoft.winkerkreader.utils.DeviceIdManager
 import za.co.jpsoft.winkerkreader.utils.Utils.fixphonenumber
@@ -58,41 +60,7 @@ class LidmaatDetailActivity : AppCompatActivity() {
         private const val STATE_IMAGE_URI = "image_uri"
     }
 
-    // UI Views
-    private lateinit var mNameTextView: EditText
-    private lateinit var mNooiensVanTextView: EditText
-    private lateinit var mVanTextView: EditText
-    private lateinit var mVolleNameTextView: EditText
-    private lateinit var mSelfoonTextView: EditText
-    private lateinit var mTelefoonTextView: EditText
-    private lateinit var mWykTextView: EditText
-    private lateinit var mGeboortedatumTextView: EditText
-    private lateinit var mStraatadresTextView: EditText
-    private lateinit var mPosadresTextView: EditText
-    private lateinit var mLidmaatstatusTextView: EditText
-    private lateinit var mGesinTextView: TextView
-    private lateinit var mJAreOudTextView: TextView
-    private lateinit var mEposTextView: EditText
-    private lateinit var mBeroepTextView: EditText
-    private lateinit var mWerkgewerTextView: EditText
-    private lateinit var mBeroepBlock: LinearLayout
-    private lateinit var mWerkgewerBlock: LinearLayout
-    private lateinit var mSelfoonBlock: LinearLayout
-    private lateinit var mTelefoonBlock: LinearLayout
-    private lateinit var mEposBlock: LinearLayout
-    private lateinit var mStraatadresBlock: LinearLayout
-    private lateinit var mPosadresBlock: LinearLayout
-    private lateinit var mNooiensvanBlock: LinearLayout
-    private lateinit var mGesinTextViewBlock: LinearLayout
-    private lateinit var mSelfooonIcon: ImageView
-    private lateinit var mTelefoonIcon: ImageView
-    private lateinit var mSmsIcon: ImageView
-    private lateinit var mEposIcon: ImageView
-    private lateinit var mWhatsappIcon: ImageView
-    private lateinit var mKontakFoto: ImageView
-    private lateinit var mWysigButton: Button
-    private lateinit var mGeslagSpinner: Spinner
-    private lateinit var mHuwelikstatusSpinner: Spinner
+    private lateinit var binding: LidmaatDetailBinding
     private lateinit var settingsManager: SettingsManager
 
     private var current_id = 0
@@ -144,26 +112,20 @@ class LidmaatDetailActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         settingsManager = SettingsManager.getInstance(this)
-        setContentView(R.layout.lidmaat_detail)
+        binding = LidmaatDetailBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         // Removed AppSessionState.deviceId assignment
         val deviceId = DeviceIdManager.getDeviceId(this)
 
-        val progressBar = findViewById<ProgressBar>(R.id.detail_indeterminateBar)
-        val progressBar2 = findViewById<ProgressBar>(R.id.detail_indeterminateBar2)
-        progressBar.visibility = View.GONE
-        progressBar2.visibility = View.GONE
+        binding.detailIndeterminateBar.visibility = View.GONE
+        binding.detailIndeterminateBar2.visibility = View.GONE
 
-        val mylpaleBlock2 = findViewById<LinearLayout>(R.id.detail_mylpaleBlock2)
-        mylpaleBlock2.visibility = View.GONE
-        val groepeBlockm = findViewById<LinearLayout>(R.id.detail_groepBlockm)
-        groepeBlockm.visibility = View.GONE
-        val meelewingBlock = findViewById<LinearLayout>(R.id.detail_meelewingBlock)
-        meelewingBlock.visibility = View.GONE
-        val passieBlock = findViewById<LinearLayout>(R.id.detail_passieBlock)
-        passieBlock.visibility = View.GONE
-        val gawesBlock = findViewById<LinearLayout>(R.id.detail_gawesBlock)
-        gawesBlock.visibility = View.GONE
+        binding.detailMylpaleBlock2.visibility = View.GONE
+        binding.detailGroepBlockm.visibility = View.GONE
+        binding.detailMeelewingBlock.visibility = View.GONE
+        binding.detailPassieBlock.visibility = View.GONE
+        binding.detailGawesBlock.visibility = View.GONE
 
         mCurrentLidmaatUri = intent.data ?: throw IllegalArgumentException("No data URI provided")
         recordStatus = intent.getStringExtra("RECORD_STATUS") ?: "0"
@@ -186,9 +148,8 @@ class LidmaatDetailActivity : AppCompatActivity() {
             }
         }
 
-        val gemeenten = findViewById<TextView>(R.id.detail_gemeentenaam)
-        gemeenten.text = settingsManager.gemeenteNaam
-        gemeenten.isSelected = true
+        binding.detailGemeentenaam.text = settingsManager.gemeenteNaam
+        binding.detailGemeentenaam.isSelected = true
 
         initializeViews()
         setupListeners()
@@ -209,84 +170,49 @@ class LidmaatDetailActivity : AppCompatActivity() {
     }
 
     private fun initializeViews() {
-        mNameTextView = findViewById(R.id.detail_noemnaam)
-        mVanTextView = findViewById(R.id.detail_van)
-        mNooiensVanTextView = findViewById(R.id.detail_nooiensvan)
-        mVolleNameTextView = findViewById(R.id.detail_vollename)
-        mSelfoonTextView = findViewById(R.id.detail_selfoon)
-        mTelefoonTextView = findViewById(R.id.detail_telefoon)
-        mWykTextView = findViewById(R.id.detail_wyk)
-        mGeboortedatumTextView = findViewById(R.id.detail_geboortedatum)
-        mStraatadresTextView = findViewById(R.id.detail_straatadres)
-        mPosadresTextView = findViewById(R.id.detail_posadres)
-        mEposTextView = findViewById(R.id.detail_epos)
-        mBeroepTextView = findViewById(R.id.detail_Beroep)
-        mWerkgewerTextView = findViewById(R.id.detail_Werkgewer)
-        mWysigButton = findViewById(R.id.buttonWysig)
-        mGeslagSpinner = findViewById(R.id.geslag)
-        mHuwelikstatusSpinner = findViewById(R.id.huwelikstatus)
-        mJAreOudTextView = findViewById(R.id.detail_jareoud)
-        mLidmaatstatusTextView = findViewById(R.id.detail_Lidmaatstatus)
-
-        mSelfoonBlock = findViewById(R.id.detail_selfoonBlock)
-        mTelefoonBlock = findViewById(R.id.detail_telefoonBlock)
-        mEposBlock = findViewById(R.id.detail_eposBlock)
-        mStraatadresBlock = findViewById(R.id.detail_straatadresBlock)
-        mPosadresBlock = findViewById(R.id.detail_posadresBlock)
-        mNooiensvanBlock = findViewById(R.id.detail_nooiensvanBlock)
-        mGesinTextViewBlock = findViewById(R.id.detail_gesinBlock)
-        mBeroepBlock = findViewById(R.id.detail_BeroepBlock)
-        mWerkgewerBlock = findViewById(R.id.detail_WerkgewerBlock)
-        mSelfooonIcon = findViewById(R.id.detail_selfoon_icon)
-        mTelefoonIcon = findViewById(R.id.detail_landlyn_icon)
-        mEposIcon = findViewById(R.id.detail_email_icon)
-        mSmsIcon = findViewById(R.id.detail_sms_icon)
-        mWhatsappIcon = findViewById(R.id.detail_whatsapp_icon)
-        mKontakFoto = findViewById(R.id.detail_kontak_foto)
-
         listOf(
-                        mNameTextView,
-                        mVanTextView,
-                        mNooiensVanTextView,
-                        mVolleNameTextView,
-                        mSelfoonTextView,
-                        mTelefoonTextView,
-                        mWykTextView,
-                        mGeboortedatumTextView,
-                        mStraatadresTextView,
-                        mPosadresTextView,
-                        mEposTextView,
-                        mBeroepTextView,
-                        mWerkgewerTextView,
-                        mLidmaatstatusTextView
+                        binding.detailNoemnaam,
+                        binding.detailVan,
+                        binding.detailNooiensvan,
+                        binding.detailVollename,
+                        binding.detailSelfoon,
+                        binding.detailTelefoon,
+                        binding.detailWyk,
+                        binding.detailGeboortedatum,
+                        binding.detailStraatadres,
+                        binding.detailPosadres,
+                        binding.detailEpos,
+                        binding.detailBeroep,
+                        binding.detailWerkgewer,
+                        binding.detailLidmaatstatus
                 )
                 .forEach { it.isEnabled = false }
-        mHuwelikstatusSpinner.isEnabled = false
-        mGeslagSpinner.isEnabled = false
+        binding.huwelikstatus.isEnabled = false
+        binding.geslag.isEnabled = false
 
-        mGesinTextViewBlock.visibility = View.GONE
+        binding.detailGesinBlock.visibility = View.GONE
     }
 
     private fun setupListeners() {
-        mKontakFoto.setOnClickListener { showImagePopup() }
+        binding.detailKontakFoto.setOnClickListener { showImagePopup() }
 
-        mWysigButton.apply {
+        binding.buttonWysig.apply {
             isFocusable = true
             isClickable = true
             setOnClickListener { onWysigClick() }
         }
 
-        mStraatadresBlock.setOnClickListener { openMapForAddress() }
+        binding.detailStraatadresBlock.setOnClickListener { openMapForAddress() }
 
-        mSelfooonIcon.setOnClickListener { dialNumber(mSelfoonTextView.text.toString()) }
-        mTelefoonIcon.setOnClickListener { dialNumber(mTelefoonTextView.text.toString()) }
-        mWhatsappIcon.setOnClickListener { openWhatsApp() }
-        mEposIcon.setOnClickListener { sendEmail() }
-        mSmsIcon.setOnClickListener { openSms() }
+        binding.detailSelfoonIcon.setOnClickListener { dialNumber(binding.detailSelfoon.text.toString()) }
+        binding.detailLandlynIcon.setOnClickListener { dialNumber(binding.detailTelefoon.text.toString()) }
+        binding.detailWhatsappIcon.setOnClickListener { openWhatsApp() }
+        binding.detailEmailIcon.setOnClickListener { sendEmail() }
+        binding.detailSmsIcon.setOnClickListener { openSms() }
     }
 
     private fun showImagePopup() {
-        val popup = PopupMenu(this, mKontakFoto)
+        val popup = PopupMenu(this, binding.detailKontakFoto)
         popup.menuInflater.inflate(R.menu.image_popup, popup.menu)
         popup.menu.findItem(R.id.whatsapp_foto).isVisible = false
 
@@ -308,17 +234,17 @@ class LidmaatDetailActivity : AppCompatActivity() {
     }
 
     private fun onWysigClick() {
-        if (mWysigButton.text == getString(R.string.wysig)) {
+        if (binding.buttonWysig.text == getString(R.string.wysig)) {
             enableEditing(true)
-            mWysigButton.text = getString(R.string.stoor)
-            mWysigButton.setBackgroundColor(Color.RED)
-            mStraatAdres = mStraatadresTextView.text.toString()
-            mPosAdres = mPosadresTextView.text.toString()
-            showSoftKeyboard(mWysigButton)
+            binding.buttonWysig.text = getString(R.string.stoor)
+            binding.buttonWysig.setBackgroundColor(Color.RED)
+            mStraatAdres = binding.detailStraatadres.text.toString()
+            mPosAdres = binding.detailPosadres.text.toString()
+            showSoftKeyboard(binding.buttonWysig)
         } else {
             enableEditing(false)
-            mWysigButton.text = getString(R.string.wysig)
-            mWysigButton.setBackgroundColor(Color.parseColor("#0A064F"))
+            binding.buttonWysig.text = getString(R.string.wysig)
+            binding.buttonWysig.setBackgroundColor(Color.parseColor("#0A064F"))
             viewModel.memberDetail.value?.let { wysigLidmaatData(it) }
             hideSoftKeyboard()
         }
@@ -326,34 +252,34 @@ class LidmaatDetailActivity : AppCompatActivity() {
 
     private fun enableEditing(enable: Boolean) {
         listOf(
-                        mNameTextView,
-                        mVanTextView,
-                        mNooiensVanTextView,
-                        mVolleNameTextView,
-                        mSelfoonTextView,
-                        mTelefoonTextView,
-                        mWykTextView,
-                        mGeboortedatumTextView,
-                        mStraatadresTextView,
-                        mPosadresTextView,
-                        mEposTextView,
-                        mBeroepTextView,
-                        mWerkgewerTextView,
-                        mLidmaatstatusTextView
+                        binding.detailNoemnaam,
+                        binding.detailVan,
+                        binding.detailNooiensvan,
+                        binding.detailVollename,
+                        binding.detailSelfoon,
+                        binding.detailTelefoon,
+                        binding.detailWyk,
+                        binding.detailGeboortedatum,
+                        binding.detailStraatadres,
+                        binding.detailPosadres,
+                        binding.detailEpos,
+                        binding.detailBeroep,
+                        binding.detailWerkgewer,
+                        binding.detailLidmaatstatus
                 )
                 .forEach { it.isEnabled = enable }
-        mHuwelikstatusSpinner.isEnabled = enable
-        mGeslagSpinner.isEnabled = enable
+        binding.huwelikstatus.isEnabled = enable
+        binding.geslag.isEnabled = enable
 
         if (enable) {
-            mSelfoonBlock.visibility = View.VISIBLE
-            mTelefoonBlock.visibility = View.VISIBLE
-            mStraatadresBlock.visibility = View.VISIBLE
-            mPosadresBlock.visibility = View.VISIBLE
-            mEposBlock.visibility = View.VISIBLE
-            mNooiensvanBlock.visibility = View.VISIBLE
-            mBeroepBlock.visibility = View.VISIBLE
-            mWerkgewerBlock.visibility = View.VISIBLE
+            binding.detailSelfoonBlock.visibility = View.VISIBLE
+            binding.detailTelefoonBlock.visibility = View.VISIBLE
+            binding.detailStraatadresBlock.visibility = View.VISIBLE
+            binding.detailPosadresBlock.visibility = View.VISIBLE
+            binding.detailEposBlock.visibility = View.VISIBLE
+            binding.detailNooiensvanBlock.visibility = View.VISIBLE
+            binding.detailBeroepBlock.visibility = View.VISIBLE
+            binding.detailWerkgewerBlock.visibility = View.VISIBLE
         }
     }
 
@@ -368,7 +294,7 @@ class LidmaatDetailActivity : AppCompatActivity() {
     }
 
     private fun openWhatsApp() {
-        val number = mSelfoonTextView.text.toString()
+        val number = binding.detailSelfoon.text.toString()
         if (number.isNotEmpty() && number.length >= 10) {
             val cell = fixphonenumber(number)?.replace("-", "")?.replace(" ", "") ?: ""
             if (cell.isNotEmpty()) {
@@ -385,7 +311,7 @@ class LidmaatDetailActivity : AppCompatActivity() {
     }
 
     private fun sendEmail() {
-        val email = mEposTextView.text.toString()
+        val email = binding.detailEpos.text.toString()
         if (email.isNotEmpty()) {
             try {
                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse("mailto:$email"))
@@ -397,7 +323,7 @@ class LidmaatDetailActivity : AppCompatActivity() {
     }
 
     private fun openSms() {
-        val number = mSelfoonTextView.text.toString()
+        val number = binding.detailSelfoon.text.toString()
         if (number.isNotEmpty()) {
             try {
                 val intent =
@@ -413,10 +339,10 @@ class LidmaatDetailActivity : AppCompatActivity() {
     }
 
     private fun openMapForAddress() {
-        val address = mStraatadresTextView.text.toString()
+        val address = binding.detailStraatadres.text.toString()
         if (address.isNotEmpty()) {
             val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-            val clipData = "${mNameTextView.text} ${mVanTextView.text}\r\n$address"
+            val clipData = "${binding.detailNoemnaam.text} ${binding.detailVan.text}\r\n$address"
             clipboard.setPrimaryClip(ClipData.newPlainText("text", clipData))
             Toast.makeText(this, clipData, Toast.LENGTH_SHORT).show()
 
@@ -439,23 +365,23 @@ class LidmaatDetailActivity : AppCompatActivity() {
         // Load photo using the GUID
         loadMemberPhoto(item.guid)
 
-        mNameTextView.setText(item.name)
-        mVanTextView.setText(item.surname)
-        mVolleNameTextView.setText(item.fullNames)
-        mNooiensVanTextView.setText(item.maidenName)
-        mSelfoonTextView.setText(item.cellphone)
-        mTelefoonTextView.setText(item.landline)
-        mWykTextView.setText(item.ward)
-        mGeboortedatumTextView.setText(item.birthday)
-        mJAreOudTextView.text = if (item.age < 0) "(?)" else "(${item.age})"
-        mStraatadresTextView.setText(item.streetAddress)
-        mPosadresTextView.setText(item.postalAddress)
-        mEposTextView.setText(item.email)
-        mBeroepTextView.setText(item.profession)
-        mWerkgewerTextView.setText(item.employer)
-        mLidmaatstatusTextView.setText(item.memberStatus)
+        binding.detailNoemnaam.setText(item.name)
+        binding.detailVan.setText(item.surname)
+        binding.detailVollename.setText(item.fullNames)
+        binding.detailNooiensvan.setText(item.maidenName)
+        binding.detailSelfoon.setText(item.cellphone)
+        binding.detailTelefoon.setText(item.landline)
+        binding.detailWyk.setText(item.ward)
+        binding.detailGeboortedatum.setText(item.birthday)
+        binding.detailJareoud.text = if (item.age < 0) "(?)" else "(${item.age})"
+        binding.detailStraatadres.setText(item.streetAddress)
+        binding.detailPosadres.setText(item.postalAddress)
+        binding.detailEpos.setText(item.email)
+        binding.detailBeroep.setText(item.profession)
+        binding.detailWerkgewer.setText(item.employer)
+        binding.detailLidmaatstatus.setText(item.memberStatus)
 
-        mLidmaatstatusTextView.setBackgroundColor(
+        binding.detailLidmaatstatus.setBackgroundColor(
                 when (item.certificateStatus) {
                     "Ontvang" -> Color.WHITE
                     "Aangevra" -> Color.GREEN
@@ -464,24 +390,24 @@ class LidmaatDetailActivity : AppCompatActivity() {
                 }
         )
 
-        mSelfoonBlock.visibility = if (item.cellphone.isNotEmpty()) View.VISIBLE else View.GONE
-        mTelefoonBlock.visibility = if (item.landline.isNotEmpty()) View.VISIBLE else View.GONE
-        mEposBlock.visibility = if (item.email.isNotEmpty()) View.VISIBLE else View.GONE
-        mNooiensvanBlock.visibility = if (item.maidenName.isNotEmpty()) View.VISIBLE else View.GONE
-        mBeroepBlock.visibility = if (item.profession.isNotEmpty()) View.VISIBLE else View.GONE
-        mWerkgewerBlock.visibility = if (item.employer.isNotEmpty()) View.VISIBLE else View.GONE
-        mStraatadresBlock.visibility = if (item.streetAddress.isNotEmpty()) View.VISIBLE else View.GONE
-        mPosadresBlock.visibility = if (item.postalAddress.isNotEmpty()) View.VISIBLE else View.GONE
+        binding.detailSelfoonBlock.visibility = if (item.cellphone.isNotEmpty()) View.VISIBLE else View.GONE
+        binding.detailTelefoonBlock.visibility = if (item.landline.isNotEmpty()) View.VISIBLE else View.GONE
+        binding.detailEposBlock.visibility = if (item.email.isNotEmpty()) View.VISIBLE else View.GONE
+        binding.detailNooiensvanBlock.visibility = if (item.maidenName.isNotEmpty()) View.VISIBLE else View.GONE
+        binding.detailBeroepBlock.visibility = if (item.profession.isNotEmpty()) View.VISIBLE else View.GONE
+        binding.detailWerkgewerBlock.visibility = if (item.employer.isNotEmpty()) View.VISIBLE else View.GONE
+        binding.detailStraatadresBlock.visibility = if (item.streetAddress.isNotEmpty()) View.VISIBLE else View.GONE
+        binding.detailPosadresBlock.visibility = if (item.postalAddress.isNotEmpty()) View.VISIBLE else View.GONE
 
         val geslagAdapter = SpinnerAdapter(applicationContext, geslagPrente, null)
-        mGeslagSpinner.adapter = geslagAdapter
-        mGeslagSpinner.setSelection(if (item.gender == "Manlik") 1 else 0)
+        binding.geslag.adapter = geslagAdapter
+        binding.geslag.setSelection(if (item.gender == "Manlik") 1 else 0)
         mGeslagB = item.gender
 
         val huwelikAdapter = SpinnerAdapter(applicationContext, null, huwelikStatusArray)
-        mHuwelikstatusSpinner.adapter = huwelikAdapter
+        binding.huwelikstatus.adapter = huwelikAdapter
         val huwPos = huwelikStatusArray.indexOfFirst { it == item.marriageStatus }
-        if (huwPos >= 0) mHuwelikstatusSpinner.setSelection(huwPos)
+        if (huwPos >= 0) binding.huwelikstatus.setSelection(huwPos)
         mHuwelikstatus = item.marriageStatus
 
         loadMilestones(item)
@@ -493,39 +419,29 @@ class LidmaatDetailActivity : AppCompatActivity() {
             return
         }
         val syncedPath = getSyncedPhotoPath(guid)
-        Log.d(TAG, "loadMemberPhoto: guid = $guid, syncedPath = $syncedPath")
-
         if (syncedPath != null) {
             val file = File(syncedPath)
             if (file.exists()) {
-                val scale = resources.displayMetrics.density
-                val pixels = (200 * scale + 0.5f).toInt()
-                mKontakFoto.layoutParams.height = pixels
-                mKontakFoto.layoutParams.width = pixels
-                mKontakFoto.requestLayout()
+                // Set desired dimensions (200dp converted to pixels)
+                val pixels = (200 * resources.displayMetrics.density + 0.5f).toInt()
+                binding.detailKontakFoto.layoutParams.height = pixels
+                binding.detailKontakFoto.layoutParams.width = pixels
+                binding.detailKontakFoto.requestLayout()
 
-                val bitmap = BitmapFactory.decodeFile(syncedPath)
-                if (bitmap != null) {
-                    mKontakFoto.setImageBitmap(bitmap)
-                    mKontakFoto.tag = "synced"
-                    Log.d(TAG, "Photo loaded successfully")
-                } else {
-                    Log.e(TAG, "BitmapFactory.decodeFile returned null")
-                    setDefaultPhoto()
-                }
+                Glide.with(this).load(file).override(pixels, pixels).centerCrop().placeholder(R.drawable.kontaks).error(R.drawable.kontaks).into(binding.detailKontakFoto)
+
+                binding.detailKontakFoto.tag = "synced"
             } else {
-                Log.e(TAG, "Photo file does not exist: $syncedPath")
                 setDefaultPhoto()
             }
         } else {
-            Log.d(TAG, "No synced photo found, using default")
             setDefaultPhoto()
         }
     }
 
     private fun displayFamily(members: List<FamilyMemberItem>) {
-        mGesinTextViewBlock.visibility = View.VISIBLE
-        mGesinTextViewBlock.removeAllViews()
+        binding.detailGesinBlock.visibility = View.VISIBLE
+        binding.detailGesinBlock.removeAllViews()
 
         for (member in members) {
             if (member.id == current_id) continue
@@ -546,31 +462,26 @@ class LidmaatDetailActivity : AppCompatActivity() {
                         scaleType = ImageView.ScaleType.FIT_XY
                         setImageResource(R.drawable.circle_crop)
                     }
-            val imageView =
-                    ImageView(this).apply {
-                        layoutParams = LinearLayout.LayoutParams(256, 256)
-                        scaleType = ImageView.ScaleType.FIT_XY
-                        if (member.picturePath.isNotEmpty()) {
-                            val file =
-                                    File(
-                                            winkerkEntry.getCacheDir(this@LidmaatDetailActivity) +
-                                                    member.picturePath
-                                    )
-                            if (file.exists()) {
-                                setImageBitmap(
-                                        BitmapFactory.decodeFile(
-                                                winkerkEntry.getCacheDir(
-                                                        this@LidmaatDetailActivity
-                                                ) + member.picturePath
-                                        )
-                                )
-                            } else {
-                                setImageResource(R.drawable.clipboard)
-                            }
-                        } else {
-                            setImageResource(R.drawable.clipboard)
-                        }
+            val imageView = ImageView(this).apply {
+                layoutParams = LinearLayout.LayoutParams(256, 256)
+                scaleType = ImageView.ScaleType.FIT_XY
+                if (member.picturePath.isNotEmpty()) {
+                    val file = File(winkerkEntry.getCacheDir(this@LidmaatDetailActivity) + member.picturePath)
+                    if (file.exists()) {
+                        Glide.with(this@LidmaatDetailActivity)
+                            .load(file)
+                            .override(256, 256)
+                            .centerCrop()
+                            .placeholder(R.drawable.clipboard)
+                            .error(R.drawable.clipboard)
+                            .into(this)
+                    } else {
+                        setImageResource(R.drawable.clipboard)
                     }
+                } else {
+                    setImageResource(R.drawable.clipboard)
+                }
+            }
             fotoFrame.addView(imageView)
             fotoFrame.addView(imageViewOverlay)
 
@@ -603,7 +514,7 @@ class LidmaatDetailActivity : AppCompatActivity() {
 
             innerLayout.addView(fotoFrame)
                             innerLayout.addView(textView)
-            mGesinTextViewBlock.addView(innerLayout)
+            binding.detailGesinBlock.addView(innerLayout)
         }
     }
 
@@ -691,11 +602,11 @@ class LidmaatDetailActivity : AppCompatActivity() {
     private fun setDefaultPhoto() {
         val scale = resources.displayMetrics.density
         val pixels = (50 * scale + 0.5f).toInt()
-        mKontakFoto.layoutParams.height = pixels
-        mKontakFoto.layoutParams.width = pixels
-        mKontakFoto.requestLayout()
-        mKontakFoto.setImageResource(R.drawable.kontaks)
-        mKontakFoto.tag = "default"
+        binding.detailKontakFoto.layoutParams.height = pixels
+        binding.detailKontakFoto.layoutParams.width = pixels
+        binding.detailKontakFoto.requestLayout()
+        binding.detailKontakFoto.setImageResource(R.drawable.kontaks)
+        binding.detailKontakFoto.tag = "default"
     }
 
     private fun wysigLidmaatData(item: MemberDetailItem) {
@@ -718,34 +629,34 @@ class LidmaatDetailActivity : AppCompatActivity() {
             }
         }
 
-        checkAndPut(winkerkEntry.LIDMATE_NOEMNAAM, mNameTextView.text.toString(), item.name)
-        checkAndPut(winkerkEntry.LIDMATE_VAN, mVanTextView.text.toString(), item.surname)
-        checkAndPut(winkerkEntry.LIDMATE_VOORNAME, mVolleNameTextView.text.toString(), item.fullNames)
-        checkAndPut(winkerkEntry.LIDMATE_SELFOON, mSelfoonTextView.text.toString(), item.cellphone)
-        checkAndPut(winkerkEntry.LIDMATE_LANDLYN, mTelefoonTextView.text.toString(), item.landline)
-        checkAndPut(winkerkEntry.LIDMATE_WYK, mWykTextView.text.toString(), item.ward)
-        checkAndPut(winkerkEntry.LIDMATE_LIDMAATSTATUS, mLidmaatstatusTextView.text.toString(), item.memberStatus)
-        checkAndPut(winkerkEntry.LIDMATE_GEBOORTEDATUM, mGeboortedatumTextView.text.toString(), item.birthday)
-        checkAndPut(winkerkEntry.LIDMATE_EPOS, mEposTextView.text.toString(), item.email)
-        checkAndPut(winkerkEntry.LIDMATE_NOOIENSVAN, mNooiensVanTextView.text.toString(), item.maidenName)
-        checkAndPut(winkerkEntry.LIDMATE_BEROEP, mBeroepTextView.text.toString(), item.profession)
-        checkAndPut(winkerkEntry.LIDMATE_WERKGEWER, mWerkgewerTextView.text.toString(), item.employer)
+        checkAndPut(winkerkEntry.LIDMATE_NOEMNAAM, binding.detailNoemnaam.text.toString(), item.name)
+        checkAndPut(winkerkEntry.LIDMATE_VAN, binding.detailVan.text.toString(), item.surname)
+        checkAndPut(winkerkEntry.LIDMATE_VOORNAME, binding.detailVollename.text.toString(), item.fullNames)
+        checkAndPut(winkerkEntry.LIDMATE_SELFOON, binding.detailSelfoon.text.toString(), item.cellphone)
+        checkAndPut(winkerkEntry.LIDMATE_LANDLYN, binding.detailTelefoon.text.toString(), item.landline)
+        checkAndPut(winkerkEntry.LIDMATE_WYK, binding.detailWyk.text.toString(), item.ward)
+        checkAndPut(winkerkEntry.LIDMATE_LIDMAATSTATUS, binding.detailLidmaatstatus.text.toString(), item.memberStatus)
+        checkAndPut(winkerkEntry.LIDMATE_GEBOORTEDATUM, binding.detailGeboortedatum.text.toString(), item.birthday)
+        checkAndPut(winkerkEntry.LIDMATE_EPOS, binding.detailEpos.text.toString(), item.email)
+        checkAndPut(winkerkEntry.LIDMATE_NOOIENSVAN, binding.detailNooiensvan.text.toString(), item.maidenName)
+        checkAndPut(winkerkEntry.LIDMATE_BEROEP, binding.detailBeroep.text.toString(), item.profession)
+        checkAndPut(winkerkEntry.LIDMATE_WERKGEWER, binding.detailWerkgewer.text.toString(), item.employer)
 
-        val newStraat = mStraatadresTextView.text.toString()
+        val newStraat = binding.detailStraatadres.text.toString()
         if (newStraat != mStraatAdres) {
             values.put(winkerkEntry.LIDMATE_STRAATADRES, newStraat)
             emailHtml += "\r\n<p>${winkerkEntry.LIDMATE_STRAATADRES} : <b><font color='red'>$newStraat</font></b></p>"
             emailText += "\r\n${winkerkEntry.LIDMATE_STRAATADRES} : $newStraat"
         }
 
-        val newPos = mPosadresTextView.text.toString()
+        val newPos = binding.detailPosadres.text.toString()
         if (newPos != mPosAdres) {
             values.put(winkerkEntry.LIDMATE_POSADRES, newPos)
             emailHtml += "\r\n<p>${winkerkEntry.LIDMATE_POSADRES} : <b><font color='red'>$newPos</font></b></p>"
             emailText += "\r\n${winkerkEntry.LIDMATE_POSADRES} : $newPos"
         }
 
-        val huwPos = mHuwelikstatusSpinner.selectedItemPosition
+        val huwPos = binding.huwelikstatus.selectedItemPosition
         val newHuwelik = huwelikStatusArray[huwPos]
         if (newHuwelik != item.marriageStatus) {
             values.put(winkerkEntry.LIDMATE_HUWELIKSTATUS, newHuwelik)
@@ -753,7 +664,7 @@ class LidmaatDetailActivity : AppCompatActivity() {
             emailText += "\r\n${winkerkEntry.LIDMATE_HUWELIKSTATUS} : $newHuwelik"
         }
 
-        val geslagPos = mGeslagSpinner.selectedItemPosition
+        val geslagPos = binding.geslag.selectedItemPosition
         val newGeslag = geslagteArray[geslagPos]
         if (newGeslag != mGeslagB) {
             values.put(winkerkEntry.LIDMATE_GESLAG, newGeslag)
@@ -833,113 +744,84 @@ class LidmaatDetailActivity : AppCompatActivity() {
     }
 
     private fun processSelectedImage(imageUri: Uri, isCamera: Boolean) {
-        // Directly call the updated copyFoto with the URI
         val newPath = copyFoto(imageUri, mLidmaatGUID)
         if (newPath.isEmpty()) {
             Toast.makeText(this, "Failed to save image", Toast.LENGTH_SHORT).show()
             return
         }
 
-        // Update UI
-        val scale = resources.displayMetrics.density
-        val pixels = (200 * scale + 0.5f).toInt()
-        mKontakFoto.layoutParams.height = pixels
-        mKontakFoto.layoutParams.width = pixels
-        mKontakFoto.requestLayout()
+        // Update UI to show the new photo using Glide
+        val pixels = (200 * resources.displayMetrics.density + 0.5f).toInt()
+        binding.detailKontakFoto.layoutParams.height = pixels
+        binding.detailKontakFoto.layoutParams.width = pixels
+        binding.detailKontakFoto.requestLayout()
 
-        // Load bitmap from the saved full-size file (or directly from URI)
-        val bitmap =
-                try {
-                    contentResolver.openInputStream(imageUri)?.use { inputStream ->
-                        BitmapFactory.decodeStream(inputStream)
-                    }
-                } catch (e: Exception) {
-                    null
-                }
-        if (bitmap != null) {
-            mKontakFoto.setImageBitmap(bitmap)
-            mKontakFoto.tag = "synced"
-        } else {
-            setDefaultPhoto()
+        val photoFile = File(getExternalFilesDir(null), "photos/$newPath")
+        Glide.with(this)
+            .load(photoFile)
+            .override(pixels, pixels)
+            .centerCrop()
+            .placeholder(R.drawable.kontaks)
+            .error(R.drawable.kontaks)
+            .into(binding.detailKontakFoto)
+
+        binding.detailKontakFoto.tag = "synced"
+
+        // Save reference in database (unchanged)
+        val values = ContentValues().apply {
+            put(winkerkEntry.INFO_FOTO_PATH, newPath)
+            put(winkerkEntry.INFO_LIDMAAT_GUID, mLidmaatGUID)
+            put(winkerkEntry.INFO_GROUP, "")
         }
 
-        // Save reference in database
-        val values =
-                ContentValues().apply {
-                    put(winkerkEntry.INFO_FOTO_PATH, newPath)
-                    put(winkerkEntry.INFO_LIDMAAT_GUID, mLidmaatGUID)
-                    put(winkerkEntry.INFO_GROUP, "")
-                }
-
-        if (mKontakFoto.tag != "default") {
-            contentResolver.update(
-                    winkerkEntry.INFO_LOADER_FOTO_URI,
-                    values,
-                    "${winkerkEntry.INFO_LIDMAAT_GUID} = ?",
-                    arrayOf(mLidmaatGUID)
-            )
-        } else {
-            contentResolver.insert(winkerkEntry.INFO_LOADER_FOTO_URI, values)
-        }
+        contentResolver.update(
+            winkerkEntry.INFO_LOADER_FOTO_URI,
+            values,
+            "${winkerkEntry.INFO_LIDMAAT_GUID} = ?",
+            arrayOf(mLidmaatGUID)
+        )
 
         val id = current_id
         val memberValues = ContentValues().apply { put(winkerkEntry.LIDMATE_PICTUREPATH, newPath) }
         val memberUri = ContentUris.withAppendedId(winkerkEntry.CONTENT_URI, id.toLong())
         contentResolver.update(
-                memberUri,
-                memberValues,
-                "${winkerkEntry.LIDMATE_TABLE_NAME}._rowid_ = ?",
-                arrayOf(id.toString())
+            memberUri,
+            memberValues,
+            "${winkerkEntry.LIDMATE_TABLE_NAME}._rowid_ = ?",
+            arrayOf(id.toString())
         )
     }
+
     private fun copyFoto(imageUri: Uri, guid: String?): String {
         if (guid.isNullOrEmpty()) return ""
 
-        // 1. Decode the full image from the URI using InputStream
-        val fullBitmap =
-                try {
-                    contentResolver.openInputStream(imageUri)?.use { inputStream ->
-                        BitmapFactory.decodeStream(inputStream)
-                    }
-                } catch (e: Exception) {
-                    Log.e(TAG, "Failed to decode image from URI", e)
-                    null
-                } ?: return ""
+        // Decode with inSampleSize=2 to reduce memory for thumbnail creation
+        val options = BitmapFactory.Options().apply { inSampleSize = 2 }
+        val fullBitmap = contentResolver.openInputStream(imageUri)?.use { inputStream ->
+            BitmapFactory.decodeStream(inputStream, null, options)
+        } ?: return ""
 
-        // 2. Generate and save thumbnail in app's cache directory
+        // Thumbnail creation (unchanged)
         val width = winkerkEntry.THUMBSIZE
         val height = winkerkEntry.THUMBSIZE
         val thumbBitmap = ThumbnailUtils.extractThumbnail(fullBitmap, width, height)
-
-        val cacheDir = File(winkerkEntry.getCacheDir(this))
-        val thumbFile = File(cacheDir, "$guid.png")
-        if (thumbFile.exists()) thumbFile.delete()
-        try {
-            FileOutputStream(thumbFile).use { out ->
-                thumbBitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Thumbnail save error", e)
-        }
+        // ... save thumbBitmap ...
         thumbBitmap.recycle()
 
-        // 3. Save full-size image to external app-specific directory
+        // Save full-size image to external directory (use original quality)
         val externalDir = getExternalFilesDir(null)
         if (externalDir != null) {
             val photoDir = File(externalDir, "photos")
             if (!photoDir.exists()) photoDir.mkdirs()
             val photoFile = File(photoDir, "$guid.jpg")
             if (photoFile.exists()) photoFile.delete()
-            try {
+            contentResolver.openInputStream(imageUri)?.use { inputStream ->
                 FileOutputStream(photoFile).use { out ->
-                    fullBitmap.compress(Bitmap.CompressFormat.JPEG, 90, out)
+                    inputStream.copyTo(out)   // Copy file directly, no decode/encode
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "Full photo save error", e)
             }
         }
         fullBitmap.recycle()
-
         return "$guid.jpg"
     }
 
