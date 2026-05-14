@@ -10,7 +10,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.data.WinkerkContract
 import za.co.jpsoft.winkerkreader.data.WinkerkDbHelper
-import za.co.jpsoft.winkerkreader.ui.activities.LaaiDatabasisActivity.Companion.DB_NAME
+import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.WINKERK_DB
 import java.io.BufferedOutputStream
 import java.io.BufferedReader
 import java.io.BufferedWriter
@@ -138,7 +138,7 @@ class FileDownloadWorker(
             if (!dbPath.exists() && !dbPath.mkdirs()) {
                 return@withContext Triple(false, "", "Cannot create databases directory")
             }
-            val destFile = File(dbPath, DB_NAME)
+            val destFile = File(dbPath, WINKERK_DB)
             // Delete existing file to ensure clean write
             if (destFile.exists() && !destFile.delete()) {
                 Log.w("FileDownloadWorker", "Could not delete existing database file")

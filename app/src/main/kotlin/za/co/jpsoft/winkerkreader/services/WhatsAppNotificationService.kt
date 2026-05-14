@@ -1,16 +1,14 @@
 package za.co.jpsoft.winkerkreader.services
 
 import android.app.Notification
-import android.content.ContentUris
 import android.content.Intent
 import android.os.Build
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
+import androidx.core.content.edit
 import za.co.jpsoft.winkerkreader.data.DatabaseHelper
-import za.co.jpsoft.winkerkreader.data.WinkerkContract
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
-import za.co.jpsoft.winkerkreader.services.OproepDetailService
 import za.co.jpsoft.winkerkreader.utils.CalendarManager
 import za.co.jpsoft.winkerkreader.utils.CallerInfoResolver
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
@@ -334,14 +332,10 @@ class WhatsAppNotificationService : NotificationListenerService() {
             if (callerForOverlay == "Unknown Contact") return
 
             val prefs = getSharedPreferences(PREFS_USER_INFO, MODE_PRIVATE)
-            prefs.edit().putString("CallerNumber", callerForOverlay).apply()
+            prefs.edit { putString("CallerNumber", callerForOverlay) }
 
             val serviceIntent = Intent(this, OproepDetailService::class.java)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                startForegroundService(serviceIntent)
-            } else {
-                startService(serviceIntent)
-            }
+            startForegroundService(serviceIntent)
         } catch (e: Exception) {
             Log.e(TAG, "Failed to start caller popup", e)
         }

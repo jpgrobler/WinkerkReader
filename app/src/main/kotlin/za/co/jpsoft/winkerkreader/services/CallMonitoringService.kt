@@ -11,7 +11,6 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.IBinder
@@ -21,7 +20,7 @@ import androidx.core.content.ContextCompat
 import za.co.jpsoft.winkerkreader.data.DatabaseHelper
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.KEY_SELECTED_CALENDAR_ID
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
-
+import za.co.jpsoft.winkerkreader.R
 class CallMonitoringService : Service() {
 
     private var phoneCallMonitor: PhoneCallMonitor? = null
@@ -79,10 +78,10 @@ class CallMonitoringService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                "Call Monitoring",
+                getString(R.string.call_monitoring_channel_name),
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
-                description = "Monitors incoming calls in the background"
+                description = getString(R.string.call_monitoring_channel_description)
                 setShowBadge(false)
             }
             val manager = getSystemService(NotificationManager::class.java)
@@ -97,8 +96,8 @@ class CallMonitoringService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Call Logger Active")
-            .setContentText("Monitoring Phone & Voip calls")
+            .setContentTitle(getString(R.string.call_logger_active))
+            .setContentText(getString(R.string.monitoring_calls))
             .setSmallIcon(android.R.drawable.ic_menu_call)
             .setContentIntent(pendingIntent)
             .setOngoing(true)
@@ -125,7 +124,7 @@ class CallMonitoringService : Service() {
             }
 
             val calendarManager = CalendarManager(this)
-            val userPrefs = getSharedPreferences(PREFS_USER_INFO, Context.MODE_PRIVATE)
+            val userPrefs = getSharedPreferences(PREFS_USER_INFO, MODE_PRIVATE)
             var calendarId = userPrefs.getLong(KEY_SELECTED_CALENDAR_ID, DEFAULT_CALENDAR_ID)
 
             // Simple validation: use default if invalid (e.g., -1)

@@ -2,14 +2,14 @@ package za.co.jpsoft.winkerkreader.ui.adapters
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import za.co.jpsoft.winkerkreader.databinding.ItemCallLogBinding
 import za.co.jpsoft.winkerkreader.data.models.CallLog
-import kotlin.collections.toMutableList
 
-class CallLogAdapter(callLogs: List<CallLog>) : RecyclerView.Adapter<CallLogAdapter.CallLogViewHolder>() {
+class CallLogAdapter(initialLogs: List<CallLog>) : RecyclerView.Adapter<CallLogAdapter.CallLogViewHolder>() {
 
-    private val callLogs = callLogs.toMutableList()
+    private var callLogs: List<CallLog> = initialLogs.toList()
 
     class CallLogViewHolder(val binding: ItemCallLogBinding) : RecyclerView.ViewHolder(binding.root)
 
@@ -51,13 +51,22 @@ class CallLogAdapter(callLogs: List<CallLog>) : RecyclerView.Adapter<CallLogAdap
     override fun getItemCount() = callLogs.size
 
     fun updateLogs(newLogs: List<CallLog>) {
-        callLogs.clear()
-        callLogs.addAll(newLogs)
-        notifyDataSetChanged()
+        val diffResult = DiffUtil.calculateDiff(CallLogDiffCallback(callLogs, newLogs))
+        callLogs = newLogs.toList()
+        diffResult.dispatchUpdatesTo(this)
     }
 
-    fun addLog(callLog: CallLog) {
-        callLogs.add(0, callLog)
-        notifyItemInserted(0)
+    private class CallLogDiffCallback(
+        private val oldList: List<CallLog>,
+        private val newList: List<CallLog>
+    ) : DiffUtil.Callback() {
+        override fun getOldListSize() = oldList.size
+        override fun getNewListSize() = newList.size
+        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+            return oldList[oldItemPosition].id == newList[newItemPosition].id
+        }
+        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+            return oldList[oldItemPosition] == newList[newItemPosition]
+        }
     }
-}
+}

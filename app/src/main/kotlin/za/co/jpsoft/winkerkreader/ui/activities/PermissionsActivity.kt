@@ -1,7 +1,5 @@
 package za.co.jpsoft.winkerkreader.ui.activities
 
-import za.co.jpsoft.winkerkreader.WinkerkReader
-
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -10,22 +8,19 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.ImageView
-import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import za.co.jpsoft.winkerkreader.databinding.ActivityPermissionsBinding
 import za.co.jpsoft.winkerkreader.databinding.ItemPermissionBinding
+import za.co.jpsoft.winkerkreader.R
 
 class PermissionsActivity : AppCompatActivity() {
 
@@ -41,7 +36,7 @@ class PermissionsActivity : AppCompatActivity() {
         refreshPermissions()
     }
 
-    private val runtimePermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
+    private val runtimePermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { _ ->
         refreshPermissions()
     }
 
@@ -208,7 +203,7 @@ class PermissionsActivity : AppCompatActivity() {
         if (!Settings.canDrawOverlays(this)) {
             val intent = Intent(
                 Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                Uri.parse("package:$packageName")
+                "package:$packageName".toUri()
             )
             overlayPermissionLauncher.launch(intent)
         } else {
@@ -219,7 +214,7 @@ class PermissionsActivity : AppCompatActivity() {
     private fun requestExactAlarmPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
-                data = Uri.parse("package:$packageName")
+                data = "package:$packageName".toUri()
             }
             startActivity(intent)
         }
@@ -261,9 +256,6 @@ class PermissionsActivity : AppCompatActivity() {
         return true
     }
 
-    companion object {
-        private const val PERMISSION_REQUEST_CODE = 1001
-    }
 
     // Inner classes
     enum class PermissionType {
@@ -329,12 +321,12 @@ class PermissionsActivity : AppCompatActivity() {
                     itemBinding.ivPermissionStatus.setImageResource(android.R.drawable.checkbox_on_background)
                     itemBinding.ivPermissionStatus.setColorFilter(ContextCompat.getColor(this@PermissionsActivity, android.R.color.holo_green_dark))
                     itemBinding.btnRequestPermission.isEnabled = false
-                    itemBinding.btnRequestPermission.text = "Granted"
+                    itemBinding.btnRequestPermission.setText(R.string.permission_granted)
                 } else {
                     itemBinding.ivPermissionStatus.setImageResource(android.R.drawable.ic_delete)
                     itemBinding.ivPermissionStatus.setColorFilter(ContextCompat.getColor(this@PermissionsActivity, android.R.color.holo_red_dark))
                     itemBinding.btnRequestPermission.isEnabled = true
-                    itemBinding.btnRequestPermission.text = "Request"
+                    itemBinding.btnRequestPermission.setText(R.string.permission_request)
                 }
 
                 itemBinding.btnRequestPermission.setOnClickListener {
@@ -357,4 +349,4 @@ class PermissionsActivity : AppCompatActivity() {
             }
         }
     }
-}
+}

@@ -6,15 +6,12 @@ import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
-import android.database.Cursor
-import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.media.ThumbnailUtils
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.provider.Settings
 import android.text.Html
 import android.text.Spanned
 import android.util.Log
@@ -28,30 +25,23 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.FileProvider
 import androidx.core.widget.TextViewCompat
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.bumptech.glide.Glide
 import java.io.File
 import java.io.FileOutputStream
-import java.time.LocalDate
-import java.time.temporal.ChronoUnit
 import za.co.jpsoft.winkerkreader.R
-import za.co.jpsoft.winkerkreader.data.WinkerkContract
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
 import za.co.jpsoft.winkerkreader.ui.adapters.SpinnerAdapter
 import za.co.jpsoft.winkerkreader.ui.viewmodels.LidmaatDetailViewModel
 import za.co.jpsoft.winkerkreader.databinding.LidmaatDetailBinding
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
-import za.co.jpsoft.winkerkreader.utils.DeviceIdManager
 import za.co.jpsoft.winkerkreader.utils.Utils.fixphonenumber
-import za.co.jpsoft.winkerkreader.utils.Utils.parseDate
 import za.co.jpsoft.winkerkreader.utils.forceShowIcons
-import za.co.jpsoft.winkerkreader.utils.getIntOrDefault
-import za.co.jpsoft.winkerkreader.utils.getStringOrEmpty
-import za.co.jpsoft.winkerkreader.utils.getStringOrNull
 import za.co.jpsoft.winkerkreader.data.models.MemberDetailItem
 import za.co.jpsoft.winkerkreader.data.models.FamilyMemberItem
+import androidx.core.graphics.toColorInt
+import androidx.core.net.toUri
 
 class LidmaatDetailActivity : AppCompatActivity() {
 
@@ -68,7 +58,6 @@ class LidmaatDetailActivity : AppCompatActivity() {
     private var mStraatAdres: String = ""
     private var mPosAdres: String = ""
     private var recordStatus: String = "0"
-    private var mCursor: Cursor? = null // Keeping for compatibility, though we'll prefer MemberDetailItem
     private lateinit var viewModel: LidmaatDetailViewModel
 
     private val huwelikStatusArray =
@@ -80,12 +69,11 @@ class LidmaatDetailActivity : AppCompatActivity() {
     private var mHuwelikstatus = "Ongetroud"
     private lateinit var mCurrentLidmaatUri: Uri
     private var mImageUri: Uri? = null
-    private var mCurrentPicUri: String? = null
 
     // Photo Picker for gallery selection (Android 4.4+)
     private val photoPickerLauncher =
             registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-                uri?.let { processSelectedImage(it, isCamera = false) }
+                uri?.let { processSelectedImage(it) }
             }
 
     // Camera launcher (unchanged)
@@ -93,7 +81,7 @@ class LidmaatDetailActivity : AppCompatActivity() {
         registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
             val uri = mImageUri
             if (success && uri != null) {
-                processSelectedImage(uri, isCamera = true)
+                processSelectedImage(uri)
             } else {
                 if (uri == null) {
                     Log.e(TAG, "Camera returned but image URI is null (activity state lost)")
@@ -114,9 +102,6 @@ class LidmaatDetailActivity : AppCompatActivity() {
         settingsManager = SettingsManager.getInstance(this)
         binding = LidmaatDetailBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        // Removed AppSessionState.deviceId assignment
-        val deviceId = DeviceIdManager.getDeviceId(this)
 
         binding.detailIndeterminateBar.visibility = View.GONE
         binding.detailIndeterminateBar2.visibility = View.GONE
@@ -165,7 +150,7 @@ class LidmaatDetailActivity : AppCompatActivity() {
 
         // Restore pending image URI if any
         savedInstanceState?.getString(STATE_IMAGE_URI)?.let { uriString ->
-            mImageUri = Uri.parse(uriString)
+            mImageUri = uriString.toUri()
         }
     }
 
@@ -244,7 +229,7 @@ class LidmaatDetailActivity : AppCompatActivity() {
         } else {
             enableEditing(false)
             binding.buttonWysig.text = getString(R.string.wysig)
-            binding.buttonWysig.setBackgroundColor(Color.parseColor("#0A064F"))
+            binding.buttonWysig.setBackgroundColor("#0A064F".toColorInt())
             viewModel.memberDetail.value?.let { wysigLidmaatData(it) }
             hideSoftKeyboard()
         }
@@ -286,7 +271,7 @@ class LidmaatDetailActivity : AppCompatActivity() {
     private fun dialNumber(number: String) {
         if (number.isNotEmpty()) {
             try {
-                startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:$number")))
+                startActivity(Intent(Intent.ACTION_DIAL, "tel:$number".toUri()))
             } catch (e: Exception) {
                 Log.e(TAG, "Dial error", e)
             }
@@ -299,7 +284,7 @@ class LidmaatDetailActivity : AppCompatActivity() {
             val cell = fixphonenumber(number)?.replace("-", "")?.replace(" ", "") ?: ""
             if (cell.isNotEmpty()) {
                 try {
-                    val uri = Uri.parse("smsto: $cell")
+                    val uri = "smsto: $cell".toUri()
                     val intent =
                             Intent(Intent.ACTION_SENDTO, uri).apply { `package` = "com.whatsapp" }
                     startActivity(Intent.createChooser(intent, ""))
@@ -314,7 +299,7 @@ class LidmaatDetailActivity : AppCompatActivity() {
         val email = binding.detailEpos.text.toString()
         if (email.isNotEmpty()) {
             try {
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("mailto:$email"))
+                val intent = Intent(Intent.ACTION_VIEW, "mailto:$email".toUri())
                 startActivity(intent)
             } catch (e: Exception) {
                 Log.e(TAG, "Email error", e)
@@ -352,7 +337,7 @@ class LidmaatDetailActivity : AppCompatActivity() {
                             .replace("\r", "%2C")
                             .replace(" ", "%20")
             val mapUri = "geo:0,0?q=$encoded"
-            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(mapUri)))
+            startActivity(Intent(Intent.ACTION_VIEW, mapUri.toUri()))
         }
     }
 
@@ -611,8 +596,6 @@ class LidmaatDetailActivity : AppCompatActivity() {
 
     private fun wysigLidmaatData(item: MemberDetailItem) {
         val id = item.id
-        mLidmaatGUID = item.guid
-
         val values = ContentValues()
         var emailText = ""
         var emailHtml = "<html>"
@@ -699,17 +682,11 @@ class LidmaatDetailActivity : AppCompatActivity() {
 
         val sendIntent =
                 Intent(Intent.ACTION_SENDTO).apply {
-                    data = Uri.parse("mailto:")
+                    data = "mailto:".toUri()
                     putExtra(Intent.EXTRA_SUBJECT, subject)
                     putExtra(Intent.EXTRA_EMAIL, arrayOf(emailUrl))
                     if (eposHtmlEnabled) {
-                        @Suppress("DEPRECATION")
-                        val html: Spanned =
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                    Html.fromHtml(emailHtml, Html.FROM_HTML_MODE_LEGACY)
-                                } else {
-                                    Html.fromHtml(emailHtml)
-                                }
+                        val html: Spanned = Html.fromHtml(emailHtml, Html.FROM_HTML_MODE_LEGACY)
                         putExtra(Intent.EXTRA_TEXT, html)
                     } else {
                         putExtra(Intent.EXTRA_TEXT, emailText)
@@ -743,7 +720,7 @@ class LidmaatDetailActivity : AppCompatActivity() {
         )
     }
 
-    private fun processSelectedImage(imageUri: Uri, isCamera: Boolean) {
+    private fun processSelectedImage(imageUri: Uri) {
         val newPath = copyFoto(imageUri, mLidmaatGUID)
         if (newPath.isEmpty()) {
             Toast.makeText(this, "Failed to save image", Toast.LENGTH_SHORT).show()
@@ -825,32 +802,12 @@ class LidmaatDetailActivity : AppCompatActivity() {
         return "$guid.jpg"
     }
 
-    private fun setForceShowIcon(popupMenu: PopupMenu) {
-        try {
-            val fields = popupMenu.javaClass.declaredFields
-            for (field in fields) {
-                if ("mPopup" == field.name) {
-                    field.isAccessible = true
-                    val menuPopupHelper = field.get(popupMenu)
-                    val classPopupHelper = Class.forName(menuPopupHelper.javaClass.name)
-                    val setForceIcons =
-                            classPopupHelper.getMethod("setForceShowIcon", Boolean::class.java)
-                    setForceIcons.invoke(menuPopupHelper, true)
-                    break
-                }
-            }
-        } catch (e: Throwable) {
-            Log.e(TAG, "setForceShowIcon error", e)
-        }
-    }
-
     private fun kamera() {
         try {
             val photo = createTemporaryFile("picture", ".jpg")
             photo.delete()
             val imageUri = FileProvider.getUriForFile(this, "${packageName}.fileprovider", photo)
             mImageUri = imageUri
-            mCurrentPicUri = imageUri.path
             takePictureLauncher.launch(imageUri)
         } catch (e: Exception) {
             Toast.makeText(this, "Camera error: ${e.message}", Toast.LENGTH_LONG).show()

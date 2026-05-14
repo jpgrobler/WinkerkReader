@@ -1,14 +1,9 @@
 package za.co.jpsoft.winkerkreader.data
 
 import za.co.jpsoft.winkerkreader.BuildConfig   
-import za.co.jpsoft.winkerkreader.WinkerkReader
-import za.co.jpsoft.winkerkreader.data.WinkerkContract
-
-import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
 import android.content.*
 import android.database.Cursor
 import android.database.SQLException
-import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteException
 import android.net.Uri
 import android.os.Bundle
@@ -29,7 +24,7 @@ import za.co.jpsoft.winkerkreader.data.WinkerkContract.PATH_WKR_GROEPE
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.PATH_WKR_GROEPLEDE
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.INFO_DB
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.WINKERK_DB
-
+import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
 
 class WinkerkProvider : ContentProvider() {
 
@@ -54,29 +49,28 @@ class WinkerkProvider : ContentProvider() {
         private const val GROEPE_LYS = 114
         private const val WKR_GROEPE_LYS = 115
         private const val WKR_GROEPE_ID = 116
-        private const val WKR_NGROEP = 117
         private const val WKR_GROEPLEDE = 118
         private const val MEELEWING_LIDMAAT = 119
         private const val ARGIEF_LAAI = 120
 
         private val uriMatcher = UriMatcher(UriMatcher.NO_MATCH).apply {
             addURI(WinkerkContract.CONTENT_AUTHORITY, WinkerkContract.PATH_LIDMATE, LIDMAAT_LIST)
-            addURI(WinkerkContract.CONTENT_AUTHORITY, "$PATH_LIDMATE/#", LIDMAAT_GUID)
-            addURI(WinkerkContract.CONTENT_AUTHORITY, "$PATH_GESIN/#", GESIN_GUID)
-            addURI(WinkerkContract.CONTENT_AUTHORITY, "$PATH_FOON/#", OPROEP)
-            addURI(WinkerkContract.CONTENT_AUTHORITY, "$PATH_MYLPALE/#", MYLPALE_GUID)
-            addURI(WinkerkContract.CONTENT_AUTHORITY, "$PATH_MEELEWING/#", MEELEWING_LIDMAAT)
-            addURI(WinkerkContract.CONTENT_AUTHORITY, "$PATH_GROEPE/#", GROEPE_GUID)
-            addURI(WinkerkContract.CONTENT_AUTHORITY, PATH_GROEPE_LYS, GROEPE_LYS)
-            addURI(WinkerkContract.CONTENT_AUTHORITY, PATH_GEMEENTE_NAAM, GEMEENTE_NAAM)
-            addURI(WinkerkContract.CONTENT_AUTHORITY, "$PATH_ADRES/#", ADRES)
-            addURI(WinkerkContract.CONTENT_AUTHORITY, "$PATH_FOTO/#", FOTO)
-            addURI(WinkerkContract.CONTENT_AUTHORITY, PATH_FOTO, FOTO)
-            addURI(WinkerkContract.CONTENT_AUTHORITY, PATH_FOTO_UPDATER, FOTO_UPDATER)
-            addURI(WinkerkContract.CONTENT_AUTHORITY, "$PATH_WKR_GROEPE/#", WKR_GROEPE_ID)
-            addURI(WinkerkContract.CONTENT_AUTHORITY, PATH_WKR_GROEPE, WKR_GROEPE_LYS)
-            addURI(WinkerkContract.CONTENT_AUTHORITY, PATH_WKR_GROEPLEDE, WKR_GROEPLEDE)
-            addURI(WinkerkContract.CONTENT_AUTHORITY, PATH_ARGIEF, ARGIEF_LAAI)
+            addURI(WinkerkContract.CONTENT_AUTHORITY, "${WinkerkContract.PATH_LIDMATE}/#", LIDMAAT_GUID)
+            addURI(WinkerkContract.CONTENT_AUTHORITY, "${WinkerkContract.PATH_GESIN}/#", GESIN_GUID)
+            addURI(WinkerkContract.CONTENT_AUTHORITY, "${WinkerkContract.PATH_FOON}/#", OPROEP)
+            addURI(WinkerkContract.CONTENT_AUTHORITY, "${WinkerkContract.PATH_MYLPALE}/#", MYLPALE_GUID)
+            addURI(WinkerkContract.CONTENT_AUTHORITY, "${WinkerkContract.PATH_MEELEWING}/#", MEELEWING_LIDMAAT)
+            addURI(WinkerkContract.CONTENT_AUTHORITY, "${WinkerkContract.PATH_GROEPE}/#", GROEPE_GUID)
+            addURI(WinkerkContract.CONTENT_AUTHORITY, WinkerkContract.PATH_GROEPE_LYS, GROEPE_LYS)
+            addURI(WinkerkContract.CONTENT_AUTHORITY, WinkerkContract.PATH_GEMEENTE_NAAM, GEMEENTE_NAAM)
+            addURI(WinkerkContract.CONTENT_AUTHORITY, "${WinkerkContract.PATH_ADRES}/#", ADRES)
+            addURI(WinkerkContract.CONTENT_AUTHORITY, "${WinkerkContract.PATH_FOTO}/#", FOTO)
+            addURI(WinkerkContract.CONTENT_AUTHORITY, WinkerkContract.PATH_FOTO, FOTO)
+            addURI(WinkerkContract.CONTENT_AUTHORITY, WinkerkContract.PATH_FOTO_UPDATER, FOTO_UPDATER)
+            addURI(WinkerkContract.CONTENT_AUTHORITY, "${WinkerkContract.PATH_WKR_GROEPE}/#", WKR_GROEPE_ID)
+            addURI(WinkerkContract.CONTENT_AUTHORITY, WinkerkContract.PATH_WKR_GROEPE, WKR_GROEPE_LYS)
+            addURI(WinkerkContract.CONTENT_AUTHORITY, WinkerkContract.PATH_WKR_GROEPLEDE, WKR_GROEPLEDE)
+            addURI(WinkerkContract.CONTENT_AUTHORITY, WinkerkContract.PATH_ARGIEF, ARGIEF_LAAI)
         }
     }
 
@@ -133,12 +127,9 @@ class WinkerkProvider : ContentProvider() {
                 Log.v(tag, "GEMEENTE_NAAM ${db.isOpen}")
                 try {
                     cursor = db.rawQuery(selection ?: "", selectionArgs)
-                    count = try { cursor?.count ?: 0 } catch (e: SQLiteException) { 0 }
+                    count = try { cursor.count } catch (_: SQLiteException) { 0 }
                 } catch (_: Exception) {
                     Log.d(tag, "Gemeente doesn't exist :(((")
-                } finally {
-                    cursor?.close()
-                    cursor = null
                 }
             }
 
@@ -210,7 +201,7 @@ class WinkerkProvider : ContentProvider() {
                 try {
                     db.execSQL("ATTACH '$dbPath' as INFO;")
                     cursor = db.rawQuery(selection ?: "", selectionArgs)
-                    count = try { cursor?.count ?: 0 } catch (e: SQLiteException) { 0 }
+                    count = try { cursor.count } catch (_: SQLiteException) { 0 }
                 } finally {
                     try { db.execSQL("detach database INFO") } catch (_: Exception) {}
                 }
@@ -220,7 +211,7 @@ class WinkerkProvider : ContentProvider() {
                 val db = mInfoDbHelper?.readableDatabase ?: return null
                 try {
                     cursor = db.rawQuery(selection ?: "", selectionArgs)
-                    count = try { cursor?.count ?: 0 } catch (e: SQLiteException) { 0 }
+                    count = try { cursor.count } catch (_: SQLiteException) { 0 }
                     Log.v(tag, "Cursor INFO query ${db.isOpen}")
                 } catch (e: SQLException) {
                     Log.e("WinkerkReader", "FOTO >> $e")
@@ -232,7 +223,7 @@ class WinkerkProvider : ContentProvider() {
 
         Log.v(tag, "Cursor count $count")
         // Double-check cursor is actually usable
-        return if (cursor != null && try { safeGetCursorCount(cursor) > 0 } catch (e: SQLiteException) { false }) cursor else null
+        return if (cursor != null && try { safeGetCursorCount(cursor) > 0 } catch (_: SQLiteException) { false }) cursor else null
     }
 
     override fun insert(uri: Uri, contentValues: ContentValues?): Uri? {
@@ -257,7 +248,7 @@ class WinkerkProvider : ContentProvider() {
             WKR_GROEPLEDE -> {
                 val db = mInfoDbHelper?.writableDatabase ?: return null
                 val groepId = contentValues?.getAsString("GroepID") ?: return null
-                val lidmaatGuid = contentValues?.getAsString("LidmaatGUID") ?: return null
+                val lidmaatGuid = contentValues.getAsString("LidmaatGUID") ?: return null
 
                 var count = 0
                 db.rawQuery(

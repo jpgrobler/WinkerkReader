@@ -14,7 +14,6 @@ import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import androidx.activity.OnBackPressedCallback
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.ViewCompat
@@ -22,18 +21,15 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import java.util.concurrent.Executors
 import za.co.jpsoft.winkerkreader.R
-import za.co.jpsoft.winkerkreader.data.WinkerkDbHelper
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
 import za.co.jpsoft.winkerkreader.data.models.FilterBox
-import za.co.jpsoft.winkerkreader.data.models.MemberItem
 import za.co.jpsoft.winkerkreader.services.CallMonitoringService
 import za.co.jpsoft.winkerkreader.ui.adapters.MemberListAdapter
 import za.co.jpsoft.winkerkreader.ui.components.SearchCheckBox
-import za.co.jpsoft.winkerkreader.ui.models.MainQueryMode
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel
+import za.co.jpsoft.winkerkreader.utils.BatteryOptimizationHelper
 import za.co.jpsoft.winkerkreader.utils.DeviceIdManager
 import za.co.jpsoft.winkerkreader.utils.MenuItemHandler
 import za.co.jpsoft.winkerkreader.utils.NavigationHandler
@@ -41,7 +37,6 @@ import za.co.jpsoft.winkerkreader.utils.PermissionHelper
 import za.co.jpsoft.winkerkreader.utils.PermissionManager
 import za.co.jpsoft.winkerkreader.utils.SearchCheckBoxPreferences
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
-import za.co.jpsoft.winkerkreader.utils.Utils
 import za.co.jpsoft.winkerkreader.utils.WhatsAppContactLoader
 import za.co.jpsoft.winkerkreader.utils.WorkManagerHelper
 import za.co.jpsoft.winkerkreader.databinding.ActivityMainBinding
@@ -63,80 +58,26 @@ class MainActivity : AppCompatActivity() {
     private lateinit var searchFilterCoordinator: MainSearchFilterCoordinator
 
     private lateinit var permissionManager: PermissionManager
+    private lateinit var permissionDialogManager: PermissionDialogManager
     private lateinit var menuController: MainMenuController
     private lateinit var startupCoordinator: MainStartupCoordinator
     private lateinit var listInteractionController: MemberListInteractionController
+    private lateinit var activityResultCoordinator: ActivityResultCoordinator
+    private lateinit var mainDataLoader: MainDataLoader
 
     companion object {
         private const val TAG = "Winkerk_MainActivity"
         const val CHANNEL_ID = "winkerkReaderServiceChannel"
         const val SEARCH_CHECK_BOX = "SEARCH_CHECK_BOX"
         const val FILTER_CHECK_BOX = "FILTER_CHECK_BOX"
-
-        val whatsappContacts = mutableListOf<String>()
     }
 
-    private val searchLauncher =
-            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-                if (result.resultCode == RESULT_OK) {
-                    result.data?.let { data ->
-                        val list =
-                                if (android.os.Build.VERSION.SDK_INT >=
-                                                android.os.Build.VERSION_CODES.TIRAMISU
-                                ) {
-                                    data.getParcelableArrayListExtra(
-                                            SEARCH_CHECK_BOX,
-                                            SearchCheckBox::class.java
-                                    )
-                                } else {
-                                    @Suppress("DEPRECATION")
-                                    data.getParcelableArrayListExtra<SearchCheckBox>(
-                                            SEARCH_CHECK_BOX
-                                    )
-                                }
-                        if (list != null) {
-                            searchList = list
-                            viewModel.setSearchList(searchList)
-                        }
-                    }
-                } else {
-                    handleResultCancelled()
-                }
-            }
-
-    private val filterLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == RESULT_OK) {
-                result.data?.let { data ->
-                    val list =
-                        if (android.os.Build.VERSION.SDK_INT >=
-                            android.os.Build.VERSION_CODES.TIRAMISU
-                        ) {
-                            data.getParcelableArrayListExtra(
-                                FILTER_CHECK_BOX,
-                                FilterBox::class.java
-                            )
-                        } else {
-                            @Suppress("DEPRECATION")
-                            data.getParcelableArrayListExtra<FilterBox>(FILTER_CHECK_BOX)
-                        }
-                    if (list != null) {
-                        searchFilterCoordinator.applyFilterResult(list, viewModel.sortOrder)
-                    }
-                }
-            } else {
-                handleResultCancelled()
-            }
-        }
-
-    private val overlayPermissionLauncher =
-            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    if (Settings.canDrawOverlays(this)) {
-                        Log.d(TAG, "Overlay permission granted")
-                    }
-                }
-            }
+    // Activity result launchers are registered in ActivityResultCoordinator
+    // (field initialisation — must happen before onCreate)
+    // NOTE: activityResultCoordinator is lateinit and assigned in onCreate because
+    // its callbacks reference searchFilterCoordinator which is also lateinit.
+    // The launchers themselves are registered lazily inside the coordinator constructor
+    // which is called at the top of onCreate before setContentView.
 
     private fun handleResultCancelled() {
         searchFilterCoordinator.handleResultCancelled()
@@ -154,32 +95,56 @@ class MainActivity : AppCompatActivity() {
 
         initializeViews()
         permissionManager = PermissionManager(this)
+        permissionDialogManager = PermissionDialogManager(this, permissionManager)
         backgroundExecutor = Executors.newSingleThreadExecutor()
         gestureDetector = GestureDetector(this, SwipeGestureDetector())
 
+        // Must be created before startupCoordinator so launchers are registered
+        activityResultCoordinator = ActivityResultCoordinator(
+            activity = this,
+            searchCheckBoxKey = SEARCH_CHECK_BOX,
+            filterBoxKey = FILTER_CHECK_BOX,
+            onSearchResult = { list ->
+                searchList = list
+                viewModel.setSearchList(searchList)
+            },
+            onFilterResult = { list ->
+                searchFilterCoordinator.applyFilterResult(list, viewModel.sortOrder)
+            },
+            onCancelled = ::handleResultCancelled
+        )
+        mainDataLoader = MainDataLoader(
+            context = this,
+            binding = binding,
+            settingsManager = settingsManager,
+            executor = backgroundExecutor
+        )
+
         startupCoordinator =
-                MainStartupCoordinator(
-                        tag = TAG,
-                        context = this,
-                        lifecycleScope = lifecycleScope,
-                        settingsManager = settingsManager,
-                        permissionManager = permissionManager,
-                        binding = binding,
-                        checkAndRequestPermissions = ::checkAndRequestPermissions,
-                        startMonitoringServiceIfEnabled = ::startMonitoringServiceIfEnabled,
-                        setupViewModel = ::setupViewModel,
-                        setupPermissions = ::setupPermissions,
-                        initializeData = { initializeData(savedInstanceState) },
-                        setupEventHandlers = ::setupEventHandlers,
-                        setupAlarms = ::setupAlarms,
-                        loadInitialData = ::loadInitialData,
-                        ensureServicesAreRunning = ::ensureServicesAreRunning,
-                        isNotificationAccessEnabled = ::isNotificationAccessEnabled,
-                        openNotificationSettings = ::openNotificationSettings,
-                        showToast = { message ->
-                            Toast.makeText(this, message, Toast.LENGTH_LONG).show()
-                        }
-                )
+            MainStartupCoordinator(
+                tag = TAG,
+                context = this,
+                lifecycleScope = lifecycleScope,
+                settingsManager = settingsManager,
+                permissionManager = permissionManager,
+                binding = binding,
+                actions = object : StartupActions {
+                    override fun checkAndRequestPermissions() = this@MainActivity.checkAndRequestPermissions()
+                    override fun startMonitoringServiceIfEnabled() = this@MainActivity.startMonitoringServiceIfEnabled()
+                    override fun setupViewModel() = this@MainActivity.setupViewModel()
+                    override fun setupPermissions() = this@MainActivity.setupPermissions()
+                    override fun initializeData() = this@MainActivity.initializeData(null)
+                    override fun setupEventHandlers() = this@MainActivity.setupEventHandlers()
+                    override fun setupAlarms() = this@MainActivity.setupAlarms()
+                    override fun loadInitialData() = this@MainActivity.loadInitialData()
+                    override fun ensureServicesAreRunning() = this@MainActivity.ensureServicesAreRunning()
+                    override fun isNotificationAccessEnabled() = this@MainActivity.isNotificationAccessEnabled()
+                    override fun openNotificationSettings() = this@MainActivity.openNotificationSettings()
+                    override fun showToast(message: String) {
+                        Toast.makeText(this@MainActivity, message, Toast.LENGTH_SHORT).show()
+                    }
+                }
+            )
         startupCoordinator.runOnCreate()
         onBackPressedDispatcher.addCallback(
                 this,
@@ -194,6 +159,14 @@ class MainActivity : AppCompatActivity() {
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             view.setPadding(0, 0, 0, systemBars.bottom)
             insets
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        // If call logging is enabled, check for battery optimizations to ensure reliability.
+        if (settingsManager.callLogEnabled) {
+            BatteryOptimizationHelper.showBatteryOptimizationDialog(this)
         }
     }
 
@@ -238,70 +211,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun checkAndRequestPermissions() {
-        if (permissionManager.isFirstLaunch()) {
-            showFirstLaunchPermissionDialog()
-            return
-        }
-        if (permissionManager.isCheckOnStartEnabled() &&
-                        !permissionManager.hasEssentialPermissions()
-        ) {
-            showPermissionReminderDialog()
-        }
-    }
-
-    private fun showFirstLaunchPermissionDialog() {
-        AlertDialog.Builder(this)
-                .setTitle("Welcome to WinkerkReader!")
-                .setMessage(
-                        "This app requires several permissions to function properly.\n\nPlease grant the necessary permissions to continue."
-                )
-                .setCancelable(false)
-                .setPositiveButton("Grant Permissions") { _, _ ->
-                    permissionManager.setFirstLaunchComplete()
-                    startActivity(Intent(this@MainActivity, PermissionsActivity::class.java))
-                }
-                .setNegativeButton("Exit") { _, _ -> finish() }
-                .show()
-    }
-
-    private fun showPermissionReminderDialog() {
-        val missingCount = permissionManager.getMissingPermissionsCount()
-        AlertDialog.Builder(this)
-                .setTitle("Permissions Required")
-                .setMessage(
-                        "You have $missingCount missing permission(s).\n\nSome features may not work correctly without these permissions."
-                )
-                .setPositiveButton("Grant Now") { _, _ ->
-                    startActivity(Intent(this@MainActivity, PermissionsActivity::class.java))
-                }
-                .setNegativeButton("Later", null)
-                .setNeutralButton("Don't Ask Again") { _, _ -> showDisablePermissionCheckDialog() }
-                .show()
-    }
-
-    private fun showDisablePermissionCheckDialog() {
-        AlertDialog.Builder(this)
-                .setTitle("Disable Permission Check")
-                .setMessage(
-                        "Are you sure you want to disable the permission check on startup?\n\nYou can re-enable it later from the settings menu."
-                )
-                .setPositiveButton("Yes, Disable") { _, _ ->
-                    permissionManager.setCheckOnStart(false)
-                    Toast.makeText(
-                                    this,
-                                    "Permission check disabled. Enable it from Settings.",
-                                    Toast.LENGTH_LONG
-                            )
-                            .show()
-                }
-                .setNegativeButton("Cancel", null)
-                .show()
+        permissionDialogManager.checkAndShowIfNeeded()
     }
 
     private fun checkOverlayPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
             PermissionHelper.getSystemAlertWindowPermissionIntent(this)?.let {
-                overlayPermissionLauncher.launch(it)
+                activityResultCoordinator.overlayPermissionLauncher.launch(it)
             }
         }
     }
@@ -340,6 +256,7 @@ class MainActivity : AppCompatActivity() {
         searchFilterCoordinator =
             MainSearchFilterCoordinator(
                 tag = TAG,
+                context = this,
                 viewModel = viewModel,
                 settingsManager = settingsManager,
                 binding = binding,
@@ -349,8 +266,7 @@ class MainActivity : AppCompatActivity() {
                     if (binding.mainFilter.visibility == View.VISIBLE) {
                         binding.mainFilter.visibility = View.GONE
                     }
-                },
-                observeDataset = ::observeDataset
+                }
             )
         menuController =
             MainMenuController(
@@ -398,7 +314,11 @@ class MainActivity : AppCompatActivity() {
                 // submitList callback fires on the main thread once DiffUtil has
                 // committed changes — safe place to auto-scroll
                 if (isVerjaar && items.isNotEmpty()) {
-                    scrollToNextBirthday(items)
+                    BirthdayScrollHelper.scrollToNextBirthday(
+                        binding.lidmaatList,
+                        items,
+                        backgroundExecutor
+                    )
                 }
             }
         }
@@ -582,158 +502,24 @@ class MainActivity : AppCompatActivity() {
         binding.sortorder.tag = viewModel.sortOrder
         binding.mainCount.text = "[0]"
 
-        backgroundExecutor.execute {
-            WinkerkDbHelper.setDatabaseDate(this)
-            WinkerkDbHelper.setChurchInfo(this)
-            runOnUiThread {
-                val churchText =
-                        "${settingsManager.gemeenteNaam} ${settingsManager.gemeente2Naam} ${settingsManager.gemeente3Naam}".trim()
-                binding.mainGemeentenaam.text = churchText
-                // Apply the background color properly if set
-                if (settingsManager.gemeenteKleur != -1) {
-                    binding.mainGemeentenaam.setBackgroundColor(settingsManager.gemeenteKleur)
-                    // Ensure text is readable
-                    binding.mainGemeentenaam.setTextColor(
-                        if (isColorDark(settingsManager.gemeenteKleur))
-                            android.graphics.Color.WHITE
-                        else
-                            android.graphics.Color.BLACK
-                    )
-                }
-
-                observeDataset()
-                WhatsAppContactLoader.loadWhatsAppContactsAtomic(this)
-            }
-        }
-    }
-    // Helper to determine if color is dark
-    private fun isColorDark(color: Int): Boolean {
-        val darkness = 1 - (0.299 * android.graphics.Color.red(color) +
-                0.587 * android.graphics.Color.green(color) +
-                0.114 * android.graphics.Color.blue(color)) / 255
-        return darkness >= 0.5
-    }
-    fun observeDataset() {
-        // Only show search block if we're actually searching and have search text
-        binding.searchItemBlock.visibility =
-                if (viewModel.soekList && viewModel.soek.isNotEmpty()) View.VISIBLE else View.GONE
-
-        // Don't override binding.sortorder.text if we're searching
-        if (!viewModel.soekList || viewModel.soek.isEmpty()) {
-            binding.sortorder.text = viewModel.sortOrder
-            binding.sortorder.tag = viewModel.sortOrder
-        }
-
-        when (val mode = resolveQueryMode(settingsManager.defLayout)) {
-            MainQueryMode.Search -> {
-                // Only do search if there's actual search text
-                if (viewModel.soek.isNotEmpty()) {
-                    viewModel.soekList = true
-                    loadQueryMode(mode)
-                } else {
-                    // Fall back to default view if search is empty
-                    viewModel.soekList = false
-                    val fallbackLayout =
-                        if (searchFilterCoordinator.originalLayoutBeforeSearch.isNotEmpty()) {
-                            searchFilterCoordinator.originalLayoutBeforeSearch
-                        } else {
-                            settingsManager.defLayout
-                        }
-                    loadQueryMode(resolveQueryMode(fallbackLayout))
-                }
-            }
-            is MainQueryMode.Filter -> {
-                viewModel.soekList = false
-                binding.searchItemBlock.visibility = View.VISIBLE
-                loadQueryMode(mode)
-            }
-            else -> loadQueryMode(mode)
-        }
-    }
-
-    private fun resolveQueryMode(layout: String): MainQueryMode {
-        return when (layout) {
-            "SOEK_DATA" -> MainQueryMode.Search
-            "FILTER_DATA" -> MainQueryMode.Filter(searchFilterCoordinator.filterList ?: arrayListOf())
-            "ADRES" -> MainQueryMode.Address
-            "GESINNE" -> MainQueryMode.Family
-            "HUWELIK" -> MainQueryMode.Wedding
-            "OUDERDOM" -> MainQueryMode.Age
-            "VAN" -> MainQueryMode.Surname
-            "VERJAAR" -> MainQueryMode.Birthday
-            "WYK" -> MainQueryMode.Ward
-            else -> MainQueryMode.Raw(layout)
-        }
-    }
-
-    private fun loadQueryMode(mode: MainQueryMode) {
-        viewModel.loadData(this, mode)
-    }
-
-    // -------------------------------------------------------------------------
-    // Birthday auto-scroll — operates on List<MemberItem>, not a Cursor
-    // -------------------------------------------------------------------------
-
-    private fun scrollToNextBirthday(items: List<MemberItem>) {
-        backgroundExecutor.execute {
-            try {
-                val today = java.time.LocalDate.now()
-                val currentMonth = today.monthValue.toString().padStart(2, '0')
-                val currentDay = today.dayOfMonth.toString().padStart(2, '0')
-                val targetPosition = findNextBirthdayPosition(items, currentMonth, currentDay)
-                if (targetPosition != -1) {
-                    runOnUiThread {
-                        binding.lidmaatList.post { binding.lidmaatList.scrollToPosition(targetPosition) }
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "Error scrolling to next birthday", e)
-            }
+        mainDataLoader.load {
+            // Runs on main thread after church header is applied
+            searchFilterCoordinator.refresh()
+            WhatsAppContactLoader.loadWhatsAppContactsAtomic(this, lifecycleScope)
         }
     }
 
     /**
-     * Finds the position of the first birthday >= today's month-day, wrapping around to the first
-     * birthday of the year if none found after today.
+     * Public entry point used by [MainMenuController] and other coordinators
+     * to trigger a data refresh. Delegates to [MainSearchFilterCoordinator.refresh].
      */
-    private fun findNextBirthdayPosition(
-            items: List<MemberItem>,
-            todayMonth: String,
-            todayDay: String
-    ): Int {
-        val todayMD = todayMonth.toInt() * 100 + todayDay.toInt()
-        var firstCandidatePos = -1
-        var firstCandidateMD = Int.MAX_VALUE
-
-        for ((pos, item) in items.withIndex()) {
-            val birthday = item.birthday
-            if (birthday.length >= 10) {
-                try {
-                    val month = birthday.substring(3, 5).trim()
-                    val day = birthday.substring(0, 2).trim()
-                    val monthDay = month.toInt() * 100 + day.toInt()
-                    if (monthDay >= todayMD) return pos
-                    if (monthDay < firstCandidateMD) {
-                        firstCandidateMD = monthDay
-                        firstCandidatePos = pos
-                    }
-                } catch (_: NumberFormatException) {}
-            }
-        }
-        return firstCandidatePos
+    fun observeDataset() {
+        searchFilterCoordinator.refresh()
     }
 
     // -------------------------------------------------------------------------
-    // Database helpers (unchanged)
+    // Options menu, touch & lifecycle
     // -------------------------------------------------------------------------
-
-    // -------------------------------------------------------------------------
-    // Options menu & search (unchanged)
-    // -------------------------------------------------------------------------
-
-    // -------------------------------------------------------------------------
-    // Options menu & search (unchanged)
-    // -----------------------------------------------------------------------
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         return menuController.onCreateOptionsMenu(menu)
     }

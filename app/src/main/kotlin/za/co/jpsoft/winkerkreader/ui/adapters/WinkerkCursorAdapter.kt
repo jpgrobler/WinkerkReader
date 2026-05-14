@@ -1,5 +1,5 @@
 package za.co.jpsoft.winkerkreader.ui.adapters
-
+import za.co.jpsoft.winkerkreader.data.repositories.ContactRepository
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import za.co.jpsoft.winkerkreader.utils.PhotoHelper
 import za.co.jpsoft.winkerkreader.ui.activities.MainActivity
@@ -273,9 +273,11 @@ class WinkerkCursorAdapter(context: Context, cursor: Cursor?) : CursorAdapter(co
             } else {
                 vh.selBlock.visibility = View.GONE
             }
-            if (MainActivity.whatsappContacts.isNotEmpty() && settingsManager.isListWhatsapp) {
-                if (MainActivity.whatsappContacts.contains(formattedCell)) {
-                    vh.whatsappImageView.visibility = View.VISIBLE
+            if (settingsManager.isListWhatsapp) {
+                formattedCell?.let { cell ->
+                    if (ContactRepository.isWhatsAppContact(cell)) {
+                        vh.whatsappImageView.visibility = View.VISIBLE
+                    }
                 }
             }
         } else {
@@ -678,4 +680,4 @@ class WinkerkCursorAdapter(context: Context, cursor: Cursor?) : CursorAdapter(co
         var weddingDT: LocalDate? = null
         var guid = ""
     }
-}
+}

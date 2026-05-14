@@ -1,10 +1,7 @@
 package za.co.jpsoft.winkerkreader.data
 
-import za.co.jpsoft.winkerkreader.utils.CursorDataExtractor
-
 import android.content.ContentValues
 import android.content.Context
-import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
@@ -15,7 +12,7 @@ import za.co.jpsoft.winkerkreader.utils.CursorDataExtractor.getSafeString
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.util.*
+import java.util.Locale
 
 class DatabaseHelper private constructor(context: Context) : SQLiteOpenHelper(context.applicationContext, DATABASE_NAME, null, DATABASE_VERSION) {
 
@@ -66,7 +63,7 @@ class DatabaseHelper private constructor(context: Context) : SQLiteOpenHelper(co
                 db.execSQL("ALTER TABLE $TABLE_CALL_LOGS ADD COLUMN $COLUMN_CALL_TYPE TEXT DEFAULT 'INCOMING'")
                 db.execSQL("ALTER TABLE $TABLE_CALL_LOGS ADD COLUMN $COLUMN_SOURCE TEXT DEFAULT 'WhatsApp'")
                 db.execSQL("ALTER TABLE $TABLE_CALL_LOGS ADD COLUMN $COLUMN_DURATION INTEGER DEFAULT 0")
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // If columns already exist or other error, recreate table
                 db.execSQL("DROP TABLE IF EXISTS $TABLE_CALL_LOGS")
                 onCreate(db)
@@ -129,15 +126,6 @@ class DatabaseHelper private constructor(context: Context) : SQLiteOpenHelper(co
         return result != -1L
     }
 
-    fun insertCallLogWithType(
-        callerInfo: String,
-        timestamp: Long,
-        callType: CallType,
-        source: String
-    ): Boolean {
-        return insertCallLogWithType(callerInfo, timestamp, callType, source, 0L)
-    }
-
     fun getAllCallLogs(): List<CallLog> {
         val callLogs = mutableListOf<CallLog>()
         val query = "SELECT * FROM $TABLE_CALL_LOGS ORDER BY $COLUMN_TIMESTAMP DESC"
@@ -170,47 +158,8 @@ class DatabaseHelper private constructor(context: Context) : SQLiteOpenHelper(co
         return callLogs
     }
 
-    fun deleteCallLog(id: Long): Boolean {
-        val result = writableDatabase.delete(TABLE_CALL_LOGS, "$COLUMN_ID = ?", arrayOf(id.toString()))
-        return result > 0
-    }
-
     fun clearAllCallLogs(): Boolean {
         val result = writableDatabase.delete(TABLE_CALL_LOGS, null, null)
-        return result > 0
-    }
-
-    fun getCallLogsCount(): Int {
-        var count = 0
-        readableDatabase.rawQuery("SELECT COUNT(*) FROM $TABLE_CALL_LOGS", null).use { cursor ->
-            if (cursor.moveToFirst()) {
-                count = cursor.getInt(0)
-            }
-        }
-        return count
-    }
-
-    fun getRecentCallLogs(timeWindowMs: Long): List<CallLog> {
-        val recentCalls = mutableListOf<CallLog>()
-        val currentTime = System.currentTimeMillis()
-        val cutoffTime = currentTime - timeWindowMs
-
-        val query = "SELECT * FROM $TABLE_CALL_LOGS WHERE $COLUMN_TIMESTAMP > ? ORDER BY $COLUMN_TIMESTAMP DESC"
-        readableDatabase.rawQuery(query, arrayOf(cutoffTime.toString())).use { cursor ->
-            if (cursor.moveToFirst()) {
-                do {
-                    val id = getSafeLong(cursor, COLUMN_ID, -1L)
-                    val callerInfo = getSafeString(cursor, COLUMN_CALLER_INFO, "") ?: ""
-                    val timestamp = getSafeLong(cursor, COLUMN_TIMESTAMP, 0L)
-                    val dateTime = getSafeString(cursor, COLUMN_DATE_TIME, "") ?: ""
-                    val callType = getSafeString(cursor, COLUMN_CALL_TYPE, "INCOMING") ?: "INCOMING"
-                    val source = getSafeString(cursor, COLUMN_SOURCE, "WhatsApp") ?: "WhatsApp"
-                    val duration = getSafeLong(cursor, COLUMN_DURATION, 0L)
-
-                    recentCalls.add(CallLog(id, callerInfo, timestamp, dateTime, callType, source, duration))
-                } while (cursor.moveToNext())
-            }
-        }
-        return recentCalls
+        return result >= 0
     }
 }

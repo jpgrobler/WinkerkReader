@@ -222,7 +222,7 @@ class ArgiefLysAdapter(context: Context, cursor: Cursor?) : CursorAdapter(contex
 
                 if (previous != null && current != null && previous != current) {
                     itemBinding.argiefListSeparator.visibility = View.VISIBLE
-                    itemBinding.argiefListSeparator.text = "${keuse} $current"
+                    itemBinding.argiefListSeparator.text = context.getString(R.string.separator_format, keuse, current)
                 }
             }
         } catch (e: Exception) {

@@ -6,7 +6,7 @@
     tools:context=".ui.home.activities.TransactionSearchActivity">
     <item
         android:id="@+id/aktief_radio_group"
-        android:title="Aktief/Onaktief/Beide"
+        android:title="@string/mainmenu_filter_aktief"
         app:actionLayout="@layout/aktief_radio"
         app:showAsAction="ifRoom" />
     <item
@@ -96,19 +96,24 @@
                 />
             <item
                 android:id="@+id/uitleg"
-                android:title="Uitleg + Funksies"
+                android:title="@string/mainmenu_uitleg_funksies"
                 app:showAsAction="never"
                 android:icon="@drawable/uitleg"
                 />
             <item
                 android:id="@+id/menu_permissions"
-                android:title="Manage Permissions"
+                android:title="@string/mainmenu_manage_permissions"
                 android:icon="@android:drawable/ic_lock_lock"
                 app:showAsAction="never" />
             <item
                 android:id="@+id/menu_permission_settings"
-                android:title="Permission Settings"
+                android:title="@string/mainmenu_permission_settings"
                 android:icon="@android:drawable/ic_menu_preferences"
+                app:showAsAction="never" />
+            <item
+                android:id="@+id/menu_battery_optimization"
+                android:title="@string/battery_optimization_title"
+                android:icon="@android:drawable/ic_menu_info_details"
                 app:showAsAction="never" />
         </menu>
     </item>
@@ -126,7 +131,7 @@
         />
     <item
         android:id="@+id/action_view_call_log"
-        android:title="View Call Log"
+        android:title="@string/mainmenu_view_call_log"
         android:icon="@android:drawable/ic_menu_recent_history"
         app:showAsAction="never"
         />

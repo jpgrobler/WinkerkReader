@@ -6,15 +6,11 @@ import android.app.NotificationManager
 import android.app.Service
 import android.content.ClipData
 import android.content.ClipboardManager
-import android.content.ContentUris
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
-import android.database.Cursor
-import android.database.SQLException
 import android.graphics.Color
 import android.graphics.PixelFormat
-import android.net.Uri
 import android.os.Build
 import android.os.IBinder
 import android.provider.Settings
@@ -27,12 +23,11 @@ import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.app.NotificationCompat
+import androidx.core.content.edit
+import androidx.core.net.toUri
 import za.co.jpsoft.winkerkreader.R
-import za.co.jpsoft.winkerkreader.data.WinkerkContract
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
-import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
 import za.co.jpsoft.winkerkreader.utils.CallerInfoResolver
-import za.co.jpsoft.winkerkreader.utils.OproepUtils
 import java.lang.ref.WeakReference
 
 class OproepDetailService : Service() {
@@ -67,7 +62,6 @@ class OproepDetailService : Service() {
 
     private lateinit var windowManager: WindowManager
     private lateinit var floatingView: View
-    private var name = ""
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -105,7 +99,7 @@ class OproepDetailService : Service() {
         serviceInstance = null
 
         val settings = getSharedPreferences(PREFS_USER_INFO, 0)
-        settings.edit().putString("CallerNumber", "XXXXXXXXXX").apply()
+        settings.edit { putString("CallerNumber", "XXXXXXXXXX") }
 
         if (::floatingView.isInitialized) {
             try {
@@ -119,33 +113,27 @@ class OproepDetailService : Service() {
     }
 
     private fun createForegroundNotification() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channelId = "WinkerkReader"
-            val channelName = "Oproep Service"
-            val channel = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_LOW).apply {
-                lightColor = Color.BLUE
-                lockscreenVisibility = Notification.VISIBILITY_PRIVATE
-                setShowBadge(false)
-            }
-            val manager = getSystemService(NotificationManager::class.java)
-            manager?.createNotificationChannel(channel)
-
-            val notification = NotificationCompat.Builder(this, channelId)
-                .setOngoing(true)
-                .setSmallIcon(R.drawable.img)
-                .setContentTitle("Caller ID Service")
-                .setContentText("Monitoring incoming calls")
-                .setPriority(NotificationCompat.PRIORITY_LOW)
-                .setCategory(NotificationCompat.CATEGORY_SERVICE)
-                .setShowWhen(false)
-                .build()
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                startForeground(2, notification, FOREGROUND_SERVICE_TYPE_DATA_SYNC)
-            } else {
-                startForeground(2, notification)
-            }
+        val channelId = "WinkerkReader"
+        val channelName = "Oproep Service"
+        val channel = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_LOW).apply {
+            lightColor = Color.BLUE
+            lockscreenVisibility = Notification.VISIBILITY_PRIVATE
+            setShowBadge(false)
         }
+        val manager = getSystemService(NotificationManager::class.java)
+        manager?.createNotificationChannel(channel)
+
+        val notification = NotificationCompat.Builder(this, channelId)
+            .setOngoing(true)
+            .setSmallIcon(R.drawable.img)
+            .setContentTitle("Caller ID Service")
+            .setContentText("Monitoring incoming calls")
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setCategory(NotificationCompat.CATEGORY_SERVICE)
+            .setShowWhen(false)
+            .build()
+
+        startForeground(2, notification, FOREGROUND_SERVICE_TYPE_DATA_SYNC)
     }
 
     private fun isValidPhoneNumber(phoneNumber: String): Boolean {
@@ -154,34 +142,22 @@ class OproepDetailService : Service() {
 
     private fun processIncomingCall(incomingNumber: String, settings: SharedPreferences) {
         val callerInfo = CallerInfoResolver.getCallerDisplayInfo(contentResolver, incomingNumber)
-        createFloatingView(callerInfo, settings)
+        createFloatingView(callerInfo)
     }
 
-
-    private fun buildSearchQuery(searchNumber: String): String {
-        val baseQuery = winkerkEntry.SELECTION_LIDMAAT_INFO + " FROM " + WinkerkContract.winkerkEntry.SELECTION_LIDMAAT_FROM + " WHERE "
-        val phoneConditions = String.format(
-            "(REPLACE(%s,' ','') LIKE '%%%s') OR (REPLACE(%s,' ','') LIKE '%%%s') OR (REPLACE(%s,' ','') LIKE '%%%s')",
-            "[${winkerkEntry.LIDMATE_SELFOON}]", searchNumber,
-            "[${winkerkEntry.LIDMATE_LANDLYN}]", searchNumber,
-            "[${winkerkEntry.LIDMATE_WERKFOON}]", searchNumber
-        )
-        return " $baseQuery$phoneConditions;"
-    }
-
-    private fun createFloatingView(callerInfo: String, prefs: SharedPreferences) {
-        // Check if already initialized and showing
+    private fun createFloatingView(callerInfo: String) {
         if (::floatingView.isInitialized) {
             Log.d("OproepDetailService", "Floating view already exists, skipping")
             return
         }
 
+        // Inflate without root to avoid layout parameter issues
         floatingView = LayoutInflater.from(this).inflate(R.layout.oproepfloat, null)
         val callerTextView = floatingView.findViewById<TextView>(R.id.oproepnommer)
         callerTextView.text = callerInfo
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
-            val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
+        if (!Settings.canDrawOverlays(this)) {
+            val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, "package:$packageName".toUri())
             startActivity(intent)
             stopSelf()
             return
@@ -197,12 +173,8 @@ class OproepDetailService : Service() {
             x = 0
             y = 100
         }
-        windowManager = (getSystemService(WINDOW_SERVICE) as? WindowManager)!!
-        if (windowManager == null) {
-            Log.e(TAG, "WindowManager not available")
-            stopSelf()
-            return
-        }
+        windowManager = (getSystemService(WINDOW_SERVICE) as WindowManager)
+        
         try {
             windowManager.addView(floatingView, params)
         } catch (e: Exception) {
@@ -212,15 +184,10 @@ class OproepDetailService : Service() {
     }
 
     private fun createWindowLayoutParams(): WindowManager.LayoutParams {
-        val windowType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-        } else {
-            WindowManager.LayoutParams.TYPE_PHONE
-        }
         return WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
-            windowType,
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
             PixelFormat.TRANSLUCENT
         )
@@ -243,7 +210,7 @@ class OproepDetailService : Service() {
         )
     }
 
-    private inner class FloatingViewTouchListener(
+    private class FloatingViewTouchListener(
         private val params: WindowManager.LayoutParams,
         private val windowManager: WindowManager,
         private val floatingView: View
@@ -261,6 +228,7 @@ class OproepDetailService : Service() {
                     initialY = params.y
                     initialTouchX = event.rawX
                     initialTouchY = event.rawY
+                    v.performClick()
                     return true
                 }
                 MotionEvent.ACTION_UP -> {
@@ -276,4 +244,4 @@ class OproepDetailService : Service() {
             return false
         }
     }
-}
+}

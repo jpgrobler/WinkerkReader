@@ -1,15 +1,8 @@
 package za.co.jpsoft.winkerkreader.ui.activities
 
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
-import za.co.jpsoft.winkerkreader.WinkerkReader
-import za.co.jpsoft.winkerkreader.R
 import android.os.Bundle
-import android.provider.Settings
 import android.view.View
-import android.widget.EditText
-import android.widget.ImageView
-
-import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
@@ -38,9 +31,6 @@ class RegistreerActivity : AppCompatActivity() {
     }
 
     private fun initializeUI() {
-
-        // Get device ID using privacy-compliant manager
-        val deviceId = za.co.jpsoft.winkerkreader.utils.DeviceIdManager.getDeviceId(this)
 
         // Set about text
         binding.regAbout.text = getAboutText()
@@ -78,7 +68,7 @@ class RegistreerActivity : AppCompatActivity() {
         binding.regOpdateer.setOnClickListener(::handleUpdateClick)
     }
 
-    private fun handleUpdateClick(view: View) {
+    private fun handleUpdateClick(unused: View) {
         val userData = collectUserData()
         saveUserData(userData)
         Toast.makeText(this, "Inligting gestoor", Toast.LENGTH_LONG).show()

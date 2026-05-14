@@ -3,7 +3,6 @@ package za.co.jpsoft.winkerkreader.utils
 
 import android.content.ContentResolver
 import android.content.ContentUris
-import android.database.Cursor
 import android.net.Uri
 import android.provider.ContactsContract
 import za.co.jpsoft.winkerkreader.data.WinkerkContract
@@ -68,8 +67,11 @@ object CallerInfoResolver {
         val cursor = contentResolver.query(uri, projection, null, null, null) ?: return null
         cursor.use {
             if (it.moveToFirst()) {
-                val name = it.getString(it.getColumnIndex(ContactsContract.PhoneLookup.DISPLAY_NAME))
-                if (!name.isNullOrBlank()) return name
+                val idx = it.getColumnIndex(ContactsContract.PhoneLookup.DISPLAY_NAME)
+                if (idx >= 0) {
+                    val name = it.getString(idx)
+                    if (!name.isNullOrBlank()) return name
+                }
             }
         }
         return null

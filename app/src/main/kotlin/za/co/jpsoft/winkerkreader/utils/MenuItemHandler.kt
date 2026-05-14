@@ -60,6 +60,10 @@ class MenuItemHandler(
                 showPermissionSettingsDialog()
                 true
             }
+            R.id.menu_battery_optimization -> {
+                BatteryOptimizationHelper.showBatteryOptimizationDialog(activity)
+                true
+            }
             else -> false
         }
     }

@@ -15,6 +15,7 @@ import android.telephony.TelephonyManager
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
+import androidx.core.content.edit
 import za.co.jpsoft.winkerkreader.data.DatabaseHelper
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
 import za.co.jpsoft.winkerkreader.data.models.CallType
@@ -22,12 +23,13 @@ import za.co.jpsoft.winkerkreader.data.models.CallType
 
 class PhoneCallMonitor(
     private val context: Context,
-    private val databaseHelper: DatabaseHelper,
-    private val calendarManager: CalendarManager,
-    private val calendarId: Long
+    databaseHelper: DatabaseHelper,
+    calendarManager: CalendarManager,
+    calendarId: Long
 ) {
 
     private var telephonyManager: TelephonyManager? = null
+    @Suppress("DEPRECATION")
     private var phoneStateListener: PhoneStateListener? = null
     private var telephonyCallback: Any? = null // TelephonyCallback on API 31+
 
@@ -48,7 +50,6 @@ class PhoneCallMonitor(
     }
 
 
-    fun getUnifiedMonitor(): UnifiedCallMonitor? = unifiedMonitor
 
     fun setIncomingNumber(number: String?) {
         pendingIncomingNumber = number
@@ -70,6 +71,7 @@ class PhoneCallMonitor(
             telephonyManager?.registerTelephonyCallback(context.mainExecutor, callback)
             Log.d(TAG, "TelephonyCallback registered (API 31+)")
         } else {
+            @Suppress("DEPRECATION")
             phoneStateListener = object : PhoneStateListener() {
                 @Suppress("OVERRIDE_DEPRECATION")
                 override fun onCallStateChanged(state: Int, phoneNumber: String?) {
@@ -77,6 +79,7 @@ class PhoneCallMonitor(
                     handleStateChanged(state, phoneNumber)
                 }
             }
+            @Suppress("DEPRECATION")
             telephonyManager?.listen(phoneStateListener, PhoneStateListener.LISTEN_CALL_STATE)
             Log.d(TAG, "PhoneStateListener registered (Legacy)")
         }
@@ -106,6 +109,7 @@ class PhoneCallMonitor(
                 }
                 telephonyCallback = null
             } else {
+                @Suppress("DEPRECATION")
                 telephonyManager?.listen(phoneStateListener, PhoneStateListener.LISTEN_NONE)
                 phoneStateListener = null
             }
@@ -143,7 +147,7 @@ class PhoneCallMonitor(
         // DO NOT call syncRecentCallsToCalendar here – UnifiedMonitor will handle logging.
 
         val settings = context.getSharedPreferences(PREFS_USER_INFO, 0)
-        settings.edit().putString("CallerNumber", number).apply()
+        settings.edit { putString("CallerNumber", number) }
         Log.d(TAG, "INCOMING call detected: $currentIncomingNumber")
         startCallerIdentificationService(context)
     }
@@ -201,10 +205,6 @@ class PhoneCallMonitor(
         currentCallType = null
     }
 
-    private fun getContactName(phoneNumber: String?): String {
-        if (phoneNumber.isNullOrEmpty()) return "Unknown Number"
-        return phoneNumber
-    }
 
     private fun hasRequiredPermissions(): Boolean {
         val requiredPermissions = arrayOf(
@@ -237,11 +237,7 @@ class PhoneCallMonitor(
 
         val serviceIntent = Intent(context, OproepDetailService::class.java)
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(serviceIntent)
-            } else {
-                context.startService(serviceIntent)
-            }
+            context.startForegroundService(serviceIntent)
             Log.d(TAG, "Caller identification service started")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to start caller identification service: ${e.message}")
@@ -256,7 +252,7 @@ class PhoneCallMonitor(
 
     private fun stopCallerIdentificationService(context: Context) {
         val prefs = context.getSharedPreferences(PREFS_USER_INFO, Context.MODE_PRIVATE)
-        prefs.edit().putString("CallerNumber", PLACEHOLDER_NUMBER).apply()
+        prefs.edit { putString("CallerNumber", PLACEHOLDER_NUMBER) }
         val serviceIntent = Intent(context, OproepDetailService::class.java)
         try {
             context.stopService(serviceIntent)

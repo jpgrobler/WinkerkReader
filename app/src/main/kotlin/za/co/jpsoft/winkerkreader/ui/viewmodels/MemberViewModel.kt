@@ -169,7 +169,7 @@ class MemberViewModel : ViewModel() {
     // -------------------------------------------------------------------------
 
     private fun fetchData(context: Context, eventType: String) {
-        val settingsManager = SettingsManager.getInstance(context)
+        val settingsManager = SettingsManager.getInstance(context.applicationContext)
 //        if (!isProcessing.compareAndSet(false, true)) {
 //            Log.d(TAG, "Fetch already in progress, skipping: $eventType")
 //            return
@@ -200,7 +200,7 @@ class MemberViewModel : ViewModel() {
                 val sqlRequest = if (cachedQuery != null && !needsQueryRebuild(eventType)) {
                     cachedQuery
                 } else {
-                    buildQuery(context, eventType)?.also {
+                    buildQuery(eventType)?.also {
                         queryCache[cacheKey] = it
                         updateLastState(eventType)
                     } ?: run {
@@ -488,10 +488,10 @@ class MemberViewModel : ViewModel() {
             currentFilterList?.let { ArrayList(it) }
     }
 
-    private fun buildQuery(context: Context, eventType: String): SqlRequest? = when (eventType) {
+    private fun buildQuery(eventType: String): SqlRequest? = when (eventType) {
         "GESINNE_DATA", "FILTER_DATA", "LIDMAAT_DATA", "LIDMAAT_DATA_WYK",
         "SOEK_DATA", "LIDMAAT_DATA_VERJAAR", "OUDERDOM_DATA", "LIDMAAT_DATA_ADRES",
-        "HUWELIK_DATA" -> buildMemberQuery(context, eventType)
+        "HUWELIK_DATA" -> buildMemberQuery(eventType)
         else -> { Log.e(TAG, "Invalid event type: $eventType"); null }
     }
 
@@ -503,7 +503,7 @@ class MemberViewModel : ViewModel() {
         Log.d(TAG, "Cache cleared")
     }
 
-    private fun buildMemberQuery(context: Context, eventType: String): SqlRequest {
+    private fun buildMemberQuery(eventType: String): SqlRequest {
         soekList = false
         val selectionBase = winkerkEntry.SELECTION_LIDMAAT_INFO
         val from = " Members "
@@ -523,7 +523,7 @@ class MemberViewModel : ViewModel() {
         }
 
 
-        appendWhereClause(context, eventType, where, argsList)
+        appendWhereClause(eventType, where, argsList)
         appendOrderByClause(eventType, sortOrderBuilder)
 
         val finalFrom: String
@@ -542,7 +542,7 @@ class MemberViewModel : ViewModel() {
         return SqlRequest(sql, argsList.toTypedArray())
     }
 
-    private fun appendWhereClause(context: Context, eventType: String, where: StringBuilder, argsList: MutableList<String>) {
+    private fun appendWhereClause(eventType: String, where: StringBuilder, argsList: MutableList<String>) {
         when (eventType) {
             "HUWELIK_DATA" -> where.append(" AND ").append(winkerkEntry.SELECTION_HUWELIK_WHERE)
             "SOEK_DATA" -> {

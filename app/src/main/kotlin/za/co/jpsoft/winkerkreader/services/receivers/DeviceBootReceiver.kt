@@ -77,19 +77,11 @@ class DeviceBootReceiver : BroadcastReceiver() {
             // Start CallMonitoringService
             try {
                 val intent = Intent(context, CallMonitoringService::class.java)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    context.startForegroundService(intent)
-                } else {
-                    context.startService(intent)
-                }
+                context.startForegroundService(intent)
                 Log.d(TAG, "CallMonitoringService started successfully")
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to start CallMonitoringService", e)
             }
-
-            // Note: IncomingCall is a BroadcastReceiver, not a Service.
-            // It is registered in the manifest and triggered automatically
-            // by phone state change intents — do NOT start it as a service.
         }
     }
 
@@ -169,15 +161,10 @@ class DeviceBootReceiver : BroadcastReceiver() {
                         Log.w(TAG, "Using inexact alarm - exact alarm permission not granted")
                     }
                 }
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.M -> {
-                    // Android 6+ - Use setExactAndAllowWhileIdle
-                    alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
-                    Log.d(TAG, "Exact alarm scheduled for Android 6+")
-                }
                 else -> {
-                    // Below Marshmallow, use setExact
-                    alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
-                    Log.d(TAG, "Exact alarm scheduled for older Android")
+                    // Android 6+ (but since minSdk is 26, this is always true)
+                    alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
+                    Log.d(TAG, "Exact alarm scheduled")
                 }
             }
         } catch (e: SecurityException) {

@@ -1,10 +1,9 @@
 package za.co.jpsoft.winkerkreader.utils
 
-import za.co.jpsoft.winkerkreader.WinkerkReader
 
 // CalendarManager.kt
 
-
+import za.co.jpsoft.winkerkreader.WinkerkReader
 import android.content.ContentValues
 import android.content.Context
 import android.provider.CalendarContract
@@ -15,6 +14,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
+import za.co.jpsoft.winkerkreader.R
 
 class CalendarManager(private val context: Context) {
 
@@ -207,11 +207,19 @@ class CalendarManager(private val context: Context) {
 
         val sourceEmoji = when {
             "WhatsApp" == source -> "💬"
-            "Phone Call" == source -> "📱"
+            "Phone Call" == source || source.contains("Phone") -> "📱"
             else -> "📞"
         }
 
-        return "$typeEmoji $sourceEmoji ${callType.name} Oproep - $callerInfo"
+        val localizedType = when (callType) {
+            CallType.INCOMING -> context.getString(R.string.call_type_incoming)
+            CallType.OUTGOING -> context.getString(R.string.call_type_outgoing)
+            CallType.MISSED -> context.getString(R.string.call_type_missed)
+            CallType.ENDED -> context.getString(R.string.call_type_ended)
+            CallType.UNKNOWN -> context.getString(R.string.call_type_unknown)
+        }
+
+        return context.getString(R.string.calendar_event_title, typeEmoji, sourceEmoji, localizedType, callerInfo)
     }
 
     private fun createEventDescription(
@@ -222,23 +230,37 @@ class CalendarManager(private val context: Context) {
         timestamp: Long
     ): String {
         val sb = StringBuilder()
-        sb.append("Oproep Besonderhede:\n")
-        sb.append("Kontak: ").append(callerInfo).append("\n")
-        sb.append("Tipe: ").append(callType.name).append("\n")
-        sb.append("Bron: ").append(source).append("\n")
+        sb.append(context.getString(R.string.calendar_details_header)).append("\n")
+        sb.append(context.getString(R.string.calendar_contact, callerInfo)).append("\n")
+        
+        val localizedType = when (callType) {
+            CallType.INCOMING -> context.getString(R.string.call_type_incoming)
+            CallType.OUTGOING -> context.getString(R.string.call_type_outgoing)
+            CallType.MISSED -> context.getString(R.string.call_type_missed)
+            CallType.ENDED -> context.getString(R.string.call_type_ended)
+            CallType.UNKNOWN -> context.getString(R.string.call_type_unknown)
+        }
+        sb.append(context.getString(R.string.calendar_type, localizedType)).append("\n")
+        
+        val localizedSource = when {
+            "WhatsApp" == source -> context.getString(R.string.source_whatsapp)
+            "Phone Call" == source || source.contains("Phone") -> context.getString(R.string.source_phone)
+            else -> source
+        }
+        sb.append(context.getString(R.string.calendar_source, localizedSource)).append("\n")
 
         if (duration > 0) {
             val minutes = duration / 60
             val seconds = duration % 60
-            sb.append("Duur: ").append(minutes).append("m ").append(seconds).append("s\n")
+            sb.append(context.getString(R.string.calendar_duration, minutes, seconds)).append("\n")
         }
 
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
         val dateTime = Instant.ofEpochMilli(timestamp)
             .atZone(ZoneId.systemDefault())
             .format(formatter)
-        sb.append("Tyd: ").append(dateTime).append("\n")
-        sb.append("\nBygevoeg deur WinkerkReader App")
+        sb.append(context.getString(R.string.calendar_time, dateTime)).append("\n")
+        sb.append("\n").append(context.getString(R.string.calendar_added_by))
 
         return sb.toString()
     }

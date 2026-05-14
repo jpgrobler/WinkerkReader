@@ -3,7 +3,6 @@ package za.co.jpsoft.winkerkreader.ui.activities
 import android.Manifest
 import android.app.AlarmManager
 import android.app.PendingIntent
-import android.app.ProgressDialog
 import android.content.*
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -11,7 +10,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.os.SystemClock
 import android.provider.Telephony
 import android.telephony.SmsManager
 import android.text.Editable
@@ -29,13 +27,13 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.WinkerkContract
+import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
 import za.co.jpsoft.winkerkreader.data.models.MemberItem
 import za.co.jpsoft.winkerkreader.services.receivers.AlarmReceiver
 import za.co.jpsoft.winkerkreader.ui.adapters.MemberListAdapter
@@ -44,8 +42,10 @@ import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel
 import za.co.jpsoft.winkerkreader.databinding.VerjaarBinding
 import za.co.jpsoft.winkerkreader.utils.MemberActionHandler
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
-import za.co.jpsoft.winkerkreader.utils.Utils
 import za.co.jpsoft.winkerkreader.utils.Utils.fixphonenumber
+import androidx.core.content.edit
+import androidx.core.net.toUri
+import androidx.appcompat.app.AlertDialog
 import za.co.jpsoft.winkerkreader.utils.forceShowIcons
 import java.util.*
 
@@ -133,29 +133,29 @@ class VerjaarSmsActivity : AppCompatActivity() {
     }
 
     private fun initializeSharedPreferences() {
-        val prefs = getSharedPreferences(WinkerkContract.PREFS_USER_INFO, Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences(PREFS_USER_INFO, Context.MODE_PRIVATE)
         autoSms = prefs.getBoolean("AUTO_SMS", false)
         binding.timeHour.setText(prefs.getString("SMS-HOUR", "08"))
         binding.timeMinute.setText(prefs.getString("SMS-MINUTE", "00"))
     }
 
     private fun initializeViews() {
-        val prefs = getSharedPreferences(WinkerkContract.PREFS_USER_INFO, Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences(PREFS_USER_INFO, Context.MODE_PRIVATE)
         binding.autosmsRadio.isChecked = autoSms
         binding.herinnerRadio.isChecked = prefs.getBoolean("HERINNER", false)
 
         binding.autosmsRadio.setOnClickListener {
-            prefs.edit().putBoolean("AUTO_SMS", binding.autosmsRadio.isChecked).apply()
+            prefs.edit { putBoolean("AUTO_SMS", binding.autosmsRadio.isChecked) }
         }
         binding.herinnerRadio.setOnClickListener {
-            prefs.edit().putBoolean("HERINNER", binding.herinnerRadio.isChecked).apply()
+            prefs.edit { putBoolean("HERINNER", binding.herinnerRadio.isChecked) }
         }
     }
 
     private fun setupRecyclerView() {
         binding.lidmaatList.layoutManager = LinearLayoutManager(this)
         memberListAdapter = MemberListAdapter(
-            onItemClick = { _, item, _ -> showPopupMenuForMember(item) },
+            onItemClick = { _, item, _1 -> showPopupMenuForMember(item) },
             onItemLongClick = { item, _ ->
                 toggleMemberTag(item)
                 true
@@ -213,7 +213,7 @@ class VerjaarSmsActivity : AppCompatActivity() {
     }
 
     private fun handleEventTypeChange(checkedId: Int) {
-        val prefs = getSharedPreferences(WinkerkContract.PREFS_USER_INFO, Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences(PREFS_USER_INFO, Context.MODE_PRIVATE)
 
         when (checkedId) {
             R.id.Keuse_Verjaar -> {
@@ -258,8 +258,8 @@ class VerjaarSmsActivity : AppCompatActivity() {
             "Bely"    -> "BelyBoodskap"
             else      -> "VerjaarBoodskap"
         }
-        getSharedPreferences(WinkerkContract.PREFS_USER_INFO, Context.MODE_PRIVATE)
-            .edit().putString(key, binding.boodskap.text.toString()).apply()
+        getSharedPreferences(PREFS_USER_INFO, Context.MODE_PRIVATE)
+            .edit { putString(key, binding.boodskap.text.toString()) }
     }
 
     // ------------------------------------------------------------------------
@@ -287,10 +287,14 @@ class VerjaarSmsActivity : AppCompatActivity() {
 
     private fun setupTimeInput() {
         binding.timeHour.setOnFocusChangeListener { _, hasFocus ->
-            if (!hasFocus && binding.timeHour.length() < 2) binding.timeHour.setText("0${binding.timeHour.text}")
+            if (!hasFocus && binding.timeHour.length() < 2) {
+                binding.timeHour.setText(getString(R.string.time_unit_leading_zero, binding.timeHour.text.toString()))
+            }
         }
         binding.timeMinute.setOnFocusChangeListener { _, hasFocus ->
-            if (!hasFocus && binding.timeMinute.length() < 2) binding.timeMinute.setText("0${binding.timeMinute.text}")
+            if (!hasFocus && binding.timeMinute.length() < 2) {
+                binding.timeMinute.setText(getString(R.string.time_unit_leading_zero, binding.timeMinute.text.toString()))
+            }
         }
     }
 
@@ -303,7 +307,7 @@ class VerjaarSmsActivity : AppCompatActivity() {
         }
     }
 
-    private fun handleSetTimeClick(view: View) {
+    private fun handleSetTimeClick(unused: View) {
         val hour = formatTimeUnit(binding.timeHour.text.toString())
         val minute = formatTimeUnit(binding.timeMinute.text.toString())
         saveTimeSettings(hour, minute)
@@ -314,13 +318,13 @@ class VerjaarSmsActivity : AppCompatActivity() {
     private fun formatTimeUnit(unit: String) = if (unit.length < 2) "0$unit" else unit
 
     private fun saveTimeSettings(hour: String, minute: String) {
-        getSharedPreferences(WinkerkContract.PREFS_USER_INFO, Context.MODE_PRIVATE)
-            .edit()
-            .putString("SMS-HOUR", hour)
-            .putString("SMS-MINUTE", minute)
-            .putBoolean("SMS-TIMEUPDATE", true)
-            .putBoolean("FROM_MENU", false)
-            .apply()
+        getSharedPreferences(PREFS_USER_INFO, Context.MODE_PRIVATE)
+            .edit {
+                putString("SMS-HOUR", hour)
+                putString("SMS-MINUTE", minute)
+                putBoolean("SMS-TIMEUPDATE", true)
+                putBoolean("FROM_MENU", false)
+            }
         Toast.makeText(this, "Tyd opgedateer", Toast.LENGTH_SHORT).show()
     }
 
@@ -379,12 +383,7 @@ class VerjaarSmsActivity : AppCompatActivity() {
     private fun sendSmsToSelectedMembers() {
         saveCurrentMessage()
         val messageTemplate = binding.boodskap.text.toString()
-        val smsManager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            getSystemService(SmsManager::class.java)
-        } else {
-            @Suppress("DEPRECATION")
-            SmsManager.getDefault()
-        } ?: run {
+        val smsManager = getSystemService(SmsManager::class.java) ?: run {
             Toast.makeText(this, "SMS manager not available", Toast.LENGTH_SHORT).show()
             return
         }
@@ -396,11 +395,12 @@ class VerjaarSmsActivity : AppCompatActivity() {
         }
 
         // Show a progress dialog (optional)
-        val progressDialog = ProgressDialog(this).apply {
+        // Show a progress dialog
+        val progressDialog = AlertDialog.Builder(this).apply {
             setMessage("Besig om SMS'e te stuur...")
             setCancelable(false)
-            show()
-        }
+        }.create()
+        progressDialog.show()
 
         lifecycleScope.launch(Dispatchers.IO) {
             var sentCount = 0
@@ -423,21 +423,6 @@ class VerjaarSmsActivity : AppCompatActivity() {
 
     private fun shouldSendSmsToMember(member: MemberItem) = member.tag == 1 || autoSms
 
-    private fun sendSmsToMember(member: MemberItem, template: String, smsManager: SmsManager): Boolean {
-        val phone = fixphonenumber(member.cellphone)
-        if (phone.isNullOrEmpty()) return false
-
-        val personalized = template.replace("<<<naam>>>", member.name)
-        return try {
-            val parts = smsManager.divideMessage(personalized)
-            smsManager.sendMultipartTextMessage(phone, null, parts, null, null)
-            logSentMessage(phone, personalized)
-            true
-        } catch (e: Exception) {
-            Log.e(TAG, "SMS failed: ${e.message}")
-            false
-        }
-    }
 
     private fun logSentMessage(phone: String, message: String) {
         try {
@@ -537,14 +522,14 @@ class VerjaarSmsActivity : AppCompatActivity() {
                 R.id.stuur_whatsapp3 -> sendWhatsAppMethod3(phone, message)
                 else -> false
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             Toast.makeText(this, "WhatsApp nie geïnstalleer nie", Toast.LENGTH_SHORT).show()
             false
         }
     }
 
     private fun sendWhatsAppMethod1(phone: String, message: String): Boolean {
-        val uri = Uri.parse("smsto: $phone")
+        val uri = "smsto: $phone".toUri()
         Intent(Intent.ACTION_SENDTO, uri).apply {
             putExtra("jid", phone)
             `package` = "com.whatsapp"
@@ -558,7 +543,7 @@ class VerjaarSmsActivity : AppCompatActivity() {
     private fun sendWhatsAppMethod2(phone: String, message: String): Boolean {
         val encoded = java.net.URLEncoder.encode(message, "UTF-8")
         val url = "https://api.whatsapp.com/send?phone=$phone&text=$encoded"
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply { `package` = "com.whatsapp" }
+        val intent = Intent(Intent.ACTION_VIEW, url.toUri()).apply { `package` = "com.whatsapp" }
         if (intent.resolveActivity(packageManager) != null) {
             startActivity(intent)
             return true
@@ -578,12 +563,12 @@ class VerjaarSmsActivity : AppCompatActivity() {
     }
 
     private fun handleAutoSMS() {
-        val prefs = getSharedPreferences(WinkerkContract.PREFS_USER_INFO, Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences(PREFS_USER_INFO, Context.MODE_PRIVATE)
         autoSms = prefs.getBoolean("AUTO_SMS", false)
         val fromMenu = prefs.getBoolean("FROM_MENU", false)
         if (!fromMenu && autoSms) {
             binding.verjaarSms.performClick()
-            prefs.edit().putBoolean("FROM_MENU", false).apply()
+            prefs.edit { putBoolean("FROM_MENU", false) }
             finish()
         }
     }

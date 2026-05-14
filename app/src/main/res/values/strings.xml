@@ -480,5 +480,75 @@
     <string name="groeplede_lid_naam">Lid Naam</string>
     <string name="groeplede_lid_van">Lid Van</string>
     <string name="end_call">End Call</string>
+    <string name="permission_granted">Granted</string>
+    <string name="time_unit_leading_zero">0%1$s</string>
+    <string name="mainmenu_filter_aktief">Aktief/Onaktief/Beide</string>
+    <string name="mainmenu_uitleg_funksies">Uitleg + Funksies</string>
+    <string name="mainmenu_manage_permissions">Manage Permissions</string>
+    <string name="mainmenu_permission_settings">Permission Settings</string>
+    <string name="mainmenu_view_call_log">View Call Log</string>
+
+    <!-- LaaiDatabasisActivity strings -->
+    <string name="time_format">%1$02d:%2$02d</string>
+    <string name="photo_sync_starting">Begin foto-sinkronisasie...</string>
+    <string name="photo_sync_done">Klaar: %1$d sukses, %2$d misluk</string>
+    <string name="photo_sync_failed_status">Misluk</string>
+    <string name="photo_sync_failed_toast">Foto-sinkronisasie het misluk</string>
+    <string name="photo_sync_progress">Sinchroniseer foto\'s: %1$d/%2$d (%3$s)</string>
+    <string name="db_dropbox_downloading">WKR - Databasis word nou van Dropbox afgelaai\nMoenie die skerm toemaak nie!!</string>
+    <string name="download_cancelled">Aflaai gekanselleer</string>
+    <string name="error_invalid_ip">Voer geldige IP adres in asb</string>
+    <string name="localhost_ip">127.0.0.1</string>
+    <string name="download_starting">Begin aflaai...</string>
+    <string name="download_received_percent">Ontvang: %1$d%%</string>
+    <string name="download_completed">Aflaai voltooi</string>
+    <string name="db_received_success">Databasis suksesvol ontvang</string>
+    <string name="download_failed">Aflaai misluk</string>
+    <string name="db_download_failed">Kon nie databasis aflaai nie</string>
+    <string name="current_data_info">Huidige Data: %1$s</string>
+    <string name="db_file_item_format">%1$s\n%2$d Mb%3$s</string>
+
+    <!-- Battery Optimization -->
+    <string name="battery_optimization_title">Battery Optimization</string>
+    <string name="battery_optimization_message">Om te verseker dat oproep-registrasie betroubaar in die agtergrond werk, moet WinkerkReader vrygestel word van battery-optimering. Dit verhoed dat Android die diens stop wanneer die skerm af is.</string>
+    <string name="battery_optimization_button">Stel vry</string>
+    <string name="battery_optimization_already_optimized">Battery optimering is reeds afgestel</string>
+
+    <!-- Call Monitoring and Export -->
+    <string name="call_monitoring_channel_name">Oproepmonitering</string>
+    <string name="call_monitoring_channel_description">Monitor inkomende oproepe in die agtergrond</string>
+    <string name="call_logger_active">Oproeplogger Aktief</string>
+    <string name="monitoring_calls">Moniteer Foon- en Voip-oproepe</string>
+    
+    <string name="export_successful">Suksesvol Uitgevoer</string>
+    <string name="export_success_msg">Oproeplog is suksesvol uitgevoer.\n\nWil jy die lêer deel?</string>
+    <string name="share">Deel</string>
+    <string name="close">Sluit</string>
+    <string name="view_file">Bekyk lêer</string>
+    <string name="open_csv_file">Maak CSV-lêer oop</string>
+    <string name="no_csv_app">Geen toepassing gevind om CSV-lêers oop te maak nie</string>
+    <string name="all_logs_cleared">Alle logge is uitgevee</string>
+    <string name="failed_to_clear_logs">Kon nie logge uitvee nie</string>
+    <string name="no_logs_to_export">Geen logge om uit te voer nie</string>
+    <string name="error_exporting">Fout met uitvoer: %1$s</string>
+    
+    <string name="calendar_event_title">%1$s %2$s %3$s Oproep - %4$s</string>
+    <string name="calendar_details_header">Oproep Besonderhede:</string>
+    <string name="calendar_contact">Kontak: %1$s</string>
+    <string name="calendar_type">Tipe: %1$s</string>
+    <string name="calendar_source">Bron: %1$s</string>
+    <string name="calendar_duration">Duur: %1$sm %2$ss</string>
+    <string name="calendar_time">Tyd: %1$s</string>
+    <string name="calendar_added_by">Bygevoeg deur WinkerkReader-toepassing</string>
+
+    <string name="call_type_incoming">Inkomend</string>
+    <string name="call_type_outgoing">Uitgaande</string>
+    <string name="call_type_missed">Gemis</string>
+    <string name="call_type_ended">Beëindig</string>
+    <string name="call_type_unknown">Onbekend</string>
+    
+    <string name="source_whatsapp">WhatsApp</string>
+    <string name="source_phone">Foonoproep</string>
+    <string name="menu_call_log">Oproep Log</string>
 </resources>
 
