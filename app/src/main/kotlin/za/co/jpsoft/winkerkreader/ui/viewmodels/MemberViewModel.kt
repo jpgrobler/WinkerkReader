@@ -16,6 +16,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.withContext
+import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.col
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import za.co.jpsoft.winkerkreader.utils.getIntOrDefault
@@ -224,10 +225,14 @@ class MemberViewModel : ViewModel() {
                 val sortOrderSnapshot = sortOrder
 
                 // Execute query and convert cursor → list, closing cursor immediately
+                if (BuildConfig.DEBUG) {
+                    Log.e(TAG, finalSelection + "/n" +  sqlRequest.args)}
                 queryDatabase(context.applicationContext, finalSelection, sqlRequest.args, sortOrderSnapshot)?.use { cursor ->
                     val items  = cursorToList(cursor, sortOrderSnapshot)
                     rowCount.postValue(items.size)
                     _memberList.postValue(items)
+                    if (BuildConfig.DEBUG) {Log.e(
+                        TAG, rowCount.value.toString())}
                 }
 
                 // Update UI-state LiveData for search/filter banners
@@ -575,11 +580,41 @@ class MemberViewModel : ViewModel() {
                 if (!list.isNullOrEmpty()) {
                     val filterFields = list.filter { it.checked }
                     if (filterFields.isNotEmpty()) {
+                        val birthdateExpr = "date(SUBSTR(" + col(winkerkEntry.LIDMATE_GEBOORTEDATUM) + ", 7, 4) || '-' || SUBSTR(" + col(winkerkEntry.LIDMATE_GEBOORTEDATUM) + ", 4, 2) || '-' || SUBSTR(" + col(winkerkEntry.LIDMATE_GEBOORTEDATUM) + ", 1, 2))"
                         where.append(" AND (")
                         filterFields.forEachIndexed { i, filter ->
                             if (i > 0) where.append(") AND (")
                             val toets = filter.text3
                             when {
+                                filter.title == "Noemnaam" -> {
+                                    val colNoem = col(winkerkEntry.LIDMATE_NOEMNAAM)
+                                    val colNaam = col(winkerkEntry.LIDMATE_VOORNAME)
+                                    when (toets) {
+                                        "gelyk aan" -> {
+                                            where.append("($colNoem = ? OR $colNaam = ?)")
+                                            argsList.add(filter.text1)
+                                            argsList.add(filter.text1)
+                                        }
+                                        "is nie", "nie gelyk aan" -> {
+                                            where.append("($colNoem != ? AND $colNaam != ?)")
+                                            argsList.add(filter.text1)
+                                            argsList.add(filter.text1)
+                                        }
+                                        "begin met" -> {
+                                            where.append("($colNoem LIKE ? OR $colNaam LIKE ?)")
+                                            argsList.add("${filter.text1}%")
+                                            argsList.add("${filter.text1}%")
+                                        }
+                                        "eindig met" -> {
+                                            where.append("($colNoem LIKE ? OR $colNaam LIKE ?)")
+                                            argsList.add("%${filter.text1}")
+                                            argsList.add("%${filter.text1}")
+                                        }
+                                        "leeg" -> {
+                                            where.append("($colNoem IS NULL AND $colNaam IS NULL)")
+                                        }
+                                    }
+                                }
                                 toets == "gelyk aan"     -> {
                                     where.append(col(filter.title)).append(" = ?")
                                     argsList.add(filter.text1)
@@ -598,20 +633,20 @@ class MemberViewModel : ViewModel() {
                                 }
                                 toets == "leeg"          -> where.append(col(filter.title)).append(" IS NULL ")
                                 toets == "kleiner as"    -> {
-                                    where.append("((strftime('%Y', 'now') - strftime('%Y', birthdate)) - (strftime('%m-%d', 'now') < strftime('%m-%d', birthdate))) < ?")
+                                    where.append("((strftime('%Y', 'now') - strftime('%Y', $birthdateExpr)) - (strftime('%m-%d', 'now') < strftime('%m-%d', $birthdateExpr))) < CAST(? AS INTEGER)")
                                     argsList.add(filter.text1)
                                 }
                                 toets == "groter as"     -> {
-                                    where.append("((strftime('%Y', 'now') - strftime('%Y', birthdate)) - (strftime('%m-%d', 'now') < strftime('%m-%d', birthdate))) > ?")
+                                    where.append("((strftime('%Y', 'now') - strftime('%Y', $birthdateExpr)) - (strftime('%m-%d', 'now') < strftime('%m-%d', $birthdateExpr))) > CAST(? AS INTEGER)")
                                     argsList.add(filter.text1)
                                 }
                                 toets == "tussen" && filter.title == "Ouderdom" -> {
-                                    where.append(" ( ((strftime('%Y', 'now') - strftime('%Y', birthdate)) - (strftime('%m-%d', 'now') < strftime('%m-%d', birthdate))) >= ? ) AND ( ((strftime('%Y', 'now') - strftime('%Y', birthdate)) - (strftime('%m-%d', 'now') < strftime('%m-%d', birthdate))) <= ? )")
+                                    where.append(" ( ((strftime('%Y', 'now') - strftime('%Y', $birthdateExpr)) - (strftime('%m-%d', 'now') < strftime('%m-%d', $birthdateExpr))) >= CAST(? AS INTEGER) ) AND ( ((strftime('%Y', 'now') - strftime('%Y', $birthdateExpr)) - (strftime('%m-%d', 'now') < strftime('%m-%d', $birthdateExpr))) <= CAST(? AS INTEGER) )")
                                     argsList.add(filter.text1)
                                     argsList.add(filter.text2)
                                 }
                                 toets == "gelyk" && filter.title == "Ouderdom" -> {
-                                    where.append("((strftime('%Y', 'now') - strftime('%Y', birthdate)) - (strftime('%m-%d', 'now') < strftime('%m-%d', birthdate))) = ?")
+                                    where.append("((strftime('%Y', 'now') - strftime('%Y', $birthdateExpr)) - (strftime('%m-%d', 'now') < strftime('%m-%d', $birthdateExpr))) = CAST(? AS INTEGER)")
                                     argsList.add(filter.text1)
                                 }
                                 filter.title == "Geslag"        -> {

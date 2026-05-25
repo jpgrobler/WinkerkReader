@@ -2,7 +2,6 @@ package za.co.jpsoft.winkerkreader.utils
 
 // SQLiteStatementValidator.kt
 
-
 import java.util.*
 import java.util.regex.Pattern
 
@@ -22,7 +21,7 @@ object SQLiteStatementValidator {
     // Removed '%' as it's valid for LIKE operator
     private val ILLEGAL_CHARS_AFTER_KEYWORDS = setOf(
         ',', '.', ';', ')', '}', ']', '!', '@', '#', '$', '^', '&', '*',
-        '+', '|', '\\', ':', '"', '\'', '<', '>', '?', '/', '~', '`'
+        '+', '|', '\\', ':', '"', '\'', '<', '>', '/', '~', '`'
         // NOTE: '=' is intentionally NOT in this list as it's valid after many keywords
     )
 
@@ -108,7 +107,7 @@ object SQLiteStatementValidator {
     }
 
     /**
-     * Fixes common SQLite statement errors by removing illegal characters
+     * Fixes common SQLite statement errors by removing illegal characters and extra semicolons
      */
     @JvmStatic
     fun fixSQLiteStatement(sqlStatement: String?): String? {
@@ -118,6 +117,7 @@ object SQLiteStatementValidator {
         sql = fixIllegalCharactersAfterKeywords(sql)
         sql = fixTrailingCommas(sql)
         sql = fixConsecutiveCommas(sql)
+        sql = removeExtraSemicolons(sql)   // <-- NEW: strip stray semicolons
         sql = cleanUpWhitespace(sql)
         return sql
     }
@@ -252,11 +252,29 @@ object SQLiteStatementValidator {
         if (parenCount > 0) return ValidationResult(false, "Unmatched opening parenthesis", -1)
         if (bracketCount > 0) return ValidationResult(false, "Unmatched opening bracket", -1)
         if (sql.contains(",,")) return ValidationResult(false, "Consecutive commas found", sql.indexOf(",,"))
+
         val trailingCommaPattern = Pattern.compile(",\\s+(FROM|WHERE|GROUP|ORDER|HAVING|LIMIT)\\b", Pattern.CASE_INSENSITIVE)
         val trailingMatcher = trailingCommaPattern.matcher(sql)
         if (trailingMatcher.find()) {
             return ValidationResult(false, "Trailing comma before ${trailingMatcher.group(1)}", trailingMatcher.start())
         }
+
+        // --- NEW: validate semicolons ---
+        val semicolonPositions = mutableListOf<Int>()
+        for ((i, c) in sql.withIndex()) {
+            if (c == ';') semicolonPositions.add(i)
+        }
+        if (semicolonPositions.size > 1) {
+            return ValidationResult(false, "Multiple semicolons found", semicolonPositions[1])
+        }
+        if (semicolonPositions.size == 1) {
+            val lastNonWhitespace = sql.trimEnd().lastIndex
+            if (semicolonPositions[0] != lastNonWhitespace) {
+                return ValidationResult(false, "Semicolon not at the end of statement", semicolonPositions[0])
+            }
+        }
+        // --- end of new validation ---
+
         return ValidationResult(true)
     }
 
@@ -342,4 +360,75 @@ object SQLiteStatementValidator {
     private fun cleanUpWhitespace(sql: String): String {
         return sql.replace(Regex("\\s+"), " ").trim()
     }
+
+    // --- NEW: remove all semicolons that are not inside string literals, comments, or brackets ---
+    private fun removeExtraSemicolons(sql: String): String {
+        val result = StringBuilder()
+        var inSingleQuote = false
+        var inDoubleQuote = false
+        var inBracket = false
+        var inLineComment = false
+        var i = 0
+
+        while (i < sql.length) {
+            val c = sql[i]
+            val next = if (i + 1 < sql.length) sql[i + 1] else '\u0000'
+
+            when {
+                !inSingleQuote && !inDoubleQuote && !inBracket && !inLineComment -> {
+                    when {
+                        c == '-' && next == '-' -> {
+                            inLineComment = true
+                            result.append(c).append(next)
+                            i += 2
+                            continue
+                        }
+                        c == '\'' -> {
+                            inSingleQuote = true
+                            result.append(c)
+                            i++
+                            continue
+                        }
+                        c == '"' -> {
+                            inDoubleQuote = true
+                            result.append(c)
+                            i++
+                            continue
+                        }
+                        c == '[' -> {
+                            inBracket = true
+                            result.append(c)
+                            i++
+                            continue
+                        }
+                        c == ';' -> {
+                            // skip this semicolon entirely (it's extraneous)
+                            i++
+                            continue
+                        }
+                    }
+                }
+            }
+
+            // Handle end of literals/comments
+            if (inLineComment && (c == '\n' || c == '\r')) {
+                inLineComment = false
+            }
+            if (inSingleQuote && c == '\'') {
+                inSingleQuote = false
+            }
+            if (inDoubleQuote && c == '"') {
+                inDoubleQuote = false
+            }
+            if (inBracket && c == ']') {
+                inBracket = false
+            }
+
+            result.append(c)
+            i++
+        }
+
+        return result.toString().trimEnd()
+    }
+    // --- end of new function ---
 }
