@@ -9,6 +9,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.provider.CallLog
 import android.telephony.PhoneStateListener
 import android.telephony.TelephonyCallback
 import android.telephony.TelephonyManager
@@ -124,6 +125,9 @@ class PhoneCallMonitor(
     }
 
     private fun handleRingingState(phoneNumber: String?) {
+        // Priority order for number resolution:
+        // 1. pendingIncomingNumber – set by IncomingCall receiver via CallMonitoringService intent
+        // 2. phoneNumber – provided by legacy PhoneStateListener (API < 31)
         val number = pendingIncomingNumber ?: phoneNumber
         pendingIncomingNumber = null
 
@@ -182,18 +186,76 @@ class PhoneCallMonitor(
     private fun handleIdleState() {
         val callId = currentCallId
 
-        if (isCallActive && callId != null) {
-            val callEndTime = System.currentTimeMillis()
-            unifiedMonitor?.onCallEnded(callId, callEndTime)
-        } else if (currentIncomingNumber != null && callId != null) {
-            // Missed call
-            unifiedMonitor?.onCallEnded(callId, System.currentTimeMillis())
+        when {
+            isCallActive && callId != null -> {
+                // Call was answered and then ended
+                val callEndTime = System.currentTimeMillis()
+                unifiedMonitor?.onCallEnded(callId, callEndTime)
+            }
+            currentIncomingNumber != null && callId != null -> {
+                // Phone rang but was never answered = missed call.
+                // If the number is still unknown, try recovering it from the system CallLog
+                // (the OS writes the missed-call entry within a few seconds of the call ending).
+                if (currentIncomingNumber == "Unknown Number") {
+                    val recovered = queryLatestCallFromLog(CallLog.Calls.MISSED_TYPE)
+                    if (recovered != null) {
+                        Log.d(TAG, "Recovered missed call number from CallLog: ${recovered.first}")
+                        // Re-register with the recovered info so the monitor logs correctly
+                        val displayInfo = CallerInfoResolver.getCallerDisplayInfo(
+                            context.contentResolver, recovered.first
+                        )
+                        unifiedMonitor?.onCallDetected(
+                            callId = callId,
+                            number = recovered.first,
+                            direction = "missed",
+                            source = "Phone Call",
+                            timestamp = recovered.second,
+                            displayName = displayInfo
+                        )
+                    }
+                }
+                unifiedMonitor?.onCallEnded(callId, System.currentTimeMillis())
+            }
         }
 
         if (OproepDetailService.isOn) {
             scheduleServiceStop(context)
         }
         resetCallState()
+    }
+
+    /**
+     * Queries the system CallLog for the most recent entry of a given type that occurred
+     * within the last 60 seconds. Returns a pair of (number, date) or null if not found.
+     * Used as a fallback when the phone number was not delivered through normal channels.
+     */
+    private fun queryLatestCallFromLog(type: Int): Pair<String, Long>? {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CALL_LOG)
+            != PackageManager.PERMISSION_GRANTED
+        ) return null
+
+        val since = System.currentTimeMillis() - 60_000L // only look at the last 60 seconds
+        val projection = arrayOf(CallLog.Calls.NUMBER, CallLog.Calls.DATE, CallLog.Calls.TYPE)
+        val selection = "${CallLog.Calls.TYPE} = ? AND ${CallLog.Calls.DATE} >= ?"
+        val selectionArgs = arrayOf(type.toString(), since.toString())
+        val sortOrder = "${CallLog.Calls.DATE} DESC"
+
+        return try {
+            context.contentResolver.query(
+                CallLog.Calls.CONTENT_URI, projection, selection, selectionArgs, sortOrder
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    val numIdx = cursor.getColumnIndex(CallLog.Calls.NUMBER)
+                    val dateIdx = cursor.getColumnIndex(CallLog.Calls.DATE)
+                    val number = cursor.getString(numIdx)?.takeIf { it.isNotBlank() }
+                    val date = if (dateIdx >= 0) cursor.getLong(dateIdx) else System.currentTimeMillis()
+                    if (number != null) Pair(number, date) else null
+                } else null
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to query call log for fallback number", e)
+            null
+        }
     }
 
     private fun resetCallState() {
@@ -224,21 +286,13 @@ class PhoneCallMonitor(
     }
 
     private fun startCallerIdentificationService(context: Context) {
-        // Check if service is already running to prevent duplicates
-        if (OproepDetailService.isOn) {
-            Log.d(TAG, "Caller identification service already running, skipping")
-            return
-        }
-        // Also check via WeakReference if needed
-        if (OproepDetailService.isServiceActive()) {
-            Log.d(TAG, "Service instance still alive, skipping")
-            return
-        }
+        val callerId = currentIncomingNumber?.takeIf { it != "Unknown Number" } ?: return
 
         val serviceIntent = Intent(context, OproepDetailService::class.java)
+            .putExtra(OproepDetailService.EXTRA_CALLER_ID, callerId)
         try {
             context.startForegroundService(serviceIntent)
-            Log.d(TAG, "Caller identification service started")
+            Log.d(TAG, "Caller identification service started for $callerId")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to start caller identification service: ${e.message}")
         }

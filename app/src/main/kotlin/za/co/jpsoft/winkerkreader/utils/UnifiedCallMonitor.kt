@@ -1,8 +1,7 @@
 package za.co.jpsoft.winkerkreader.utils
 
+import android.annotation.SuppressLint
 import android.content.Context
-import android.content.Intent
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import android.util.Log
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -25,6 +24,7 @@ class UnifiedCallMonitor private constructor(
     companion object {
         private const val TAG = "UnifiedCallMonitor"
         @Volatile
+        @SuppressLint("StaticFieldLeak")
         private var instance: UnifiedCallMonitor? = null
 
         fun getInstance(
@@ -146,10 +146,9 @@ class UnifiedCallMonitor private constructor(
                 "missed" -> CallType.MISSED
                 else -> CallType.UNKNOWN
             }
-            source.contains("WhatsApp", ignoreCase = true) ||
-                    source.contains("Skype", ignoreCase = true) ||
-                    source.contains("Zoom", ignoreCase = true) -> {
-                // VoIP: trust the direction only if explicitly given
+            else -> {
+                // VoIP sources (WhatsApp, Skype, Zoom, Teams, Discord, Telegram,
+                // Viber, Messenger, Google Meet, etc.): trust the direction
                 when (direction?.lowercase()) {
                     "incoming" -> CallType.INCOMING
                     "outgoing" -> CallType.OUTGOING
@@ -157,7 +156,6 @@ class UnifiedCallMonitor private constructor(
                     else -> CallType.UNKNOWN
                 }
             }
-            else -> CallType.UNKNOWN
         }
     }
 
@@ -178,9 +176,6 @@ class UnifiedCallMonitor private constructor(
             Log.d(TAG, "Call logged to DB: $contactInfo, type=$callType, source=$source")
             
             // Notify UI that call logs have been updated
-            LocalBroadcastManager.getInstance(context).sendBroadcast(
-                Intent(PhoneCallMonitor.ACTION_CALL_LOG_UPDATED)
-            )
             _callLogUpdates.tryEmit(Unit)
 
             // Insert into calendar if a valid calendar is selected

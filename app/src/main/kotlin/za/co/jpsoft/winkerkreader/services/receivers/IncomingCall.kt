@@ -36,9 +36,13 @@ class IncomingCall : BroadcastReceiver() {
             TelephonyManager.EXTRA_STATE_RINGING -> {
                 incomingNumber.safeNumber()?.let { number ->
                     saveCallerNumber(context, number)
+                    // Always forward the number to CallMonitoringService so PhoneCallMonitor
+                    // can use it. On API 31+, TelephonyCallback no longer provides the number
+                    // directly, so this is the only reliable delivery path.
+                    forwardNumberToCallMonitoringService(context, number)
 
                     if (isCallMonitorEnabled(context)) {
-                        startCallerIdentificationService(context)
+                        startCallerIdentificationService(context, number)
                     }
                 }
             }
@@ -60,21 +64,32 @@ class IncomingCall : BroadcastReceiver() {
         prefs.edit { putString("CallerNumber", phoneNumber) }
     }
 
-    private fun startCallerIdentificationService(context: Context) {
+    /**
+     * Sends the incoming number to [CallMonitoringService] so [PhoneCallMonitor] can use it.
+     * If the service is already running, it is re-started with the extra (startForegroundService
+     * is idempotent – it calls onStartCommand again without creating a new instance).
+     * If the service is not yet running this is a no-op because the number is already stored in
+     * SharedPreferences and [startCallerIdentificationService] will start the service fresh.
+     */
+    private fun forwardNumberToCallMonitoringService(context: Context, number: String) {
         if (CallMonitoringService.isServiceRunning()) {
-            Log.d(TAG, "CallMonitoringService is active; skip receiver-based overlay start")
-            return
+            try {
+                val intent = Intent(context, CallMonitoringService::class.java)
+                    .putExtra("incoming_number", number)
+                context.startForegroundService(intent)
+                Log.d(TAG, "Forwarded incoming number to running CallMonitoringService: $number")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to forward number to CallMonitoringService", e)
+            }
         }
+    }
 
-        if (OproepDetailService.isOn || OproepDetailService.isServiceActive()) {
-            Log.d(TAG, "Caller identification service already running, skipping")
-            return
-        }
-
+    private fun startCallerIdentificationService(context: Context, number: String) {
         val serviceIntent = Intent(context, OproepDetailService::class.java)
+            .putExtra(OproepDetailService.EXTRA_CALLER_ID, number)
         try {
             context.startForegroundService(serviceIntent)
-            Log.d(TAG, "Caller identification service started")
+            Log.d(TAG, "Caller identification service started for $number")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to start caller identification service: ${e.message}")
         }

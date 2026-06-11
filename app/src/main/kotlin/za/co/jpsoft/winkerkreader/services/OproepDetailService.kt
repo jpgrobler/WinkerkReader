@@ -7,11 +7,9 @@ import android.app.Service
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
-import android.content.SharedPreferences
 import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
 import android.graphics.Color
 import android.graphics.PixelFormat
-import android.os.Build
 import android.os.IBinder
 import android.provider.Settings
 import android.util.Log
@@ -37,11 +35,12 @@ class OproepDetailService : Service() {
         var isOn = false
             private set
         private const val TAG = "OproepDetailService"
+        const val EXTRA_CALLER_ID = "caller_id"
+        const val EXTRA_CALLER_DISPLAY = "caller_display"
         private var serviceInstance: WeakReference<OproepDetailService>? = null
 
-        fun isServiceActive(): Boolean = serviceInstance?.get() != null
+        //fun isServiceActive(): Boolean = serviceInstance?.get() != null
 
-        // Track last processed number to prevent duplicates
         private var lastProcessedNumber = ""
         private var lastProcessedTime = 0L
 
@@ -49,7 +48,7 @@ class OproepDetailService : Service() {
             synchronized(this) {
                 val now = System.currentTimeMillis()
                 return if (lastProcessedNumber == number && now - lastProcessedTime < 500) {
-                    Log.d("OproepDetailService", "Duplicate call number detected, skipping: $number")
+                    Log.d(TAG, "Duplicate call number detected, skipping: $number")
                     false
                 } else {
                     lastProcessedNumber = number
@@ -67,30 +66,26 @@ class OproepDetailService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-
-        if (isOn || isServiceActive()) {
-            Log.d("OproepDetailService", "Service already running, skipping onCreate")
-            stopSelf()
-            return
-        }
-
         serviceInstance = WeakReference(this)
         isOn = true
-
         createForegroundNotification()
-        val settings = getSharedPreferences(PREFS_USER_INFO, MODE_PRIVATE)
-        val incomingNumber = settings.getString("CallerNumber", "") ?: ""
+    }
 
-        if (isValidPhoneNumber(incomingNumber)) {
-            if (canProcessCall(incomingNumber)) {
-                processIncomingCall(incomingNumber, settings)
-            } else {
-                Log.d("OproepDetailService", "Duplicate call, stopping service")
-                stopSelf()
-            }
-        } else {
-            stopSelf()
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        val callerId = intent?.getStringExtra(EXTRA_CALLER_ID) ?: ""
+
+        if (!isValidPhoneNumber(callerId)) {
+            Log.d(TAG, "No valid caller id, ignoring start command")
+            return START_NOT_STICKY
         }
+
+        if (!canProcessCall(callerId)) {
+            return START_NOT_STICKY
+        }
+
+        val displayName = intent?.getStringExtra(EXTRA_CALLER_DISPLAY)
+        showCaller(callerId, displayName)
+        return START_NOT_STICKY
     }
 
     override fun onDestroy() {
@@ -140,18 +135,20 @@ class OproepDetailService : Service() {
         return phoneNumber.isNotEmpty() && phoneNumber != "XXXXXXXXXX" && phoneNumber != "Unknown"
     }
 
-    private fun processIncomingCall(incomingNumber: String, settings: SharedPreferences) {
-        val callerInfo = CallerInfoResolver.getCallerDisplayInfo(contentResolver, incomingNumber)
-        createFloatingView(callerInfo)
-    }
+    private fun showCaller(callerId: String, displayName: String?) {
+        getSharedPreferences(PREFS_USER_INFO, MODE_PRIVATE).edit {
+            putString("CallerNumber", callerId)
+        }
 
-    private fun createFloatingView(callerInfo: String) {
+        val callerInfo = displayName?.takeIf { it.isNotBlank() }
+            ?: CallerInfoResolver.getCallerDisplayInfo(contentResolver, callerId)
+
         if (::floatingView.isInitialized) {
-            Log.d("OproepDetailService", "Floating view already exists, skipping")
+            floatingView.findViewById<TextView>(R.id.oproepnommer)?.text = callerInfo
+            Log.d(TAG, "Updated overlay for caller: $callerInfo")
             return
         }
 
-        // Inflate without root to avoid layout parameter issues
         floatingView = LayoutInflater.from(this).inflate(R.layout.oproepfloat, null)
         val callerTextView = floatingView.findViewById<TextView>(R.id.oproepnommer)
         callerTextView.text = callerInfo
@@ -244,4 +241,4 @@ class OproepDetailService : Service() {
             return false
         }
     }
-}
+}
