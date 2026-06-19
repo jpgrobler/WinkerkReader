@@ -3,9 +3,11 @@ package za.co.jpsoft.winkerkreader.workers
 import za.co.jpsoft.winkerkreader.services.receivers.AlarmReceiver
 
 import android.content.Context
+import android.util.Log
 import androidx.work.*
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
+import za.co.jpsoft.winkerkreader.utils.PastoralDatabaseBackup
 
 class DropboxDownloadWorker(
     context: Context,
@@ -14,12 +16,15 @@ class DropboxDownloadWorker(
 
     companion object {
         const val WORK_NAME = "dropbox_download_work"
+
     }
 
     override suspend fun doWork(): Result {
         return try {
             // Your existing Dropbox download logic here
             // This should call the same functionality that AlarmReceiver used for "DropBoxDownLoad"
+            PastoralDatabaseBackup.backupNow(applicationContext)
+            Log.d(WORK_NAME, "Pastoral DB backed up before congregation reload")
             performDropboxDownload()
             Result.success()
         } catch (e: Exception) {

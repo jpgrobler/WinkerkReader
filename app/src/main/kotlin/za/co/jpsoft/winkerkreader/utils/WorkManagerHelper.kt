@@ -5,7 +5,9 @@ import za.co.jpsoft.winkerkreader.workers.WidgetRefreshWorker
 import za.co.jpsoft.winkerkreader.workers.DropboxDownloadWorker
 
 import android.content.Context
+import android.util.Log
 import androidx.work.*
+import za.co.jpsoft.winkerkreader.workers.FollowUpReminderWorker
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
@@ -14,6 +16,8 @@ object WorkManagerHelper {
     private const val TAG_DROPBOX = "dropbox_download"
     private const val TAG_WIDGET = "widget_refresh"
     private const val TAG_BIRTHDAY = "birthday_reminder"
+    private const val TAG_FOLLOW_UP = "follow_up_reminder"
+
 
     /**
      * Schedule weekly Dropbox download
@@ -143,6 +147,47 @@ object WorkManagerHelper {
     }
 
     /**
+     * Schedule daily pastoral follow-up reminder check.
+     *
+     * Fires at [hour]:[minute] every day. Default 07:00 — before the pastor starts
+     * the day, so reminders appear when they open the phone in the morning.
+     */
+    fun scheduleFollowUpReminders(context: Context, hour: Int = 7, minute: Int = 0) {
+        val workManager = WorkManager.getInstance(context)
+
+        workManager.cancelUniqueWork(FollowUpReminderWorker.WORK_NAME)
+
+        val now = Calendar.getInstance()
+        val targetTime = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, hour)
+            set(Calendar.MINUTE, minute)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+
+        var initialDelay = targetTime.timeInMillis - now.timeInMillis
+        if (initialDelay <= 0) {
+            initialDelay += TimeUnit.DAYS.toMillis(1)
+        }
+
+        val workRequest = PeriodicWorkRequestBuilder<FollowUpReminderWorker>(
+            1, TimeUnit.DAYS,
+            15, TimeUnit.MINUTES   // flex window — consistent with existing workers
+        )
+            .setInitialDelay(initialDelay, TimeUnit.MILLISECONDS)
+            .addTag(TAG_FOLLOW_UP)
+            .build()
+
+        workManager.enqueueUniquePeriodicWork(
+            FollowUpReminderWorker.WORK_NAME,
+            ExistingPeriodicWorkPolicy.UPDATE,
+            workRequest
+        )
+
+        Log.d("WorkManagerHelper", "Follow-up reminder worker scheduled at $hour:$minute")
+    }
+
+    /**
      * Cancel all scheduled work
      */
     fun cancelAllWork(context: Context) {
@@ -150,6 +195,7 @@ object WorkManagerHelper {
         workManager.cancelUniqueWork(DropboxDownloadWorker.WORK_NAME)
         workManager.cancelUniqueWork(WidgetRefreshWorker.WORK_NAME)
         workManager.cancelUniqueWork(BirthdayReminderWorker.WORK_NAME)
+        workManager.cancelUniqueWork(FollowUpReminderWorker.WORK_NAME)  // ← add
     }
 
     /**

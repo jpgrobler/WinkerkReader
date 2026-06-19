@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/border"
+    android:orientation="vertical"
+    android:id="@+id/widget_pastoral_root"
+    android:padding="8dp">
+
+    <!-- Header (optional) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_gravity="center"
+        >
+        <ImageView
+            android:id="@+id/widget_image"
+            android:layout_width="40dp"
+            android:layout_height="30dp"
+            android:clickable="true"
+            android:scaleType="fitXY"
+            android:src="@drawable/ic_launcher_round"
+            android:paddingEnd="10dp"/>
+        <TextView
+            android:layout_gravity="center"
+            android:id="@+id/widget_pastoral_header"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/widget_pastoral_title"
+            android:textColor="@android:color/background_dark"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:paddingBottom="4dp"
+            android:contentDescription="@string/widget_pastoral_title"
+            android:paddingEnd="10dp"/>
+        <ImageView
+            android:id="@+id/widget_image2"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:clickable="true"
+            android:src="@drawable/ic_bedienings"/>
+    </LinearLayout>
+    <!-- List of reminders -->
+    <ListView
+        android:id="@+id/widget_pastoral_list"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="2"
+        android:divider="@android:color/transparent"
+        />
+
+    <!-- Empty view (shown when no reminders) -->
+    <TextView
+        android:id="@+id/widget_pastoral_empty"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/widget_pastoral_empty"
+        android:textColor="@android:color/white"
+        android:textSize="11sp"
+        android:gravity="center"
+        android:visibility="gone"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp" />
+
+    <!-- Last updated timestamp -->
+    <TextView
+        android:id="@+id/widget_pastoral_update_time"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/widget_last_updated"
+        android:textColor="@android:color/white"
+        android:textSize="11sp"
+        android:gravity="center"
+        android:alpha="0.7" />
+
+</LinearLayout>

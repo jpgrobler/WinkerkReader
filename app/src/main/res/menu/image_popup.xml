@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/gallery_foto"
         android:icon="@drawable/ic_photo"
@@ -12,5 +13,4 @@
         android:id="@+id/whatsapp_foto"
         android:icon="@drawable/whatsapp"
         android:title="@string/Groepfunksie_sms_selected" />
-
 </menu>

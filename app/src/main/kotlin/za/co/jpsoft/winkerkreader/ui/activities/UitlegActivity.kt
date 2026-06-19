@@ -51,11 +51,17 @@ class UitlegActivity : AppCompatActivity() {
     // Settings manager
     private lateinit var settingsManager: SettingsManager
 
+    // Google Tasks
+//    private var googleTaskLists: List<com.google.api.services.tasks.model.TaskList> = emptyList()
+//    private var googleTasksManager: GoogleTasksManager? = null
+//    private var selectedTaskListId: String? = null
     // Color picker
     private val defaultColor = 0
 
     // Progress dialog
     private var progressDialog: AlertDialog? = null
+    private var pastoralCalendars: List<CalendarInfo> = emptyList()
+    private var selectedPastoralCalendarId: Long = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,7 +81,7 @@ class UitlegActivity : AppCompatActivity() {
             if (!loadSavedPreferences()) {
                 showErrorDialog("Warning", "Some settings could not be loaded. Default values will be used.", false)
             }
-
+            setupGoogleTasksUI()
             setupClickListeners()
             initializeCalendarManager()
             loadCalendars()
@@ -179,7 +185,7 @@ class UitlegActivity : AppCompatActivity() {
             binding.uitlegW2.isChecked = settingsManager.whatsapp2
             binding.uitlegW3.isChecked = settingsManager.whatsapp3
             binding.autoStartSwitch.isChecked = settingsManager.autoStartEnabled
-
+            binding.pastoralCalendarAutoSync.isChecked = settingsManager.pastoralCalendarSyncEnabled
             binding.autoStartSwitch.setOnCheckedChangeListener { _, isChecked ->
                 saveAutoStartSetting(isChecked)
                 settingsManager.autoStartEnabled = isChecked
@@ -189,7 +195,10 @@ class UitlegActivity : AppCompatActivity() {
                     stopMonitoringService()
                 }
             }
-
+            binding.pastoralCalendarAutoSync.setOnCheckedChangeListener { _, isChecked ->
+                settingsManager.pastoralCalendarSyncEnabled = isChecked
+                Log.d(TAG, "Pastoral sync setting saved immediately: $isChecked")
+            }
             // Set spinner selection with validation
             val defaultLayout = settingsManager.defLayout
             setSpinnerSelection(binding.layoutOpsies, defaultLayout)
@@ -213,6 +222,7 @@ class UitlegActivity : AppCompatActivity() {
             false
         }
     }
+
 
     private fun setColorPreferences(): Boolean {
         return try {
@@ -294,6 +304,8 @@ class UitlegActivity : AppCompatActivity() {
         binding.funksoieStoor.setOnClickListener { saveFunctionSettings() }
         binding.saveWidget.setOnClickListener { saveWidgetSettings() }
         binding.saveColor.setOnClickListener { saveColorSettings() }
+        binding.tasksSave.setOnClickListener { saveGoogleTasksSettings()
+        }
     }
 
     private fun setupColorPickerListeners() {
@@ -351,6 +363,7 @@ class UitlegActivity : AppCompatActivity() {
             } else {
                 showInfoToast("VOIP call logging is now disabled")
             }
+
         } catch (e: Exception) {
             hideProgressDialog()
             Log.e(TAG, "Critical error saving function settings", e)
@@ -482,6 +495,7 @@ class UitlegActivity : AppCompatActivity() {
             Log.e(TAG, "Error initializing calendar manager", e)
             showErrorToast("Calendar features may not work properly")
         }
+        selectedPastoralCalendarId = settingsManager.getPastoralCalendarId() ?: -1L
     }
 
     private fun loadCalendars() {
@@ -504,7 +518,7 @@ class UitlegActivity : AppCompatActivity() {
                 setupEmptyCalendarSpinner("No calendars found - Add Google account")
                 return
             }
-
+            setupPastoralCalendarSpinner()
             setupCalendarSpinner()
             Log.d(TAG, "Loaded ${availableCalendars.size} calendars successfully")
         } catch (e: SecurityException) {
@@ -658,4 +672,98 @@ class UitlegActivity : AppCompatActivity() {
         super.onDestroy()
         hideProgressDialog()
     }
+
+    private fun setupGoogleTasksUI() {
+        val mode = settingsManager.googleTasksMode()
+        when (mode) {
+            SettingsManager.GoogleTasksMode.OFF -> binding.tasksModeOff.isChecked = true
+            SettingsManager.GoogleTasksMode.API -> binding.tasksModeApi.isChecked = true
+            SettingsManager.GoogleTasksMode.SHARE -> binding.tasksModeShare.isChecked = true
+        }
+
+        val account = settingsManager.googleTasksAccountEmail
+        if (!account.isNullOrBlank()) {
+            binding.tasksAccount.text = getString(R.string.tasks_aangeteken_as, account)
+            binding.tasksAccount.visibility = View.VISIBLE
+        }
+
+        // Show/hide sign-in and spinner based on mode
+        val isApi = mode == SettingsManager.GoogleTasksMode.API
+        binding.tasksSignIn.visibility = if (isApi) View.VISIBLE else View.GONE
+        binding.tasksSignIn.isEnabled = isApi
+        binding.tasksListSpinner.visibility = if (isApi) View.VISIBLE else View.GONE
+        binding.tasksWarning.visibility = if (isApi) View.VISIBLE else View.GONE
+    }
+
+    private fun saveGoogleTasksSettings() {
+        val selectedId = binding.tasksModeGroup.checkedRadioButtonId
+        val mode = when (selectedId) {
+            R.id.tasks_mode_api -> SettingsManager.GoogleTasksMode.API
+            R.id.tasks_mode_share -> SettingsManager.GoogleTasksMode.SHARE
+            else -> SettingsManager.GoogleTasksMode.OFF
+        }
+        settingsManager.pastoralCalendarSyncEnabled = binding.pastoralCalendarAutoSync.isChecked
+        settingsManager.setPastoralCalendarId(
+            if (selectedPastoralCalendarId != -1L) selectedPastoralCalendarId else null
+        )
+
+        // If API mode, ensure a task list is selected
+//        if (mode == SettingsManager.GoogleTasksMode.API) {
+//            if (selectedTaskListId.isNullOrBlank()) {
+//                Toast.makeText(this, "Kies asseblief 'n taaklys", Toast.LENGTH_SHORT).show()
+//                return
+//            }
+//            // Also ensure an account is signed in
+//            if (settingsManager.googleTasksAccountEmail.isNullOrBlank()) {
+//                Toast.makeText(this, "Teken eers in by Google", Toast.LENGTH_SHORT).show()
+//                return
+//            }
+//        }
+
+        // Save
+       // settingsManager.setGoogleTasksMode(mode)
+//        settingsManager.googleTasksListId = selectedTaskListId
+//         account is already saved
+//
+        Toast.makeText(this, "Bedienings instellings gestoor", Toast.LENGTH_SHORT).show()
+        finish() // optional – close settings after saving
+    }
+
+    private fun setupPastoralCalendarSpinner() {
+        if (availableCalendars.isEmpty()) {
+            setupEmptyPastoralSpinner("No calendars found")
+            return
+        }
+        pastoralCalendars = availableCalendars
+        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item,
+            availableCalendars.map { "${it.displayName} (${it.accountName})" })
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        binding.pastoralCalendarSpinner.adapter = adapter
+        binding.pastoralCalendarSpinner.isEnabled = true
+
+        // Select saved calendar
+        val savedId = settingsManager.getPastoralCalendarId()
+        if (savedId != null) {
+            val index = availableCalendars.indexOfFirst { it.id == savedId }
+            if (index >= 0) binding.pastoralCalendarSpinner.setSelection(index)
+        }
+
+        binding.pastoralCalendarSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                if (position < availableCalendars.size) {
+                    selectedPastoralCalendarId = availableCalendars[position].id
+                }
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
+    }
+
+    private fun setupEmptyPastoralSpinner(message: String) {
+        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, listOf(message))
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        binding.pastoralCalendarSpinner.adapter = adapter
+        binding.pastoralCalendarSpinner.isEnabled = false
+    }
+
+
 }

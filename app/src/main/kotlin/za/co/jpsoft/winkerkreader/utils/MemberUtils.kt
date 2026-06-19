@@ -209,12 +209,14 @@ object MemberUtils {
 
     fun openMemberDetail(context: Context, item: MemberItem, recordStatus: String) {
         try {
+            Log.d("MemberUtils", "Opening detail for ${item.name} ${item.surname}, GUID = ${item.guid}")
             val intent = Intent(context, LidmaatDetailActivity::class.java).apply {
                 data = ContentUris.withAppendedId(
                     za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.CONTENT_URI,
                     item.id
                 )
                 putExtra("RECORD_STATUS", recordStatus)
+                putExtra(LidmaatDetailActivity.EXTRA_MEMBER_GUID, item.guid)
             }
             context.startActivity(intent)
         } catch (e: Exception) {

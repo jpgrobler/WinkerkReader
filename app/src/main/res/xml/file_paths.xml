@@ -8,7 +8,7 @@
 
     <!-- External files directory -->
     <external-files-path name="external_files" path="." />
-
+    <external-files-path name="wkr_dir"        path="." />
     <!-- External cache directory -->
     <external-cache-path name="external_cache" path="." />
 

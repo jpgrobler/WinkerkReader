@@ -1,25 +1,11 @@
 package za.co.jpsoft.winkerkreader.utils
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.ContentUris
-import android.content.ContentValues
-import android.content.Context
-import android.content.Intent
-import android.database.Cursor
-import android.net.Uri
-import android.os.Build
-import android.provider.ContactsContract
-import android.text.format.DateUtils
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import za.co.jpsoft.winkerkreader.R
-import za.co.jpsoft.winkerkreader.data.WinkerkContract
-import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
 import za.co.jpsoft.winkerkreader.data.models.MemberItem
-import za.co.jpsoft.winkerkreader.ui.activities.LidmaatDetailActivity
-import za.co.jpsoft.winkerkreader.utils.Utils.fixphonenumber
+import za.co.jpsoft.winkerkreader.ui.bottomsheets.StelHerinneringBottomSheet
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel
 
 class MemberActionHandler(
@@ -36,6 +22,14 @@ class MemberActionHandler(
                 when (actionId) {
                     R.id.kyk_lidmaat_detail -> {
                         MemberUtils.openMemberDetail(activity, item, viewModel.recordStatus)
+                        true
+                    }
+                    R.id.stel_herinnering -> {
+                        StelHerinneringBottomSheet.newInstance(item.guid)
+                            .show(
+                                activity.supportFragmentManager,
+                                StelHerinneringBottomSheet.TAG
+                            )
                         true
                     }
                     R.id.bel_selfoon -> {

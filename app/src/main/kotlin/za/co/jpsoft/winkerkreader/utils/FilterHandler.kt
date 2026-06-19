@@ -20,7 +20,7 @@ import za.co.jpsoft.winkerkreader.R
  * Handles filter dialog operations
  */
 class FilterHandler(
-    private val activity: AppCompatActivity,
+    private val activity: MainActivity,
     private val viewModel: MemberViewModel
 ) {
 

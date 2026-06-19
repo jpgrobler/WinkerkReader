@@ -22,6 +22,11 @@
         android:title="@string/mainmenu_filter">
     </item>
     <item
+        android:id="@+id/action_bediening"
+        android:title="@string/mainmenu_bediening"
+        android:icon="@drawable/ic_bedienings"
+        app:showAsAction="never" />
+    <item
         android:title="@string/mainmenu_taggedtitle"
         android:icon="@drawable/selectedb">
         <menu>

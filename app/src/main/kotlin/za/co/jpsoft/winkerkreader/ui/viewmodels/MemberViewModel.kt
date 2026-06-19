@@ -24,9 +24,6 @@ import za.co.jpsoft.winkerkreader.utils.getStringOrEmpty
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import za.co.jpsoft.winkerkreader.ui.models.MainQueryMode
-// import java.text.Spannable
-// import android.text.SpannableString
-// import android.text.style.RelativeSizeSpan
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -127,6 +124,14 @@ class MemberViewModel : ViewModel() {
 
     private val queryCache = mutableMapOf<String, SqlRequest>()
 
+    // Inside MemberViewModel.kt
+    private val _memberGuidsWithPendingReminders = MutableLiveData<Set<String>>(emptySet())
+    val memberGuidsWithPendingReminders: LiveData<Set<String>> = _memberGuidsWithPendingReminders
+
+    fun updatePendingRemindersSet(guids: Set<String>) {
+        _memberGuidsWithPendingReminders.value = guids
+    }
+
     // -------------------------------------------------------------------------
     // Public API
     // -------------------------------------------------------------------------
@@ -170,6 +175,7 @@ class MemberViewModel : ViewModel() {
     // -------------------------------------------------------------------------
 
     private fun fetchData(context: Context, eventType: String) {
+        Log.d(TAG, "fetchData called, eventType=$eventType, isProcessing=${isProcessing.get()}")
         val settingsManager = SettingsManager.getInstance(context.applicationContext)
 //        if (!isProcessing.compareAndSet(false, true)) {
 //            Log.d(TAG, "Fetch already in progress, skipping: $eventType")
@@ -218,7 +224,8 @@ class MemberViewModel : ViewModel() {
                     Log.e(TAG, "Could not fix SQL: ${result.errorMessage}")
                     return@launch
                 }
-
+                Log.d(TAG, "SQL: $finalSelection")
+                Log.d(TAG, "Args: ${sqlRequest.args.joinToString()}")
                 // Snapshot sort order on the IO thread before the query so that a
                 // concurrent main-thread write does not affect the
                 // separator computation mid-flight.
@@ -231,6 +238,7 @@ class MemberViewModel : ViewModel() {
                     val items  = cursorToList(cursor, sortOrderSnapshot)
                     rowCount.postValue(items.size)
                     _memberList.postValue(items)
+                    Log.d(TAG, "Posted ${items.size} items to LiveData")
                     if (BuildConfig.DEBUG) {Log.e(
                         TAG, rowCount.value.toString())}
                 }
@@ -800,4 +808,6 @@ class MemberViewModel : ViewModel() {
         Log.d(TAG, "ViewModel cleared")
         super.onCleared()
     }
+
+
 }

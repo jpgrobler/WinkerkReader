@@ -414,13 +414,13 @@
     <string name="permissions_title">App Permissions</string>
     <string name="permissions_intro">Gee asb toestemming vir die volgende permissions om al die app se funksies te kan gebruik</string>
     <string name="permissions_request_all">Toestemming vir alle permissions</string>
-    <string name="uitleg_icons_title">Uitleg + Icons</string>
+    <string name="uitleg_icons_title">Hooflys Icons</string>
     <string name="uitleg_foto">Foto</string>
     <string name="uitleg_epos">Epos</string>
     <string name="uitleg_whatsapp">Whatsapp</string>
     <string name="uitleg_verjaarsdag">Verjaarsdag</string>
     <string name="uitleg_huweliksdatum">Huweliksdatum</string>
-    <string name="uitleg_widget_title">Widget</string>
+    <string name="uitleg_widget_title">Verjaar Widget</string>
     <string name="uitleg_doopdatum">Doopdatum</string>
     <string name="uitleg_belydenisdatum">Belydenisdatum</string>
     <string name="uitleg_sterfdatum">Sterfdatum</string>
@@ -429,8 +429,8 @@
     <string name="uitleg_monitor_oproepe">Monitor Oproepe</string>
     <string name="uitleg_log_tel_oproepe">Log Tel Oproepe</string>
     <string name="uitleg_log_voip_oproepe">Log VOIP Oproepe</string>
-    <string name="uitleg_calendar_picker">Kies 📅 kalender:</string>
-    <string name="uitleg_default_layout">Def Uitleg:</string>
+    <string name="uitleg_calendar_picker">Log 📞 kalender📅:</string>
+    <string name="uitleg_default_layout">Standaard Hoofskerm:</string>
     <string name="uitleg_whatsapp_label">Whatsapp:</string>
     <string name="uitleg_whatsapp_method_1">Whatsapp Metode 1</string>
     <string name="uitleg_whatsapp_method_2">Whatsapp Metode 2</string>
@@ -537,7 +537,7 @@
     <string name="calendar_contact">Kontak: %1$s</string>
     <string name="calendar_type">Tipe: %1$s</string>
     <string name="calendar_source">Bron: %1$s</string>
-    <string name="calendar_duration">Duur: %1$sm %2$ss</string>
+    <string name="calendar_duration">Duration: %d minutes %d seconds</string>
     <string name="calendar_time">Tyd: %1$s</string>
     <string name="calendar_added_by">Bygevoeg deur WinkerkReader-toepassing</string>
 
@@ -550,5 +550,117 @@
     <string name="source_whatsapp">WhatsApp</string>
     <string name="source_phone">Foonoproep</string>
     <string name="menu_call_log">Oproep Log</string>
+
+    <!-- Pastoral -->
+    <string name="bediening_channel_description">Herinnerings vir pastorale opvolg</string>
+    <string name="bediening_title">Bediening</string>
+    <string name="bediening_agterstallig">Agterstallig</string>
+    <string name="herinnering_voltooi">Voltooi</string>
+    <string name="herinnering_uitstel">Uitstel 1 dag</string>
+    <string name="bediening_tab_vandag">Vandag</string>
+    <string name="bediening_filter_vandag">Vandag</string>
+    <string name="bediening_filter_agterstallig">Agterstallig</string>
+    <string name="bediening_filter_agterstallig_count">Agterstallig (%d)</string>
+    <string name="bediening_filter_hierdie_week">Hierdie week</string>
+    <string name="bediening_filter_als">Als</string>
+    <string name="mainmenu_bediening">Bediening</string>
+    <string name="mainmenu_bediening_badge">Bediening (%d)</string>
+    <string name="herinnering_bel">Bel</string>
+    <string name="herinnering_whatsapp">WhatsApp</string>
+    <string name="herinnering_maak_lid_oop">Maak lid oop</string>
+    <string name="herinnering_uitstel_kies">Stel herinnering uit</string>
+    <string name="herinnering_voeg_by_kalender">Voeg by kalender</string>
+    <string name="snooze_more">Môre (08:00)</string>
+    <string name="snooze_drie_dae">3 dae</string>
+    <string name="snooze_een_week">1 week</string>
+    <string name="datum_vandag">Vandag</string>
+    <string name="datum_gister">Gister</string>
+    <string name="meer_opsies">Meer opsies</string>
+    <string name="bediening_geen_herinnerings">Geen herinnerings vir vandag nie</string>
+
+    <!-- Sprint E additions -->
+    <string name="detail_bediening">Bediening</string>
+    <string name="detail_stel_herinnering">Stel herinnering</string>
+    <string name="herinnering_stel_sjabloon">Sjabloon</string>
+    <string name="herinnering_enkel">Enkel herinnering</string>
+    <string name="herinnering_verwysingsdatum">Verwysingsdatum</string>
+    <string name="herinnering_voorskou">Voorskou</string>
+    <string name="herinnering_bevestig">Stoor</string>
+    <string name="herinnering_titel">Titel</string>
+    <string name="herinnering_nota">Nota (opsioneel)</string>
+    <string name="herinnering_spesifieke_tyd">Spesifieke tyd</string>
+    <string name="herinnering_kies_tyd">Kies tyd</string>
+    <!-- Sprint F additions to strings.xml -->
+    <string name="pastoral_import_gevind_titel">Pastorale rugsteun gevind</string>
+    <string name="pastoral_import_gevind_boodskap">\'n Pastorale databasis van %1$s (%2$s MB) is gevind.\n\nWil jy dit invoer?</string>
+    <string name="pastoral_import_ja">Ja</string>
+    <string name="pastoral_import_nee">Nee</string>
+    <string name="pastoral_import_besig">Databasis word ingevoer…</string>
+    <string name="pastoral_import_sukses">Pastorale databasis suksesvol ingevoer</string>
+    <string name="pastoral_import_fout_titel">Invoerfout</string>
+    <string name="pastoral_import_onleesbaar">Die rugsteun-lêer kan nie gelees word nie. Dit is moontlik beskadig.</string>
+    <string name="pastoral_import_weergawe_fout">Die rugsteun (weergawe %1$d) is ouer as wat hierdie app ondersteun (weergawe %2$d). Werk die app op voor jy invoer.</string>
+    <string name="pastoral_import_misluk">Invoer het misluk. Die vorige databasis is behou.</string>
+    <string name="pastoral_deel_rugsteun">Deel / Rugsteun</string>
+    <string name="pastoral_rugsteun_nie_gevind">Geen rugsteun-lêer gevind nie</string>
+    <string name="pastoral_rugsteun_deel_onderwerp">WKR Pastorale databasis</string>
+    <string name="lidmaatlistmenu_stel_herinnering">Stel herinnering</string>
+    <string name="context_hospitaal">Hospitaal</string>
+    <string name="context_naam_oorledene">Naam van oorledene</string>
+    <string name="context_geboortedatum_oorledene">Geboortedatum van oorledene</string>
+    <string name="context_datum_afsterwe">Datum van afsterwe</string>
+    <string name="context_operasiedatum">Hospitalisasiedatum</string>
+    <string name="context_datum_aansluiting">Datum van aansluiting</string>
+
+    <string name="template_bestuur_titel">Bestuur sjablone</string>
+    <string name="template_nuwe_sjabloon">Nuwe sjabloon</string>
+    <string name="template_skep">Skep</string>
+    <string name="template_stelsel_badge">STELSEL</string>
+    <string name="template_verwyder_titel">Verwyder sjabloon</string>
+    <string name="template_verwyder_boodskap">Verwyder \"%1$s\" permanent? Dit kan nie ontdoen word nie.</string>
+
+    <string name="template_wysig_titel">Wysig sjabloon</string>
+    <string name="template_titel">Titel</string>
+    <string name="template_beskrywing">Beskrywing</string>
+    <string name="template_stoor">Stoor</string>
+    <string name="template_gestoor">Sjabloon gestoor</string>
+    <string name="template_stappe">Stappe</string>
+    <string name="template_nuwe_stap">Voeg stap by</string>
+    <string name="template_wysig_stap">Wysig stap</string>
+    <string name="template_verwyder_stap_titel">Verwyder stap</string>
+    <string name="template_verwyder_stap_boodskap">Verwyder hierdie stap uit die sjabloon?</string>
+    <string name="template_offset_dae">Dae vanaf verwysingsdatum</string>
+    <string name="template_offset_maande">Maande vanaf verwysingsdatum</string>
+
+    <string name="template_herstel_titel">Herstel na verstek</string>
+    <string name="template_herstel_boodskap">Dit sal alle stappe in hierdie sjabloon vervang met die oorspronklike stelsel-stappe. Voortgaan?</string>
+    <string name="template_herstel_sukses">Sjabloon herstel na verstek</string>
+    <string name="template_bestuur_sjablone">Bestuur sjablone</string>
+    <string name="template_simbolo">Simbool (opsioneel)</string>
+
+    <string name="tasks_titel">Google Tasks</string>
+    <string name="tasks_af">Af</string>
+    <string name="tasks_outomaties">Log outomaties</string>
+    <string name="tasks_deel_elke_keer">Deel elke keer (geen rekening nodig)</string>
+    <string name="tasks_teken_in">Teken in by Google</string>
+    <string name="tasks_aangeteken_as">Aangeteken as: %1$s</string>
+    <string name="tasks_taaklys">Taaklys</string>
+    <string name="tasks_deel_titel">Deel herinnering</string>
+    <string name="herinnering_voeg_by_tasks">Voeg by Google Tasks</string>
+    <string name="tasks_nie_geaktiveer">Google Tasks is nie geaktiveer nie — stel dit op in Instellings</string>
+    <string name="tasks_waarskuwing_offline">Let wel: as \'n herinnering voltooi of uitgestel word terwyl jy nie by Google aangeteken is nie, sal die ooreenstemmende Google-taak nie outomaties verwyder word nie.</string>
+
+    <string name="widget_pastoral_title">Pastorale herinnerings</string>
+    <string name="widget_pastoral_empty">Geen herinnerings</string>
+    <string name="widget_pastoral_description">Pastorale herinneringslys</string>
+    <string name="test_item">Test Item</string>
+    <string name="pastoral_titel">Bedienings Reminders</string>
+    <string name="uitleg_pastoral_calendar_label">Log ⛪ kalender📅:</string>
+    <string name="herinnering_verwyder">Verwyder</string>
+    <string name="herinnering_verwyder_titel">Verwyder die Bedieningsherinnering</string>
+    <string name="herinnering_verwyder_boodskap">Verwyder</string>
+    <string name="pastoral_calendar_auto_sync_label">Skryf outomaties na kalender\n</string>
+    <string name="herinnering_verwyder_reeks">Verwyder reeks</string>
+    <string name="gemeente_kleur">Gemeente kleur</string>
 </resources>
 

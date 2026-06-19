@@ -27,8 +27,12 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import androidx.work.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.WinkerkContract
 import za.co.jpsoft.winkerkreader.data.WinkerkDbHelper
@@ -40,12 +44,14 @@ import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import za.co.jpsoft.winkerkreader.workers.FileDownloadWorker
 import za.co.jpsoft.winkerkreader.workers.PhotoDownloadWorker
 import za.co.jpsoft.winkerkreader.databinding.LaaidatabasisBinding
+import za.co.jpsoft.winkerkreader.utils.PastoralDatabaseBackup
 import java.io.*
 import java.nio.file.Files
 import java.util.*
 import java.util.regex.Pattern
 
 class LaaiDatabasisActivity : AppCompatActivity() {
+    private val CURRENT_PASTORAL_SCHEMA_VERSION = 1
     companion object {
         private const val TAG = "LaaiDatabasisActivity"
         const val DB_NAME = WINKERK_DB
@@ -97,6 +103,8 @@ class LaaiDatabasisActivity : AppCompatActivity() {
     private var delete: Boolean = false
     private var syncPhotosAfterDb: Boolean = false
     private var fromMenu: Boolean = true
+
+
 
     private val notificationPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
         if (isGranted) Log.d("LaaiDatabasis", "Notification permission granted")
@@ -200,6 +208,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         binding.startPhotoSync.setOnClickListener { startPhotoSync() }
 
         handleAutomaticDownload()
+        checkForPastoralBackup()
     }
 
     override fun onDestroy() {
@@ -497,17 +506,24 @@ class LaaiDatabasisActivity : AppCompatActivity() {
             return
         }
         delete = binding.laaiWisuit.isChecked
-        val filePath = fileList[radioButtonID]["Path"]
-        if (LaaiNuweData(filePath!!)) {
-            Toast.makeText(this, "Suksesvol", Toast.LENGTH_SHORT).show()
-            resetGemeenteSettings()
-            reloadDatabaseAndFinish()
-        } else {
-            Toast.makeText(this, "Onsuksesvol", Toast.LENGTH_SHORT).show()
-            navigateToMainActivity()
+        val filePath = fileList[radioButtonID]["Path"] ?: return
+
+        lifecycleScope.launch {
+            withContext(Dispatchers.IO) {
+                PastoralDatabaseBackup.backupNow(applicationContext)  // await backup first
+            }
+            // Then load on main thread as before
+            if (LaaiNuweData(filePath)) {
+                Toast.makeText(this@LaaiDatabasisActivity, "Suksesvol", Toast.LENGTH_SHORT).show()
+                resetGemeenteSettings()
+                reloadDatabaseAndFinish()
+            } else {
+                Toast.makeText(this@LaaiDatabasisActivity, "Onsuksesvol", Toast.LENGTH_SHORT).show()
+                navigateToMainActivity()
+            }
+            binding.laaiWisuit.isChecked = false
+            binding.laaiFilelist.clearCheck()
         }
-        binding.laaiWisuit.isChecked = false
-        binding.laaiFilelist.clearCheck()
     }
 
     private fun resetGemeenteSettings() {
@@ -815,18 +831,26 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                 val manager = getSystemService(DOWNLOAD_SERVICE) as? DownloadManager ?: return
                 val reference = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
                 if (myDownloadReference != reference) return
+
                 val query = DownloadManager.Query().setFilterById(reference)
                 manager.query(query).use { cursor ->
                     if (cursor.moveToFirst()) {
-                        val status = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS))
-                        if (status == DownloadManager.STATUS_SUCCESSFUL) {
-                            val downloadUri = manager.getUriForDownloadedFile(reference)
-                            contentResolver.openInputStream(downloadUri!!)?.use { input ->
-                                FileOutputStream("$dbPath/$DB_NAME").use { output ->
-                                    input.copyTo(output)
+                        // Get column index safely
+                        val statusColumnIndex = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)
+                        if (statusColumnIndex != -1) {
+                            val status = cursor.getInt(statusColumnIndex)
+                            if (status == DownloadManager.STATUS_SUCCESSFUL) {
+                                val downloadUri = manager.getUriForDownloadedFile(reference)
+                                contentResolver.openInputStream(downloadUri!!)?.use { input ->
+                                    FileOutputStream("$dbPath/$DB_NAME").use { output ->
+                                        input.copyTo(output)
+                                    }
                                 }
+                                reloadDatabaseAndFinish()
                             }
-                            reloadDatabaseAndFinish()
+                        } else {
+                            // Handle missing column – log error or fallback
+                            Log.e("LaaiDatabasis", "COLUMN_STATUS not found in cursor")
                         }
                     }
                 }
@@ -883,6 +907,93 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         } catch (e: Exception) {
             Log.e(TAG, "Error during database reload", e)
             navigateBackToMain()
+        }
+    }
+
+    /**
+     * Checks for a pastoral DB backup in the WKR directory and offers import if found.
+     * Call this from onResume() or after the congregation DB scan completes.
+     */
+    private fun checkForPastoralBackup() {
+        val backupFile = PastoralDatabaseBackup.findBackupFile(this)
+            ?: return   // No backup present — nothing to do
+
+        val backupVersion = PastoralDatabaseBackup.readSchemaVersion(backupFile)
+        val backupSizeMb  = "%.1f".format(backupFile.length() / 1_048_576.0)
+        val backupDate    = java.text.SimpleDateFormat("d MMM yyyy HH:mm", java.util.Locale.getDefault())
+            .format(java.util.Date(backupFile.lastModified()))
+
+        when {
+            backupVersion < 0 -> {
+                // Corrupt or unreadable — warn and skip
+                AlertDialog.Builder(this)
+                    .setTitle(getString(R.string.pastoral_import_fout_titel))
+                    .setMessage(getString(R.string.pastoral_import_onleesbaar))
+                    .setPositiveButton(android.R.string.ok, null)
+                    .show()
+            }
+            backupVersion > CURRENT_PASTORAL_SCHEMA_VERSION -> {
+                // Backup is newer than the app supports — refuse import
+                AlertDialog.Builder(this)
+                    .setTitle(getString(R.string.pastoral_import_fout_titel))
+                    .setMessage(
+                        getString(
+                            R.string.pastoral_import_weergawe_fout,
+                            backupVersion,
+                            CURRENT_PASTORAL_SCHEMA_VERSION
+                        )
+                    )
+                    .setPositiveButton(android.R.string.ok, null)
+                    .show()
+            }
+            else -> {
+                // Compatible — offer import
+                AlertDialog.Builder(this)
+                    .setTitle(getString(R.string.pastoral_import_gevind_titel))
+                    .setMessage(
+                        getString(
+                            R.string.pastoral_import_gevind_boodskap,
+                            backupDate,
+                            backupSizeMb
+                        )
+                    )
+                    .setPositiveButton(getString(R.string.pastoral_import_ja)) { _, _ ->
+                        performPastoralImport(backupFile)
+                    }
+                    .setNegativeButton(getString(R.string.pastoral_import_nee), null)
+                    .show()
+            }
+        }
+    }
+
+    private fun performPastoralImport(backupFile: java.io.File) {
+        val progressDialog = AlertDialog.Builder(this)
+            .setMessage(getString(R.string.pastoral_import_besig))
+            .setCancelable(false)
+            .create()
+        progressDialog.show()
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            val success = PastoralDatabaseBackup.importBackup(
+                context    = applicationContext,
+                backupFile = backupFile
+            )
+            withContext(Dispatchers.Main) {
+                progressDialog.dismiss()
+                if (success) {
+                    Toast.makeText(
+                        this@LaaiDatabasisActivity,
+                        getString(R.string.pastoral_import_sukses),
+                        Toast.LENGTH_LONG
+                    ).show()
+                } else {
+                    AlertDialog.Builder(this@LaaiDatabasisActivity)
+                        .setTitle(getString(R.string.pastoral_import_fout_titel))
+                        .setMessage(getString(R.string.pastoral_import_misluk))
+                        .setPositiveButton(android.R.string.ok, null)
+                        .show()
+                }
+            }
         }
     }
 }

@@ -71,7 +71,7 @@
         android:label="@string/app_name"
         android:roundIcon="@drawable/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme"
+        android:theme="@style/Theme.WinkerkReader"
         android:usesCleartextTraffic="true">
 
         <!-- Activities -->
@@ -99,7 +99,8 @@
             android:icon="@mipmap/ic_shortcut_family_roof"
             android:windowSoftInputMode="adjustPan|adjustResize"
             android:label="Lidmaat Detail"
-            android:parentActivityName="za.co.jpsoft.winkerkreader.ui.activities.MainActivity">
+            android:parentActivityName="za.co.jpsoft.winkerkreader.ui.activities.MainActivity"
+            android:theme="@style/Theme.WinkerkReader">
         </activity>
 
         <activity
@@ -160,6 +161,27 @@
             android:exported="false">
         </activity>
 
+        <activity
+            android:name=".ui.activities.BedieningActivity"
+            android:label="@string/bediening_title"
+            android:theme="@style/Theme.WinkerkReader.NoActionBar"
+            android:parentActivityName=".ui.activities.MainActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.activities.TemplateManagerActivity"
+            android:label="@string/template_bestuur_sjablone"
+            android:theme="@style/Theme.WinkerkReader.NoActionBar"
+            android:parentActivityName=".ui.activities.BedieningActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.activities.TemplateEditorActivity"
+            android:label="@string/template_wysig_titel"
+            android:theme="@style/Theme.WinkerkReader.NoActionBar"
+            android:parentActivityName=".ui.activities.TemplateManagerActivity"
+            android:exported="false" />
+
         <!-- Receivers -->
         <receiver
             android:name="za.co.jpsoft.winkerkreader.services.receivers.DeviceBootReceiver"
@@ -190,10 +212,51 @@
                 android:resource="@xml/winkerkreaderwidgetprovider" />
         </receiver>
 
+        <!-- Pastoral Reminder Widget -->
+        <receiver
+            android:name=".widget.PastoralWidgetProvider"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="za.co.jpsoft.winkerkreader.ACTION_REFRESH_PASTORAL_WIDGET" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_pastoral_info" />
+        </receiver>
+        <!-- Keyguard Pastoral Reminder Widget -->
+        <receiver
+            android:name=".widget.PastoralWidgetKeyguardProvider"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_pastoral_keyguard_info" />
+        </receiver>
+
+        <service
+            android:name=".widget.PastoralWidgetKeyguardRemoteViewsService"
+            android:permission="android.permission.BIND_REMOTEVIEWS"
+            android:exported="false" />
+
+        <service
+            android:name=".widget.PastoralWidgetRemoteViewsService"
+            android:permission="android.permission.BIND_REMOTEVIEWS"
+            android:exported="false" />
         <receiver
             android:name="za.co.jpsoft.winkerkreader.services.receivers.AlarmReceiver"
             android:exported="false" />
 
+        <receiver
+            android:name=".receivers.PastoralReminderActionReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="za.co.jpsoft.winkerkreader.ACTION_PASTORAL_COMPLETE" />
+                <action android:name="za.co.jpsoft.winkerkreader.ACTION_PASTORAL_SNOOZE" />
+            </intent-filter>
+        </receiver>
 
         <!-- Services -->
         <service

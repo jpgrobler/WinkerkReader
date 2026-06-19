@@ -29,7 +29,6 @@
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
             android:ellipsize="marquee"
-            android:gravity="center_horizontal"
             android:marqueeRepeatLimit="marquee_forever"
             android:maxLines="1"
             android:text="@string/detail_gemeente"
@@ -43,10 +42,10 @@
         <Button
             android:id="@+id/buttonWysig"
             android:layout_width="wrap_content"
-            android:layout_height="35dp"
+            android:layout_height="40dp"
             android:background="@drawable/buttonshape"
             android:scaleX=".9"
-            android:scaleY=".75"
+            android:scaleY=".85"
             android:text="@string/detail_wysig"
             android:textColor="@android:color/white"
             app:layout_constraintEnd_toEndOf="parent"
@@ -61,524 +60,597 @@
         android:scrollbarSize="12dp"
         android:scrollbars="vertical">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <!-- SINGLE direct child: LinearLayout that wraps all scrollable content -->
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-            <!-- Contact photo -->
-            <ImageView
-                android:id="@+id/detail_kontak_foto"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                android:layout_gravity="center_horizontal"
-                android:scaleType="centerInside"
-                android:src="@drawable/kontak"
-                android:tag="default"
-                android:visibility="visible"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
+            <!-- ConstraintLayout with all member details -->
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
 
-            <!-- Row 1: Noemnaam + Geslag + Huwelikstatus -->
-            <TextView
-                android:id="@+id/label_noemnaam"
-                style="@style/CategoryStyle"
-                android:text="@string/detail_naam"
-                app:layout_constraintTop_toBottomOf="@id/detail_kontak_foto"
-                app:layout_constraintStart_toStartOf="parent"
-                android:layout_marginTop="8dp" />
-
-            <EditText
-                android:id="@+id/detail_noemnaam"
-                style="@style/EditorFieldStyle"
-                android:text="@string/detail_noemnaam"
-                android:textIsSelectable="true"
-                app:layout_constraintTop_toTopOf="@id/label_noemnaam"
-                app:layout_constraintStart_toEndOf="@id/label_noemnaam"
-                app:layout_constraintEnd_toStartOf="@id/geslag"
-                android:layout_marginStart="8dp"
-                android:layout_marginEnd="8dp" />
-
-            <Spinner
-                android:id="@+id/geslag"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:layout_constraintTop_toTopOf="@id/label_noemnaam"
-                app:layout_constraintEnd_toStartOf="@id/huwelikstatus"
-                android:layout_marginEnd="8dp" />
-
-            <Spinner
-                android:id="@+id/huwelikstatus"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:layout_constraintTop_toTopOf="@id/label_noemnaam"
-                app:layout_constraintEnd_toEndOf="parent" />
-
-            <!-- Row 2: Vollename -->
-            <TextView
-                android:id="@+id/label_vollename"
-                style="@style/CategoryStyle"
-                android:text="@string/detail_vollename"
-                app:layout_constraintTop_toBottomOf="@id/label_noemnaam"
-                app:layout_constraintStart_toStartOf="parent"
-                android:layout_marginTop="8dp" />
-
-            <EditText
-                android:id="@+id/detail_vollename"
-                style="@style/EditorFieldStyle"
-                android:text="@string/detail_vollename"
-                android:textIsSelectable="true"
-                app:layout_constraintTop_toTopOf="@id/label_vollename"
-                app:layout_constraintStart_toEndOf="@id/label_vollename"
-                app:layout_constraintEnd_toEndOf="parent"
-                android:layout_marginStart="8dp" />
-
-            <!-- Row 3: Van -->
-            <TextView
-                android:id="@+id/label_van"
-                style="@style/CategoryStyle"
-                android:text="@string/detail_van"
-                app:layout_constraintTop_toBottomOf="@id/label_vollename"
-                app:layout_constraintStart_toStartOf="parent"
-                android:layout_marginTop="8dp" />
-
-            <EditText
-                android:id="@+id/detail_van"
-                style="@style/EditorFieldStyle"
-                android:text="@string/detail_van"
-                android:textIsSelectable="true"
-                app:layout_constraintTop_toTopOf="@id/label_van"
-                app:layout_constraintStart_toEndOf="@id/label_van"
-                app:layout_constraintEnd_toEndOf="parent"
-                android:layout_marginStart="8dp" />
-
-            <!-- Row 4: Nooiensvan (optional block) -->
-            <LinearLayout
-                android:id="@+id/detail_nooiensvanBlock"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                app:layout_constraintTop_toBottomOf="@id/label_van"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                android:layout_marginTop="8dp">
-
-                <TextView
-                    style="@style/CategoryStyle"
-                    android:text="@string/detail_Nooiensvan" />
-
-                <EditText
-                    android:id="@+id/detail_nooiensvan"
-                    style="@style/EditorFieldStyle"
-                    android:text="@string/detail_Nooiensvan"
-                    android:textIsSelectable="true" />
-            </LinearLayout>
-
-            <!-- Row 5: Werkgewer (EditText alone) -->
-            <EditText
-                android:id="@+id/detail_Werkgewer"
-                style="@style/EditorFieldStyle"
-                android:textIsSelectable="true"
-                tools:text="@string/detail_werkgewer"
-                app:layout_constraintTop_toBottomOf="@id/detail_nooiensvanBlock"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                android:layout_marginTop="8dp" />
-
-            <!-- Row 6: Lidmaatstatus -->
-            <LinearLayout
-                android:id="@+id/detail_lidmaatstatusBlock"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                app:layout_constraintTop_toBottomOf="@id/detail_Werkgewer"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                android:layout_marginTop="8dp">
-
-                <TextView
-                    style="@style/CategoryStyle"
-                    android:text="@string/detail_lidmaatskap" />
-
-                <EditText
-                    android:id="@+id/detail_Lidmaatstatus"
-                    style="@style/EditorFieldStyle"
-                    android:text="@string/detail_lidmaatskap"
-                    android:textIsSelectable="true" />
-            </LinearLayout>
-
-            <!-- Row 7: Geboortedatum + Age -->
-            <TextView
-                android:id="@+id/label_gebore"
-                style="@style/CategoryStyle"
-                android:text="@string/detail_gebore"
-                app:layout_constraintTop_toBottomOf="@id/detail_lidmaatstatusBlock"
-                app:layout_constraintStart_toStartOf="parent"
-                android:layout_marginTop="8dp" />
-
-            <EditText
-                android:id="@+id/detail_geboortedatum"
-                style="@style/EditorFieldStyle"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:text="@string/detail_gebore"
-                android:textIsSelectable="true"
-                app:layout_constraintTop_toTopOf="@id/label_gebore"
-                app:layout_constraintStart_toEndOf="@id/label_gebore"
-                app:layout_constraintEnd_toStartOf="@id/detail_jareoud"
-                android:layout_marginStart="8dp"
-                android:layout_marginEnd="8dp" />
-
-            <TextView
-                android:id="@+id/detail_jareoud"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
-                android:layout_marginStart="4dp"
-                android:text=""
-                app:layout_constraintTop_toTopOf="@id/label_gebore"
-                app:layout_constraintEnd_toEndOf="parent" />
-
-            <!-- Row 8: Selfoon + icons -->
-            <LinearLayout
-                android:id="@+id/detail_selfoonBlock"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                app:layout_constraintTop_toBottomOf="@id/label_gebore"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                android:layout_marginTop="8dp">
-
-                <TextView
-                    style="@style/CategoryStyle"
-                    android:text="@string/detail_selfoon" />
-
-                <EditText
-                    android:id="@+id/detail_selfoon"
-                    style="@style/EditorFieldStyle"
-                    android:text="@string/detail_selfoon"
-                    android:textIsSelectable="true" />
-
+                <!-- Contact photo -->
                 <ImageView
-                    android:id="@+id/detail_whatsapp_icon"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:layout_marginEnd="16dp"
-                    android:scaleType="fitXY"
-                    android:src="@drawable/whatsapp" />
+                    android:id="@+id/detail_kontak_foto"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:layout_gravity="center_horizontal"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/kontak"
+                    android:tag="default"
+                    android:visibility="visible"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent" />
 
-                <ImageView
-                    android:id="@+id/detail_sms_icon"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:layout_marginEnd="16dp"
-                    android:src="@drawable/sms2" />
-
-                <ImageView
-                    android:id="@+id/detail_selfoon_icon"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:layout_marginEnd="8dp"
-                    android:src="@drawable/cell3" />
-            </LinearLayout>
-
-            <!-- Row 9: Landlyn + icon -->
-            <LinearLayout
-                android:id="@+id/detail_telefoonBlock"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                app:layout_constraintTop_toBottomOf="@id/detail_selfoonBlock"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                android:layout_marginTop="8dp">
-
+                <!-- Row 1: Noemnaam + Geslag + Huwelikstatus -->
                 <TextView
+                    android:id="@+id/label_noemnaam"
                     style="@style/CategoryStyle"
-                    android:text="@string/detail_landlyn" />
+                    android:text="@string/detail_naam"
+                    app:layout_constraintTop_toBottomOf="@id/detail_kontak_foto"
+                    app:layout_constraintStart_toStartOf="parent"
+                    android:layout_marginTop="8dp" />
 
                 <EditText
-                    android:id="@+id/detail_telefoon"
+                    android:id="@+id/detail_noemnaam"
                     style="@style/EditorFieldStyle"
-                    android:text="@string/detail_landlyn"
-                    android:textIsSelectable="true" />
-
-                <ImageView
-                    android:id="@+id/detail_landlyn_icon"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:layout_marginEnd="8dp"
-                    android:src="@drawable/oldphone" />
-            </LinearLayout>
-
-            <!-- Row 10: Epos + icon -->
-            <LinearLayout
-                android:id="@+id/detail_eposBlock"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                app:layout_constraintTop_toBottomOf="@id/detail_telefoonBlock"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                android:layout_marginTop="8dp">
-
-                <TextView
-                    style="@style/CategoryStyle"
-                    android:text="@string/detail_epos" />
-
-                <EditText
-                    android:id="@+id/detail_epos"
-                    style="@style/EditorFieldStyle"
-                    android:text="@string/detail_epos"
-                    android:textIsSelectable="true" />
-
-                <ImageView
-                    android:id="@+id/detail_email_icon"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:layout_marginEnd="8dp"
-                    android:src="@drawable/email2" />
-            </LinearLayout>
-
-            <!-- Row 11: Beroep -->
-            <LinearLayout
-                android:id="@+id/detail_BeroepBlock"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                app:layout_constraintTop_toBottomOf="@id/detail_eposBlock"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                android:layout_marginTop="8dp">
-
-                <TextView
-                    style="@style/CategoryStyle"
-                    android:text="@string/detail_beroep" />
-
-                <EditText
-                    android:id="@+id/detail_Beroep"
-                    style="@style/EditorFieldStyle"
+                    android:text="@string/detail_noemnaam"
                     android:textIsSelectable="true"
-                    tools:text="@string/detail_beroep" />
-            </LinearLayout>
+                    app:layout_constraintTop_toTopOf="@id/label_noemnaam"
+                    app:layout_constraintStart_toEndOf="@id/label_noemnaam"
+                    app:layout_constraintEnd_toStartOf="@id/geslag"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="8dp" />
 
-            <!-- Row 12: Werkgever (label only, field already above?) – keeping original structure -->
-            <LinearLayout
-                android:id="@+id/detail_WerkgewerBlock"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                app:layout_constraintTop_toBottomOf="@id/detail_BeroepBlock"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                android:layout_marginTop="8dp">
+                <Spinner
+                    android:id="@+id/geslag"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintTop_toTopOf="@id/label_noemnaam"
+                    app:layout_constraintEnd_toStartOf="@id/huwelikstatus"
+                    android:layout_marginEnd="8dp" />
 
+                <Spinner
+                    android:id="@+id/huwelikstatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintTop_toTopOf="@id/label_noemnaam"
+                    app:layout_constraintEnd_toEndOf="parent" />
+
+                <!-- Row 2: Vollename -->
                 <TextView
+                    android:id="@+id/label_vollename"
                     style="@style/CategoryStyle"
-                    android:text="@string/detail_werkgewer" />
-                <!-- No EditText here – original had none, just label -->
-            </LinearLayout>
-
-            <!-- Row 13: Wyk -->
-            <LinearLayout
-                android:id="@+id/detail_wykBlock"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                app:layout_constraintTop_toBottomOf="@id/detail_WerkgewerBlock"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                android:layout_marginTop="8dp">
-
-                <TextView
-                    style="@style/CategoryStyle"
-                    android:text="@string/detail_wyk" />
+                    android:text="@string/detail_vollename"
+                    app:layout_constraintTop_toBottomOf="@id/label_noemnaam"
+                    app:layout_constraintStart_toStartOf="parent"
+                    android:layout_marginTop="8dp" />
 
                 <EditText
-                    android:id="@+id/detail_wyk"
+                    android:id="@+id/detail_vollename"
                     style="@style/EditorFieldStyle"
+                    android:text="@string/detail_vollename"
                     android:textIsSelectable="true"
-                    tools:text="@string/detail_wyk" />
-            </LinearLayout>
+                    app:layout_constraintTop_toTopOf="@id/label_vollename"
+                    app:layout_constraintStart_toEndOf="@id/label_vollename"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:layout_marginStart="8dp" />
 
-            <!-- Row 14: Straatadres + icon -->
-            <LinearLayout
-                android:id="@+id/detail_straatadresBlock"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                app:layout_constraintTop_toBottomOf="@id/detail_wykBlock"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                android:layout_marginTop="8dp">
-
+                <!-- Row 3: Van -->
                 <TextView
+                    android:id="@+id/label_van"
                     style="@style/CategoryStyle"
-                    android:text="@string/detail_straatadres" />
+                    android:text="@string/detail_van"
+                    app:layout_constraintTop_toBottomOf="@id/label_vollename"
+                    app:layout_constraintStart_toStartOf="parent"
+                    android:layout_marginTop="8dp" />
 
                 <EditText
-                    android:id="@+id/detail_straatadres"
+                    android:id="@+id/detail_van"
                     style="@style/EditorFieldStyle"
+                    android:text="@string/detail_van"
                     android:textIsSelectable="true"
-                    tools:text="@string/detail_straatadres" />
+                    app:layout_constraintTop_toTopOf="@id/label_van"
+                    app:layout_constraintStart_toEndOf="@id/label_van"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:layout_marginStart="8dp" />
 
-                <ImageView
-                    android:id="@+id/detail_straat_icon"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:layout_marginEnd="8dp"
-                    android:src="@drawable/location" />
-            </LinearLayout>
-
-            <!-- Row 15: Posadres (label only) -->
-            <LinearLayout
-                android:id="@+id/detail_posadresBlock"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                app:layout_constraintTop_toBottomOf="@id/detail_straatadresBlock"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                android:layout_marginTop="8dp">
-
-                <TextView
-                    style="@style/CategoryStyle"
-                    android:text="@string/detail_posadres" />
-            </LinearLayout>
-
-            <!-- Mylpale section (two nested blocks) -->
-            <LinearLayout
-                android:id="@+id/detail_mylpaleBlock2"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                app:layout_constraintTop_toBottomOf="@id/detail_posadresBlock"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                android:layout_marginTop="8dp">
-
-                <TextView
-                    style="@style/CategoryStyle"
-                    android:layout_gravity="top"
-                    android:paddingEnd="8dp"
-                    android:text="@string/detail_mylpale" />
-
+                <!-- Row 4: Nooiensvan (optional block) -->
                 <LinearLayout
-                    android:id="@+id/detail_mylpaleBlock"
+                    android:id="@+id/detail_nooiensvanBlock"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    app:layout_constraintTop_toBottomOf="@id/label_van"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:layout_marginTop="8dp">
+
+                    <TextView
+                        style="@style/CategoryStyle"
+                        android:text="@string/detail_Nooiensvan" />
+
+                    <EditText
+                        android:id="@+id/detail_nooiensvan"
+                        style="@style/EditorFieldStyle"
+                        android:text="@string/detail_Nooiensvan"
+                        android:textIsSelectable="true" />
+                </LinearLayout>
+
+                <!-- Row 5: Werkgewer (EditText alone) -->
+                <EditText
+                    android:id="@+id/detail_Werkgewer"
+                    style="@style/EditorFieldStyle"
+                    android:textIsSelectable="true"
+                    tools:text="@string/detail_werkgewer"
+                    app:layout_constraintTop_toBottomOf="@id/detail_nooiensvanBlock"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:layout_marginTop="8dp" />
+
+                <!-- Row 6: Lidmaatstatus -->
+                <LinearLayout
+                    android:id="@+id/detail_lidmaatstatusBlock"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    app:layout_constraintTop_toBottomOf="@id/detail_Werkgewer"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:layout_marginTop="8dp">
+
+                    <TextView
+                        style="@style/CategoryStyle"
+                        android:text="@string/detail_lidmaatskap" />
+
+                    <EditText
+                        android:id="@+id/detail_Lidmaatstatus"
+                        style="@style/EditorFieldStyle"
+                        android:text="@string/detail_lidmaatskap"
+                        android:textIsSelectable="true" />
+                </LinearLayout>
+
+                <!-- Row 7: Geboortedatum + Age -->
+                <TextView
+                    android:id="@+id/label_gebore"
+                    style="@style/CategoryStyle"
+                    android:text="@string/detail_gebore"
+                    app:layout_constraintTop_toBottomOf="@id/detail_lidmaatstatusBlock"
+                    app:layout_constraintStart_toStartOf="parent"
+                    android:layout_marginTop="8dp" />
+
+                <EditText
+                    android:id="@+id/detail_geboortedatum"
+                    style="@style/EditorFieldStyle"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:text="@string/detail_gebore"
+                    android:textIsSelectable="true"
+                    app:layout_constraintTop_toTopOf="@id/label_gebore"
+                    app:layout_constraintStart_toEndOf="@id/label_gebore"
+                    app:layout_constraintEnd_toStartOf="@id/detail_jareoud"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="8dp" />
+
+                <TextView
+                    android:id="@+id/detail_jareoud"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginStart="4dp"
+                    android:text=""
+                    app:layout_constraintTop_toTopOf="@id/label_gebore"
+                    app:layout_constraintEnd_toEndOf="parent" />
+
+                <!-- Row 8: Selfoon + icons -->
+                <LinearLayout
+                    android:id="@+id/detail_selfoonBlock"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    app:layout_constraintTop_toBottomOf="@id/label_gebore"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:layout_marginTop="8dp">
+
+                    <TextView
+                        style="@style/CategoryStyle"
+                        android:text="@string/detail_selfoon" />
+
+                    <EditText
+                        android:id="@+id/detail_selfoon"
+                        style="@style/EditorFieldStyle"
+                        android:text="@string/detail_selfoon"
+                        android:textIsSelectable="true" />
+
+                    <ImageView
+                        android:id="@+id/detail_whatsapp_icon"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_marginEnd="16dp"
+                        android:scaleType="fitXY"
+                        android:src="@drawable/whatsapp" />
+
+                    <ImageView
+                        android:id="@+id/detail_sms_icon"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_marginEnd="16dp"
+                        android:src="@drawable/sms2" />
+
+                    <ImageView
+                        android:id="@+id/detail_selfoon_icon"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_marginEnd="8dp"
+                        android:src="@drawable/cell3" />
+                </LinearLayout>
+
+                <!-- Row 9: Landlyn + icon -->
+                <LinearLayout
+                    android:id="@+id/detail_telefoonBlock"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    app:layout_constraintTop_toBottomOf="@id/detail_selfoonBlock"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:layout_marginTop="8dp">
+
+                    <TextView
+                        style="@style/CategoryStyle"
+                        android:text="@string/detail_landlyn" />
+
+                    <EditText
+                        android:id="@+id/detail_telefoon"
+                        style="@style/EditorFieldStyle"
+                        android:text="@string/detail_landlyn"
+                        android:textIsSelectable="true" />
+
+                    <ImageView
+                        android:id="@+id/detail_landlyn_icon"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_marginEnd="8dp"
+                        android:src="@drawable/oldphone" />
+                </LinearLayout>
+
+                <!-- Row 10: Epos + icon -->
+                <LinearLayout
+                    android:id="@+id/detail_eposBlock"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    app:layout_constraintTop_toBottomOf="@id/detail_telefoonBlock"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:layout_marginTop="8dp">
+
+                    <TextView
+                        style="@style/CategoryStyle"
+                        android:text="@string/detail_epos" />
+
+                    <EditText
+                        android:id="@+id/detail_epos"
+                        style="@style/EditorFieldStyle"
+                        android:text="@string/detail_epos"
+                        android:textIsSelectable="true" />
+
+                    <ImageView
+                        android:id="@+id/detail_email_icon"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_marginEnd="8dp"
+                        android:src="@drawable/email2" />
+                </LinearLayout>
+
+                <!-- Row 11: Beroep -->
+                <LinearLayout
+                    android:id="@+id/detail_BeroepBlock"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    app:layout_constraintTop_toBottomOf="@id/detail_eposBlock"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:layout_marginTop="8dp">
+
+                    <TextView
+                        style="@style/CategoryStyle"
+                        android:text="@string/detail_beroep" />
+
+                    <EditText
+                        android:id="@+id/detail_Beroep"
+                        style="@style/EditorFieldStyle"
+                        android:textIsSelectable="true"
+                        tools:text="@string/detail_beroep" />
+                </LinearLayout>
+
+                <!-- Row 12: Werkgewer (label only) -->
+                <LinearLayout
+                    android:id="@+id/detail_WerkgewerBlock"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    app:layout_constraintTop_toBottomOf="@id/detail_BeroepBlock"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:layout_marginTop="8dp">
+
+                    <TextView
+                        style="@style/CategoryStyle"
+                        android:text="@string/detail_werkgewer" />
+                </LinearLayout>
+
+                <!-- Row 13: Wyk -->
+                <LinearLayout
+                    android:id="@+id/detail_wykBlock"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    app:layout_constraintTop_toBottomOf="@id/detail_WerkgewerBlock"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:layout_marginTop="8dp">
+
+                    <TextView
+                        style="@style/CategoryStyle"
+                        android:text="@string/detail_wyk" />
+
+                    <EditText
+                        android:id="@+id/detail_wyk"
+                        style="@style/EditorFieldStyle"
+                        android:textIsSelectable="true"
+                        tools:text="@string/detail_wyk" />
+                </LinearLayout>
+
+                <!-- Row 14: Straatadres + icon -->
+                <LinearLayout
+                    android:id="@+id/detail_straatadresBlock"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    app:layout_constraintTop_toBottomOf="@id/detail_wykBlock"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:layout_marginTop="8dp">
+
+                    <TextView
+                        style="@style/CategoryStyle"
+                        android:text="@string/detail_straatadres" />
+
+                    <EditText
+                        android:id="@+id/detail_straatadres"
+                        style="@style/EditorFieldStyle"
+                        android:textIsSelectable="true"
+                        tools:text="@string/detail_straatadres" />
+
+                    <ImageView
+                        android:id="@+id/detail_straat_icon"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_marginEnd="8dp"
+                        android:src="@drawable/location" />
+                </LinearLayout>
+
+                <!-- Row 15: Posadres (label only) -->
+                <LinearLayout
+                    android:id="@+id/detail_posadresBlock"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    app:layout_constraintTop_toBottomOf="@id/detail_straatadresBlock"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:layout_marginTop="8dp">
+
+                    <TextView
+                        style="@style/CategoryStyle"
+                        android:text="@string/detail_posadres" />
+                </LinearLayout>
+
+                <!-- Mylpale section -->
+                <LinearLayout
+                    android:id="@+id/detail_mylpaleBlock2"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    app:layout_constraintTop_toBottomOf="@id/detail_posadresBlock"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:layout_marginTop="8dp">
+
+                    <TextView
+                        style="@style/CategoryStyle"
+                        android:layout_gravity="top"
+                        android:paddingEnd="8dp"
+                        android:text="@string/detail_mylpale" />
+
+                    <LinearLayout
+                        android:id="@+id/detail_mylpaleBlock"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical" />
+                </LinearLayout>
+
+                <!-- Gesin section -->
+                <LinearLayout
+                    android:id="@+id/detail_gesinBlock"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    app:layout_constraintTop_toBottomOf="@id/detail_mylpaleBlock2"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:layout_marginTop="8dp">
+
+                    <EditText
+                        android:id="@+id/detail_posadres"
+                        style="@style/EditorFieldStyle"
+                        android:textIsSelectable="true"
+                        tools:text="@string/detail_posadres" />
+
+                    <TextView
+                        style="@style/CategoryStyle"
+                        android:layout_width="wrap_content"
+                        android:text="@string/detail_gesin" />
+                </LinearLayout>
+
+                <!-- Groepe section -->
+                <LinearLayout
+                    android:id="@+id/detail_groepBlockm"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    app:layout_constraintTop_toBottomOf="@id/detail_gesinBlock"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:layout_marginTop="8dp">
+
+                    <TextView
+                        style="@style/CategoryStyle"
+                        android:layout_width="wrap_content"
+                        android:text="@string/detail_groepe" />
+
+                    <LinearLayout
+                        android:id="@+id/detail_groepBlock"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical" />
+                </LinearLayout>
+
+                <!-- Meelewing section -->
+                <LinearLayout
+                    android:id="@+id/detail_meelewingBlock"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    app:layout_constraintTop_toBottomOf="@id/detail_groepBlockm"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:layout_marginTop="8dp">
+
+                    <TextView
+                        style="@style/CategoryStyle"
+                        android:layout_width="wrap_content"
+                        android:text="@string/detail_meelewing" />
+                </LinearLayout>
+
+                <!-- Gawes section -->
+                <LinearLayout
+                    android:id="@+id/detail_gawesBlock"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    app:layout_constraintTop_toBottomOf="@id/detail_meelewingBlock"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:layout_marginTop="8dp">
+
+                    <TextView
+                        style="@style/CategoryStyle"
+                        android:layout_width="wrap_content"
+                        android:text="@string/detail_gawes" />
+                </LinearLayout>
+
+                <!-- Passie section -->
+                <LinearLayout
+                    android:id="@+id/detail_passieBlock"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    app:layout_constraintTop_toBottomOf="@id/detail_gawesBlock"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp">
+
+                    <TextView
+                        style="@style/CategoryStyle"
+                        android:layout_width="wrap_content"
+                        android:text="@string/detail_passie" />
+                </LinearLayout>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <!-- Bottom progress bar -->
+            <ProgressBar
+                android:id="@+id/detail_indeterminateBar2"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:focusedByDefault="true"
+                android:visibility="visible" />
+
+            <!-- ===== BEDIENING BLOCK (Pastoral reminders) ===== -->
+            <LinearLayout
+                android:id="@+id/detail_bediening_block"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingTop="8dp"
+                android:paddingBottom="4dp">
+
+                <!-- Divider -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="?attr/dividerColor"
+                    android:layout_marginBottom="8dp" />
+
+                <!-- Header row: label + Stel herinnering button -->
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical" />
-            </LinearLayout>
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="16dp">
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/ic_bedienings"/>
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/detail_bediening"
+                        android:textAppearance="?attr/textAppearanceTitleSmall" />
 
-            <!-- Gesin section -->
-            <LinearLayout
-                android:id="@+id/detail_gesinBlock"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                app:layout_constraintTop_toBottomOf="@id/detail_mylpaleBlock2"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                android:layout_marginTop="8dp">
+                    <TextView
+                        android:id="@+id/detail_herinnering_count"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="?attr/textAppearanceLabelSmall"
+                        android:alpha="0.6"
+                        android:layout_marginEnd="8dp"
+                        android:visibility="gone" />
 
-                <EditText
-                    android:id="@+id/detail_posadres"
-                    style="@style/EditorFieldStyle"
-                    android:textIsSelectable="true"
-                    tools:text="@string/detail_posadres" />
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/detail_stel_herinnering"
+                        style="@style/Widget.Material3.Button.TonalButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:text="@string/detail_stel_herinnering"
+                        android:textSize="12sp" />
 
-                <TextView
-                    style="@style/CategoryStyle"
-                    android:layout_width="wrap_content"
-                    android:text="@string/detail_gesin" />
-            </LinearLayout>
+                </LinearLayout>
 
-            <!-- Groepe section -->
-            <LinearLayout
-                android:id="@+id/detail_groepBlockm"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                app:layout_constraintTop_toBottomOf="@id/detail_gesinBlock"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                android:layout_marginTop="8dp">
-
-                <TextView
-                    style="@style/CategoryStyle"
-                    android:layout_width="wrap_content"
-                    android:text="@string/detail_groepe" />
-
-                <LinearLayout
-                    android:id="@+id/detail_groepBlock"
+                <!-- Pending reminder mini-list -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/detail_pending_reminders"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical" />
+                    android:maxHeight="150dp"
+                    android:nestedScrollingEnabled="false"
+                    android:paddingTop="4dp"
+                    android:visibility="gone" />
+
             </LinearLayout>
+            <!-- ===== END BEDIENING BLOCK ===== -->
 
-            <!-- Meelewing section -->
-            <LinearLayout
-                android:id="@+id/detail_meelewingBlock"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                app:layout_constraintTop_toBottomOf="@id/detail_groepBlockm"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                android:layout_marginTop="8dp">
-
-                <TextView
-                    style="@style/CategoryStyle"
-                    android:layout_width="wrap_content"
-                    android:text="@string/detail_meelewing" />
-            </LinearLayout>
-
-            <!-- Gawes section -->
-            <LinearLayout
-                android:id="@+id/detail_gawesBlock"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                app:layout_constraintTop_toBottomOf="@id/detail_meelewingBlock"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                android:layout_marginTop="8dp">
-
-                <TextView
-                    style="@style/CategoryStyle"
-                    android:layout_width="wrap_content"
-                    android:text="@string/detail_gawes" />
-            </LinearLayout>
-
-            <!-- Passie section -->
-            <LinearLayout
-                android:id="@+id/detail_passieBlock"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                app:layout_constraintTop_toBottomOf="@id/detail_gawesBlock"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp">
-
-                <TextView
-                    style="@style/CategoryStyle"
-                    android:layout_width="wrap_content"
-                    android:text="@string/detail_passie" />
-            </LinearLayout>
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
+        </LinearLayout>
     </ScrollView>
-
-    <!-- Progress bar bottom -->
-    <ProgressBar
-        android:id="@+id/detail_indeterminateBar2"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:focusedByDefault="true"
-        android:visibility="visible" />
-
 </LinearLayout>

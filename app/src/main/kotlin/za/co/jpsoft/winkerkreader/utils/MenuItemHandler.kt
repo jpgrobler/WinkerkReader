@@ -13,6 +13,7 @@ import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel
 
 import android.content.ContentValues
 import android.content.Intent
+import android.util.Log
 
 import android.view.MenuItem
 import android.widget.RadioGroup
@@ -23,6 +24,7 @@ import androidx.appcompat.app.AppCompatActivity
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.WinkerkContract
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.LIDMATE_TAG
+import za.co.jpsoft.winkerkreader.ui.activities.BedieningActivity
 
 class MenuItemHandler(
     private val activity: AppCompatActivity,
@@ -62,6 +64,10 @@ class MenuItemHandler(
             }
             R.id.menu_battery_optimization -> {
                 BatteryOptimizationHelper.showBatteryOptimizationDialog(activity)
+                true
+            }
+            R.id.action_bediening -> {
+                BedieningActivity.launch(activity)
                 true
             }
             else -> false
@@ -178,10 +184,11 @@ class MenuItemHandler(
 
     private fun handleFilterOptions(): Boolean {
         return try {
-            val filterHandler = FilterHandler(activity, viewModel)
+            val filterHandler = FilterHandler(activity as MainActivity, viewModel)
             filterHandler.showFilterDialog()
             true
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Log.e("MenuItemHandler", "Filter error", e)
             Toast.makeText(activity, "Error opening filter options", Toast.LENGTH_SHORT).show()
             false
         }

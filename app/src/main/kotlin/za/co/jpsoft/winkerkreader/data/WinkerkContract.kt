@@ -41,6 +41,13 @@ object WinkerkContract {
     const val KEY_WHATSAPP3 = "Whatsapp3"
     const val KEY_EPOSHTML = "EposHtml"
     const val KEY_SELECTED_CALENDAR_ID = "selected_calendar_id"
+    const val KEY_PASTORAL_SYNC_CALENDAR       = "pref_pastoral_sync_calendar"
+    const val KEY_PASTORAL_CALENDAR_AUTO_TIMED = "pref_pastoral_calendar_auto_timed"
+
+    // Google Tasks
+    const val KEY_GOOGLE_TASKS_MODE      = "pref_google_tasks_mode"       // "off" | "api" | "share"
+    const val KEY_GOOGLE_TASKS_LIST_ID   = "pref_google_tasks_list_id"
+    const val KEY_GOOGLE_TASKS_ACCOUNT   = "pref_google_tasks_account"    // cached email for display
 
     // Widget Settings Keys
     const val KEY_WIDGET_DOOP = "Widget_Doop"
@@ -169,6 +176,7 @@ object WinkerkContract {
         // DATABASES
         const val WINKERK_DB = "WinkerkReader.sqlite"
         const val INFO_DB = "wkr_info.db"
+        const val PASTORAL_DB = "wkr_pastoral.db"
 
         // Table Names
         const val LIDMATE_TABLE_NAME = "Members"
@@ -482,6 +490,11 @@ object WinkerkContract {
         }
 
         @JvmStatic
+        fun getPastoralDbPath(context: Context): String {
+            return (context.getExternalFilesDir(null) ?: context.filesDir).absolutePath + "/"
+        }
+
+        @JvmStatic
         fun getFotoDir(context: Context): String {
             val dir = File(getWkrDir(context), "Fotos")
             if (!dir.exists()) dir.mkdirs()
@@ -499,4 +512,9 @@ object WinkerkContract {
             return gender == GENDER_UNKNOWN || gender == GENDER_MALE || gender == GENDER_FEMALE
         }
     }
+
+    const val KEY_TASKS_SCRIPT_URL    = "pref_tasks_script_url"
+    const val KEY_TASKS_SCRIPT_SECRET = "pref_tasks_script_secret"
+
+    const val KEY_PASTORAL_CALENDAR_ID = "pref_pastoral_calendar_id"
 }

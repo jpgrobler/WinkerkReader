@@ -1,5 +1,6 @@
 package za.co.jpsoft.winkerkreader.ui.activities
 
+import android.app.Application
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.ContentUris
@@ -10,7 +11,6 @@ import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.media.ThumbnailUtils
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.text.Html
 import android.text.Spanned
@@ -42,12 +42,32 @@ import za.co.jpsoft.winkerkreader.data.models.MemberDetailItem
 import za.co.jpsoft.winkerkreader.data.models.FamilyMemberItem
 import androidx.core.graphics.toColorInt
 import androidx.core.net.toUri
+import androidx.activity.viewModels
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.launch
+import za.co.jpsoft.winkerkreader.data.pastoral.entities.FollowUpReminderEntity
+import za.co.jpsoft.winkerkreader.data.pastoral.model.TemplateContext
+import za.co.jpsoft.winkerkreader.ui.adapters.PendingReminderMiniAdapter
+import za.co.jpsoft.winkerkreader.ui.bottomsheets.StelHerinneringBottomSheet
+import za.co.jpsoft.winkerkreader.ui.viewmodels.LidmaatDetailPastoralViewModel
+import za.co.jpsoft.winkerkreader.ui.viewmodels.LidmaatDetailPastoralViewModelFactory
+import za.co.jpsoft.winkerkreader.utils.PhotoHelper
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 class LidmaatDetailActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "LidmaatDetailActivity"
         private const val STATE_IMAGE_URI = "image_uri"
+
+        const val EXTRA_MEMBER_GUID = "memberGUID"
     }
 
     private lateinit var binding: LidmaatDetailBinding
@@ -76,7 +96,7 @@ class LidmaatDetailActivity : AppCompatActivity() {
                 uri?.let { processSelectedImage(it) }
             }
 
-    // Camera launcher (unchanged)
+    // Camera launcher (uchanged)
     private val takePictureLauncher =
         registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
             val uri = mImageUri
@@ -91,6 +111,15 @@ class LidmaatDetailActivity : AppCompatActivity() {
             // Clear the temporary URI to avoid re-use
             mImageUri = null
         }
+
+    private val pastoralViewModel: LidmaatDetailPastoralViewModel by viewModels {
+        val guid = intent.getStringExtra(EXTRA_MEMBER_GUID) ?: ""
+        Log.d(TAG, "Pastoral ViewModel GUID: '$guid'")
+        LidmaatDetailPastoralViewModelFactory(this, guid)
+    }
+
+    private lateinit var miniAdapter: PendingReminderMiniAdapter
+
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
@@ -112,11 +141,37 @@ class LidmaatDetailActivity : AppCompatActivity() {
         binding.detailPassieBlock.visibility = View.GONE
         binding.detailGawesBlock.visibility = View.GONE
 
-        mCurrentLidmaatUri = intent.data ?: throw IllegalArgumentException("No data URI provided")
+        mCurrentLidmaatUri = intent.data ?: run {
+            val guid = intent.getStringExtra(EXTRA_MEMBER_GUID)
+                ?: intent.getStringExtra("MEMBER_GUID") // fallback for fragment
+            if (guid != null) {
+                val id = getIdFromGuid(guid)
+                if (id != -1L) {
+                    ContentUris.withAppendedId(winkerkEntry.CONTENT_URI, id)
+                } else {
+                    throw IllegalArgumentException("Cannot resolve member GUID: $guid")
+                }
+            } else {
+                throw IllegalArgumentException("No data URI and no MEMBER_GUID provided")
+            }
+        }
+
         recordStatus = intent.getStringExtra("RECORD_STATUS") ?: "0"
+        val guid = intent.getStringExtra(EXTRA_MEMBER_GUID)
+            ?: intent.getStringExtra("MEMBER_GUID")
 
         viewModel = ViewModelProvider(this)[LidmaatDetailViewModel::class.java]
-        viewModel.loadMember(mCurrentLidmaatUri, recordStatus)
+
+        if (intent.data != null) {
+            // Called from main list (has content URI)
+            viewModel.loadMember(intent.data!!, recordStatus)
+        } else if (!guid.isNullOrEmpty()) {
+            // Called from pastoral reminders (GUID only)
+            viewModel.loadMemberByGuid(guid, recordStatus)
+        } else {
+            throw IllegalArgumentException("No data URI and no MEMBER_GUID provided")
+        }
+
 
         viewModel.memberDetail.observe(this) { item ->
             if (item != null) {
@@ -151,6 +206,66 @@ class LidmaatDetailActivity : AppCompatActivity() {
         // Restore pending image URI if any
         savedInstanceState?.getString(STATE_IMAGE_URI)?.let { uriString ->
             mImageUri = uriString.toUri()
+        }
+
+        setupBedieningBlock()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.menu_lidmaat_detail, menu)
+        return true
+    }
+
+    private fun setupBedieningBlock() {
+        miniAdapter = PendingReminderMiniAdapter(
+            onComplete = { reminderId -> pastoralViewModel.completeReminder(reminderId) },
+            onClick = { reminder -> showReminderDetailsDialog(reminder) }
+        )
+        binding.detailPendingReminders.apply {
+            adapter = miniAdapter
+            layoutManager = LinearLayoutManager(this@LidmaatDetailActivity)
+            setHasFixedSize(false)
+        }
+
+        binding.detailStelHerinnering.setOnClickListener {
+            StelHerinneringBottomSheet.newInstance(
+                intent.getStringExtra("MemberGUID") ?: ""
+            ).show(supportFragmentManager, StelHerinneringBottomSheet.TAG)
+        }
+
+        // Observe pending reminders
+        lifecycleScope.launch {
+            pastoralViewModel.pendingReminders.collect { reminders ->
+                Log.d(TAG, "pendingReminders collected: ${reminders.size} items")
+                miniAdapter.submitList(reminders)
+                binding.detailPendingReminders.visibility =
+                    if (reminders.isEmpty()) View.GONE else View.VISIBLE
+                binding.detailHerinneringCount.visibility =
+                if (reminders.isEmpty()) View.GONE else View.VISIBLE
+                binding.detailHerinneringCount.text =
+                resources.getQuantityString(
+                    R.plurals.herinnering_created_count,
+                    reminders.size,
+                    reminders.size
+                )
+            }
+        }
+
+        // Toast on creation
+        lifecycleScope.launch {
+            pastoralViewModel.created.collect { count ->
+                val msg = resources.getQuantityString(
+                    R.plurals.herinnering_created_count, count, count
+                )
+                Toast.makeText(this@LidmaatDetailActivity, msg, Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // Error Snackbar
+        lifecycleScope.launch {
+            pastoralViewModel.error.collect { message ->
+                Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -399,29 +514,36 @@ class LidmaatDetailActivity : AppCompatActivity() {
     }
 
     private fun loadMemberPhoto(guid: String?) {
-        if (guid == null) {
+        if (guid.isNullOrEmpty()) {
             setDefaultPhoto()
             return
         }
-        val syncedPath = getSyncedPhotoPath(guid)
-        if (syncedPath != null) {
-            val file = File(syncedPath)
+
+        // Directly use PhotoHelper – it returns the full path if file exists, else null
+        val photoPath = PhotoHelper.getSyncedPhotoPath(this, guid)
+        if (photoPath != null) {
+            val file = File(photoPath)
             if (file.exists()) {
-                // Set desired dimensions (200dp converted to pixels)
                 val pixels = (200 * resources.displayMetrics.density + 0.5f).toInt()
                 binding.detailKontakFoto.layoutParams.height = pixels
                 binding.detailKontakFoto.layoutParams.width = pixels
                 binding.detailKontakFoto.requestLayout()
 
-                Glide.with(this).load(file).override(pixels, pixels).centerCrop().placeholder(R.drawable.kontaks).error(R.drawable.kontaks).into(binding.detailKontakFoto)
+                Glide.with(this)
+                    .load(file)
+                    .override(pixels, pixels)
+                    .centerCrop()
+                    .placeholder(R.drawable.kontaks)
+                    .error(R.drawable.kontaks)
+                    .into(binding.detailKontakFoto)
 
                 binding.detailKontakFoto.tag = "synced"
-            } else {
-                setDefaultPhoto()
+                return
             }
-        } else {
-            setDefaultPhoto()
         }
+
+        // 3. Fallback: default photo
+        setDefaultPhoto()
     }
 
     private fun displayFamily(members: List<FamilyMemberItem>) {
@@ -481,6 +603,7 @@ class LidmaatDetailActivity : AppCompatActivity() {
                         tag = member.id
                         setOnClickListener {
                             val gId = tag as Int
+                            val guid = member.guid
                             val intent =
                                     Intent(
                                             this@LidmaatDetailActivity,
@@ -491,6 +614,7 @@ class LidmaatDetailActivity : AppCompatActivity() {
                                                 gId.toLong()
                                         )
                                         putExtra("RECORD_STATUS", recordStatus)
+                                        putExtra(EXTRA_MEMBER_GUID, guid)
                                     }
                             startActivity(intent)
                             finish()
@@ -576,14 +700,6 @@ class LidmaatDetailActivity : AppCompatActivity() {
             mylpaleBlock.addView(huwelikTv)
         }
     }
-
-    private fun getSyncedPhotoPath(guid: String?): String? {
-        if (guid.isNullOrEmpty()) return null
-        val externalDir = getExternalFilesDir(null) ?: return null
-        val syncedFile = File(externalDir, "photos/$guid.jpg")
-        return if (syncedFile.exists()) syncedFile.absolutePath else null
-    }
-
     private fun setDefaultPhoto() {
         val scale = resources.displayMetrics.density
         val pixels = (50 * scale + 0.5f).toInt()
@@ -788,7 +904,7 @@ class LidmaatDetailActivity : AppCompatActivity() {
         // Save full-size image to external directory (use original quality)
         val externalDir = getExternalFilesDir(null)
         if (externalDir != null) {
-            val photoDir = File(externalDir, "photos")
+            val photoDir = File(externalDir, "Fotos")
             if (!photoDir.exists()) photoDir.mkdirs()
             val photoFile = File(photoDir, "$guid.jpg")
             if (photoFile.exists()) photoFile.delete()
@@ -833,6 +949,75 @@ class LidmaatDetailActivity : AppCompatActivity() {
             onBackPressedDispatcher.onBackPressed()
             return true
         }
+
+        if (item.itemId == R.id.action_stel_herinnering) {
+            StelHerinneringBottomSheet.newInstance(mLidmaatGUID)
+                .show(supportFragmentManager, StelHerinneringBottomSheet.TAG)
+            return true
+        }
+
         return false
     }
+    private fun getPhotoPathFromDatabase(guid: String): String? {
+        val cursor = contentResolver.query(
+            winkerkEntry.INFO_LOADER_FOTO_URI,
+            arrayOf(winkerkEntry.INFO_FOTO_PATH),
+            "${winkerkEntry.INFO_LIDMAAT_GUID} = ?",
+            arrayOf(guid),
+            null
+        )
+        return cursor?.use {
+            if (it.moveToFirst()) it.getString(0) else null
+        }
+    }
+    private fun getIdFromGuid(memberGuid: String): Long {
+        val fullQuery = """
+        SELECT _rowid_ FROM ${winkerkEntry.LIDMATE_TABLE_NAME}
+        WHERE ${winkerkEntry.LIDMATE_LIDMAATGUID} = ?
+    """.trimIndent()
+        val cursor = contentResolver.query(
+            winkerkEntry.CONTENT_URI,
+            null,
+            fullQuery,
+            arrayOf(memberGuid),
+            null
+        )
+        return cursor?.use {
+            if (it.moveToFirst()) it.getLong(0) else -1L
+        } ?: -1L
+    }
+
+    private fun showReminderDetailsDialog(reminder: FollowUpReminderEntity) {
+        val dueDate = Instant.ofEpochMilli(reminder.dueDateUtc)
+            .atZone(ZoneId.systemDefault())
+            .toLocalDate()
+        val dateStr = DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault()).format(dueDate)
+        val isOverdue = dueDate.isBefore(LocalDate.now())
+
+        val details = buildString {
+            append("Titel: ${reminder.title}")
+            append("\nDatum: $dateStr")
+            if (isOverdue) append(" (Agterstallig)")
+            if (!reminder.note.isNullOrBlank()) {
+                append("\n\nNota:\n${reminder.note}")
+            }
+            // Add context line if available
+            val contextLine = TemplateContext.from(reminder.contextJson).toDisplayLine()
+            if (contextLine != null) {
+                append("\n\nKontekst: $contextLine")
+            }
+            // Optionally add schedule type
+            append("\n\nSkema: ${reminder.scheduleType}")
+            // Status
+            append("\nStatus: ${reminder.status}")
+        }
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Herinnering besonderhede")
+            .setMessage(details)
+            .setPositiveButton("Sluit", null)
+            .show()
+    }
+
+
 }

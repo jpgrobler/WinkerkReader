@@ -1,6 +1,7 @@
 package za.co.jpsoft.winkerkreader.workers
 
 import za.co.jpsoft.winkerkreader.widget.WinkerkReaderWidgetProvider
+import za.co.jpsoft.winkerkreader.widget.PastoralWidgetProvider
 
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
@@ -19,14 +20,15 @@ class WidgetRefreshWorker(
 
     override suspend fun doWork(): Result {
         return try {
-            refreshWidgets()
+            refreshBirthdayWidget()
+            refreshPastoralWidget()
             Result.success()
         } catch (e: Exception) {
             Result.retry()
         }
     }
 
-    private fun refreshWidgets() {
+    private fun refreshBirthdayWidget() {
         val appWidgetManager = AppWidgetManager.getInstance(applicationContext)
         val componentName = ComponentName(applicationContext, WinkerkReaderWidgetProvider::class.java)
         val ids = appWidgetManager.getAppWidgetIds(componentName)
@@ -36,5 +38,10 @@ class WidgetRefreshWorker(
             putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
         }
         applicationContext.sendBroadcast(intent)
+    }
+
+    private fun refreshPastoralWidget() {
+
+        PastoralWidgetProvider.refreshWidgets(applicationContext)
     }
 }

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_pastoral_keyguard_item_text"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingVertical="1dp"
+    android:paddingHorizontal="2dp"
+    android:textSize="11sp"
+    android:textColor="#FFFFFF"
+    android:singleLine="true"
+    android:ellipsize="end" />

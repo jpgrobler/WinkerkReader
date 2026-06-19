@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="250dp"
+    android:minHeight="40dp"
+    android:updatePeriodMillis="0"
+    android:previewImage="@drawable/ic_bedienings"
+    android:initialLayout="@layout/widget_pastoral"
+    android:resizeMode="vertical"
+    android:widgetCategory="home_screen"
+    android:description="@string/widget_pastoral_description" />

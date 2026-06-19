@@ -4,6 +4,7 @@ package za.co.jpsoft.winkerkreader.utils
 // CalendarManager.kt
 
 import za.co.jpsoft.winkerkreader.WinkerkReader
+import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
 import android.provider.CalendarContract
@@ -17,6 +18,7 @@ import java.util.*
 import za.co.jpsoft.winkerkreader.R
 
 class CalendarManager(private val context: Context) {
+    private val contentResolver = context.contentResolver
 
     fun getAvailableCalendars(): List<CalendarInfo> {
         val calendars = mutableListOf<CalendarInfo>()
@@ -67,6 +69,161 @@ class CalendarManager(private val context: Context) {
         return calendars
     }
 
+    /**
+     * Inserts a single pastoral reminder event into [calendarId].
+     *
+     * Title is prefixed with [PASTORAL_TITLE_PREFIX] so pastoral events are visually
+     * distinct and scannable by [isDuplicatePastoralEvent].
+     * Description footer includes [PASTORAL_REMINDER_TOKEN] + [reminderId] for
+     * orphan detection after restore.
+     *
+     * @return The new `CalendarContract.Events._ID`, or null if insert failed or
+     *         a duplicate was detected.
+     */
+    fun addPastoralEvent(
+        calendarId: Long,
+        reminderId: String,
+        memberDisplayName: String,
+        title: String,
+        note: String?,
+        startMillis: Long,
+        endMillis: Long,
+        isAllDay: Boolean
+    ): Long? {
+        if (isDuplicatePastoralEvent(calendarId, reminderId, startMillis, isAllDay)) {
+            Log.w(TAG, "Skipping duplicate pastoral calendar event for reminder $reminderId")
+            return null
+        }
+
+        val descriptionParts = buildList {
+            if (!note.isNullOrBlank()) add(note.trim())
+            add("$PASTORAL_REMINDER_TOKEN$reminderId")
+        }
+
+        val values = ContentValues().apply {
+            put(CalendarContract.Events.CALENDAR_ID, calendarId)
+            put(CalendarContract.Events.TITLE, "$PASTORAL_TITLE_PREFIX${title.trim()}")
+            put(CalendarContract.Events.DESCRIPTION, descriptionParts.joinToString("\n\n"))
+            put(CalendarContract.Events.DTSTART, startMillis)
+            put(CalendarContract.Events.DTEND, endMillis)
+            put(CalendarContract.Events.ALL_DAY, if (isAllDay) 1 else 0)
+            put(CalendarContract.Events.EVENT_TIMEZONE, TimeZone.getDefault().id)
+            put(CalendarContract.Events.HAS_ALARM, 0)  // In-app notification owns alerting
+        }
+
+        return try {
+            val uri = contentResolver.insert(CalendarContract.Events.CONTENT_URI, values)
+            uri?.lastPathSegment?.toLongOrNull().also { id ->
+                Log.d(TAG, "Pastoral calendar event created: id=$id reminder=$reminderId")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to insert pastoral calendar event for $reminderId", e)
+            null
+        }
+    }
+
+    /**
+     * Deletes the calendar event with [calendarEventId].
+     * Safe to call even if the event no longer exists (ContentProvider returns 0 rows).
+     *
+     * @return true if the event was deleted, false if not found or deletion failed.
+     */
+    fun deletePastoralEvent(calendarEventId: Long): Boolean {
+        val uri = ContentUris.withAppendedId(
+            CalendarContract.Events.CONTENT_URI, calendarEventId
+        )
+        return try {
+            val deleted = contentResolver.delete(uri, null, null)
+            (deleted > 0).also {
+                Log.d(TAG, "Pastoral calendar event delete: id=$calendarEventId deleted=$it")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to delete pastoral calendar event $calendarEventId", e)
+            false
+        }
+    }
+
+    /**
+     * Returns true if a pastoral event for [reminderId] already exists on [calendarId].
+     *
+     * Checks by description token first (fast, handles post-restore orphans), then
+     * falls back to a time-window scan.
+     *
+     * @param startMillis  The proposed event start (epoch ms). Used for the time-window check.
+     * @param isAllDay     When true, the time-window check spans the entire calendar day.
+     */
+    fun isDuplicatePastoralEvent(
+        calendarId: Long,
+        reminderId: String,
+        startMillis: Long,
+        isAllDay: Boolean = false
+    ): Boolean {
+        return isTokenDuplicate(calendarId, reminderId)
+                || isTimeWindowDuplicate(calendarId, startMillis, isAllDay)
+    }
+
+    private fun isTokenDuplicate(calendarId: Long, reminderId: String): Boolean {
+        val projection = arrayOf(CalendarContract.Events._ID)
+        val selection = "${CalendarContract.Events.CALENDAR_ID} = ? " +
+                "AND ${CalendarContract.Events.DESCRIPTION} LIKE ? " +
+                "AND ${CalendarContract.Events.DELETED} = 0"
+        val token = "$PASTORAL_REMINDER_TOKEN$reminderId"
+
+        return try {
+            contentResolver.query(
+                CalendarContract.Events.CONTENT_URI,
+                projection,
+                selection,
+                arrayOf(calendarId.toString(), "%$token%"),
+                null
+            )?.use { cursor -> cursor.count > 0 } ?: false
+        } catch (e: Exception) {
+            Log.e(TAG, "Token dedup query failed for $reminderId", e)
+            false  // Fail open: let the insert proceed; the description token will catch it next time
+        }
+    }
+
+    private fun isTimeWindowDuplicate(calendarId: Long, startMillis: Long, isAllDay: Boolean): Boolean {
+        val (windowStart, windowEnd) = if (isAllDay) {
+            // Same calendar day in device timezone
+            val cal = Calendar.getInstance()
+            cal.timeInMillis = startMillis
+            cal.set(Calendar.HOUR_OF_DAY, 0)
+            cal.set(Calendar.MINUTE, 0)
+            cal.set(Calendar.SECOND, 0)
+            cal.set(Calendar.MILLISECOND, 0)
+            val dayStart = cal.timeInMillis
+            cal.add(Calendar.DAY_OF_MONTH, 1)
+            dayStart to cal.timeInMillis
+        } else {
+            (startMillis - PASTORAL_TIMED_WINDOW_MS) to (startMillis + PASTORAL_TIMED_WINDOW_MS)
+        }
+
+        val projection = arrayOf(CalendarContract.Events._ID)
+        val selection = "${CalendarContract.Events.CALENDAR_ID} = ? " +
+                "AND ${CalendarContract.Events.TITLE} LIKE ? " +
+                "AND ${CalendarContract.Events.DTSTART} >= ? " +
+                "AND ${CalendarContract.Events.DTSTART} < ? " +
+                "AND ${CalendarContract.Events.DELETED} = 0"
+
+        return try {
+            contentResolver.query(
+                CalendarContract.Events.CONTENT_URI,
+                projection,
+                selection,
+                arrayOf(
+                    calendarId.toString(),
+                    "$PASTORAL_TITLE_PREFIX%",
+                    windowStart.toString(),
+                    windowEnd.toString()
+                ),
+                null
+            )?.use { cursor -> cursor.count > 0 } ?: false
+        } catch (e: Exception) {
+            Log.e(TAG, "Time-window dedup query failed", e)
+            false
+        }
+    }
     fun addCallEventToCalendar(
         calendarId: Long,
         callerInfo: String,
@@ -252,7 +409,7 @@ class CalendarManager(private val context: Context) {
         if (duration > 0) {
             val minutes = duration / 60
             val seconds = duration % 60
-            sb.append(context.getString(R.string.calendar_duration, minutes, seconds)).append("\n")
+            sb.append(context.getString(R.string.calendar_duration, minutes.toInt(), seconds.toInt())).append("\n")
         }
 
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
@@ -274,5 +431,8 @@ class CalendarManager(private val context: Context) {
 
     companion object {
         private const val TAG = "CalendarManager"
+        private const val PASTORAL_TITLE_PREFIX    = "WKR Bediening: "
+        private const val PASTORAL_REMINDER_TOKEN  = "wkr_reminder_id="
+        private const val PASTORAL_TIMED_WINDOW_MS = 2 * 60 * 1000L   // ±2 min dedup window
     }
 }

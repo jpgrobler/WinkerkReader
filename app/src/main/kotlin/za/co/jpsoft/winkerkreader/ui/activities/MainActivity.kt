@@ -25,6 +25,7 @@ import java.util.concurrent.Executors
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
 import za.co.jpsoft.winkerkreader.data.models.FilterBox
+import za.co.jpsoft.winkerkreader.data.pastoral.PastoralDatabase
 import za.co.jpsoft.winkerkreader.services.CallMonitoringService
 import za.co.jpsoft.winkerkreader.ui.adapters.MemberListAdapter
 import za.co.jpsoft.winkerkreader.ui.components.SearchCheckBox
@@ -40,7 +41,14 @@ import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import za.co.jpsoft.winkerkreader.utils.WhatsAppContactLoader
 import za.co.jpsoft.winkerkreader.utils.WorkManagerHelper
 import za.co.jpsoft.winkerkreader.databinding.ActivityMainBinding
-
+import za.co.jpsoft.winkerkreader.utils.PastoralNotificationHelper
+import za.co.jpsoft.winkerkreader.ui.activities.BedieningActivity
+import java.time.LocalDate
+import java.time.ZoneId
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import za.co.jpsoft.winkerkreader.widget.PastoralWidgetProvider
 
 class MainActivity : AppCompatActivity() {
 
@@ -64,6 +72,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var listInteractionController: MemberListInteractionController
     private lateinit var activityResultCoordinator: ActivityResultCoordinator
     private lateinit var mainDataLoader: MainDataLoader
+    private var bedieningBadgeCount = 0
 
     companion object {
         private const val TAG = "Winkerk_MainActivity"
@@ -160,6 +169,7 @@ class MainActivity : AppCompatActivity() {
             view.setPadding(0, 0, 0, systemBars.bottom)
             insets
         }
+        PastoralDatabase.getInstance(this)
     }
 
     override fun onStart() {
@@ -173,6 +183,8 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         startupCoordinator.runOnResume()
+        updateBedieningBadge()
+        loadPendingReminderGuids()
     }
 
     private fun ensureServicesAreRunning() {
@@ -299,6 +311,7 @@ class MainActivity : AppCompatActivity() {
 
         // One observer for ALL sort orders — no cursor leaks, no 9-way dispatch
         viewModel.getMemberList().observe(this) { items ->
+            Log.d(TAG, "Observer received ${items.size} items")
             val isVerjaar = settingsManager.defLayout == "VERJAAR"
 
             // Sync adapter state before submitting list
@@ -309,7 +322,7 @@ class MainActivity : AppCompatActivity() {
                     recordStatus = viewModel.recordStatus,
                     sortOrder = viewModel.sortOrder
             )
-
+            //memberListAdapter.submitList(null)
             memberListAdapter.submitList(items) {
                 // submitList callback fires on the main thread once DiffUtil has
                 // committed changes — safe place to auto-scroll
@@ -321,6 +334,11 @@ class MainActivity : AppCompatActivity() {
                     )
                 }
             }
+           // memberListAdapter.notifyDataSetChanged()
+        }
+
+        viewModel.memberGuidsWithPendingReminders.observe(this) { guids ->
+            memberListAdapter.updatePendingReminderGuids(guids)
         }
     }
 
@@ -328,6 +346,7 @@ class MainActivity : AppCompatActivity() {
         PermissionHelper.requestAllPermissions(this, PermissionHelper.REQUEST_CODE_ALL_PERMISSIONS)
         checkOverlayPermission()
         createNotificationChannel()
+        PastoralNotificationHelper.ensureChannel(this)   // ← Sprint C
     }
 
     private fun initializeData(savedInstanceState: Bundle?) {
@@ -462,6 +481,7 @@ class MainActivity : AppCompatActivity() {
         setupAutoDownloadWork()
         setupReminderWork()
         setupWidgetRefreshWork()
+        setupFollowUpReminderWork()
     }
 
     private fun setupAutoDownloadWork() {
@@ -489,6 +509,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupWidgetRefreshWork() {
         WorkManagerHelper.scheduleWidgetRefresh(this)
+        PastoralWidgetProvider.refreshWidgets(this)
+    }
+
+    private fun setupFollowUpReminderWork() {
+        WorkManagerHelper.scheduleFollowUpReminders(this)
     }
 
     private fun loadInitialData() {
@@ -592,5 +617,43 @@ class MainActivity : AppCompatActivity() {
 
     private fun onRightSwipe() {
         NavigationHandler.handleRightSwipe(this, binding.sortorder, viewModel)
+    }
+
+    private fun updateBedieningBadge() {
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val db = PastoralDatabase.getInstance(applicationContext)
+                val zoneId = ZoneId.systemDefault()
+                val now = System.currentTimeMillis()
+                val startOfToday = LocalDate.now(zoneId)
+                    .atStartOfDay(zoneId).toInstant().toEpochMilli()
+                val endOfDay = LocalDate.now(zoneId).plusDays(1)
+                    .atStartOfDay(zoneId).toInstant().toEpochMilli() - 1
+
+                val total = db.followUpReminderDao().countOverdue(startOfToday) +
+                        db.followUpReminderDao().countDueToday(endOfDay, now)
+
+                withContext(Dispatchers.Main) {
+                    bedieningBadgeCount = total
+                    invalidateOptionsMenu()   // triggers onPrepareOptionsMenu
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Badge count failed", e)
+            }
+        }
+    }
+
+    private fun loadPendingReminderGuids() {
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val db = PastoralDatabase.getInstance(applicationContext)
+                val guids = db.followUpReminderDao().getDistinctMemberGuidsWithPending()
+                withContext(Dispatchers.Main) {
+                    viewModel.updatePendingRemindersSet(guids.toSet())
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to load pending reminder guids", e)
+            }
+        }
     }
 }

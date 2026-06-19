@@ -20,10 +20,40 @@
         <item name="windowNoTitle">true</item>
     </style>
     <!-- ========== BASE APPLICATION THEMES ========== -->
+    <!-- Popup menu with dark text on light background -->
+    <style name="ThemeOverlay.WinkerkReader.ActionBar.Popup" parent="ThemeOverlay.Material3.Light">
+        <item name="android:textColorPrimary">@android:color/black</item>
+        <item name="android:background">@android:color/white</item>
+    </style>
+
+    <style name="Theme.WinkerkReader.NoActionBar" parent="Theme.WinkerkReader">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="Widget.WinkerkReader.Chip.Filter" parent="Widget.MaterialComponents.Chip.Filter">
+        <!-- Explicit colors – no ?attr/ references -->
+        <item name="chipBackgroundColor">@color/surface_light</item>
+        <item name="chipStrokeColor">@color/primary_blue</item>
+        <item name="chipStrokeWidth">1dp</item>
+        <item name="chipMinHeight">32dp</item>
+        <item name="chipCornerRadius">16dp</item>
+        <item name="android:textColor">@color/text_primary_light</item>
+        <!-- Use a stable text appearance -->
+        <item name="android:textAppearance">@style/TextAppearance.MaterialComponents.Chip</item>
+
+    </style>
+
 
     <!-- Base Application Theme -->
-    <style name="Theme.WinkerkReader" parent="Theme.Material3.DayNight">
+    <style name="Theme.WinkerkReader" parent="Theme.Material3.Light">
         <!-- Primary brand color -->
+        <item name="android:actionBarStyle">@style/Widget.MaterialComponents.ActionBar.Primary</item>
+        <item name="actionBarStyle">@style/Widget.MaterialComponents.ActionBar.Primary</item>
+        <item name="android:titleTextStyle">@style/TextAppearance.WinkerkReader.ActionBar.Title</item>
+        <item name="titleTextStyle">@style/TextAppearance.WinkerkReader.ActionBar.Title</item>
+        
+        <item name="android:windowLightStatusBar">true</item>
         <item name="colorPrimary">@color/primary_blue</item>
         <item name="colorPrimaryVariant">@color/primary_blue_dark</item>
         <item name="colorOnPrimary">@android:color/white</item>
@@ -40,7 +70,7 @@
         <item name="colorOnSurface">@color/text_primary_light</item>
 
         <!-- Status bar -->
-        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        <item name="android:statusBarColor">@color/primary_blue</item>
 
         <!-- Enable window insets handling -->
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
@@ -50,6 +80,49 @@
         <item name="android:buttonStyle">@style/Widget.WinkerkReader.Button</item>
         <item name="android:checkboxStyle">@style/Widget.WinkerkReader.CheckBox</item>
         <item name="materialButtonStyle">@style/Widget.WinkerkReader.Button.Primary</item>
+
+        <item name="dividerColor">?attr/colorOutline</item>   <!-- or a specific color, e.g. @color/gray_300 -->
+        <item name="android:windowActionBarOverlay">false</item>
+        <!-- or for AppCompat -->
+        <item name="windowActionBarOverlay">false</item>
+        <!-- ADD THESE THREE: -->
+        <item name="actionBarTheme">@style/ThemeOverlay.WinkerkReader.ActionBar</item>
+        <item name="actionBarPopupTheme">@style/ThemeOverlay.WinkerkReader.PopupMenu</item>
+        <item name="actionMenuTextColor">@android:color/white</item>
+    </style>
+
+
+    <style name="TextAppearance.WinkerkReader.ActionBar.Title" parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:textColor">?attr/colorOnPrimary</item>
+    </style>
+    <style name="Widget.WinkerkReader.ActionBar" parent="Widget.AppCompat.ActionBar">
+        <item name="android:background">?attr/colorPrimary</item>
+        <item name="android:titleTextStyle">@style/TextAppearance.WinkerkReader.ActionBar.Title</item>
+    </style>
+
+    <style name="Widget.WinkerkReader.ActionBar.Primary" parent="Widget.MaterialComponents.ActionBar.Primary">
+        <item name="android:titleTextStyle">@style/TextAppearance.WinkerkReader.ActionBar.Title</item>
+        <item name="titleTextStyle">@style/TextAppearance.WinkerkReader.ActionBar.Title</item>
+        <item name="android:popupTheme">@style/ThemeOverlay.WinkerkReader.ActionBar.Popup</item>
+        <item name="popupTheme">@style/ThemeOverlay.WinkerkReader.ActionBar.Popup</item>
+    </style>
+
+    <!-- Controls the ActionBar bar itself: white icons + text on blue background -->
+    <style name="ThemeOverlay.WinkerkReader.ActionBar"
+        parent="ThemeOverlay.Material3.ActionBar">
+        <item name="colorControlNormal">@android:color/white</item>
+        <item name="actionMenuTextColor">@android:color/white</item>
+        <item name="android:textColorPrimary">@android:color/white</item>
+        <item name="android:textColorSecondary">@android:color/white</item>
+    </style>
+
+    <!-- Controls overflow + submenu popups: dark text on white surface -->
+    <style name="ThemeOverlay.WinkerkReader.PopupMenu"
+        parent="ThemeOverlay.Material3.Light">
+        <item name="colorControlNormal">?attr/colorOnSurface</item>
+        <item name="actionMenuTextColor">?attr/colorOnSurface</item>
+        <item name="android:textColorPrimary">?attr/colorOnSurface</item>
+        <item name="android:background">@android:color/white</item>
     </style>
 
     <!-- Settings Activity Theme -->

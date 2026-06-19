@@ -4,6 +4,7 @@ package za.co.jpsoft.winkerkreader.utils
 import android.content.Context
 import android.content.SharedPreferences
 import za.co.jpsoft.winkerkreader.data.WinkerkContract
+import za.co.jpsoft.winkerkreader.data.WinkerkContract.KEY_PASTORAL_SYNC_CALENDAR
 
 
 /**
@@ -37,6 +38,26 @@ class SettingsManager(context: Context) {
 
     fun setBirthdayMessage(value: String) = prefs.edit().putString("VerjaarBoodskap", value).apply()
 
+    /** True when the user has opted into calendar mirroring for pastoral reminders. Default false. */
+    fun isPastoralCalendarSyncEnabled(): Boolean =
+        prefs.getBoolean(WinkerkContract.KEY_PASTORAL_SYNC_CALENDAR, false)
+
+    /**
+     * When true AND [isPastoralCalendarSyncEnabled], TIMED reminders are automatically
+     * pushed to the calendar on creation. DATE_ONLY reminders always require explicit
+     * "Voeg by kalender" user action.
+     */
+    fun isPastoralCalendarAutoTimedEnabled(): Boolean =
+        prefs.getBoolean(WinkerkContract.KEY_PASTORAL_CALENDAR_AUTO_TIMED, false)
+
+    /** Returns the selected calendar ID, or null if not configured. Reuses existing key. */
+    fun selectedCalendarId(): Long? {
+        val id = prefs.getLong(WinkerkContract.KEY_SELECTED_CALENDAR_ID, -1L)
+        return if (id == -1L) null else id
+    }
+    var pastoralCalendarSyncEnabled: Boolean
+        get() = prefs.getBoolean(KEY_PASTORAL_SYNC_CALENDAR, false)
+        set(value) = prefs.edit().putBoolean(KEY_PASTORAL_SYNC_CALENDAR, value).apply()
 
     var voipLogEnabled: Boolean
         get() = prefs.getBoolean(WinkerkContract.winkerkEntry.KEY_LOG_VOIP, false)
@@ -232,4 +253,40 @@ class SettingsManager(context: Context) {
     var groepView: Int
         get() = prefs.getInt("GROEP_VIEW", 500) // WkrContract.winkerkEntry.GROEPLIST_LOADER
         set(value) = prefs.edit().putInt("GROEP_VIEW", value).apply()
+
+    enum class GoogleTasksMode { OFF, API, SHARE }
+
+    fun googleTasksMode(): GoogleTasksMode {
+        val stored = prefs.getString(WinkerkContract.KEY_GOOGLE_TASKS_MODE, "off")
+        return when (stored) {
+            "api"   -> GoogleTasksMode.API
+            "share" -> GoogleTasksMode.SHARE
+            else    -> GoogleTasksMode.OFF
+        }
+    }
+
+    fun setGoogleTasksMode(mode: GoogleTasksMode) {
+        prefs.edit().putString(
+            WinkerkContract.KEY_GOOGLE_TASKS_MODE,
+            mode.name.lowercase()
+        ).apply()
+    }
+
+    var googleTasksListId: String?
+        get() = prefs.getString(WinkerkContract.KEY_GOOGLE_TASKS_LIST_ID, null)
+        set(value) = prefs.edit().putString(WinkerkContract.KEY_GOOGLE_TASKS_LIST_ID, value).apply()
+
+    var googleTasksAccountEmail: String?
+        get() = prefs.getString(WinkerkContract.KEY_GOOGLE_TASKS_ACCOUNT, null)
+        set(value) = prefs.edit().putString(WinkerkContract.KEY_GOOGLE_TASKS_ACCOUNT, value).apply()
+
+    fun getPastoralCalendarId(): Long? {
+        val id = prefs.getLong(WinkerkContract.KEY_PASTORAL_CALENDAR_ID, -1L)
+        return if (id == -1L) null else id
+    }
+
+    fun setPastoralCalendarId(id: Long?) {
+        prefs.edit().putLong(WinkerkContract.KEY_PASTORAL_CALENDAR_ID, id ?: -1L).apply()
+    }
+
 }

@@ -70,5 +70,8 @@
                 android:title="@string/lidmaatlistmenu_nota" />
         </menu>
     </item>
-
+    <item
+        android:id="@+id/stel_herinnering"
+        android:icon="@drawable/ic_bedienings"
+        android:title="@string/lidmaatlistmenu_stel_herinnering" />
 </menu>

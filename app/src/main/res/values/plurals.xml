@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="herinnering_stap_count">
+        <item quantity="one">%d stap</item>
+        <item quantity="other">%d stappe</item>
+    </plurals>
+    <plurals name="herinnering_created_count">
+        <item quantity="one">%d herinnering gestel</item>
+        <item quantity="other">%d herinnerings gestel</item>
+    </plurals>
+</resources>
