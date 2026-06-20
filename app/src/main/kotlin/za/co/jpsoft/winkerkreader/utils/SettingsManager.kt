@@ -289,4 +289,15 @@ class SettingsManager(context: Context) {
         prefs.edit().putLong(WinkerkContract.KEY_PASTORAL_CALENDAR_ID, id ?: -1L).apply()
     }
 
+    var tasksScriptUrl: String?
+        get() = prefs.getString(WinkerkContract.KEY_TASKS_SCRIPT_URL, null)
+        set(value) = prefs.edit().putString(WinkerkContract.KEY_TASKS_SCRIPT_URL, value?.trim()).apply()
+
+    var tasksScriptSecret: String?
+        get() = prefs.getString(WinkerkContract.KEY_TASKS_SCRIPT_SECRET, null)
+        set(value) = prefs.edit().putString(WinkerkContract.KEY_TASKS_SCRIPT_SECRET, value?.trim()).apply()
+
+    fun isTasksScriptConfigured(): Boolean =
+        !tasksScriptUrl.isNullOrBlank() && !tasksScriptSecret.isNullOrBlank()
+
 }

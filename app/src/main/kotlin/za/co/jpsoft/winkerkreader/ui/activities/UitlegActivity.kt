@@ -5,6 +5,8 @@ import za.co.jpsoft.winkerkreader.utils.CalendarManager
 import za.co.jpsoft.winkerkreader.services.CallMonitoringService
 
 import android.Manifest
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -199,6 +201,8 @@ class UitlegActivity : AppCompatActivity() {
                 settingsManager.pastoralCalendarSyncEnabled = isChecked
                 Log.d(TAG, "Pastoral sync setting saved immediately: $isChecked")
             }
+            binding.appsScriptLink.setText(settingsManager.tasksScriptUrl ?: "")
+            binding.appsScriptKey.setText(settingsManager.tasksScriptSecret ?: "")
             // Set spinner selection with validation
             val defaultLayout = settingsManager.defLayout
             setSpinnerSelection(binding.layoutOpsies, defaultLayout)
@@ -293,6 +297,9 @@ class UitlegActivity : AppCompatActivity() {
         try {
             setupSaveButtonListeners()
             setupColorPickerListeners()
+            binding.btnCopyScript.setOnClickListener {
+                copyScriptToClipboard()
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Error setting up click listeners", e)
             showErrorDialog("Error", "Some buttons may not work properly. Please restart the app.", false)
@@ -681,18 +688,11 @@ class UitlegActivity : AppCompatActivity() {
             SettingsManager.GoogleTasksMode.SHARE -> binding.tasksModeShare.isChecked = true
         }
 
-        val account = settingsManager.googleTasksAccountEmail
-        if (!account.isNullOrBlank()) {
-            binding.tasksAccount.text = getString(R.string.tasks_aangeteken_as, account)
-            binding.tasksAccount.visibility = View.VISIBLE
-        }
+
 
         // Show/hide sign-in and spinner based on mode
         val isApi = mode == SettingsManager.GoogleTasksMode.API
-        binding.tasksSignIn.visibility = if (isApi) View.VISIBLE else View.GONE
-        binding.tasksSignIn.isEnabled = isApi
-        binding.tasksListSpinner.visibility = if (isApi) View.VISIBLE else View.GONE
-        binding.tasksWarning.visibility = if (isApi) View.VISIBLE else View.GONE
+
     }
 
     private fun saveGoogleTasksSettings() {
@@ -702,29 +702,17 @@ class UitlegActivity : AppCompatActivity() {
             R.id.tasks_mode_share -> SettingsManager.GoogleTasksMode.SHARE
             else -> SettingsManager.GoogleTasksMode.OFF
         }
+        settingsManager.setGoogleTasksMode(mode)
         settingsManager.pastoralCalendarSyncEnabled = binding.pastoralCalendarAutoSync.isChecked
         settingsManager.setPastoralCalendarId(
             if (selectedPastoralCalendarId != -1L) selectedPastoralCalendarId else null
         )
 
-        // If API mode, ensure a task list is selected
-//        if (mode == SettingsManager.GoogleTasksMode.API) {
-//            if (selectedTaskListId.isNullOrBlank()) {
-//                Toast.makeText(this, "Kies asseblief 'n taaklys", Toast.LENGTH_SHORT).show()
-//                return
-//            }
-//            // Also ensure an account is signed in
-//            if (settingsManager.googleTasksAccountEmail.isNullOrBlank()) {
-//                Toast.makeText(this, "Teken eers in by Google", Toast.LENGTH_SHORT).show()
-//                return
-//            }
-//        }
+        val scriptUrl = binding.appsScriptLink.text?.toString()?.trim()
+        val scriptSecret = binding.appsScriptKey.text?.toString()?.trim()
+        settingsManager.tasksScriptUrl = scriptUrl?.ifBlank { null }
+        settingsManager.tasksScriptSecret = scriptSecret?.ifBlank { null }
 
-        // Save
-       // settingsManager.setGoogleTasksMode(mode)
-//        settingsManager.googleTasksListId = selectedTaskListId
-//         account is already saved
-//
         Toast.makeText(this, "Bedienings instellings gestoor", Toast.LENGTH_SHORT).show()
         finish() // optional – close settings after saving
     }
@@ -765,5 +753,133 @@ class UitlegActivity : AppCompatActivity() {
         binding.pastoralCalendarSpinner.isEnabled = false
     }
 
+    private fun copyScriptToClipboard() {
+        val scriptCode = """
+/**
+ * WinkerkReader Pastoral Reminders — Google Tasks Bridge
+ * Deploy as: Web App | Execute as: Me | Who has access: Anyone
+ *
+ * Setup:
+ * 1. Project Settings → Script Properties → add SECRET = (choose your own key)
+ * 2. Services (+) → Add "Tasks API"
+ * 3. Deploy → New deployment → Web App
+ * 4. Copy the /exec URL into WinkerkReader Settings → Apps Script-skakel
+ * 5. Enter the same SECRET into Settings → Geheime kode
+ */
 
+const WKR_MARKER = '[WKR] ';   // Prefix added to task titles for identification
+
+function doGet(e) {
+  var secret = PropertiesService.getScriptProperties().getProperty('SECRET');
+  if (!e.parameter || e.parameter.secret !== secret) {
+    console.log('Invalid secret provided');
+    return respond('UNAUTHORIZED');
+  }
+
+  var action = e.parameter.action;
+  console.log('Action: ' + action);
+
+  try {
+    if (action === 'add')      return handleAdd(e);
+    if (action === 'delete')   return handleDelete(e);
+    if (action === 'complete') return handleComplete(e);
+    return respond('ERROR:unknown_action');
+  } catch (err) {
+    console.error('Error in doGet: ' + err.message);
+    return respond('ERROR:' + err.message);
+  }
+}
+
+function handleAdd(e) {
+  var title = e.parameter.title || 'Herinnering';
+  var notes = e.parameter.notes || '';
+  var due   = e.parameter.due;
+  var fullTitle = WKR_MARKER + title;
+  console.log('Adding task: ' + fullTitle);
+
+  var taskListId = getDefaultTaskListId();
+  var task = { title: fullTitle, notes: notes };
+  if (due) task.due = due + 'T00:00:00.000Z';
+
+  var created = Tasks.Tasks.insert(task, taskListId);
+  console.log('Task created with ID: ' + created.id);
+  return respond('OK:' + created.id);
+}
+
+function handleDelete(e) {
+  var taskId = e.parameter.taskId;
+  if (!taskId) return respond('ERROR:no_taskId');
+  if (!taskBelongsToUs(taskId)) return respond('ERROR:not_our_task');
+
+  console.log('Deleting task: ' + taskId);
+  var taskListId = getDefaultTaskListId();
+  Tasks.Tasks.remove(taskListId, taskId);
+  return respond('DELETED');
+}
+
+function handleComplete(e) {
+  var taskId = e.parameter.taskId;
+  if (!taskId) return respond('ERROR:no_taskId');
+  if (!taskBelongsToUs(taskId)) return respond('ERROR:not_our_task');
+
+  console.log('Completing task: ' + taskId);
+  var taskListId = getDefaultTaskListId();
+  var task = Tasks.Tasks.get(taskListId, taskId);
+  task.status    = 'completed';
+  task.completed = new Date().toISOString();
+  Tasks.Tasks.update(task, taskListId, taskId);
+  return respond('COMPLETED');
+}
+
+var CACHED_TASK_LIST_ID = null;
+function getDefaultTaskListId() {
+  if (CACHED_TASK_LIST_ID) return CACHED_TASK_LIST_ID;
+  var lists = Tasks.Tasklists.list();
+  CACHED_TASK_LIST_ID = lists.items[0].id;
+  return CACHED_TASK_LIST_ID;
+}
+
+function respond(text) {
+  return ContentService.createTextOutput(text).setMimeType(ContentService.MimeType.TEXT);
+}
+
+function taskBelongsToUs(taskId) {
+  try {
+    var taskListId = getDefaultTaskListId();
+    var task = Tasks.Tasks.get(taskListId, taskId);
+    return task.title && task.title.startsWith(WKR_MARKER);
+  } catch (e) {
+    console.log('Error fetching task ' + taskId + ': ' + e.message);
+    return false;
+  }
+}
+    """.trimIndent()
+
+        val instructions = """
+📋 INSTALLASIE-INSTRUKSIES:
+
+1. Gaan na script.google.com en skep 'n nuwe projek.
+2. Vee die standaardkode uit en plak die skrip hierbo in.
+3. Klik op "Project Settings" (rat-ikoon) en voeg 'n script property by:
+   - Eienskap: SECRET
+   - Waarde: Kies 'n geheim (bv. 'MyGeheim123') – onthou dit!
+4. Klik op "Services" (+), voeg "Tasks API" by en aktiveer dit.
+5. Klik op "Deploy" → "New deployment" → "Web app".
+6. Stel "Execute as" op "Me" en "Who has access" op "Anyone".
+7. Klik "Deploy" en kopieer die /exec URL.
+8. Plak die URL in die "Apps Script-skakel" veld hierbo.
+9. Plak dieselfde SECRET in die "Geheime kode" veld hierbo.
+10. Stoor die instellings.
+
+Die skrip is nou gereed!
+    """.trimIndent()
+
+        val fullText = "$scriptCode\n\n$instructions"
+
+        val clipboard = getSystemService(ClipboardManager::class.java)
+        val clip = ClipData.newPlainText("WinkerkReader Script", fullText)
+        clipboard.setPrimaryClip(clip)
+
+        Toast.makeText(this, "Skrip en instruksies is na knipbord gekopieer", Toast.LENGTH_LONG).show()
+    }
 }

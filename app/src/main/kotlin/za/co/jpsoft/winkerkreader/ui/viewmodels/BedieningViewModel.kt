@@ -1,5 +1,6 @@
 package za.co.jpsoft.winkerkreader.ui.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -142,33 +143,21 @@ class BedieningViewModel(
      * A placeholder message is shown to guide the user.
      */
     fun syncReminderToGoogleTasks(reminderId: String) {
+
         viewModelScope.launch {
             try {
-                when (settingsManager.googleTasksMode()) {
-                    SettingsManager.GoogleTasksMode.API -> {
-                        val listId = settingsManager.googleTasksListId
-                        if (listId.isNullOrBlank()) {
-                            _error.tryEmit("Kies asseblief 'n taaklys in Instellings.")
-                            return@launch
-                        }
-                        // TODO: Obtain a fresh access token via GoogleTasksAuthManager
-                        // and call repository.syncToGoogleTasks(reminderId, tasksManager, listId)
-                        _error.tryEmit("Google Tasks API integrasie is nog in ontwikkeling. Gebruik asseblief 'Deel elke keer'.")
-                    }
-                    SettingsManager.GoogleTasksMode.SHARE -> {
-                        // Should not be called from here – the Fragment handles SHARE mode
-                        _error.tryEmit("Gebruik 'Deel elke keer' in die kieslys.")
-                    }
-                    SettingsManager.GoogleTasksMode.OFF -> {
-                        _error.tryEmit("Google Tasks is afgeskakel. Stel dit op in Instellings.")
-                    }
+                val url = settingsManager.tasksScriptUrl
+                val secret = settingsManager.tasksScriptSecret
+                Log.d("Tasks", "URL: $url, Secret: $secret")
+                val pushed = repository.syncToGoogleTasksViaScript(reminderId)
+                if (!pushed) {
+                    _error.tryEmit("Taak is reeds gesinkroniseer of Apps Script is nie opgestel nie")
                 }
             } catch (e: Exception) {
-                _error.tryEmit("Fout: ${e.message}")
+                _error.tryEmit("Kon nie taak stuur nie: ${e.message}")
             }
         }
     }
-
     private val _error = MutableSharedFlow<String>(extraBufferCapacity = 1)
     val error: SharedFlow<String> = _error.asSharedFlow()
 

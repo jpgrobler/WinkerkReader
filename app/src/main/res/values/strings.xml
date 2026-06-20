@@ -662,5 +662,10 @@
     <string name="pastoral_calendar_auto_sync_label">Skryf outomaties na kalender\n</string>
     <string name="herinnering_verwyder_reeks">Verwyder reeks</string>
     <string name="gemeente_kleur">Gemeente kleur</string>
+    <string name="herinnering_verwyder_reeks_titel">Verwyder reeks</string>
+    <string name="herinnering_verwyder_reeks_boodskap">Is jy seker jy wil die hele reeks herinnerings verwyder? Dit sal ook die Google Take verwyder.</string>
+    <string name="google_apps_script_link">Google Apps Script Link</string>
+    <string name="google_apps_script_key">Google Apps Script Key</string>
+    <string name="copy_script_btn">Kopieer Skrip na knipbord</string>
 </resources>
 
