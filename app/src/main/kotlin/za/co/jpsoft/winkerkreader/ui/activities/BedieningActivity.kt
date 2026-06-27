@@ -20,9 +20,11 @@ import android.view.MenuItem
 import com.google.android.material.snackbar.Snackbar
 import za.co.jpsoft.winkerkreader.data.pastoral.repository.PastoralReminderRepository
 import za.co.jpsoft.winkerkreader.utils.PastoralDatabaseBackup
+import za.co.jpsoft.winkerkreader.utils.MainNavigationController
 
 class BedieningActivity : AppCompatActivity() {
 
+    private val navigationController by lazy { MainNavigationController(this) }
     private lateinit var binding: ActivityBedieningBinding
 
     private val viewModel: BedieningViewModel by viewModels {
@@ -102,7 +104,13 @@ class BedieningActivity : AppCompatActivity() {
                 true
             }
             R.id.action_bestuur_sjablone -> {
-                TemplateManagerActivity.launch(this)
+                //TemplateManagerActivity.launch(this)
+                navigationController.navigateToTemplateManager()
+                true
+            }
+            R.id.action_herstel_rugsteun -> {
+                startActivity(Intent(this, LaaiDatabasisActivity::class.java)
+                    .putExtra(LaaiDatabasisActivity.EXTRA_PROMPT_RESTORE, true))
                 true
             }
             else -> super.onOptionsItemSelected(item)

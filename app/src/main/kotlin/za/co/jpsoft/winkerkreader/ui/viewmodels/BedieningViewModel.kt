@@ -12,6 +12,7 @@ import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
+import za.co.jpsoft.winkerkreader.BuildConfig
 
 class BedieningViewModel(
     private val repository: PastoralReminderRepository,
@@ -148,7 +149,7 @@ class BedieningViewModel(
             try {
                 val url = settingsManager.tasksScriptUrl
                 val secret = settingsManager.tasksScriptSecret
-                Log.d("Tasks", "URL: $url, Secret: $secret")
+                if (BuildConfig.DEBUG) Log.d("Tasks", "URL: $url, Secret: $secret")
                 val pushed = repository.syncToGoogleTasksViaScript(reminderId)
                 if (!pushed) {
                     _error.tryEmit("Taak is reeds gesinkroniseer of Apps Script is nie opgestel nie")

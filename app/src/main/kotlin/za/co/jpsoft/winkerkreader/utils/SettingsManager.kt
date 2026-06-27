@@ -3,9 +3,11 @@ package za.co.jpsoft.winkerkreader.utils
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 import za.co.jpsoft.winkerkreader.data.WinkerkContract
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.KEY_PASTORAL_SYNC_CALENDAR
 
+import za.co.jpsoft.winkerkreader.BuildConfig
 
 /**
  * Central manager for all app preferences.
@@ -40,7 +42,7 @@ class SettingsManager(context: Context) {
 
     /** True when the user has opted into calendar mirroring for pastoral reminders. Default false. */
     fun isPastoralCalendarSyncEnabled(): Boolean =
-        prefs.getBoolean(WinkerkContract.KEY_PASTORAL_SYNC_CALENDAR, false)
+        prefs.getBoolean(KEY_PASTORAL_SYNC_CALENDAR, false)
 
     /**
      * When true AND [isPastoralCalendarSyncEnabled], TIMED reminders are automatically
@@ -118,8 +120,15 @@ class SettingsManager(context: Context) {
         set(value) = prefs.edit().putBoolean(WinkerkContract.KEY_OPROEPLOG, value).apply()
 
     var defLayout: String
-        get() = prefs.getString(WinkerkContract.KEY_DEFLAYOUT, "GESINNE") ?: "GESINNE"
-        set(value) = prefs.edit().putString(WinkerkContract.KEY_DEFLAYOUT, value).apply()
+        get() {
+            val value = prefs.getString(WinkerkContract.KEY_DEFLAYOUT, "GESINNE") ?: "GESINNE"
+            if (BuildConfig.DEBUG) Log.d("SettingsManager", "get defLayout = $value")
+            return value
+        }
+        set(value) {
+            if (BuildConfig.DEBUG) Log.d("SettingsManager", "set defLayout = $value")
+            prefs.edit().putString(WinkerkContract.KEY_DEFLAYOUT, value).apply()
+        }
 
     var whatsapp1: Boolean
         get() = prefs.getBoolean(WinkerkContract.KEY_WHATSAPP1, true)
@@ -300,4 +309,21 @@ class SettingsManager(context: Context) {
     fun isTasksScriptConfigured(): Boolean =
         !tasksScriptUrl.isNullOrBlank() && !tasksScriptSecret.isNullOrBlank()
 
+
+    var appBiometricEnabled: Boolean
+        get() = prefs.getBoolean("app_biometric_enabled", false)
+        set(value) = prefs.edit().putBoolean("app_biometric_enabled", value).apply()
+
+    var databaseSchemaVersion: Int
+        get() = prefs.getInt("database_schema_version", 0)
+        set(value) = prefs.edit().putInt("database_schema_version", value).apply()
+
+    // Add to SettingsManager.kt
+    var dailyBackupEnabled: Boolean
+        get() = prefs.getBoolean("daily_backup_enabled", true)
+        set(value) = prefs.edit().putBoolean("daily_backup_enabled", value).apply()
+
+    var backupExportToDownloads: Boolean
+        get() = prefs.getBoolean("backup_export_to_downloads", false)
+        set(value) = prefs.edit().putBoolean("backup_export_to_downloads", value).apply()
 }

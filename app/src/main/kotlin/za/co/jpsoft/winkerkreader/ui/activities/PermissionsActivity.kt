@@ -21,9 +21,10 @@ import androidx.recyclerview.widget.RecyclerView
 import za.co.jpsoft.winkerkreader.databinding.ActivityPermissionsBinding
 import za.co.jpsoft.winkerkreader.databinding.ItemPermissionBinding
 import za.co.jpsoft.winkerkreader.R
+import za.co.jpsoft.winkerkreader.utils.PermissionManager
 
 class PermissionsActivity : AppCompatActivity() {
-
+    private val permissionManager by lazy { PermissionManager(this) }
     private lateinit var binding: ActivityPermissionsBinding
     private lateinit var adapter: PermissionsAdapter
     private lateinit var permissionsList: List<PermissionItem>
@@ -49,7 +50,8 @@ class PermissionsActivity : AppCompatActivity() {
             title = "App Permissions"
             setDisplayHomeAsUpEnabled(true)
         }
-
+        val missing = PermissionManager.ALL_RUNTIME_PERMISSIONS
+            .filter { !permissionManager.isPermissionGranted(it) }
         binding.recyclerViewPermissions.layoutManager = LinearLayoutManager(this)
 
         initializePermissionsList()
@@ -349,4 +351,4 @@ class PermissionsActivity : AppCompatActivity() {
             }
         }
     }
-}
+}

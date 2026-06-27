@@ -14,6 +14,7 @@ import java.io.OutputStreamWriter
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import za.co.jpsoft.winkerkreader.BuildConfig
 
 object CallLogExporter {
     private const val TAG = "CallLogExporter"
@@ -56,7 +57,7 @@ object CallLogExporter {
                 Uri.fromFile(file)
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error exporting call logs: ${e.message}", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error exporting call logs: ${e.message}", e)
             null
         }
     }
@@ -161,7 +162,7 @@ object CallLogExporter {
             context.startActivity(android.content.Intent.createChooser(shareIntent, "Export Call Log"))
             true
         } catch (e: Exception) {
-            Log.e(TAG, "Error sharing CSV: ${e.message}", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error sharing CSV: ${e.message}", e)
             false
         }
     }

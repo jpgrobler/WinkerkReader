@@ -71,7 +71,13 @@
         </menu>
     </item>
     <item
+        android:id="@+id/voeg_nota_by"
+        android:title="@string/voeg_nota_by"
+        android:orderInCategory="1"/>
+
+    <item
         android:id="@+id/stel_herinnering"
+        android:title="@string/stel_herinnering"
         android:icon="@drawable/ic_bedienings"
-        android:title="@string/lidmaatlistmenu_stel_herinnering" />
+        android:orderInCategory="2"/>
 </menu>

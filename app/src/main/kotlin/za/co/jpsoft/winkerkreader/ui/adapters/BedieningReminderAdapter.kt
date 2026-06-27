@@ -25,6 +25,8 @@ import com.bumptech.glide.Glide
 import za.co.jpsoft.winkerkreader.data.pastoral.entities.FollowUpReminderEntity
 import java.io.File
 import za.co.jpsoft.winkerkreader.data.pastoral.model.TemplateContext
+import za.co.jpsoft.winkerkreader.utils.Utils.toLocalDateSafe
+import java.time.LocalDate
 
 class BedieningReminderAdapter(
     private val onVoltooi:      (reminderId: String) -> Unit,
@@ -42,9 +44,8 @@ class BedieningReminderAdapter(
 
         fun bind(item: ReminderWithMember) {
             val reminder = item.reminder
-            val today = java.time.LocalDate.now(ZoneId.systemDefault())
-            val dueDate = Instant.ofEpochMilli(reminder.dueDateUtc)
-                .atZone(ZoneId.systemDefault()).toLocalDate()
+            val today = LocalDate.now(ZoneId.systemDefault())
+            val dueDate = reminder.dueDateUtc.toLocalDateSafe() ?: LocalDate.now()
             val isOverdue = dueDate.isBefore(today)
 
             binding.ivMemberPhoto.setOnClickListener {
@@ -118,12 +119,9 @@ class BedieningReminderAdapter(
                 showOverflowMenu(anchor, item)
             }
 
-            val anchorDate = if (reminder.anchorDateUtc != null) {
-                Instant.ofEpochMilli(reminder.anchorDateUtc)
-                    .atZone(ZoneId.systemDefault()).toLocalDate()
-                    .format(DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault()))
-            } else null
-            binding.tvAnchorDate.text = "⚓" + anchorDate ?: ""
+            val anchorDate = reminder.anchorDateUtc.toLocalDateSafe()
+                ?.format(DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault()))
+            binding.tvAnchorDate.text = "⚓${anchorDate ?: ""}"
             binding.tvAnchorDate.visibility = if (anchorDate != null) View.VISIBLE else View.GONE
         }
 
@@ -161,11 +159,10 @@ class BedieningReminderAdapter(
             menu.show()
         }
 
-        private fun formatDueDate(reminder: za.co.jpsoft.winkerkreader.data.pastoral.entities.FollowUpReminderEntity): String {
+        private fun formatDueDate(reminder: FollowUpReminderEntity): String {
             val zoneId = ZoneId.systemDefault()
-            val dueDate = Instant.ofEpochMilli(reminder.dueDateUtc)
-                .atZone(zoneId).toLocalDate()
-            val today = java.time.LocalDate.now(zoneId)
+            val dueDate = reminder.dueDateUtc.toLocalDateSafe() ?: LocalDate.now()
+            val today = LocalDate.now(zoneId)
 
             val dateStr = when {
                 dueDate == today ->

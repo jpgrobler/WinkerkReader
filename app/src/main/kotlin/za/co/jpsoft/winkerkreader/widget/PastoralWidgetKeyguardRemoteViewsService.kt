@@ -13,6 +13,8 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import za.co.jpsoft.winkerkreader.BuildConfig
+import za.co.jpsoft.winkerkreader.utils.Utils.toLocalDateSafe
 
 class PastoralWidgetKeyguardRemoteViewsService : RemoteViewsService() {
 
@@ -30,12 +32,12 @@ class PastoralWidgetKeyguardRemoteViewsService : RemoteViewsService() {
         override fun onCreate() { /* no-op */ }
 
         override fun onDataSetChanged() {
-            Log.d(TAG, "onDataSetChanged called")
+            if (BuildConfig.DEBUG) Log.d(TAG, "onDataSetChanged called")
             try {
                 val db = PastoralDatabase.getInstance(context)
                 reminders = db.followUpReminderDao().getAllPending()
                     .sortedBy { it.dueDateUtc }
-                Log.d(TAG, "Loaded ${reminders.size} pending reminders")
+                if (BuildConfig.DEBUG) Log.d(TAG, "Loaded ${reminders.size} pending reminders")
             } catch (e: Exception) {
                 reminders = emptyList()
             }
@@ -50,7 +52,7 @@ class PastoralWidgetKeyguardRemoteViewsService : RemoteViewsService() {
             val views = RemoteViews(context.packageName, R.layout.widget_pastoral_keyguard_item)
 
             val displayName = reminder.memberDisplayNameCache?.takeIf { it.isNotBlank() } ?: "Lidmaat"
-            val dueDate = Instant.ofEpochMilli(reminder.dueDateUtc).atZone(zoneId).toLocalDate()
+            val dueDate = reminder.dueDateUtc.toLocalDateSafe() ?: LocalDate.now()
             val today = LocalDate.now(zoneId)
             val isToday = dueDate == today
             val dateStr = if (isToday) context.getString(R.string.datum_vandag) else dateFormatter.format(dueDate)

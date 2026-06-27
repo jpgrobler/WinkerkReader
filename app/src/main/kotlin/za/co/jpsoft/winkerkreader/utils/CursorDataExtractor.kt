@@ -2,6 +2,7 @@ package za.co.jpsoft.winkerkreader.utils
 
 import android.database.Cursor
 import android.util.Log
+import za.co.jpsoft.winkerkreader.BuildConfig
 
 /**
  * Helper class for safely extracting data from cursors with validation
@@ -27,7 +28,7 @@ object CursorDataExtractor {
     @JvmStatic
     fun getSafeString(cursor: Cursor?, columnName: String, defaultValue: String?): String? {
         if (cursor == null || cursor.isClosed) {
-            Log.w(TAG, "Cursor is null or closed for column: $columnName")
+            if (BuildConfig.DEBUG) Log.w(TAG, "Cursor is null or closed for column: $columnName")
             return defaultValue
         }
 
@@ -37,7 +38,7 @@ object CursorDataExtractor {
                 cursor.getString(columnIndex) ?: defaultValue
             } else defaultValue
         } catch (e: Exception) {
-            Log.w(TAG, "Error reading string column $columnName: ${e.message}")
+            if (BuildConfig.DEBUG) Log.w(TAG, "Error reading string column $columnName: ${e.message}")
             defaultValue
         }
     }
@@ -52,7 +53,7 @@ object CursorDataExtractor {
     @JvmStatic
     fun getSafeInt(cursor: Cursor?, columnName: String, defaultValue: Int): Int {
         if (cursor == null || cursor.isClosed) {
-            Log.w(TAG, "Cursor is null or closed for column: $columnName")
+            if (BuildConfig.DEBUG) Log.w(TAG, "Cursor is null or closed for column: $columnName")
             return defaultValue
         }
 
@@ -62,7 +63,7 @@ object CursorDataExtractor {
                 cursor.getInt(columnIndex)
             } else defaultValue
         } catch (e: Exception) {
-            Log.w(TAG, "Error reading int column $columnName: ${e.message}")
+            if (BuildConfig.DEBUG) Log.w(TAG, "Error reading int column $columnName: ${e.message}")
             defaultValue
         }
     }
@@ -77,7 +78,7 @@ object CursorDataExtractor {
     @JvmStatic
     fun getSafeLong(cursor: Cursor?, columnName: String, defaultValue: Long): Long {
         if (cursor == null || cursor.isClosed) {
-            Log.w(TAG, "Cursor is null or closed for column: $columnName")
+            if (BuildConfig.DEBUG) Log.w(TAG, "Cursor is null or closed for column: $columnName")
             return defaultValue
         }
 
@@ -87,7 +88,7 @@ object CursorDataExtractor {
                 cursor.getLong(columnIndex)
             } else defaultValue
         } catch (e: Exception) {
-            Log.w(TAG, "Error reading long column $columnName: ${e.message}")
+            if (BuildConfig.DEBUG) Log.w(TAG, "Error reading long column $columnName: ${e.message}")
             defaultValue
         }
     }
@@ -102,7 +103,7 @@ object CursorDataExtractor {
     @JvmStatic
     fun getSafeDouble(cursor: Cursor?, columnName: String, defaultValue: Double): Double {
         if (cursor == null || cursor.isClosed) {
-            Log.w(TAG, "Cursor is null or closed for column: $columnName")
+            if (BuildConfig.DEBUG) Log.w(TAG, "Cursor is null or closed for column: $columnName")
             return defaultValue
         }
 
@@ -112,7 +113,7 @@ object CursorDataExtractor {
                 cursor.getDouble(columnIndex)
             } else defaultValue
         } catch (e: Exception) {
-            Log.w(TAG, "Error reading double column $columnName: ${e.message}")
+            if (BuildConfig.DEBUG) Log.w(TAG, "Error reading double column $columnName: ${e.message}")
             defaultValue
         }
     }
@@ -127,7 +128,7 @@ object CursorDataExtractor {
     @JvmStatic
     fun getSafeFloat(cursor: Cursor?, columnName: String, defaultValue: Float): Float {
         if (cursor == null || cursor.isClosed) {
-            Log.w(TAG, "Cursor is null or closed for column: $columnName")
+            if (BuildConfig.DEBUG) Log.w(TAG, "Cursor is null or closed for column: $columnName")
             return defaultValue
         }
 
@@ -137,7 +138,7 @@ object CursorDataExtractor {
                 cursor.getFloat(columnIndex)
             } else defaultValue
         } catch (e: Exception) {
-            Log.w(TAG, "Error reading float column $columnName: ${e.message}")
+            if (BuildConfig.DEBUG) Log.w(TAG, "Error reading float column $columnName: ${e.message}")
             defaultValue
         }
     }
@@ -152,7 +153,7 @@ object CursorDataExtractor {
     @JvmStatic
     fun getSafeBoolean(cursor: Cursor?, columnName: String, defaultValue: Boolean): Boolean {
         if (cursor == null || cursor.isClosed) {
-            Log.w(TAG, "Cursor is null or closed for column: $columnName")
+            if (BuildConfig.DEBUG) Log.w(TAG, "Cursor is null or closed for column: $columnName")
             return defaultValue
         }
 
@@ -162,7 +163,7 @@ object CursorDataExtractor {
                 cursor.getInt(columnIndex) != 0
             } else defaultValue
         } catch (e: Exception) {
-            Log.w(TAG, "Error reading boolean column $columnName: ${e.message}")
+            if (BuildConfig.DEBUG) Log.w(TAG, "Error reading boolean column $columnName: ${e.message}")
             defaultValue
         }
     }
@@ -177,7 +178,7 @@ object CursorDataExtractor {
     @JvmStatic
     fun getSafeBlob(cursor: Cursor?, columnName: String, defaultValue: ByteArray?): ByteArray? {
         if (cursor == null || cursor.isClosed) {
-            Log.w(TAG, "Cursor is null or closed for column: $columnName")
+            if (BuildConfig.DEBUG) Log.w(TAG, "Cursor is null or closed for column: $columnName")
             return defaultValue
         }
 
@@ -187,7 +188,7 @@ object CursorDataExtractor {
                 cursor.getBlob(columnIndex) ?: defaultValue
             } else defaultValue
         } catch (e: Exception) {
-            Log.w(TAG, "Error reading blob column $columnName: ${e.message}")
+            if (BuildConfig.DEBUG) Log.w(TAG, "Error reading blob column $columnName: ${e.message}")
             defaultValue
         }
     }
@@ -204,7 +205,7 @@ object CursorDataExtractor {
         return try {
             cursor.getColumnIndex(columnName) != -1
         } catch (e: Exception) {
-            Log.w(TAG, "Error checking column existence $columnName: ${e.message}")
+            if (BuildConfig.DEBUG) Log.w(TAG, "Error checking column existence $columnName: ${e.message}")
             false
         }
     }
@@ -222,7 +223,7 @@ object CursorDataExtractor {
             val columnIndex = cursor.getColumnIndex(columnName)
             columnIndex == -1 || cursor.isNull(columnIndex)
         } catch (e: Exception) {
-            Log.w(TAG, "Error checking null for column $columnName: ${e.message}")
+            if (BuildConfig.DEBUG) Log.w(TAG, "Error checking null for column $columnName: ${e.message}")
             true
         }
     }

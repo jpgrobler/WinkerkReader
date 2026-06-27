@@ -13,11 +13,15 @@ import za.co.jpsoft.winkerkreader.data.pastoral.entities.FollowUpReminderEntity
 import za.co.jpsoft.winkerkreader.data.pastoral.model.ScheduleType
 import za.co.jpsoft.winkerkreader.receivers.PastoralReminderActionReceiver
 import za.co.jpsoft.winkerkreader.ui.activities.BedieningActivity
+
+import java.util.Locale
+import kotlin.math.abs
+import za.co.jpsoft.winkerkreader.BuildConfig
+import za.co.jpsoft.winkerkreader.utils.Utils.toLocalDateSafe
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.util.Locale
-import kotlin.math.abs
+import java.time.LocalDate
 
 object PastoralNotificationHelper {
 
@@ -76,10 +80,10 @@ object PastoralNotificationHelper {
 
         try {
             NotificationManagerCompat.from(context).notify(notifId, notification)
-            Log.d(TAG, "Posted notification $notifId for reminder ${reminder.reminderId}")
+            if (BuildConfig.DEBUG) Log.d(TAG, "Posted notification $notifId for reminder ${reminder.reminderId}")
         } catch (e: SecurityException) {
             // POST_NOTIFICATIONS permission not granted (Android 13+)
-            Log.w(TAG, "POST_NOTIFICATIONS permission missing — notification not shown", e)
+            if (BuildConfig.DEBUG) Log.w(TAG, "POST_NOTIFICATIONS permission missing — notification not shown", e)
         }
     }
 
@@ -168,9 +172,7 @@ object PastoralNotificationHelper {
 
     private fun formatOverdueLabel(context: Context, dueDateUtc: Long): String {
         val formatter = DateTimeFormatter.ofPattern("d MMM", Locale.getDefault())
-        val date = Instant.ofEpochMilli(dueDateUtc)
-            .atZone(ZoneId.systemDefault())
-            .toLocalDate()
+        val date = dueDateUtc.toLocalDateSafe() ?: LocalDate.now()
         return context.getString(R.string.bediening_agterstallig) + " (${date.format(formatter)})"
     }
 
@@ -183,7 +185,7 @@ object PastoralNotificationHelper {
     }
 
     private fun todayStartMillis(): Long {
-        val today = java.time.LocalDate.now(ZoneId.systemDefault())
+        val today = LocalDate.now(ZoneId.systemDefault())
         return today.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
     }
 }

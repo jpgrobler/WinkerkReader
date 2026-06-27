@@ -2,11 +2,17 @@ package za.co.jpsoft.winkerkreader.ui.viewmodels
 
 import android.app.Application
 import android.content.ContentUris
+import android.database.Cursor
 import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.WinkerkContract
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
 import za.co.jpsoft.winkerkreader.data.models.FamilyMemberItem
@@ -15,7 +21,6 @@ import za.co.jpsoft.winkerkreader.utils.Utils.fixphonenumber
 import za.co.jpsoft.winkerkreader.utils.Utils.parseDate
 import za.co.jpsoft.winkerkreader.utils.getIntOrDefault
 import za.co.jpsoft.winkerkreader.utils.getStringOrEmpty
-import za.co.jpsoft.winkerkreader.utils.getStringOrNull
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
@@ -24,62 +29,117 @@ class LidmaatDetailViewModel(application: Application) : AndroidViewModel(applic
     private val _memberDetail = MutableLiveData<MemberDetailItem?>()
     val memberDetail: LiveData<MemberDetailItem?> = _memberDetail
 
-    private val _familyMembers = MutableLiveData<List<FamilyMemberItem>>()
+    private val _familyMembers = MutableLiveData<List<FamilyMemberItem>>(emptyList())
     val familyMembers: LiveData<List<FamilyMemberItem>> = _familyMembers
 
     private val contentResolver = application.contentResolver
 
+    // ------------------------------------------------------------------------
+    // Public entry points – launch coroutines
+    // ------------------------------------------------------------------------
+
     fun loadMemberByGuid(memberGuid: String, recordStatus: String) {
-        val fullQuery = """
-        SELECT *, _rowid_ as _id 
-        FROM ${winkerkEntry.LIDMATE_TABLE_NAME}
-        WHERE ${winkerkEntry.LIDMATE_LIDMAATGUID} = ? 
-          AND ${winkerkEntry.LIDMATE_REKORDSTATUS} = ?
-    """.trimIndent()
+        viewModelScope.launch {
+            val result = withContext(Dispatchers.IO) {
+                queryMemberByGuid(memberGuid, recordStatus)
+            }
+            _memberDetail.postValue(result)
+        }
+    }
+
+    fun loadMember(memberUri: Uri, recordStatus: String) {
+        viewModelScope.launch {
+            val result = withContext(Dispatchers.IO) {
+                queryMemberByUri(memberUri, recordStatus)
+            }
+            _memberDetail.postValue(result)
+        }
+    }
+
+    fun loadFamily(familyHeadGuid: String, recordStatus: String) {
+        viewModelScope.launch {
+            val result = withContext(Dispatchers.IO) {
+                queryFamilyMembers(familyHeadGuid, recordStatus)
+            }
+            _familyMembers.postValue(result)
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // Background query methods (all run on IO)
+    // ------------------------------------------------------------------------
+
+    private fun queryMemberByGuid(memberGuid: String, recordStatus: String): MemberDetailItem? {
+        // Use parameterized query with ?
+        val query = """
+            SELECT *, _rowid_ as _id 
+            FROM ${winkerkEntry.LIDMATE_TABLE_NAME}
+            WHERE ${winkerkEntry.LIDMATE_LIDMAATGUID} = ?
+              AND ${winkerkEntry.LIDMATE_REKORDSTATUS} = ?
+        """.trimIndent()
         val cursor = contentResolver.query(
             winkerkEntry.CONTENT_URI,
             null,
-            fullQuery,
+            query,
             arrayOf(memberGuid, recordStatus),
             null
         )
-        cursor?.use {
-            if (it.moveToFirst()) {
-                val item = extractMemberDetail(it)
-                _memberDetail.postValue(item)
-            } else {
-                // Optionally try archived table
-                loadArchivedMemberByGuid(memberGuid)
-            }
+        return cursor?.use {
+            if (it.moveToFirst()) extractMemberDetail(it) else null
         }
     }
 
-    private fun loadArchivedMemberByGuid(memberGuid: String) {
-        // Implement similar query on Argief table if needed
-    }
-    fun loadMember(memberUri: Uri, recordStatus: String) {
+    private fun queryMemberByUri(memberUri: Uri, recordStatus: String): MemberDetailItem? {
         val selection = """
             SELECT _rowid_ AS _id, * 
             FROM ${winkerkEntry.SELECTION_LIDMAAT_FROM}
-            WHERE (${winkerkEntry.LIDMATE_TABLE_NAME}.${winkerkEntry.LIDMATE_REKORDSTATUS} = $recordStatus)
-            AND (${winkerkEntry.LIDMATE_TABLE_NAME}._rowid_ = ${memberUri.lastPathSegment})
+            WHERE (${winkerkEntry.LIDMATE_TABLE_NAME}.${winkerkEntry.LIDMATE_REKORDSTATUS} = ?)
+              AND (${winkerkEntry.LIDMATE_TABLE_NAME}._rowid_ = ?)
         """.trimIndent()
-
-        try {
-            contentResolver.query(memberUri, null, selection, null, null)?.use { cursor ->
-                if (cursor.moveToFirst()) {
-                    val item = extractMemberDetail(cursor)
-                    _memberDetail.postValue(item)
-                }
-            }
-        } catch (e: Exception) {
-            Log.e("LidmaatDetailVM", "Error loading member detail", e)
-            _memberDetail.postValue(null)
+        val selectionArgs = arrayOf(recordStatus, memberUri.lastPathSegment)
+        val cursor = contentResolver.query(
+            memberUri,
+            null,
+            selection,
+            selectionArgs,
+            null
+        )
+        return cursor?.use {
+            if (it.moveToFirst()) extractMemberDetail(it) else null
         }
     }
 
-    private fun extractMemberDetail(cursor: android.database.Cursor): MemberDetailItem {
-        val bDayRaw = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_GEBOORTEDATUM)
+    private fun queryFamilyMembers(familyHeadGuid: String, recordStatus: String): List<FamilyMemberItem> {
+        val selection = """
+            SELECT _rowid_ AS _id,
+                   ${winkerkEntry.LIDMATE_TABLE_NAME}.${winkerkEntry.LIDMATE_VAN},
+                   ${winkerkEntry.LIDMATE_TABLE_NAME}.${winkerkEntry.LIDMATE_NOEMNAAM},
+                   ${winkerkEntry.LIDMATE_TABLE_NAME}.${winkerkEntry.LIDMATE_GEBOORTEDATUM},
+                   ${winkerkEntry.LIDMATE_TABLE_NAME}.${winkerkEntry.LIDMATE_PICTUREPATH},
+                   ${winkerkEntry.LIDMATE_TABLE_NAME}.${winkerkEntry.LIDMATE_LIDMAATGUID}
+            FROM ${winkerkEntry.LIDMATE_TABLE_NAME}
+            WHERE (${winkerkEntry.LIDMATE_TABLE_NAME}.${winkerkEntry.LIDMATE_REKORDSTATUS} = ?)
+              AND (${winkerkEntry.LIDMATE_TABLE_NAME}.${winkerkEntry.LIDMATE_GESINSHOOFGUID} = ?)
+            ORDER BY Gesinsrol ASC
+        """.trimIndent()
+        val selectionArgs = arrayOf(recordStatus, familyHeadGuid)
+        val uri = ContentUris.withAppendedId(winkerkEntry.CONTENT_GESIN_URI, 0L)
+        val cursor = contentResolver.query(uri, null, selection, selectionArgs, null)
+        return cursor?.use {
+            buildList {
+                while (it.moveToNext()) {
+                    add(extractFamilyMember(it))
+                }
+            }
+        } ?: emptyList()
+    }
+
+    // ------------------------------------------------------------------------
+    // Cursor → Model conversion (unchanged logic)
+    // ------------------------------------------------------------------------
+
+    private fun extractMemberDetail(cursor: Cursor): MemberDetailItem {
+        var bDayRaw = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_GEBOORTEDATUM)
         var ageYears = -1L
         var bDay = bDayRaw
         if (bDay.length >= 10) {
@@ -136,37 +196,8 @@ class LidmaatDetailViewModel(application: Application) : AndroidViewModel(applic
             gemeente = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_GEMEENTE)
         )
     }
-//deathDate = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_STERFDATUM)
-    fun loadFamily(familyHeadGuid: String, recordStatus: String) {
-    val selection = """
-        SELECT _rowid_ AS _id,
-               ${winkerkEntry.LIDMATE_TABLE_NAME}.${winkerkEntry.LIDMATE_VAN},
-               ${winkerkEntry.LIDMATE_TABLE_NAME}.${winkerkEntry.LIDMATE_NOEMNAAM},
-               ${winkerkEntry.LIDMATE_TABLE_NAME}.${winkerkEntry.LIDMATE_GEBOORTEDATUM},
-               ${winkerkEntry.LIDMATE_TABLE_NAME}.${winkerkEntry.LIDMATE_PICTUREPATH},
-               ${winkerkEntry.LIDMATE_TABLE_NAME}.${winkerkEntry.LIDMATE_LIDMAATGUID}
-        FROM ${winkerkEntry.LIDMATE_TABLE_NAME}
-        WHERE (${winkerkEntry.LIDMATE_TABLE_NAME}.${winkerkEntry.LIDMATE_REKORDSTATUS} = $recordStatus)
-        AND (${winkerkEntry.LIDMATE_TABLE_NAME}.${winkerkEntry.LIDMATE_GESINSHOOFGUID} = "$familyHeadGuid")
-        ORDER BY Gesinsrol ASC
-    """.trimIndent()
 
-    val uri = ContentUris.withAppendedId(winkerkEntry.CONTENT_GESIN_URI, 0L)
-    try {
-        contentResolver.query(uri, null, selection, null, null)?.use { cursor ->
-            val list = mutableListOf<FamilyMemberItem>()
-            while (cursor.moveToNext()) {
-                list.add(extractFamilyMember(cursor))
-            }
-            _familyMembers.postValue(list)
-        }
-    } catch (e: Exception) {
-        Log.e("LidmaatDetailVM", "Error loading family", e)
-        _familyMembers.postValue(emptyList())
-    }
-}
-
-    private fun extractFamilyMember(cursor: android.database.Cursor): FamilyMemberItem {
+    private fun extractFamilyMember(cursor: Cursor): FamilyMemberItem {
         var bDay = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_GEBOORTEDATUM)
         var age = -1L
         if (bDay.isNotEmpty() && bDay.length >= 10) {

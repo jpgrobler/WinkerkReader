@@ -87,11 +87,9 @@
                         android:layout_height="wrap_content"
                         android:layout_marginHorizontal="24dp"
                         android:text="@string/datum_vandag" />
-
-                    <!-- Confirm button REMOVED from here -->
                 </LinearLayout>
 
-                <!-- Context fields -->
+                <!-- Context fields (where the family spinner is added dynamically) -->
                 <LinearLayout
                     android:id="@+id/layout_context_fields"
                     android:layout_width="match_parent"
@@ -132,13 +130,14 @@
                 android:paddingHorizontal="24dp"
                 android:visibility="gone">
 
-                <!-- Ad-hoc fields ... (unchanged) -->
+                <!-- Ad-hoc fields -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/til_title"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="@string/herinnering_titel"
                     style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
+
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/et_title"
                         android:layout_width="match_parent"
@@ -154,6 +153,7 @@
                     android:hint="@string/herinnering_nota"
                     android:layout_marginTop="8dp"
                     style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
+
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/et_note"
                         android:layout_width="match_parent"
@@ -188,7 +188,7 @@
 
             </LinearLayout>
 
-            <!-- ===== CONFIRM BUTTON (visible for both modes) ===== -->
+            <!-- ===== CONFIRM BUTTON ===== -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_bevestig"
                 android:layout_width="wrap_content"

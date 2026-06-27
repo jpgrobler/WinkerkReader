@@ -4,6 +4,7 @@ import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.util.Log
 import com.readystatesoftware.sqliteasset.SQLiteAssetHelper
+import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import java.util.concurrent.ConcurrentHashMap
 
@@ -13,10 +14,22 @@ class WinkerkDbHelper private constructor(context: Context, dbName: String) :
     private val tag = "WinkerkDbHelper"
 
     override fun onOpen(db: SQLiteDatabase) {
-        Log.d(tag, "onOpen for database: $databaseName, path: ${db.path}")
+        if (BuildConfig.DEBUG) Log.d(tag, "onOpen for database: $databaseName, path: ${db.path}")
         db.disableWriteAheadLogging()
         super.onOpen(db)
         ensureColumnsExist(db)
+        SQLiteDatabase.openDatabase(db.path, null, SQLiteDatabase.OPEN_READONLY).use { db ->
+            val cursor = db.rawQuery("PRAGMA table_info(Members)", null)
+            if (BuildConfig.DEBUG) Log.d("DBinfo", "")
+            while (cursor.moveToNext()) {
+                val name = cursor.getString(1)
+                val type = cursor.getString(2)
+                val notNull = cursor.getInt(3)
+                val pk = cursor.getInt(5)
+                if (BuildConfig.DEBUG) Log.d("DBinfo", "Column: '$name' | Type: '$type' | PK: $pk | NotNull: $notNull")
+            }
+            cursor.close()
+        }
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
@@ -37,9 +50,9 @@ class WinkerkDbHelper private constructor(context: Context, dbName: String) :
             if (!isColumnExists(db, "Members", WinkerkContract.winkerkEntry.LIDMATE_TAG)) {
                 try {
                     db.execSQL("ALTER TABLE Members ADD COLUMN ${WinkerkContract.winkerkEntry.LIDMATE_TAG} BIT")
-                    Log.d(tag, "Added ${WinkerkContract.winkerkEntry.LIDMATE_TAG} column to Members table")
+                    if (BuildConfig.DEBUG) Log.d(tag, "Added ${WinkerkContract.winkerkEntry.LIDMATE_TAG} column to Members table")
                 } catch (e: Exception) {
-                    Log.e(tag, "Failed to add TAG column", e)
+                    if (BuildConfig.DEBUG) Log.e(tag, "Failed to add TAG column", e)
                 }
             }
 
@@ -47,9 +60,9 @@ class WinkerkDbHelper private constructor(context: Context, dbName: String) :
             if (!isColumnExists(db, "Datum", "_id")) {
                 try {
                     db.execSQL("ALTER TABLE Datum ADD COLUMN _id INTEGER PRIMARY KEY AUTOINCREMENT")
-                    Log.d(tag, "Added _id column to Datum table")
+                    if (BuildConfig.DEBUG) Log.d(tag, "Added _id column to Datum table")
                 } catch (e: Exception) {
-                    Log.e(tag, "Failed to add _id column", e)
+                    if (BuildConfig.DEBUG) Log.e(tag, "Failed to add _id column", e)
                 }
             }
         }
@@ -71,7 +84,7 @@ class WinkerkDbHelper private constructor(context: Context, dbName: String) :
                 false
             }
         } catch (e: Exception) {
-            Log.e(tag, "Error checking column existence", e)
+            if (BuildConfig.DEBUG) Log.e(tag, "Error checking column existence", e)
             false
         }
     }
@@ -93,9 +106,9 @@ class WinkerkDbHelper private constructor(context: Context, dbName: String) :
         /** Close a specific database instance and remove it from the map. */
         @JvmStatic
         fun closeInstance(dbName: String) {
-            Log.d("WinkerkDbHelper", "closeInstance called for: $dbName")
+            if (BuildConfig.DEBUG) Log.d("WinkerkDbHelper", "closeInstance called for: $dbName")
             instances.remove(dbName)?.close()
-            Log.d("WinkerkDbHelper", "Closed helper for: $dbName")
+            if (BuildConfig.DEBUG) Log.d("WinkerkDbHelper", "Closed helper for: $dbName")
         }
 
         fun setDatabaseDate(context: Context) {
@@ -113,7 +126,7 @@ class WinkerkDbHelper private constructor(context: Context, dbName: String) :
 
                 }
             } catch (e: Exception) {
-                Log.e("WinkerkDbHelper", "Error setting database date", e)
+                if (BuildConfig.DEBUG) Log.e("WinkerkDbHelper", "Error setting database date", e)
             }
         }
 
@@ -142,7 +155,7 @@ class WinkerkDbHelper private constructor(context: Context, dbName: String) :
                     }
                 }
             } catch (e: Exception) {
-                Log.e("WinkerkDbHelper", "Error setting church info", e)
+                if (BuildConfig.DEBUG) Log.e("WinkerkDbHelper", "Error setting church info", e)
             }
         }
     }

@@ -16,6 +16,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
 import za.co.jpsoft.winkerkreader.R
+import za.co.jpsoft.winkerkreader.BuildConfig
 
 class CalendarManager(private val context: Context) {
     private val contentResolver = context.contentResolver
@@ -45,7 +46,7 @@ class CalendarManager(private val context: Context) {
 
             cursor?.use {
                 if (it.count == 0) {
-                    Log.w(TAG, "No calendars found on device")
+                    if (BuildConfig.DEBUG) Log.w(TAG, "No calendars found on device")
                     return calendars
                 }
                 while (it.moveToNext()) {
@@ -56,14 +57,14 @@ class CalendarManager(private val context: Context) {
 
                     calendars.add(CalendarInfo(id, name, displayName, accountName))
                 }
-                Log.d(TAG, "Found ${calendars.size} calendars")
+                if (BuildConfig.DEBUG) Log.d(TAG, "Found ${calendars.size} calendars")
             } ?: run {
-                Log.w(TAG, "Calendar query returned null cursor - no calendars available or permission denied")
+                if (BuildConfig.DEBUG) Log.w(TAG, "Calendar query returned null cursor - no calendars available or permission denied")
             }
         } catch (e: SecurityException) {
-            Log.e(TAG, "Permission denied accessing calendars", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Permission denied accessing calendars", e)
         } catch (e: Exception) {
-            Log.e(TAG, "Error getting calendars", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error getting calendars", e)
         }
 
         return calendars
@@ -91,7 +92,7 @@ class CalendarManager(private val context: Context) {
         isAllDay: Boolean
     ): Long? {
         if (isDuplicatePastoralEvent(calendarId, reminderId, startMillis, isAllDay)) {
-            Log.w(TAG, "Skipping duplicate pastoral calendar event for reminder $reminderId")
+            if (BuildConfig.DEBUG) Log.w(TAG, "Skipping duplicate pastoral calendar event for reminder $reminderId")
             return null
         }
 
@@ -114,10 +115,10 @@ class CalendarManager(private val context: Context) {
         return try {
             val uri = contentResolver.insert(CalendarContract.Events.CONTENT_URI, values)
             uri?.lastPathSegment?.toLongOrNull().also { id ->
-                Log.d(TAG, "Pastoral calendar event created: id=$id reminder=$reminderId")
+                if (BuildConfig.DEBUG) Log.d(TAG, "Pastoral calendar event created: id=$id reminder=$reminderId")
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to insert pastoral calendar event for $reminderId", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Failed to insert pastoral calendar event for $reminderId", e)
             null
         }
     }
@@ -135,10 +136,10 @@ class CalendarManager(private val context: Context) {
         return try {
             val deleted = contentResolver.delete(uri, null, null)
             (deleted > 0).also {
-                Log.d(TAG, "Pastoral calendar event delete: id=$calendarEventId deleted=$it")
+                if (BuildConfig.DEBUG) Log.d(TAG, "Pastoral calendar event delete: id=$calendarEventId deleted=$it")
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to delete pastoral calendar event $calendarEventId", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Failed to delete pastoral calendar event $calendarEventId", e)
             false
         }
     }
@@ -178,7 +179,7 @@ class CalendarManager(private val context: Context) {
                 null
             )?.use { cursor -> cursor.count > 0 } ?: false
         } catch (e: Exception) {
-            Log.e(TAG, "Token dedup query failed for $reminderId", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Token dedup query failed for $reminderId", e)
             false  // Fail open: let the insert proceed; the description token will catch it next time
         }
     }
@@ -220,7 +221,7 @@ class CalendarManager(private val context: Context) {
                 null
             )?.use { cursor -> cursor.count > 0 } ?: false
         } catch (e: Exception) {
-            Log.e(TAG, "Time-window dedup query failed", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Time-window dedup query failed", e)
             false
         }
     }
@@ -236,20 +237,20 @@ class CalendarManager(private val context: Context) {
             // Check if we have any calendars first
             val availableCalendars = getAvailableCalendars()
             if (availableCalendars.isEmpty()) {
-                Log.w(TAG, "No calendars available on device - cannot add event")
+                if (BuildConfig.DEBUG) Log.w(TAG, "No calendars available on device - cannot add event")
                 return false
             }
 
             // Check if the specified calendar ID exists
             val calendarExists = availableCalendars.any { it.id == calendarId }
             if (!calendarExists) {
-                Log.e(TAG, "Calendar with ID $calendarId not found")
+                if (BuildConfig.DEBUG) Log.e(TAG, "Calendar with ID $calendarId not found")
                 return false
             }
 
             // Check for duplicate calendar events first
             if (isDuplicateCalendarEvent(calendarId, callerInfo, timestamp, callType, source)) {
-                Log.d(TAG, "Duplicate calendar event detected, skipping - Contact: $callerInfo, Type: $callType, Source: $source")
+                if (BuildConfig.DEBUG) Log.d(TAG, "Duplicate calendar event detected, skipping - Contact: $callerInfo, Type: $callType, Source: $source")
                 return true // Return true as it's not really an error
             }
 
@@ -268,18 +269,18 @@ class CalendarManager(private val context: Context) {
             val uri = context.contentResolver.insert(CalendarContract.Events.CONTENT_URI, values)
 
             return if (uri != null) {
-                Log.d(TAG, "Call event added to calendar successfully")
+                if (BuildConfig.DEBUG) Log.d(TAG, "Call event added to calendar successfully")
                 true
             } else {
-                Log.e(TAG, "Failed to add call event to calendar")
+                if (BuildConfig.DEBUG) Log.e(TAG, "Failed to add call event to calendar")
                 false
             }
 
         } catch (e: SecurityException) {
-            Log.e(TAG, "Permission denied adding event to calendar", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Permission denied adding event to calendar", e)
             return false
         } catch (e: Exception) {
-            Log.e(TAG, "Error adding event to calendar", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error adding event to calendar", e)
             return false
         }
     }
@@ -330,7 +331,7 @@ class CalendarManager(private val context: Context) {
 
                     // Check if title matches and time is very close
                     if (existingTitle == expectedTitle && kotlin.math.abs(existingTime - timestamp) < timeWindow) {
-                        Log.d(TAG, "Found duplicate calendar event: $existingTitle at $existingTime")
+                        if (BuildConfig.DEBUG) Log.d(TAG, "Found duplicate calendar event: $existingTitle at $existingTime")
                         return true
                     }
 
@@ -340,7 +341,7 @@ class CalendarManager(private val context: Context) {
                         existingDescription.contains(callType.name) &&
                         kotlin.math.abs(existingTime - timestamp) < timeWindow
                     ) {
-                        Log.d(TAG, "Found similar calendar event based on description")
+                        if (BuildConfig.DEBUG) Log.d(TAG, "Found similar calendar event based on description")
                         return true
                     }
                 }
@@ -348,7 +349,7 @@ class CalendarManager(private val context: Context) {
 
             return false
         } catch (e: Exception) {
-            Log.e(TAG, "Error checking for duplicate calendar events", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error checking for duplicate calendar events", e)
             return false // If error, allow event to be created
         }
     }

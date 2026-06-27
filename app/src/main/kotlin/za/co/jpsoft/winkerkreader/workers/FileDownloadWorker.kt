@@ -22,6 +22,8 @@ import java.net.Socket
 import java.net.SocketTimeoutException
 import java.security.MessageDigest
 import java.util.concurrent.atomic.AtomicInteger
+import za.co.jpsoft.winkerkreader.BuildConfig
+import za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase
 
 class FileDownloadWorker(
     context: Context,
@@ -44,7 +46,7 @@ class FileDownloadWorker(
 
         if (serverIp.isNullOrEmpty()) {
             val error = "No server IP provided"
-            Log.e("FileDownloadWorker", error)
+            if (BuildConfig.DEBUG) Log.e("FileDownloadWorker", error)
             return@withContext Result.failure(workDataOf(KEY_SUCCESS to false, KEY_ERROR to error))
         }
 
@@ -61,10 +63,10 @@ class FileDownloadWorker(
                 ackSocket = Socket(serverIp, serverPort + 1).apply { soTimeout = 30000 }
                 checksumSocket = Socket(serverIp, serverPort + 2).apply { soTimeout = 30000 }
                 connected = true
-                Log.d("FileDownloadWorker", "Connected to server $serverIp:$serverPort")
+                if (BuildConfig.DEBUG) Log.d("FileDownloadWorker", "Connected to server $serverIp:$serverPort")
             } catch (e: Exception) {
                 val remaining = retryAttempts.decrementAndGet()
-                Log.w("FileDownloadWorker", "Connection attempt failed, remaining: $remaining", e)
+                if (BuildConfig.DEBUG) Log.w("FileDownloadWorker", "Connection attempt failed, remaining: $remaining", e)
                 if (remaining > 0 && !isStopped) {
                     delay(retryInterval)
                 } else {
@@ -85,10 +87,11 @@ class FileDownloadWorker(
         checksumSocket?.close()
 
         if (result.first) {
-            Log.d("FileDownloadWorker", "Download successful, file saved to ${result.second}")
+            if (BuildConfig.DEBUG) Log.d("FileDownloadWorker", "Download successful, file saved to ${result.second}")
             // Force close any open database helpers to release the file
-            WinkerkDbHelper.closeInstance(WinkerkContract.winkerkEntry.WINKERK_DB)
-            WinkerkDbHelper.closeInstance(WinkerkContract.winkerkEntry.INFO_DB)
+            WinkerkDatabase.closeInstance()
+            // Keep info_db close if needed
+            //WinkerkDbHelper.closeInstance(WinkerkContract.winkerkEntry.INFO_DB)
             // Trigger database reload via ContentProvider
             applicationContext.contentResolver.call(
                 WinkerkContract.winkerkEntry.CONTENT_URI,
@@ -99,7 +102,7 @@ class FileDownloadWorker(
             Result.success(workDataOf(KEY_SUCCESS to true, KEY_FILE_PATH to result.second))
         } else {
             val error = result.third ?: "Download failed"
-            Log.e("FileDownloadWorker", error)
+            if (BuildConfig.DEBUG) Log.e("FileDownloadWorker", error)
             Result.failure(workDataOf(KEY_SUCCESS to false, KEY_ERROR to error))
         }
     }
@@ -141,7 +144,7 @@ class FileDownloadWorker(
             val destFile = File(dbPath, WINKERK_DB)
             // Delete existing file to ensure clean write
             if (destFile.exists() && !destFile.delete()) {
-                Log.w("FileDownloadWorker", "Could not delete existing database file")
+                if (BuildConfig.DEBUG) Log.w("FileDownloadWorker", "Could not delete existing database file")
             }
             outputStream = BufferedOutputStream(FileOutputStream(destFile))
 
@@ -182,13 +185,13 @@ class FileDownloadWorker(
 
             outputStream.flush()
             outputStream.close()
-            Log.d("FileDownloadWorker", "File saved to ${destFile.absolutePath}")
+            if (BuildConfig.DEBUG) Log.d("FileDownloadWorker", "File saved to ${destFile.absolutePath}")
             Triple(true, destFile.absolutePath, null)
         } catch (e: SocketTimeoutException) {
-            Log.e("FileDownloadWorker", "Socket timeout during download", e)
+            if (BuildConfig.DEBUG) Log.e("FileDownloadWorker", "Socket timeout during download", e)
             Triple(false, "", "Connection timeout: ${e.message}")
         } catch (e: Exception) {
-            Log.e("FileDownloadWorker", "Download failed", e)
+            if (BuildConfig.DEBUG) Log.e("FileDownloadWorker", "Download failed", e)
             Triple(false, "", "Download failed: ${e.message}")
         } finally {
             try {

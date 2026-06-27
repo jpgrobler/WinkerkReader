@@ -1,3 +1,4 @@
+// File: PhotoSyncManager.kt
 package za.co.jpsoft.winkerkreader.utils
 
 import android.content.Context
@@ -5,6 +6,7 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import kotlinx.coroutines.*
+import za.co.jpsoft.winkerkreader.BuildConfig
 import java.io.File
 import java.io.FileOutputStream
 import java.net.Socket
@@ -19,13 +21,9 @@ class PhotoSyncManager(private val context: Context, private val serverIp: Strin
     private var listener: SyncListener? = null
     private val mainHandler = Handler(Looper.getMainLooper())
 
-    // Coroutine scope tied to this manager – can be cancelled
-    private var syncScope: CoroutineScope? = null
-
-    init {
-        val externalDir = context.getExternalFilesDir(null)
-        photoDir = if (externalDir != null) File(externalDir, "photos") else null
-    }
+    // Job that can be cancelled
+    private var syncJob: Job? = null
+    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     interface SyncListener {
         fun onProgress(current: Int, total: Int, filename: String)
@@ -33,10 +31,13 @@ class PhotoSyncManager(private val context: Context, private val serverIp: Strin
         fun onError(message: String)
     }
 
-    fun startSync(photoGuids: List<String>, listener: SyncListener) {
-        // Cancel any ongoing sync first
-        cancel()
+    init {
+        val externalDir = context.getExternalFilesDir(null)
+        photoDir = if (externalDir != null) File(externalDir, "photos") else null
+    }
 
+    fun startSync(photoGuids: List<String>, listener: SyncListener) {
+        cancel() // cancel any previous sync
         this.listener = listener
 
         if (photoDir == null) {
@@ -49,17 +50,13 @@ class PhotoSyncManager(private val context: Context, private val serverIp: Strin
         }
         photoDir!!.mkdirs()
 
-        // Create a new coroutine scope with a SupervisorJob (allows cancellation)
-        val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-        syncScope = scope
-
-        scope.launch {
+        // ✅ Store the Job first, then attach completion handler
+        val job = scope.launch {
             var success = 0
             var failed = 0
             val total = photoGuids.size
 
             for ((index, guid) in photoGuids.withIndex()) {
-                // Check cancellation before each download
                 ensureActive()
                 val file = File(photoDir, "$guid.jpg")
                 if (file.exists()) {
@@ -78,23 +75,24 @@ class PhotoSyncManager(private val context: Context, private val serverIp: Strin
 
             withContext(Dispatchers.Main) {
                 listener.onComplete(success, failed)
-                // Clear listener reference after completion
                 this@PhotoSyncManager.listener = null
             }
-        }.invokeOnCompletion { cause ->
+        }
+        // Now assign to syncJob
+        syncJob = job
+
+        // Attach completion handler separately
+        job.invokeOnCompletion { cause ->
             if (cause is CancellationException) {
-                Log.d(tag, "Sync was cancelled")
                 mainHandler.post {
-                    listener?.onError("Synchronisation cancelled")
+                    this@PhotoSyncManager.listener?.onError("Synchronisation cancelled")
                     this@PhotoSyncManager.listener = null
                 }
             }
-            // Scope is about to be cleared, but we keep it until next start
         }
     }
 
     private suspend fun downloadPhoto(guid: String, destFile: File): Boolean = withContext(Dispatchers.IO) {
-        // Check cancellation before establishing connections
         ensureActive()
         var dataSocket: Socket? = null
         var ackSocket: Socket? = null
@@ -109,21 +107,17 @@ class PhotoSyncManager(private val context: Context, private val serverIp: Strin
             val ackOut = ackSocket.getOutputStream()
             val checksumIn = checksumSocket.getInputStream().bufferedReader()
 
-            // Send GUID
             dataOut.write("$guid\n".toByteArray())
             dataOut.flush()
 
-            // Wait for ACK
             val ack1 = ackIn.readLine()
             if (ack1 != "ACK") throw Exception("No ACK for GUID")
 
-            // Receive file size
             val sizeStr = ackIn.readLine() ?: throw Exception("No file size")
             val fileSize = sizeStr.toLongOrNull() ?: throw Exception("Invalid file size")
             ackOut.write("ACK\n".toByteArray())
             ackOut.flush()
 
-            // Receive buffer size
             val bufferSizeStr = ackIn.readLine() ?: throw Exception("No buffer size")
             val bufferSize = bufferSizeStr.toIntOrNull() ?: throw Exception("Invalid buffer size")
             ackOut.write("ACK\n".toByteArray())
@@ -135,7 +129,6 @@ class PhotoSyncManager(private val context: Context, private val serverIp: Strin
 
             try {
                 while (totalRead < fileSize) {
-                    // Check cancellation inside the loop
                     ensureActive()
                     var bytesRead = 0
                     while (bytesRead < buffer.size) {
@@ -167,10 +160,10 @@ class PhotoSyncManager(private val context: Context, private val serverIp: Strin
             }
             true
         } catch (e: CancellationException) {
-            Log.d(tag, "Download cancelled for $guid")
-            throw e // propagate cancellation
+            if (BuildConfig.DEBUG) Log.d(tag, "Download cancelled for $guid")
+            throw e
         } catch (e: Exception) {
-            Log.e(tag, "downloadPhoto error for $guid", e)
+            if (BuildConfig.DEBUG) Log.e(tag, "downloadPhoto error for $guid", e)
             false
         } finally {
             dataSocket?.close()
@@ -199,10 +192,8 @@ class PhotoSyncManager(private val context: Context, private val serverIp: Strin
     }
 
     fun cancel() {
-        // Cancel the entire coroutine scope – this will cancel all child jobs
-        syncScope?.cancel()
-        syncScope = null
-        // Clear listener reference immediately to avoid leaks
+        syncJob?.cancel()
+        syncJob = null
         listener = null
     }
 }

@@ -12,6 +12,7 @@
         android:layout_width="0dp"
         android:layout_weight="1"
         android:layout_height="wrap_content"
+        android:textSize="14sp"
         android:singleLine="true"
         android:ellipsize="end" />
 
@@ -21,7 +22,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/bediening_agterstallig"
-        android:textSize="10sp"
+        android:textSize="11sp"
         android:textColor="#FFFFFF"
         android:background="#D32F2F"
         android:paddingHorizontal="4dp"

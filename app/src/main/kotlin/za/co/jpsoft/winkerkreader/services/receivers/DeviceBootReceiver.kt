@@ -12,6 +12,7 @@ import android.content.Intent
 import android.os.Build
 import android.util.Log
 import java.util.Calendar
+import za.co.jpsoft.winkerkreader.BuildConfig
 
 /**
  * Combined boot receiver that handles device startup, package replacement,
@@ -25,11 +26,11 @@ class DeviceBootReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         val action = intent.action ?: run {
-            Log.w(TAG, "Received intent with null action")
+            if (BuildConfig.DEBUG) Log.w(TAG, "Received intent with null action")
             return
         }
 
-        Log.d(TAG, "Boot receiver triggered with action: $action")
+        if (BuildConfig.DEBUG) Log.d(TAG, "Boot receiver triggered with action: $action")
 
         // Handle different boot/restart scenarios
         when (action) {
@@ -63,9 +64,9 @@ class DeviceBootReceiver : BroadcastReceiver() {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
             context.startActivity(intent)
-            Log.d(TAG, "Main activity started successfully")
+            if (BuildConfig.DEBUG) Log.d(TAG, "Main activity started successfully")
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to start main activity", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Failed to start main activity", e)
         }
     }
 
@@ -78,9 +79,9 @@ class DeviceBootReceiver : BroadcastReceiver() {
             try {
                 val intent = Intent(context, CallMonitoringService::class.java)
                 context.startForegroundService(intent)
-                Log.d(TAG, "CallMonitoringService started successfully")
+                if (BuildConfig.DEBUG) Log.d(TAG, "CallMonitoringService started successfully")
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to start CallMonitoringService", e)
+                if (BuildConfig.DEBUG) Log.e(TAG, "Failed to start CallMonitoringService", e)
             }
         }
     }
@@ -90,7 +91,7 @@ class DeviceBootReceiver : BroadcastReceiver() {
         val timeUpdate = settings.smsTimeUpdate
 
         if (!reminderEnabled && !timeUpdate) {
-            Log.d(TAG, "Birthday reminder disabled")
+            if (BuildConfig.DEBUG) Log.d(TAG, "Birthday reminder disabled")
             return
         }
 
@@ -125,7 +126,7 @@ class DeviceBootReceiver : BroadcastReceiver() {
 
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager
             if (alarmManager == null) {
-                Log.e(TAG, "AlarmManager is null")
+                if (BuildConfig.DEBUG) Log.e(TAG, "AlarmManager is null")
                 return
             }
 
@@ -141,9 +142,9 @@ class DeviceBootReceiver : BroadcastReceiver() {
             // Schedule the alarm based on Android version
             scheduleAlarm(alarmManager, triggerTime, pendingIntent)
 
-            Log.d(TAG, "Birthday reminder alarm scheduled for ${alarmTime.time}")
+            if (BuildConfig.DEBUG) Log.d(TAG, "Birthday reminder alarm scheduled for ${alarmTime.time}")
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to setup birthday alarm", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Failed to setup birthday alarm", e)
         }
     }
 
@@ -154,27 +155,27 @@ class DeviceBootReceiver : BroadcastReceiver() {
                     // Android 12+ - Check if we can schedule exact alarms
                     if (alarmManager.canScheduleExactAlarms()) {
                         alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
-                        Log.d(TAG, "Exact alarm scheduled for Android 12+")
+                        if (BuildConfig.DEBUG) Log.d(TAG, "Exact alarm scheduled for Android 12+")
                     } else {
                         // Fallback to inexact alarm
                         alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
-                        Log.w(TAG, "Using inexact alarm - exact alarm permission not granted")
+                        if (BuildConfig.DEBUG) Log.w(TAG, "Using inexact alarm - exact alarm permission not granted")
                     }
                 }
                 else -> {
                     // Android 6+ (but since minSdk is 26, this is always true)
                     alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
-                    Log.d(TAG, "Exact alarm scheduled")
+                    if (BuildConfig.DEBUG) Log.d(TAG, "Exact alarm scheduled")
                 }
             }
         } catch (e: SecurityException) {
-            Log.e(TAG, "SecurityException scheduling alarm - permission may be missing", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "SecurityException scheduling alarm - permission may be missing", e)
             // Try inexact alarm as fallback
             try {
                 alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
-                Log.w(TAG, "Fallback to inexact alarm due to security exception")
+                if (BuildConfig.DEBUG) Log.w(TAG, "Fallback to inexact alarm due to security exception")
             } catch (fallbackException: Exception) {
-                Log.e(TAG, "Failed to schedule fallback alarm", fallbackException)
+                if (BuildConfig.DEBUG) Log.e(TAG, "Failed to schedule fallback alarm", fallbackException)
             }
         }
     }

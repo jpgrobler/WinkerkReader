@@ -7,6 +7,7 @@ import android.content.Intent
 import android.util.Log
 import android.widget.RemoteViews
 import za.co.jpsoft.winkerkreader.R
+import za.co.jpsoft.winkerkreader.BuildConfig
 
 class PastoralWidgetKeyguardProvider : AppWidgetProvider() {
 
@@ -24,7 +25,7 @@ class PastoralWidgetKeyguardProvider : AppWidgetProvider() {
         private const val TAG = "PastoralWidgetKeyguard"
 
         fun updateWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
-            Log.d(TAG, "Updating keyguard widget $appWidgetId")
+            if (BuildConfig.DEBUG) Log.d(TAG, "Updating keyguard widget $appWidgetId")
             val views = RemoteViews(context.packageName, R.layout.widget_pastoral_keyguard)
 
             val intent = Intent(context, PastoralWidgetKeyguardRemoteViewsService::class.java)

@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Funksies -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/section_frame"
+            android:orientation="vertical"
+            android:padding="8dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:background="@color/primary_blue_dark"
+                android:padding="4dp"
+                android:text="@string/uitleg_funksies_title"
+                android:textAlignment="center"
+                android:textColor="@color/surface_light"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/funksoie_Stoor"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginBottom="8dp"
+                android:background="@drawable/buttonshape"
+                android:enabled="false"
+                android:text="@string/stoor"
+                android:textColor="#FFFF" />
+
+            <CheckBox
+                android:id="@+id/autoStartSwitch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/uitleg_autostart_monitor" />
+
+            <CheckBox
+                android:id="@+id/uitleg_Monitor_Oproepe"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/uitleg_monitor_oproepe" />
+
+            <CheckBox
+                android:id="@+id/uitleg_Log_Oproepe"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/uitleg_log_tel_oproepe" />
+
+            <CheckBox
+                android:id="@+id/uitleg_Log_VOIP"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/uitleg_log_voip_oproepe" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/uitleg_calendar_picker"
+                android:textColor="#666666"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <Spinner
+                android:id="@+id/calendarSpinner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:minHeight="48dp" />
+
+            <!-- REMOVED: Default layout spinner -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:background="@drawable/section_frame"
+                android:orientation="vertical"
+                android:padding="8dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="8dp"
+                    android:text="@string/uitleg_whatsapp_label"
+                    android:textSize="16sp" />
+
+                <CheckBox
+                    android:id="@+id/uitleg_w1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/uitleg_whatsapp_method_1" />
+
+                <CheckBox
+                    android:id="@+id/uitleg_w2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/uitleg_whatsapp_method_2" />
+
+                <CheckBox
+                    android:id="@+id/uitleg_w3"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/uitleg_whatsapp_method_3" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:background="@drawable/section_frame"
+                android:orientation="vertical"
+                android:padding="8dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="8dp"
+                    android:text="@string/uitleg_epos_label"
+                    android:textSize="16sp" />
+
+                <CheckBox
+                    android:id="@+id/uitleg_html"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/uitleg_html_epos" />
+            </LinearLayout>
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>

@@ -72,7 +72,8 @@
         android:roundIcon="@drawable/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.WinkerkReader"
-        android:usesCleartextTraffic="true">
+        android:usesCleartextTraffic="true"
+        android:enableOnBackInvokedCallback="true">
 
         <!-- Activities -->
         <activity android:name="za.co.jpsoft.winkerkreader.ui.activities.MainActivity"
@@ -114,7 +115,7 @@
         <activity android:name="za.co.jpsoft.winkerkreader.ui.activities.ArgiefListActivity"
             android:exported="true"
             android:icon="@mipmap/ic_shortcut_family_roof"
-            android:windowSoftInputMode="adjustResize"
+            android:windowSoftInputMode="adjustPan|adjustResize"
             android:label="Argief"
             android:parentActivityName="za.co.jpsoft.winkerkreader.ui.activities.MainActivity">
         </activity>
@@ -143,6 +144,7 @@
         <activity android:name="za.co.jpsoft.winkerkreader.ui.activities.VerjaarSmsActivity"
             android:exported="true"
             android:icon="@mipmap/ic_shortcut_family_roof"
+            android:windowSoftInputMode="adjustPan|adjustResize"
             android:label="Stuur Verjaarsdasg SMS"
             android:parentActivityName="za.co.jpsoft.winkerkreader.ui.activities.MainActivity">
         </activity>
@@ -165,6 +167,7 @@
             android:name=".ui.activities.BedieningActivity"
             android:label="@string/bediening_title"
             android:theme="@style/Theme.WinkerkReader.NoActionBar"
+            android:windowSoftInputMode="adjustPan|adjustResize"
             android:parentActivityName=".ui.activities.MainActivity"
             android:exported="false" />
 
@@ -172,6 +175,7 @@
             android:name=".ui.activities.TemplateManagerActivity"
             android:label="@string/template_bestuur_sjablone"
             android:theme="@style/Theme.WinkerkReader.NoActionBar"
+            android:windowSoftInputMode="adjustPan|adjustResize"
             android:parentActivityName=".ui.activities.BedieningActivity"
             android:exported="false" />
 
@@ -179,6 +183,7 @@
             android:name=".ui.activities.TemplateEditorActivity"
             android:label="@string/template_wysig_titel"
             android:theme="@style/Theme.WinkerkReader.NoActionBar"
+            android:windowSoftInputMode="adjustPan|adjustResize"
             android:parentActivityName=".ui.activities.TemplateManagerActivity"
             android:exported="false" />
 

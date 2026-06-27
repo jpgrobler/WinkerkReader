@@ -1,15 +1,18 @@
 package za.co.jpsoft.winkerkreader.services
 
+import android.app.ActivityManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
 import android.content.ClipData
 import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
 import android.graphics.Color
 import android.graphics.PixelFormat
+import android.os.Build
 import android.os.IBinder
 import android.provider.Settings
 import android.util.Log
@@ -23,24 +26,55 @@ import android.widget.TextView
 import androidx.core.app.NotificationCompat
 import androidx.core.content.edit
 import androidx.core.net.toUri
+import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
 import za.co.jpsoft.winkerkreader.utils.CallerInfoResolver
 import java.lang.ref.WeakReference
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class OproepDetailService : Service() {
 
     companion object {
-        @Volatile
-        var isOn = false
-            private set
         private const val TAG = "OproepDetailService"
         const val EXTRA_CALLER_ID = "caller_id"
         const val EXTRA_CALLER_DISPLAY = "caller_display"
         private var serviceInstance: WeakReference<OproepDetailService>? = null
 
-        //fun isServiceActive(): Boolean = serviceInstance?.get() != null
+        // Optional: keep as a quick hint, but do not rely on it for correctness
+        @Volatile
+        var isOn = false
+            private set
 
+        // Reliable check using ActivityManager
+        fun isServiceRunning(context: Context): Boolean {
+            val manager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                // Type-safe API (requires API 23+)
+                context.getSystemService(ActivityManager::class.java)
+            } else {
+                // Legacy fallback with safe cast
+                context.getSystemService(ACTIVITY_SERVICE) as? ActivityManager
+            }
+
+            // If manager is null, the service is not available
+            if (manager == null) return false
+
+            val serviceName = "${context.packageName}.${OproepDetailService::class.java.simpleName}"
+            return try {
+                manager.getRunningServices(Int.MAX_VALUE)
+                    .any { it.service.className == serviceName }
+            } catch (e: Exception) {
+                // getRunningServices may throw on some devices; fallback to false
+                false
+            }
+        }
+
+        // Deduplication logic (unchanged)
         private var lastProcessedNumber = ""
         private var lastProcessedTime = 0L
 
@@ -48,7 +82,6 @@ class OproepDetailService : Service() {
             synchronized(this) {
                 val now = System.currentTimeMillis()
                 return if (lastProcessedNumber == number && now - lastProcessedTime < 500) {
-                    Log.d(TAG, "Duplicate call number detected, skipping: $number")
                     false
                 } else {
                     lastProcessedNumber = number
@@ -61,6 +94,8 @@ class OproepDetailService : Service() {
 
     private lateinit var windowManager: WindowManager
     private lateinit var floatingView: View
+    private var viewAdded = false
+    private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -69,13 +104,14 @@ class OproepDetailService : Service() {
         serviceInstance = WeakReference(this)
         isOn = true
         createForegroundNotification()
+        windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val callerId = intent?.getStringExtra(EXTRA_CALLER_ID) ?: ""
 
         if (!isValidPhoneNumber(callerId)) {
-            Log.d(TAG, "No valid caller id, ignoring start command")
+            if (BuildConfig.DEBUG) Log.d(TAG, "No valid caller id, ignoring start command")
             return START_NOT_STICKY
         }
 
@@ -84,27 +120,42 @@ class OproepDetailService : Service() {
         }
 
         val displayName = intent?.getStringExtra(EXTRA_CALLER_DISPLAY)
-        showCaller(callerId, displayName)
+
+        // Launch the lookup on a background thread
+        serviceScope.launch {
+            val resolvedName = if (displayName.isNullOrBlank()) {
+                CallerInfoResolver.getCallerDisplayInfo(contentResolver, callerId)
+            } else {
+                displayName
+            }
+            // Show the caller info on the main thread
+            withContext(Dispatchers.Main) {
+                showCaller(callerId, resolvedName)
+            }
+        }
+
         return START_NOT_STICKY
     }
 
     override fun onDestroy() {
-        super.onDestroy()
+        serviceScope.cancel()
+
         isOn = false
         serviceInstance = null
 
-        val settings = getSharedPreferences(PREFS_USER_INFO, 0)
-        settings.edit { putString("CallerNumber", "XXXXXXXXXX") }
-
-        if (::floatingView.isInitialized) {
+        // Remove floating view if it was added
+        if (::floatingView.isInitialized && viewAdded) {
             try {
-                if (::windowManager.isInitialized) {
-                    windowManager.removeView(floatingView)
-                }
+                windowManager.removeView(floatingView)
+                viewAdded = false
             } catch (e: Exception) {
-                Log.e("OproepDetailService", "Error removing floating view", e)
+                if (BuildConfig.DEBUG) Log.e(TAG, "Error removing floating view", e)
             }
         }
+
+        // Clear shared preference
+        getSharedPreferences(PREFS_USER_INFO, 0).edit { putString("CallerNumber", "XXXXXXXXXX") }
+        super.onDestroy()
     }
 
     private fun createForegroundNotification() {
@@ -135,20 +186,21 @@ class OproepDetailService : Service() {
         return phoneNumber.isNotEmpty() && phoneNumber != "XXXXXXXXXX" && phoneNumber != "Unknown"
     }
 
-    private fun showCaller(callerId: String, displayName: String?) {
+    private fun showCaller(callerId: String, callerInfo: String) {
         getSharedPreferences(PREFS_USER_INFO, MODE_PRIVATE).edit {
             putString("CallerNumber", callerId)
         }
 
-        val callerInfo = displayName?.takeIf { it.isNotBlank() }
-            ?: CallerInfoResolver.getCallerDisplayInfo(contentResolver, callerId)
+//        val callerInfo = displayName?.takeIf { it.isNotBlank() }
+//            ?: CallerInfoResolver.getCallerDisplayInfo(contentResolver, callerId)
 
-        if (::floatingView.isInitialized) {
+        // If floating view already exists, just update it
+        if (::floatingView.isInitialized && viewAdded) {
             floatingView.findViewById<TextView>(R.id.oproepnommer)?.text = callerInfo
-            Log.d(TAG, "Updated overlay for caller: $callerInfo")
             return
         }
 
+        // Inflate new view
         floatingView = LayoutInflater.from(this).inflate(R.layout.oproepfloat, null)
         val callerTextView = floatingView.findViewById<TextView>(R.id.oproepnommer)
         callerTextView.text = callerInfo
@@ -159,9 +211,11 @@ class OproepDetailService : Service() {
             stopSelf()
             return
         }
+
         createFloatingWindow()
         setupClickListeners(callerTextView)
         setupTouchListener()
+        viewAdded = true
     }
 
     private fun createFloatingWindow() {
@@ -170,12 +224,10 @@ class OproepDetailService : Service() {
             x = 0
             y = 100
         }
-        windowManager = (getSystemService(WINDOW_SERVICE) as WindowManager)
-        
         try {
             windowManager.addView(floatingView, params)
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to add floating view", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Failed to add floating view", e)
             stopSelf()
         }
     }
@@ -225,10 +277,6 @@ class OproepDetailService : Service() {
                     initialY = params.y
                     initialTouchX = event.rawX
                     initialTouchY = event.rawY
-                    v.performClick()
-                    return true
-                }
-                MotionEvent.ACTION_UP -> {
                     return true
                 }
                 MotionEvent.ACTION_MOVE -> {

@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Icons Section (2 columns) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/section_frame"
+            android:layout_marginBottom="12dp"
+            android:padding="8dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/primary_blue_dark"
+                android:text="@string/uitleg_icons_title"
+                android:textAlignment="center"
+                android:textColor="@color/surface_light"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:padding="4dp"
+                android:layout_marginBottom="8dp" />
+
+            <Button
+                android:id="@+id/uitleg_stoor"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="@string/stoor"
+                android:textColor="#FFFF"
+                android:enabled="false"
+                android:background="@drawable/buttonshape"
+                android:layout_marginBottom="8dp" />
+
+            <!-- 2-column grid -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <!-- Left column -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:paddingEnd="4dp">
+
+                    <CheckBox
+                        android:id="@+id/uitleg_foto"
+                        android:text="@string/uitleg_foto"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                    <CheckBox
+                        android:id="@+id/uitleg_epos"
+                        android:text="@string/uitleg_epos"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                    <CheckBox
+                        android:id="@+id/uitleg_whatsap"
+                        android:text="@string/uitleg_whatsapp"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                    <CheckBox
+                        android:id="@+id/uitleg_verjaarsdag"
+                        android:text="@string/uitleg_verjaarsdag"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                    <CheckBox
+                        android:id="@+id/uitleg_ouderdom"
+                        android:text="@string/filter_ouderdom"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <!-- Right column -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:paddingStart="4dp">
+
+                    <CheckBox
+                        android:id="@+id/uitleg_Huweliksdag"
+                        android:text="@string/uitleg_huweliksdatum"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                    <CheckBox
+                        android:id="@+id/uitleg_wyk"
+                        android:text="@string/list_wyk"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                    <CheckBox
+                        android:id="@+id/uitleg_selfoon"
+                        android:text="@string/list_selfoon"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                    <CheckBox
+                        android:id="@+id/uitleg_telefoon"
+                        android:text="@string/list_telefoon"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Default Layout -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/section_frame"
+            android:padding="8dp"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="8dp"
+                android:text="@string/uitleg_default_layout"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <Spinner
+                android:id="@+id/layoutOpsies"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:entries="@array/layoutoptions"
+                android:minHeight="24dp"
+                android:layout_marginBottom="8dp" />
+        </LinearLayout>
+
+        <!-- Colors Section -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/section_frame"
+            android:padding="8dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/primary_blue_dark"
+                android:text="@string/gemeente_kleur"
+                android:textAlignment="center"
+                android:textColor="@color/surface_light"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:padding="4dp"
+                android:layout_marginBottom="8dp" />
+
+            <Button
+                android:id="@+id/saveColor"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="@string/stoor"
+                android:textColor="#FFFF"
+                android:enabled="false"
+                android:background="@drawable/buttonshape"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:id="@+id/gem1"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginBottom="8dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:text="@string/uitleg_gemeente_1"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/gem2"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginBottom="8dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:text="@string/uitleg_gemeente_2"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/gem3"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginBottom="8dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:text="@string/uitleg_gemeente_3"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>

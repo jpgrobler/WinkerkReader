@@ -424,7 +424,7 @@
     <string name="uitleg_doopdatum">Doopdatum</string>
     <string name="uitleg_belydenisdatum">Belydenisdatum</string>
     <string name="uitleg_sterfdatum">Sterfdatum</string>
-    <string name="uitleg_funksies_title">Funksies</string>
+    <string name="uitleg_funksies_title">Hoofskerm</string>
     <string name="uitleg_autostart_monitor">Begin outomaties\n\tmonitor &amp; log</string>
     <string name="uitleg_monitor_oproepe">Monitor Oproepe</string>
     <string name="uitleg_log_tel_oproepe">Log Tel Oproepe</string>
@@ -667,5 +667,36 @@
     <string name="google_apps_script_link">Google Apps Script Link</string>
     <string name="google_apps_script_key">Google Apps Script Key</string>
     <string name="copy_script_btn">Kopieer Skrip na knipbord</string>
+    <string name="refresh_lists_btn">Herlaai lyste</string>
+    <string name="tasks_loading_lists">Laai taaklyste…</string>
+    <string name="tasks_no_lists">Geen taaklyste gevind</string>
+    <string name="tasks_list_load_failed">Kon taaklyste nie laai nie</string>
+    <string name="login_button">Login</string>
+    <string name="logging_in">Logging in…</string>
+    <!-- VoegNotaByBottomSheet -->
+    <string name="nota_titel">Nuwe Bedieningsnota</string>
+    <string name="nota_kategorie">Kategorie</string>
+    <string name="nota_datum">Datum van interaksie</string>
+    <string name="nota_teks_wenk">Skryf jou nota hier…</string>
+    <string name="nota_vertroulik">Vertroulik (inhoud verberg in lys)</string>
+    <string name="nota_stel_ook_herinnering">Stel ook \'n opvolg-herinnering</string>
+    <string name="nota_gestoor">Nota gestoor</string>
+    <string name="nota_stoor_fout">Kon nie nota stoor nie. Probeer weer.</string>
+    <string name="nota_gewysig">Nota gewysig</string>
+    <!-- MemberUtils / popup menu -->
+    <string name="popup_voeg_nota_by">📝  Voeg nota by</string>
+    <string name="popup_stel_herinnering">🔔  Stel herinnering</string>
+
+    <!-- Generic (only add if not already present) -->
+    <string name="kanselleer">Kanselleer</string>
+    <string name="voeg_nota_by">📝 Voeg nota by</string>
+    <string name="stel_herinnering">Stel herinnering</string>
+
+    <string name="auth_wag_verifikasie">Verifieer om voort te gaan</string>
+    <string name="auth_misluк_probeer_weer">Verifikasie misluk. Probeer weer.</string>
+    <string name="auth_probeer_weer">Probeer weer</string>
+    <string name="settings_app_biometric">Vereis verifikasie by opstart</string>
+    <string name="settings_app_biometric_summary">Gebruik vingerafdruk, gesig of PIN om die app te ontsluit</string>
+    <string name="herstel_rugsteun">Herstel Databasis Rugsteun</string>
 </resources>
 

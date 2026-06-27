@@ -37,7 +37,7 @@ class ArgiefListActivity : AppCompatActivity() {
         mCursorAdapter = ArgiefLysAdapter(this, null)
         mCursorAdapter.keuse = keuse
         binding.argiefList.adapter = mCursorAdapter
-        binding.argiefList.isFastScrollEnabled = true
+        //binding.argiefList.isFastScrollEnabled = true
         binding.argiefList.isClickable = true
 
         viewModel = ViewModelProvider(this)[ArgiefViewModel::class.java]

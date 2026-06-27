@@ -105,10 +105,6 @@ class SettingsActivity : AppCompatActivity() {
         outState.putParcelableArrayList(MainActivity.SEARCH_CHECK_BOX, settingList)
     }
 
-    override fun finish() {
-        super.finish()
-    }
-
     private fun createDefaultSearchList(): ArrayList<SearchCheckBox> {
         return arrayListOf(
             SearchCheckBox(WinkerkContract.winkerkEntry.LIDMATE_VAN, "", "Van", true),

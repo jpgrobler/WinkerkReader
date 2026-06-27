@@ -1,47 +1,34 @@
 package za.co.jpsoft.winkerkreader.utils
 
-import za.co.jpsoft.winkerkreader.ui.activities.RegistreerActivity
-import za.co.jpsoft.winkerkreader.ui.activities.ArgiefListActivity
-import za.co.jpsoft.winkerkreader.ui.activities.MainActivity
-import za.co.jpsoft.winkerkreader.ui.activities.PermissionsActivity
-import za.co.jpsoft.winkerkreader.ui.activities.VerjaarSmsActivity
-import za.co.jpsoft.winkerkreader.ui.activities.UitlegActivity
-import za.co.jpsoft.winkerkreader.ui.activities.SettingsActivity
-import za.co.jpsoft.winkerkreader.ui.activities.LaaiDatabasisActivity
-import za.co.jpsoft.winkerkreader.ui.activities.CallLogActivity
-import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel
-
 import android.content.ContentValues
-import android.content.Intent
 import android.util.Log
-
 import android.view.MenuItem
-import android.widget.RadioGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.WinkerkContract
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.LIDMATE_TAG
-import za.co.jpsoft.winkerkreader.ui.activities.BedieningActivity
+import za.co.jpsoft.winkerkreader.ui.activities.MainActivity
+import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel
 
 class MenuItemHandler(
     private val activity: AppCompatActivity,
     private val settings: SettingsManager,
-    private val viewModel: MemberViewModel
+    private val viewModel: MemberViewModel,
+    private val navigationController: MainNavigationController
 ) {
     private lateinit var permissionManager: PermissionManager
 
     fun handleMenuItem(item: MenuItem): Boolean {
-        // Initialize permission manager (needed for permission dialogs)
         permissionManager = PermissionManager(activity)
 
         val sortOrderView = activity.findViewById<TextView>(R.id.sortorder)
 
         return when (item.itemId) {
             R.id.aktief_radio_group -> handleAktiefRadioGroup()
-            //R.id.select_options -> handleSelectOptions()
             R.id.tagged -> handleTagged(sortOrderView)
             R.id.sort_van -> handleSortVan(sortOrderView)
             R.id.sort_wyk -> handleSortWyk(sortOrderView)
@@ -49,15 +36,39 @@ class MenuItemHandler(
             R.id.verjaar -> handleVerjaar(sortOrderView)
             R.id.sort_adres -> handleSortAdres(sortOrderView)
             R.id.sort_gesin -> handleSortGesin(sortOrderView)
-            R.id.RegistreerActivity -> handleRegistreer()
-            R.id.laai -> handleLaai()
-            R.id.sms_verjaar -> handleSmsVerjaar()
+            R.id.RegistreerActivity -> {
+                navigationController.navigateToRegistreer()
+                true
+            }
+            R.id.laai -> {
+                settings.fromMenu = true
+                navigationController.navigateToLaaiDatabasis()
+                activity.finish()
+                true
+            }
+            R.id.sms_verjaar -> {
+                settings.fromMenu = true
+                navigationController.navigateToSmsVerjaar()
+                true
+            }
             R.id.filter_options -> handleFilterOptions()
             R.id.deselect -> handleDeselect()
-            R.id.uitleg -> handleUitleg()
-            R.id.argief -> handleArgief()
-            R.id.action_view_call_log -> handleViewCallLog()
-            R.id.menu_permissions -> handlePermissions()
+            R.id.uitleg -> {
+                navigationController.navigateToUitleg()
+                true
+            }
+            R.id.argief -> {
+                navigationController.navigateToArgief()
+                true
+            }
+            R.id.action_view_call_log -> {
+                navigationController.navigateToCallLog()
+                true
+            }
+            R.id.menu_permissions -> {
+                navigationController.navigateToPermissions()
+                true
+            }
             R.id.menu_permission_settings -> {
                 showPermissionSettingsDialog()
                 true
@@ -67,7 +78,7 @@ class MenuItemHandler(
                 true
             }
             R.id.action_bediening -> {
-                BedieningActivity.launch(activity)
+                navigationController.navigateToBediening()
                 true
             }
             else -> false
@@ -78,24 +89,7 @@ class MenuItemHandler(
         return true
     }
 
-    fun handlePermissions(): Boolean {
-        val intent = Intent(activity, PermissionsActivity::class.java)
-        activity.startActivity(intent)
-        return true
-    }
-
-    private fun handleViewCallLog(): Boolean {
-        val intent = Intent(activity, CallLogActivity::class.java)
-        activity.startActivity(intent)
-        return true
-    }
-
-    private fun handleSelectOptions(): Boolean {
-        val intent = Intent(activity, SettingsActivity::class.java)
-        activity.startActivity(intent)
-        return true
-    }
-
+    // Die volgende metodes bly onveranderd, want hulle gebruik nie `startActivity` nie.
     private fun handleTagged(sortOrderView: TextView): Boolean {
         sortOrderView.background = null
         settings.defLayout = "VAN"
@@ -107,7 +101,7 @@ class MenuItemHandler(
 
     private fun handleSortVan(sortOrderView: TextView): Boolean {
         sortOrderView.background = null
-        settings.defLayout =  "VAN"
+        settings.defLayout = "VAN"
         viewModel.sortOrder = "VAN"
         viewModel.soekList = false
         (activity as MainActivity).observeDataset()
@@ -116,7 +110,7 @@ class MenuItemHandler(
 
     private fun handleSortWyk(sortOrderView: TextView): Boolean {
         sortOrderView.background = null
-        settings.defLayout =  "WYK"
+        settings.defLayout = "WYK"
         viewModel.sortOrder = "WYK"
         viewModel.soekList = false
         (activity as MainActivity).observeDataset()
@@ -159,36 +153,13 @@ class MenuItemHandler(
         return true
     }
 
-    private fun handleRegistreer(): Boolean {
-        val intent = Intent(activity, RegistreerActivity::class.java)
-        activity.startActivity(intent)
-        return true
-    }
-
-
-
-    private fun handleLaai(): Boolean {
-        settings.fromMenu = true
-        val intent = Intent(activity, LaaiDatabasisActivity::class.java)
-        activity.startActivity(intent)
-        activity.finish()
-        return true
-    }
-
-    private fun handleSmsVerjaar(): Boolean {
-        val intent = Intent(activity, VerjaarSmsActivity::class.java)
-        settings.fromMenu = true
-        activity.startActivity(intent)
-        return true
-    }
-
     private fun handleFilterOptions(): Boolean {
         return try {
             val filterHandler = FilterHandler(activity as MainActivity, viewModel)
             filterHandler.showFilterDialog()
             true
         } catch (e: Exception) {
-            Log.e("MenuItemHandler", "Filter error", e)
+            if (BuildConfig.DEBUG) Log.e("MenuItemHandler", "Filter error", e)
             Toast.makeText(activity, "Error opening filter options", Toast.LENGTH_SHORT).show()
             false
         }
@@ -199,18 +170,6 @@ class MenuItemHandler(
             put(LIDMATE_TAG, 0)
         }
         activity.contentResolver.update(WinkerkContract.winkerkEntry.CONTENT_URI, values, null, null)
-        return true
-    }
-
-    private fun handleUitleg(): Boolean {
-        val intent = Intent(activity, UitlegActivity::class.java)
-        activity.startActivity(intent)
-        return true
-    }
-
-    private fun handleArgief(): Boolean {
-        val intent = Intent(activity, ArgiefListActivity::class.java)
-        activity.startActivity(intent)
         return true
     }
 
@@ -229,8 +188,7 @@ class MenuItemHandler(
                 ).show()
             }
             .setNeutralButton("Manage Permissions") { _, _ ->
-                val intent = Intent(activity, PermissionsActivity::class.java)
-                activity.startActivity(intent)
+                navigationController.navigateToPermissions()
             }
             .setNegativeButton("Cancel", null)
             .show()

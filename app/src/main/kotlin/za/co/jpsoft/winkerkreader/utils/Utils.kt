@@ -1,6 +1,8 @@
 package za.co.jpsoft.winkerkreader.utils
 
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 object Utils {
@@ -40,5 +42,12 @@ object Utils {
             }
         }
         return null
+    }
+
+    @JvmStatic
+    fun Long?.toLocalDateSafe(): LocalDate? {
+        return if (this != null && this > 0) {
+            Instant.ofEpochMilli(this).atZone(ZoneId.systemDefault()).toLocalDate()
+        } else null
     }
 }

@@ -1,9 +1,6 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
     id 'com.android.application'
-    id 'org.jetbrains.kotlin.android'
-    id 'com.google.devtools.ksp' version '2.3.2'
+    id 'com.google.devtools.ksp' version '2.3.9'
 }
 
 android {
@@ -11,12 +8,13 @@ android {
     defaultConfig {
         applicationId = "za.co.jpsoft.winkerkreader"
         minSdk = 26
-        versionCode = 101
-        versionName = "4.2 test r001"
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"  // Fixed
+        versionCode = 104
+        versionName = "4.2 test r004"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         targetSdk = 35
         vectorDrawables.useSupportLibrary = true
     }
+
     buildFeatures {
         buildConfig = true
         viewBinding true
@@ -32,7 +30,7 @@ android {
             keyAlias = RELEASE_KEY_ALIAS
             keyPassword = RELEASE_KEY_PASSWORD
         }
-       }
+    }
 
     sourceSets {
         main {
@@ -62,15 +60,8 @@ android {
         options.compilerArgs << "-Xlint:deprecation"
     }
 
-    kotlin {
-        compilerOptions {
-            jvmTarget = JvmTarget.JVM_17
-        }
-    }
-
-    // Standard configurations
-    configurations.configureEach {
-    }
+    // kotlin { compilerOptions } block REMOVED — AGP built-in Kotlin manages this
+    // Set JVM target via compileOptions above instead
 
     java {
         toolchain {
@@ -91,25 +82,20 @@ android {
         }
     }
 
-    productFlavors {
-    }
-
     namespace = 'za.co.jpsoft.winkerkreader'
 
     dependenciesInfo {
         includeInApk = false
         includeInBundle = false
     }
-
-    lint {
-        // Suppression removed - targetSdk is current
-    }
 }
 
 dependencies {
-    // Kotlin
+    implementation 'androidx.paging:paging-common:3.5.0'
+    implementation "androidx.paging:paging-runtime-ktx:3.3.6"
+    implementation("androidx.biometric:biometric:1.1.0")
     implementation "androidx.core:core-ktx:1.19.0"
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation 'com.google.android.libraries.places:places:5.2.0'
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0"
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0'
 
@@ -123,6 +109,7 @@ dependencies {
 
     // ========== LIFECYCLE COMPONENTS ==========
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.10.0"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-savedstate:2.10.0"
     implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.10.0'
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.10.0'
     implementation 'androidx.lifecycle:lifecycle-common-java8:2.10.0'
@@ -136,10 +123,10 @@ dependencies {
     implementation 'androidx.recyclerview:recyclerview:1.4.0'
 
     // ========== ROOM DATABASE ==========
-    def room_version = "2.8.4"   // updated
+    def room_version = "2.8.4"
     implementation "androidx.room:room-runtime:$room_version"
     implementation "androidx.room:room-ktx:$room_version"
-    ksp "androidx.room:room-compiler:$room_version"
+    ksp "androidx.room:room-compiler:$room_version"  // kapt → ksp
 
     // ========== WORK MANAGER ==========
     implementation 'androidx.work:work-runtime-ktx:2.11.2'
@@ -163,12 +150,6 @@ dependencies {
     implementation 'com.squareup.retrofit2:converter-gson:3.0.0'
     implementation 'pub.devrel:easypermissions:3.0.0'
 
-    // ========== GOOGLE TASKS INTEGRATION ==========
-// Authorization (Tasks scope) — current non-deprecated approach
- //   implementation "com.google.android.gms:play-services-auth:21.6.0"
-
-
-
     // ========== DEBUG ==========
     debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.14'
 
@@ -187,12 +168,16 @@ dependencies {
     androidTestImplementation 'androidx.test:rules:1.7.0'
     androidTestImplementation 'androidx.test:runner:1.7.0'
     androidTestImplementation 'androidx.test.uiautomator:uiautomator:2.3.0'
-
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0'
     // ========== DESUGARING ==========
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
+
+
 }
 
+// Single ksp block — handles both Room and Glide
 ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
+    arg("room.verifier.enabled", "false")
 }
-
+// kapt block REMOVED entirely

@@ -8,6 +8,7 @@ import za.co.jpsoft.winkerkreader.WinkerkReader
 import android.util.Log
 import java.net.HttpURLConnection
 import java.net.URL
+import za.co.jpsoft.winkerkreader.BuildConfig
 
 /**
  * Utility class for validating server file availability
@@ -45,7 +46,7 @@ object ServerFileValidator {
 
             // Check if URL uses HTTPS (security best practice)
             if (!fileUrl.lowercase().startsWith("https://")) {
-                Log.w(TAG, "URL does not use HTTPS: $fileUrl")
+                if (BuildConfig.DEBUG) Log.w(TAG, "URL does not use HTTPS: $fileUrl")
             }
 
             val url = URL(fileUrl)
@@ -62,37 +63,37 @@ object ServerFileValidator {
             val contentType = connection.contentType
 
             if (responseCode == HttpURLConnection.HTTP_OK) {
-                Log.d(TAG, "File available: $fileUrl")
-                Log.d(TAG, "Response code: $responseCode")
-                Log.d(TAG, "File size: ${if (fileSize > 0) "$fileSize bytes" else "unknown"}")
-                Log.d(TAG, "Content type: ${contentType ?: "unknown"}")
+                if (BuildConfig.DEBUG) Log.d(TAG, "File available: $fileUrl")
+                if (BuildConfig.DEBUG) Log.d(TAG, "Response code: $responseCode")
+                if (BuildConfig.DEBUG) Log.d(TAG, "File size: ${if (fileSize > 0) "$fileSize bytes" else "unknown"}")
+                if (BuildConfig.DEBUG) Log.d(TAG, "Content type: ${contentType ?: "unknown"}")
 
                 ValidationResult(true, fileSize, responseCode, "File available")
             } else {
                 val message = "File not available. HTTP $responseCode"
-                Log.w(TAG, "$message for $fileUrl")
+                if (BuildConfig.DEBUG) Log.w(TAG, "$message for $fileUrl")
                 ValidationResult(false, 0, responseCode, message)
             }
 
         } catch (e: java.net.MalformedURLException) {
             val message = "Invalid URL format: ${e.message}"
-            Log.e(TAG, message, e)
+            if (BuildConfig.DEBUG) Log.e(TAG, message, e)
             ValidationResult(false, 0, -1, message)
         } catch (e: java.net.SocketTimeoutException) {
             val message = "Connection timeout after ${timeoutMs}ms"
-            Log.e(TAG, message, e)
+            if (BuildConfig.DEBUG) Log.e(TAG, message, e)
             ValidationResult(false, 0, -1, message)
         } catch (e: java.net.UnknownHostException) {
             val message = "Unknown host: ${e.message}"
-            Log.e(TAG, message, e)
+            if (BuildConfig.DEBUG) Log.e(TAG, message, e)
             ValidationResult(false, 0, -1, message)
         } catch (e: javax.net.ssl.SSLException) {
             val message = "SSL error: ${e.message}"
-            Log.e(TAG, message, e)
+            if (BuildConfig.DEBUG) Log.e(TAG, message, e)
             ValidationResult(false, 0, -1, message)
         } catch (e: Exception) {
             val message = "Error checking file: ${e.message}"
-            Log.e(TAG, message, e)
+            if (BuildConfig.DEBUG) Log.e(TAG, message, e)
             ValidationResult(false, 0, -1, message)
         } finally {
             connection?.disconnect()

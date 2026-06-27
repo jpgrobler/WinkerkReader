@@ -81,6 +81,7 @@
                 android:textAlignment="center"
                 android:textColor="@android:color/black"
                 android:maxLines="1"
+                android:layout_marginTop="2dp"
                 android:visibility="visible"/>
             <TextView
                 android:paddingStart="4dp"
@@ -89,9 +90,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/main_count_symbol"
+                android:layout_marginTop="2dp"
                 android:layout_marginEnd="4dp" />
             <TextView
                 android:textStyle="bold"
+                android:layout_marginTop="2dp"
                 android:id="@+id/sortorder"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

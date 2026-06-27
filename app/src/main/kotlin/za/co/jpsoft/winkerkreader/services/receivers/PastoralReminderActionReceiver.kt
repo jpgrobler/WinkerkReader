@@ -11,12 +11,13 @@ import kotlinx.coroutines.launch
 import za.co.jpsoft.winkerkreader.data.pastoral.repository.PastoralReminderRepository
 import za.co.jpsoft.winkerkreader.utils.PastoralNotificationHelper
 import java.time.LocalDateTime
+import za.co.jpsoft.winkerkreader.BuildConfig
 
 class PastoralReminderActionReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         val reminderId = intent.getStringExtra(EXTRA_REMINDER_ID) ?: run {
-            Log.w(TAG, "onReceive: missing reminderId, ignoring")
+            if (BuildConfig.DEBUG) Log.w(TAG, "onReceive: missing reminderId, ignoring")
             return
         }
         val notifId = intent.getIntExtra(EXTRA_NOTIF_ID, -1)
@@ -30,18 +31,18 @@ class PastoralReminderActionReceiver : BroadcastReceiver() {
                 when (intent.action) {
                     ACTION_COMPLETE -> {
                         repository.completeReminder(reminderId)
-                        Log.d(TAG, "Reminder $reminderId marked complete via notification")
+                        if (BuildConfig.DEBUG) Log.d(TAG, "Reminder $reminderId marked complete via notification")
                     }
                     ACTION_SNOOZE_1_DAY -> {
                         val until = LocalDateTime.now().plusDays(1)
                             .withHour(8).withMinute(0).withSecond(0).withNano(0)
                         repository.snoozeReminder(reminderId, until)
-                        Log.d(TAG, "Reminder $reminderId snoozed to $until via notification")
+                        if (BuildConfig.DEBUG) Log.d(TAG, "Reminder $reminderId snoozed to $until via notification")
                     }
                     else -> Log.w(TAG, "Unknown action: ${intent.action}")
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Error handling reminder action for $reminderId", e)
+                if (BuildConfig.DEBUG) Log.e(TAG, "Error handling reminder action for $reminderId", e)
             } finally {
                 // Always cancel the notification and release goAsync
                 if (notifId != -1) {

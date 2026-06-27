@@ -10,6 +10,7 @@ import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.pastoral.entities.FollowUpReminderEntity
 import za.co.jpsoft.winkerkreader.data.pastoral.model.TemplateContext
 import za.co.jpsoft.winkerkreader.databinding.ItemPendingReminderMiniBinding
+import za.co.jpsoft.winkerkreader.utils.Utils.toLocalDateSafe
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -47,8 +48,7 @@ class PendingReminderMiniAdapter(
             binding.tvMiniTitle.text = titleText
 
             // Due date
-            val dueDate = Instant.ofEpochMilli(item.dueDateUtc)
-                .atZone(zoneId).toLocalDate()
+            val dueDate = item.dueDateUtc.toLocalDateSafe() ?: LocalDate.now()
             val today = LocalDate.now(zoneId)
             val isOverdue = dueDate.isBefore(today)
 

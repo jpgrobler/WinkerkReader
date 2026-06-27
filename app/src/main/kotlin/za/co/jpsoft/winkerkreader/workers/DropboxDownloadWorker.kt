@@ -8,6 +8,7 @@ import androidx.work.*
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 import za.co.jpsoft.winkerkreader.utils.PastoralDatabaseBackup
+import za.co.jpsoft.winkerkreader.BuildConfig
 
 class DropboxDownloadWorker(
     context: Context,
@@ -24,7 +25,7 @@ class DropboxDownloadWorker(
             // Your existing Dropbox download logic here
             // This should call the same functionality that AlarmReceiver used for "DropBoxDownLoad"
             PastoralDatabaseBackup.backupNow(applicationContext)
-            Log.d(WORK_NAME, "Pastoral DB backed up before congregation reload")
+            if (BuildConfig.DEBUG) Log.d(WORK_NAME, "Pastoral DB backed up before congregation reload")
             performDropboxDownload()
             Result.success()
         } catch (e: Exception) {

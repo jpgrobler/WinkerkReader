@@ -29,7 +29,7 @@ class StepEditorAdapter(
         notifyItemMoved(from, to)
     }
 
-    inner class ViewHolder(val binding: ItemStepEditorBinding) : RecyclerView.ViewHolder(binding.root)
+    class ViewHolder(val binding: ItemStepEditorBinding) : RecyclerView.ViewHolder(binding.root)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = ViewHolder(
         ItemStepEditorBinding.inflate(LayoutInflater.from(parent.context), parent, false)

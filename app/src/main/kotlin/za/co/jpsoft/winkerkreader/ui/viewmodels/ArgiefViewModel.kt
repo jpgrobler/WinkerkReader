@@ -1,3 +1,4 @@
+// File: ArgiefViewModel.kt
 package za.co.jpsoft.winkerkreader.ui.viewmodels
 
 import android.app.Application
@@ -12,14 +13,11 @@ class ArgiefViewModel(application: Application) : AndroidViewModel(application) 
     private val _archiveCursor = MutableLiveData<Cursor?>()
     val archiveCursor: LiveData<Cursor?> = _archiveCursor
 
-    // Keep reference to old cursor for delayed closing
-    private var pendingCloseCursor: Cursor? = null
     private var currentSortBy: String = "Van"
     private var currentSearchTerm: String? = null
     private var isFirstLoad = true
 
     fun loadArchive(sortBy: String, searchTerm: String? = null) {
-        // Don't reload if same parameters (optimization) - but allow first load
         if (!isFirstLoad && currentSortBy == sortBy && currentSearchTerm == searchTerm) {
             return
         }
@@ -39,20 +37,13 @@ class ArgiefViewModel(application: Application) : AndroidViewModel(application) 
             null
         )
 
-        // Store old cursor for later closing (after adapter has finished with it)
+        // Close old cursor immediately
         val oldCursor = _archiveCursor.value
         if (oldCursor != null && !oldCursor.isClosed) {
-            pendingCloseCursor = oldCursor
+            oldCursor.close()
         }
 
-        // Post new cursor immediately
         _archiveCursor.postValue(newCursor)
-
-        // Close old cursor after a delay to ensure adapter has released it
-        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-            pendingCloseCursor?.close()
-            pendingCloseCursor = null
-        }, 500)
     }
 
     private fun buildQuery(sortBy: String, searchTerm: String?): String {
@@ -69,14 +60,11 @@ class ArgiefViewModel(application: Application) : AndroidViewModel(application) 
         return baseQuery + whereClause + orderClause
     }
 
-    // Force refresh (useful for retry scenarios)
     fun refresh() {
         loadArchive(currentSortBy, currentSearchTerm)
     }
 
     override fun onCleared() {
-        pendingCloseCursor?.close()
-        pendingCloseCursor = null
         _archiveCursor.value?.close()
         super.onCleared()
     }

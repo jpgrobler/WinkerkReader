@@ -13,6 +13,7 @@ import za.co.jpsoft.winkerkreader.data.WinkerkContract.col
 import za.co.jpsoft.winkerkreader.data.models.MemberItem
 import java.time.LocalDate
 import android.util.Log
+import za.co.jpsoft.winkerkreader.BuildConfig
 
 class EventViewModel : ViewModel() {
 
@@ -35,7 +36,7 @@ class EventViewModel : ViewModel() {
                 "Huwelik" -> buildWeddingSelection(currentMonth, currentDay)
                 "Bely"    -> buildConfessionSelection(currentMonth, currentDay)
                 else -> {
-                    Log.e("EventViewModel", "Invalid event type: $eventType")
+                    if (BuildConfig.DEBUG) Log.e("EventViewModel", "Invalid event type: $eventType")
                     null
                 }
             }
@@ -47,7 +48,7 @@ class EventViewModel : ViewModel() {
                             try {
                                 add(MemberItem.fromCursor(cursor))
                             } catch (e: Exception) {
-                                Log.e("EventViewModel", "Failed to convert row", e)
+                                if (BuildConfig.DEBUG) Log.e("EventViewModel", "Failed to convert row", e)
                             }
                         }
                     }
@@ -55,9 +56,9 @@ class EventViewModel : ViewModel() {
             } else {
                 emptyList()
             }
-            Log.d("EventViewModel", "Built ${members.size} members")
+            if (BuildConfig.DEBUG) Log.d("EventViewModel", "Built ${members.size} members")
             members.take(3).forEach {
-                Log.d("EventViewModel", "Sample: ${it.name} ${it.surname}, id=${it.id}")
+                if (BuildConfig.DEBUG) Log.d("EventViewModel", "Sample: ${it.name} ${it.surname}, id=${it.id}")
             }
             _eventList.postValue(members)
         }
@@ -120,9 +121,9 @@ class EventViewModel : ViewModel() {
                 null,
                 null
             ).also { cursor ->
-                Log.d("EventViewModel", "Query returned ${cursor?.count ?: 0} rows")}
+                if (BuildConfig.DEBUG) Log.d("EventViewModel", "Query returned ${cursor?.count ?: 0} rows")}
         } catch (e: Exception) {
-            Log.e("EventViewModel", "Query failed: ${e.message}\nQuery: $query")
+            if (BuildConfig.DEBUG) Log.e("EventViewModel", "Query failed: ${e.message}\nQuery: $query")
             null
         }
     }

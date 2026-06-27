@@ -10,6 +10,7 @@ import androidx.work.*
 import za.co.jpsoft.winkerkreader.workers.FollowUpReminderWorker
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
+import za.co.jpsoft.winkerkreader.BuildConfig
 
 object WorkManagerHelper {
 
@@ -184,7 +185,7 @@ object WorkManagerHelper {
             workRequest
         )
 
-        Log.d("WorkManagerHelper", "Follow-up reminder worker scheduled at $hour:$minute")
+        if (BuildConfig.DEBUG) Log.d("WorkManagerHelper", "Follow-up reminder worker scheduled at $hour:$minute")
     }
 
     /**
@@ -201,7 +202,7 @@ object WorkManagerHelper {
     /**
      * Get work status (optional - for debugging)
      */
-    fun getWorkStatus(context: Context, workName: String): androidx.work.WorkInfo? {
+    fun getWorkStatus(context: Context, workName: String): WorkInfo? {
         val workManager = WorkManager.getInstance(context)
         // This would require collecting from LiveData or using getWorkInfosForUniqueWork
         return null

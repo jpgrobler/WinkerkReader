@@ -17,6 +17,7 @@ import android.os.Build
 import android.util.Log
 import android.widget.RemoteViews
 import java.util.Calendar
+import za.co.jpsoft.winkerkreader.BuildConfig
 
 /**
  * Enhanced Widget Provider with modern Android compatibility and error handling.
@@ -38,7 +39,7 @@ class WinkerkReaderWidgetProvider : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray
     ) {
-        Log.d(TAG, "onUpdate called for ${appWidgetIds.size} widgets")
+        if (BuildConfig.DEBUG) Log.d(TAG, "onUpdate called for ${appWidgetIds.size} widgets")
 
         try {
             for (appWidgetId in appWidgetIds) {
@@ -46,14 +47,14 @@ class WinkerkReaderWidgetProvider : AppWidgetProvider() {
             }
             scheduleNextUpdate(context)
         } catch (e: Exception) {
-            Log.e(TAG, "Error in onUpdate", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error in onUpdate", e)
         }
         super.onUpdate(context, appWidgetManager, appWidgetIds)
     }
 
     override fun onReceive(context: Context, intent: Intent) {
         val action = intent.action
-        Log.d(TAG, "onReceive: $action")
+        if (BuildConfig.DEBUG) Log.d(TAG, "onReceive: $action")
 
         try {
             if (ACTION_UPDATE_WIDGET == action) {
@@ -65,20 +66,20 @@ class WinkerkReaderWidgetProvider : AppWidgetProvider() {
                 updateWidget(context)
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error in onReceive", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error in onReceive", e)
         }
         super.onReceive(context, intent)
     }
 
     override fun onEnabled(context: Context) {
         super.onEnabled(context)
-        Log.d(TAG, "Widget enabled - scheduling updates")
+        if (BuildConfig.DEBUG) Log.d(TAG, "Widget enabled - scheduling updates")
         scheduleNextUpdate(context)
     }
 
     override fun onDisabled(context: Context) {
         super.onDisabled(context)
-        Log.d(TAG, "Widget disabled - canceling updates")
+        if (BuildConfig.DEBUG) Log.d(TAG, "Widget disabled - canceling updates")
         cancelScheduledUpdates(context)
     }
 
@@ -127,9 +128,9 @@ class WinkerkReaderWidgetProvider : AppWidgetProvider() {
             appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.words)
 
             appWidgetManager.updateAppWidget(appWidgetId, widget)
-            Log.d(TAG, "Updated widget $appWidgetId")
+            if (BuildConfig.DEBUG) Log.d(TAG, "Updated widget $appWidgetId")
         } catch (e: Exception) {
-            Log.e(TAG, "Error updating widget $appWidgetId", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error updating widget $appWidgetId", e)
         }
     }
 
@@ -138,36 +139,46 @@ class WinkerkReaderWidgetProvider : AppWidgetProvider() {
      */
     private fun scheduleNextUpdate(context: Context) {
         try {
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager
+                ?: return
+
+            // Build the pending intent for the update broadcast
+            val intent = Intent(context, WinkerkReaderWidgetProvider::class.java).apply {
+                action = ACTION_UPDATE_WIDGET
+            }
+            val pendingIntent = PendingIntent.getBroadcast(
+                context, 0, intent, pendingIntentFlags
+            )
+
+            // Cancel any existing alarm first
+            alarmManager.cancel(pendingIntent)
+
+            // Calculate the next desired update time (e.g., 01:00:01 AM daily)
             val calendar = Calendar.getInstance().apply {
                 set(Calendar.HOUR_OF_DAY, UPDATE_HOUR)
                 set(Calendar.MINUTE, UPDATE_MINUTE)
                 set(Calendar.SECOND, UPDATE_SECOND)
             }
-
             val now = Calendar.getInstance()
             if (calendar.timeInMillis <= now.timeInMillis) {
                 calendar.add(Calendar.DAY_OF_MONTH, 1)
             }
 
-            val intent = Intent(context, WinkerkReaderWidgetProvider::class.java).apply {
-                action = ACTION_UPDATE_WIDGET
-            }
-
-            val pendingIntent = PendingIntent.getBroadcast(
-                context, 0, intent, pendingIntentFlags
+            // Use inexact repeating alarm – works on all API levels and does not require
+            // the SCHEDULE_EXACT_ALARM permission.
+            alarmManager.setInexactRepeating(
+                AlarmManager.RTC_WAKEUP,
+                calendar.timeInMillis,
+                AlarmManager.INTERVAL_DAY,
+                pendingIntent
             )
 
-            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager
-            alarmManager?.let {
-                it.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    calendar.timeInMillis,
-                    pendingIntent
-                )
-                Log.d(TAG, "Scheduled next update for: ${calendar.time}")
+            if (BuildConfig.DEBUG) {
+                Log.d(TAG, "Scheduled inexact daily update at ~${calendar.time}")
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error scheduling update", e)
+            // Catch any unexpected errors (e.g., security exceptions if any)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error scheduling widget update", e)
         }
     }
 
@@ -184,11 +195,12 @@ class WinkerkReaderWidgetProvider : AppWidgetProvider() {
             )
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager
             alarmManager?.cancel(pendingIntent)
-            Log.d(TAG, "Cancelled scheduled updates")
+            if (BuildConfig.DEBUG) Log.d(TAG, "Cancelled scheduled updates")
         } catch (e: Exception) {
-            Log.e(TAG, "Error cancelling updates", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error cancelling updates", e)
         }
     }
+
 
     /**
      * Notify data changed for all widgets.
@@ -201,9 +213,9 @@ class WinkerkReaderWidgetProvider : AppWidgetProvider() {
             )
             @Suppress("DEPRECATION")
             appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetIds, R.id.words)
-            Log.d(TAG, "Notified data change for ${appWidgetIds.size} widgets")
+            if (BuildConfig.DEBUG) Log.d(TAG, "Notified data change for ${appWidgetIds.size} widgets")
         } catch (e: Exception) {
-            Log.e(TAG, "Error updating widget", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error updating widget", e)
         }
     }
 

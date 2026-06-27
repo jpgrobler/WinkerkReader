@@ -6,7 +6,6 @@ import android.content.*
 import android.content.pm.PackageManager
 import android.database.sqlite.SQLiteDatabase
 import android.graphics.Color
-import android.graphics.PorterDuff
 import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.*
@@ -28,8 +27,8 @@ import androidx.core.content.edit
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.RecyclerView
 import androidx.work.*
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -37,7 +36,7 @@ import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.WinkerkContract
 import za.co.jpsoft.winkerkreader.data.WinkerkDbHelper
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
-import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.INFO_DB
+
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.WINKERK_DB
 import za.co.jpsoft.winkerkreader.services.receivers.AlarmReceiver
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
@@ -46,16 +45,25 @@ import za.co.jpsoft.winkerkreader.workers.PhotoDownloadWorker
 import za.co.jpsoft.winkerkreader.databinding.LaaidatabasisBinding
 import za.co.jpsoft.winkerkreader.utils.PastoralDatabaseBackup
 import java.io.*
-import java.nio.file.Files
 import java.util.*
 import java.util.regex.Pattern
+import za.co.jpsoft.winkerkreader.BuildConfig
+import za.co.jpsoft.winkerkreader.data.pastoral.PastoralDatabase
+import za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase
+import za.co.jpsoft.winkerkreader.services.WidgetViewsFactory
+import za.co.jpsoft.winkerkreader.utils.MainNavigationController
+import za.co.jpsoft.winkerkreader.utils.WidgetDataRepository
 
 class LaaiDatabasisActivity : AppCompatActivity() {
-    private val CURRENT_PASTORAL_SCHEMA_VERSION = 1
+
+
     companion object {
         private const val TAG = "LaaiDatabasisActivity"
         const val DB_NAME = WINKERK_DB
+        const val EXTRA_PROMPT_RESTORE = "pastoral_prompt_restore"
         private const val PICKFILE_RESULT_CODE = 1
+        private val CURRENT_PASTORAL_SCHEMA_VERSION
+        get() = PastoralDatabaseBackup.CURRENT_PASTORAL_SCHEMA_VERSION
         private val RECEIVER_EXPORTED = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) Context.RECEIVER_EXPORTED else 0
 
         private fun writeExtractedFileToDisk(`in`: InputStream, outs: OutputStream) {
@@ -69,9 +77,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
             `in`.close()
         }
 
-        fun isDownloadManagerAvailable(): Boolean {
-            return true
-        }
+        fun isDownloadManagerAvailable(): Boolean = true
 
         fun checkIPv4(s: String): Boolean {
             val reg0To255 = "(\\d{1,2}|(0|1)\\d{2}|2[0-4]\\d|25[0-5])"
@@ -80,10 +86,12 @@ class LaaiDatabasisActivity : AppCompatActivity() {
             val m = p.matcher(s)
             return m.matches()
         }
-
     }
+
     private lateinit var settings: SharedPreferences
     private lateinit var settingsManager: SettingsManager
+    private val navigationController by lazy { MainNavigationController(this) }
+
     private var currentWorkInfoLiveData: LiveData<WorkInfo?>? = null
     private var workInfoObserver: Observer<WorkInfo?> = Observer { }
 
@@ -103,8 +111,6 @@ class LaaiDatabasisActivity : AppCompatActivity() {
     private var delete: Boolean = false
     private var syncPhotosAfterDb: Boolean = false
     private var fromMenu: Boolean = true
-
-
 
     private val notificationPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
         if (isGranted) Log.d("LaaiDatabasis", "Notification permission granted")
@@ -126,10 +132,10 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                 try {
                     recieverDownloadComplete?.let { unregisterReceiver(it) }
                 } catch (_: IllegalArgumentException) {}
-
+                migrateDownloadedDatabase(targetFile)
                 reloadDatabaseAndFinish()
             } catch (e: IOException) {
-                Log.e(TAG, "File copy failed", e)
+                if (BuildConfig.DEBUG) Log.e(TAG, "File copy failed", e)
                 Toast.makeText(this, "Kon nie lêer kopieer nie: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
@@ -160,8 +166,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
     }
 
     private fun navigateBackToMain() {
-        val intent = Intent(this, MainActivity::class.java)
-        startActivity(intent)
+        navigationController.navigateToMain()
         finish()
     }
 
@@ -221,7 +226,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         try {
             recieverDownloadComplete?.let { unregisterReceiver(it) }
         } catch (e: Exception) {
-            Log.e(TAG, "Error unregistering download receiver", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error unregistering download receiver", e)
         }
     }
 
@@ -471,11 +476,10 @@ class LaaiDatabasisActivity : AppCompatActivity() {
 
     private fun navigateToMainActivity() {
         settingsManager.defLayout = "VERJAAR"
-        val intent = Intent(this, MainActivity::class.java).apply {
-            putExtra("SENDER_CLASS_NAME", "WysVerjaar")
-            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        val extras = Bundle().apply {
+            putString("SENDER_CLASS_NAME", "WysVerjaar")
         }
-        startActivity(intent)
+        navigationController.navigateToMain(extras)
         finish()
     }
 
@@ -510,9 +514,9 @@ class LaaiDatabasisActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             withContext(Dispatchers.IO) {
-                PastoralDatabaseBackup.backupNow(applicationContext)  // await backup first
+                PastoralDatabaseBackup.backupNow(applicationContext)
             }
-            // Then load on main thread as before
+            migrateDownloadedDatabase(File(filePath))
             if (LaaiNuweData(filePath)) {
                 Toast.makeText(this@LaaiDatabasisActivity, "Suksesvol", Toast.LENGTH_SHORT).show()
                 resetGemeenteSettings()
@@ -602,6 +606,10 @@ class LaaiDatabasisActivity : AppCompatActivity() {
             if (workInfo.state.isFinished) {
                 button.background.clearColorFilter()
                 if (workInfo.state == WorkInfo.State.SUCCEEDED) {
+                    val dbFile = File(applicationInfo.dataDir, "databases/$DB_NAME")
+                    if (dbFile.exists()) {
+                        migrateDownloadedDatabase(dbFile)
+                    }
                     binding.laaiBoodskap.setText(R.string.download_completed)
                     Toast.makeText(this, R.string.db_received_success, Toast.LENGTH_SHORT).show()
                     Handler(Looper.getMainLooper()).postDelayed({ navigateBackToMain() }, 1500)
@@ -636,29 +644,29 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         try {
             getFileList(winkerkEntry.getWkrDir(this))
         } catch (e: Exception) {
-            Log.e("WinkerkReader LaaiDatabasisActivity", "Error scanning files: $e")
+            if (BuildConfig.DEBUG) Log.e("WinkerkReader LaaiDatabasisActivity", "Error scanning files: $e")
         }
-        backupCurrentDatabase()
+        //backupCurrentDatabase()
     }
 
-    private fun backupCurrentDatabase() {
-        try {
-            val dataDir = File(applicationInfo.dataDir, "/databases/")
-            val currentDB = File(dataDir, INFO_DB)
-            val backupDB = File(winkerkEntry.getWkrDir(this), INFO_DB)
-            if (backupDB.exists()) backupDB.delete()
-            if (currentDB.exists()) {
-                FileInputStream(currentDB).use { fis ->
-                    FileOutputStream(backupDB).use { fos ->
-                        fis.channel.transferTo(0, fis.channel.size(), fos.channel)
-                    }
-                }
-                MediaScannerConnection.scanFile(this, arrayOf(backupDB.absolutePath), null, null)
-            }
-        } catch (e: Exception) {
-            Log.e("WinkerkReader LaaiDatabasisActivity", "Error backing up database: $e")
-        }
-    }
+//    private fun backupCurrentDatabase() {
+//        try {
+//            val dataDir = File(applicationInfo.dataDir, "/databases/")
+//            val currentDB = File(dataDir, INFO_DB)
+//            val backupDB = File(winkerkEntry.getWkrDir(this), INFO_DB)
+//            if (backupDB.exists()) backupDB.delete()
+//            if (currentDB.exists()) {
+//                FileInputStream(currentDB).use { fis ->
+//                    FileOutputStream(backupDB).use { fos ->
+//                        fis.channel.transferTo(0, fis.channel.size(), fos.channel)
+//                    }
+//                }
+//                MediaScannerConnection.scanFile(this, arrayOf(backupDB.absolutePath), null, null)
+//            }
+//        } catch (e: Exception) {
+//            if (BuildConfig.DEBUG) Log.e("WinkerkReader LaaiDatabasisActivity", "Error backing up database: $e")
+//        }
+//    }
 
     private fun setupFileListUI() {
         if (this.fileList.isEmpty()) {
@@ -670,6 +678,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
             addFileRadioButton(binding.laaiFilelist, i)
         }
     }
+
     private fun addFileRadioButton(fileListGroup: RadioGroup, index: Int) {
         val file = File(this.fileList[index]["Path"])
         val size = (file.length() / 1024 / 1024).toInt().toString()
@@ -687,21 +696,6 @@ class LaaiDatabasisActivity : AppCompatActivity() {
 
         fileListGroup.addView(radioButton)
     }
-//    private fun addFileRadioButton(fileListGroup: RadioGroup, index: Int) {
-//        val file = File(this.fileList[index]["Path"]!!)
-//        val size = (file.length() / 1024 / 1024).toInt().toString()
-//        val additionalData = getFileAdditionalData(this.fileList[index]["Path"])
-//        val radioButton = RadioButton(this).apply {
-//            text = getString(R.string.db_file_item_format, this@LaaiDatabasisActivity.fileList[index]["Path"] ?: "", size, additionalData)
-//            id = index
-//            background = ContextCompat.getDrawable(this@LaaiDatabasisActivity, R.drawable.border2)
-//            layoutParams = LinearLayoutCompat.LayoutParams(
-//                LinearLayoutCompat.LayoutParams.MATCH_PARENT,
-//                LinearLayoutCompat.LayoutParams.WRAP_CONTENT
-//            )
-//        }
-//        fileListGroup.addView(radioButton)
-//    }
 
     private fun getFileAdditionalData(filePath: String?): String {
         if (filePath == null) return ""
@@ -727,18 +721,26 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                 }
             }
         } catch (e: Exception) {
-            Log.e("WinkerkReader LaaiDatabasisActivity", "Error reading database info: $e")
+            if (BuildConfig.DEBUG) Log.e("WinkerkReader LaaiDatabasisActivity", "Error reading database info: $e")
             ""
         }
     }
 
     private fun handleIntentExtras() {
-        val intentMain = intent
-        if (intentMain.extras == null) return
-        val extra = intentMain.getStringExtra("DataBase_Update")
-        if (extra.isNullOrEmpty()) return
-        processAutomaticDatabaseUpdate(extra)
-    }
+         val intentMain = intent
+         if (intentMain.extras == null) return
+
+         // Pastoral restore request from BedieningActivity / MainActivity snackbar
+         if (intentMain.getBooleanExtra(EXTRA_PROMPT_RESTORE, false)) {
+             openFilePicker()       // launches the SAF OpenDocument picker
+             return
+         }
+
+         // Existing congregation DB auto-update path
+         val extra = intentMain.getStringExtra("DataBase_Update")
+         if (extra.isNullOrEmpty()) return
+         processAutomaticDatabaseUpdate(extra)
+     }
 
     private fun processAutomaticDatabaseUpdate(filePath: String) {
         Toast.makeText(this, "WKR - Databasislaai", Toast.LENGTH_SHORT).show()
@@ -750,6 +752,8 @@ class LaaiDatabasisActivity : AppCompatActivity() {
             Toast.makeText(this, "WKR - Probeer Dropbox databasis laai", Toast.LENGTH_LONG).show()
             if (LaaiNuweData(filePath)) {
                 Toast.makeText(this, "WKR - Dropbox Databasis gelaai", Toast.LENGTH_LONG).show()
+                val appDbFile = File(applicationInfo.dataDir, "databases/$DB_NAME")
+                migrateDownloadedDatabase(appDbFile)
                 reloadDatabaseAndFinish()
             } else {
                 Toast.makeText(this, "WKR - Dropbox Databasis laai was onsuksesvol", Toast.LENGTH_LONG).show()
@@ -791,8 +795,8 @@ class LaaiDatabasisActivity : AppCompatActivity() {
     }
 
     private fun LaaiNuweData(nfile: String): Boolean {
-        WinkerkDbHelper.closeInstance(WINKERK_DB)
-        WinkerkDbHelper.closeInstance(INFO_DB)
+        WinkerkDatabase.closeInstance()
+        //WinkerkDbHelper.closeInstance(WinkerkContract.winkerkEntry.INFO_DB)
         val dbPath = applicationInfo.dataDir + "/databases/"
         var result = false
         val sourceFile = File(nfile)
@@ -804,7 +808,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
             writeExtractedFileToDisk(inputStream, outputStream)
             result = true
         } catch (e: Exception) {
-            Log.e(TAG, "Laai Nuwe Data failed", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Laai Nuwe Data failed", e)
             showError("Kon nie databasis laai nie")
             result = false
         } finally {
@@ -822,7 +826,6 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         return result
     }
 
-
     private fun downloadFromDropBoxUrl(url: String) {
         val dbPath = applicationInfo.dataDir + "/databases/"
         val intentFilter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
@@ -835,7 +838,6 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                 val query = DownloadManager.Query().setFilterById(reference)
                 manager.query(query).use { cursor ->
                     if (cursor.moveToFirst()) {
-                        // Get column index safely
                         val statusColumnIndex = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)
                         if (statusColumnIndex != -1) {
                             val status = cursor.getInt(statusColumnIndex)
@@ -846,11 +848,11 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                                         input.copyTo(output)
                                     }
                                 }
+                                migrateDownloadedDatabase(File("$dbPath/$DB_NAME"))
                                 reloadDatabaseAndFinish()
                             }
                         } else {
-                            // Handle missing column – log error or fallback
-                            Log.e("LaaiDatabasis", "COLUMN_STATUS not found in cursor")
+                            if (BuildConfig.DEBUG) Log.e("LaaiDatabasis", "COLUMN_STATUS not found in cursor")
                         }
                     }
                 }
@@ -898,14 +900,28 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         return "https://api.onedrive.com/v1.0/shares/$encodedUrl/root/content"
     }
 
+//    private fun reloadDatabaseAndFinish() {
+//        try {
+//            contentResolver.call(WinkerkContract.winkerkEntry.CONTENT_URI, "reloadDatabase", null, null)
+//            WidgetViewsFactory.invalidateCache()
+//            Handler(Looper.getMainLooper()).postDelayed({
+//                navigateBackToMain()
+//            }, 200)
+//        } catch (e: Exception) {
+//            if (BuildConfig.DEBUG) Log.e(TAG, "Error during database reload", e)
+//            navigateBackToMain()
+//        }
+//    }
     private fun reloadDatabaseAndFinish() {
         try {
-            contentResolver.call(WinkerkContract.winkerkEntry.CONTENT_URI, "reloadDatabase", null, null)
+            contentResolver.call(winkerkEntry.CONTENT_URI, "reloadDatabase", null, null)
+            // Old: WidgetViewsFactory.invalidateCache()
+            WidgetDataRepository.invalidateCache()
             Handler(Looper.getMainLooper()).postDelayed({
                 navigateBackToMain()
             }, 200)
         } catch (e: Exception) {
-            Log.e(TAG, "Error during database reload", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error during database reload", e)
             navigateBackToMain()
         }
     }
@@ -916,16 +932,15 @@ class LaaiDatabasisActivity : AppCompatActivity() {
      */
     private fun checkForPastoralBackup() {
         val backupFile = PastoralDatabaseBackup.findBackupFile(this)
-            ?: return   // No backup present — nothing to do
+            ?: return
 
         val backupVersion = PastoralDatabaseBackup.readSchemaVersion(backupFile)
         val backupSizeMb  = "%.1f".format(backupFile.length() / 1_048_576.0)
-        val backupDate    = java.text.SimpleDateFormat("d MMM yyyy HH:mm", java.util.Locale.getDefault())
-            .format(java.util.Date(backupFile.lastModified()))
+        val backupDate    = java.text.SimpleDateFormat("d MMM yyyy HH:mm", Locale.getDefault())
+            .format(Date(backupFile.lastModified()))
 
         when {
             backupVersion < 0 -> {
-                // Corrupt or unreadable — warn and skip
                 AlertDialog.Builder(this)
                     .setTitle(getString(R.string.pastoral_import_fout_titel))
                     .setMessage(getString(R.string.pastoral_import_onleesbaar))
@@ -933,7 +948,6 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                     .show()
             }
             backupVersion > CURRENT_PASTORAL_SCHEMA_VERSION -> {
-                // Backup is newer than the app supports — refuse import
                 AlertDialog.Builder(this)
                     .setTitle(getString(R.string.pastoral_import_fout_titel))
                     .setMessage(
@@ -947,7 +961,6 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                     .show()
             }
             else -> {
-                // Compatible — offer import
                 AlertDialog.Builder(this)
                     .setTitle(getString(R.string.pastoral_import_gevind_titel))
                     .setMessage(
@@ -966,7 +979,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         }
     }
 
-    private fun performPastoralImport(backupFile: java.io.File) {
+    private fun performPastoralImport(backupFile: File) {
         val progressDialog = AlertDialog.Builder(this)
             .setMessage(getString(R.string.pastoral_import_besig))
             .setCancelable(false)
@@ -994,6 +1007,133 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                         .show()
                 }
             }
+        }
+    }
+
+    /**
+     * Migrates VARCHAR columns to TEXT in a newly downloaded/copied database file
+     * BEFORE Room opens it. Uses plain SQLiteDatabase (not Room) to avoid
+     * Room's schema validation triggering first.
+     */
+    private fun migrateDownloadedDatabase(dbFile: File): Boolean {
+        if (!dbFile.exists()) return false
+        return try {
+            SQLiteDatabase.openDatabase(
+                dbFile.absolutePath,
+                null,
+                SQLiteDatabase.OPEN_READWRITE
+            ).use { db ->
+                listOf("Members", "Argief", "Datum").forEach { tableName ->
+                    migrateTableVarcharToText(db, tableName)
+                }
+                db.execSQL("PRAGMA user_version = 1")
+                if (BuildConfig.DEBUG) Log.d(TAG, "VARCHAR→TEXT migration done on ${dbFile.name}, user_version set to 1")
+            }
+            true
+        } catch (e: Exception) {
+            if (BuildConfig.DEBUG) Log.e(TAG, "Migration failed on downloaded DB", e)
+            false
+        }
+    }
+
+    /**
+     * Migrates a table to ensure all columns (except _id) are TEXT, and that _id
+     * is correctly defined as INTEGER PRIMARY KEY AUTOINCREMENT.
+     * If the old table does NOT have an _id column, it is omitted from the INSERT,
+     * allowing the new AUTOINCREMENT to generate _id values automatically.
+     */
+    /**
+     * Migrates a table to ensure all columns (except _id) are TEXT, and that _id
+     * is correctly defined as INTEGER PRIMARY KEY AUTOINCREMENT with or without
+     * NOT NULL depending on the table (Members requires NOT NULL).
+     *
+     * Handles the case where the old table does NOT have an _id column – in that
+     * case, we let Room auto‑generate the _id values.
+     */
+    private fun migrateTableVarcharToText(db: SQLiteDatabase, tableName: String) {
+        // Check if table exists
+        db.rawQuery(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
+            arrayOf(tableName)
+        ).use { if (!it.moveToFirst()) return }
+
+        // Read existing columns from the old table
+        val oldColumns = mutableListOf<String>()
+        db.rawQuery("PRAGMA table_info('$tableName')", null).use { cursor ->
+            while (cursor.moveToNext()) {
+                val name = cursor.getString(cursor.getColumnIndexOrThrow("name"))
+                oldColumns.add(name)
+            }
+        }
+
+        if (oldColumns.isEmpty()) return
+
+        val withNotNull = tableName == "Members"
+
+        // Build new table definition: _id first, then all other columns as TEXT
+        val newColumnDefs = mutableListOf<String>()
+        newColumnDefs.add(
+            if (withNotNull) "[_id] INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL"
+            else "[_id] INTEGER PRIMARY KEY AUTOINCREMENT"
+        )
+        val otherColumns = oldColumns.filter { it != "_id" }
+        otherColumns.forEach { colName ->
+            newColumnDefs.add("[$colName] TEXT")
+        }
+
+        val temp = "${tableName}_upgrade_new"
+        val createTableColumns = newColumnDefs.joinToString(", ")
+        db.execSQL("DROP TABLE IF EXISTS $temp")
+        db.execSQL("CREATE TABLE $temp ($createTableColumns)")
+
+        // Prepare INSERT – handle presence/absence of _id
+        val columnsToInsert = if (oldColumns.contains("_id")) {
+            oldColumns
+        } else {
+            otherColumns
+        }
+
+        val insertColumns = columnsToInsert.joinToString(", ") { "[$it]" }
+        val selectColumns = columnsToInsert.joinToString(", ") { "[$it]" }
+
+        val insertSql = "INSERT INTO $temp ($insertColumns) SELECT $selectColumns FROM $tableName"
+        db.execSQL(insertSql)
+
+        db.execSQL("DROP TABLE $tableName")
+        db.execSQL("ALTER TABLE $temp RENAME TO $tableName")
+    }
+
+    private val pickBackupFile =
+        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            uri ?: return@registerForActivityResult
+            lifecycleScope.launch {
+                val result = PastoralDatabaseBackup.importFromUri(this@LaaiDatabasisActivity, uri)
+                handleImportResult(result)
+            }
+        }
+    private fun openFilePicker() {
+        // SQLite has no standard MIME type; offer both options so pickers show .db files
+        pickBackupFile.launch(arrayOf("application/octet-stream", "*/*"))
+    }
+
+    private fun handleImportResult(result: PastoralDatabaseBackup.ImportResult) {
+        val msg = when (result) {
+            is PastoralDatabaseBackup.ImportResult.Success     ->
+                if (result.migratedFrom < CURRENT_PASTORAL_SCHEMA_VERSION)
+                    "Rugsteun herstel en opgradeer van v${result.migratedFrom}"
+                else
+                    "Rugsteun suksesvol herstel"
+            is PastoralDatabaseBackup.ImportResult.TooNew      ->
+                "Lêer is van 'n nuwer weergawe (v${result.backupVersion}). Dateer die app op."
+            PastoralDatabaseBackup.ImportResult.InvalidFile    -> "Ongeldige rugsteunlêer"
+            PastoralDatabaseBackup.ImportResult.ReadError      -> "Kon nie lêer lees nie — probeer weer"
+            PastoralDatabaseBackup.ImportResult.Failed         -> "Herstel misluk"
+        }
+        Snackbar.make(binding.root, msg, Snackbar.LENGTH_LONG).show()
+        if (result is PastoralDatabaseBackup.ImportResult.Success) {
+            // Re-init Room and reload UI
+            PastoralDatabase.getInstance(this) // triggers migration if needed
+            finish()
         }
     }
 }

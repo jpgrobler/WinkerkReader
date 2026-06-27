@@ -7,7 +7,9 @@ import java.net.URLEncoder
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-
+import za.co.jpsoft.winkerkreader.BuildConfig
+import org.json.JSONArray
+import org.json.JSONObject
 object PastoralTaskScriptManager {
 
     private const val TAG = "PastoralTaskScript"
@@ -22,12 +24,13 @@ object PastoralTaskScriptManager {
         secret: String,
         title: String,
         notes: String?,
-        dueDateUtc: Long
+        dueDateUtc: Long,
+        listId: String? = null   // new
     ): String? {
         val dueDate = Instant.ofEpochMilli(dueDateUtc)
             .atZone(ZoneId.systemDefault())
             .toLocalDate()
-            .format(DateTimeFormatter.ISO_LOCAL_DATE)   // YYYY-MM-DD
+            .format(DateTimeFormatter.ISO_LOCAL_DATE)
 
         val url = buildUrl(scriptUrl) {
             param("secret", secret)
@@ -35,15 +38,16 @@ object PastoralTaskScriptManager {
             param("title", title)
             param("due", dueDate)
             if (!notes.isNullOrBlank()) param("notes", notes)
+            if (!listId.isNullOrBlank()) param("listId", listId)
         }
 
         val response = get(url) ?: return null
         if (!response.startsWith("OK:")) {
-            Log.w(TAG, "pushTask unexpected response: $response")
+            if (BuildConfig.DEBUG) Log.w(TAG, "pushTask unexpected response: $response")
             return null
         }
         val taskId = response.removePrefix("OK:").trim()
-        Log.i(TAG, "Task created: $taskId")
+        if (BuildConfig.DEBUG) Log.i(TAG, "Task created: $taskId")
         return taskId
     }
 
@@ -79,7 +83,7 @@ object PastoralTaskScriptManager {
     // -------------------------------------------------------------------------
 
     private fun get(url: String): String? {
-        Log.d(TAG, "GET $url")
+        if (BuildConfig.DEBUG) Log.d(TAG, "GET $url")
         return try {
             val connection = URL(url).openConnection() as HttpURLConnection
             connection.apply {
@@ -90,14 +94,14 @@ object PastoralTaskScriptManager {
             }
             if (connection.responseCode == HttpURLConnection.HTTP_OK) {
                 val response = connection.inputStream.bufferedReader().readText()
-                Log.d(TAG, "Response: $response")
+                if (BuildConfig.DEBUG) Log.d(TAG, "Response: $response")
                 response
             } else {
-                Log.w(TAG, "HTTP ${connection.responseCode}")
+                if (BuildConfig.DEBUG) Log.w(TAG, "HTTP ${connection.responseCode}")
                 null
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Request failed", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Request failed", e)
             null
         }
     }
@@ -111,5 +115,31 @@ object PastoralTaskScriptManager {
             params += "${URLEncoder.encode(key, "UTF-8")}=${URLEncoder.encode(value, "UTF-8")}"
         }
         fun build() = if (params.isEmpty()) base else "$base?${params.joinToString("&")}"
+    }
+
+    /**
+     * Fetch the list of available task lists from the Apps Script.
+     * @return List of Pair(listId, listTitle) or null on failure.
+     */
+    fun listTaskLists(scriptUrl: String, secret: String): List<Pair<String, String>>? {
+        val url = buildUrl(scriptUrl) {
+            param("secret", secret)
+            param("action", "list")
+        }
+        val response = get(url) ?: return null
+        return try {
+            val json = JSONArray(response)
+            val result = mutableListOf<Pair<String, String>>()
+            for (i in 0 until json.length()) {
+                val obj = json.getJSONObject(i)
+                val id = obj.getString("id")
+                val title = obj.getString("title")
+                result.add(id to title)
+            }
+            result
+        } catch (e: Exception) {
+            if (BuildConfig.DEBUG) Log.e(TAG, "Failed to parse task lists", e)
+            null
+        }
     }
 }

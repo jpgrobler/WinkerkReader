@@ -175,7 +175,6 @@ object WinkerkContract {
 
         // DATABASES
         const val WINKERK_DB = "WinkerkReader.sqlite"
-        const val INFO_DB = "wkr_info.db"
         const val PASTORAL_DB = "wkr_pastoral.db"
 
         // Table Names
@@ -290,70 +289,70 @@ object WinkerkContract {
         // SQL SELECTIONS (Use col() helper for brackets)
         @JvmField val SELECTION_LIDMAAT_WIDGET =
             "SELECT Members._rowid_ as _id, " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_VAN) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_NOEMNAAM) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_GEBOORTEDATUM) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_REKORDSTATUS) + ", " +
-                    "quote (" + LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_LIDMAATGUID) + ") AS MemberGUID, " +
-                    "date(SUBSTR(" + WinkerkContract.col(LIDMATE_GEBOORTEDATUM) + ", 7,4) || '-' || SUBSTR(" + WinkerkContract.col(LIDMATE_GEBOORTEDATUM) + ", 4, 2) || '-' || SUBSTR(" + WinkerkContract.col(LIDMATE_GEBOORTEDATUM) + ", 1, 2)) AS birthdate, " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_GEMEENTE)
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_VAN) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_NOEMNAAM) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_GEBOORTEDATUM) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_REKORDSTATUS) + ", " +
+                    "quote (" + LIDMATE_TABLE_NAME + "." + col(LIDMATE_LIDMAATGUID) + ") AS MemberGUID, " +
+                    "date(SUBSTR(" + col(LIDMATE_GEBOORTEDATUM) + ", 7,4) || '-' || SUBSTR(" + col(LIDMATE_GEBOORTEDATUM) + ", 4, 2) || '-' || SUBSTR(" + col(LIDMATE_GEBOORTEDATUM) + ", 1, 2)) AS birthdate, " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_GEMEENTE)
 
         @JvmField val SELECTION_LIDMAAT_INFO =
             "SELECT Members._rowid_ as _id, " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_TAG) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_VAN) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_VOORNAME) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_NOEMNAAM) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_GEBOORTEDATUM) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_PICTUREPATH) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_GESLAG) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_LANDLYN) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_WERKFOON) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_SELFOON) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_EPOS) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_REKORDSTATUS) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_GESINSROL) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_AANKOMSDATUM) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_PREDIKANTSWYKGUID) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_WYK) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_STRAATADRES) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_KORTADRES) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_GESINSHOOFGUID) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_LIDMAATGUID) + ", " +
-                    "date(SUBSTR(" + WinkerkContract.col(LIDMATE_GEBOORTEDATUM) + ", 7,4) || '-' || SUBSTR(" + WinkerkContract.col(LIDMATE_GEBOORTEDATUM) + ", 4, 2) || '-' || SUBSTR(" + WinkerkContract.col(LIDMATE_GEBOORTEDATUM) + ", 1, 2)) AS birthdate, " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_GEMEENTE)
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_TAG) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_VAN) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_VOORNAME) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_NOEMNAAM) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_GEBOORTEDATUM) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_PICTUREPATH) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_GESLAG) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_LANDLYN) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_WERKFOON) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_SELFOON) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_EPOS) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_REKORDSTATUS) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_GESINSROL) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_AANKOMSDATUM) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_PREDIKANTSWYKGUID) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_WYK) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_STRAATADRES) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_KORTADRES) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_GESINSHOOFGUID) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_LIDMAATGUID) + ", " +
+                    "date(SUBSTR(" + col(LIDMATE_GEBOORTEDATUM) + ", 7,4) || '-' || SUBSTR(" + col(LIDMATE_GEBOORTEDATUM) + ", 4, 2) || '-' || SUBSTR(" + col(LIDMATE_GEBOORTEDATUM) + ", 1, 2)) AS birthdate, " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_GEMEENTE)
 
         @JvmField val SELECTION_LIDMAAT_INFO_GESINSHOOF = ""
 
         @JvmField val SELECTION_LIDMAAT_DETAIL =
             "SELECT Members._rowid_ as _id, " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_TAG) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_VAN) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_VOORNAME) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_NOEMNAAM) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_NOOIENSVAN) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_GEBOORTEDATUM) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_GESLAG) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_HUWELIKSTATUS) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_BEROEP) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_WERKGEWER) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_LIDMAATSTATUS) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_PICTUREPATH) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_LANDLYN) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_WERKFOON) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_SELFOON) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_EPOS) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_REKORDSTATUS) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_AANKOMSDATUM) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_GESINSROL) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_PREDIKANTSWYKGUID) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_WYK) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_STRAATADRES) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_KORTADRES) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_GESINSHOOFGUID) + ", " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_LIDMAATGUID) + ", " +
-                    "date(SUBSTR(" + WinkerkContract.col(LIDMATE_GEBOORTEDATUM) + ", 7,4) || '-' || SUBSTR(" + WinkerkContract.col(LIDMATE_GEBOORTEDATUM) + ", 4, 2) || '-' || SUBSTR(" + WinkerkContract.col(LIDMATE_GEBOORTEDATUM) + ", 1, 2)) AS birthdate, " +
-                    LIDMATE_TABLE_NAME + "." + WinkerkContract.col(LIDMATE_GEMEENTE)
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_TAG) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_VAN) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_VOORNAME) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_NOEMNAAM) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_NOOIENSVAN) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_GEBOORTEDATUM) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_GESLAG) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_HUWELIKSTATUS) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_BEROEP) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_WERKGEWER) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_LIDMAATSTATUS) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_PICTUREPATH) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_LANDLYN) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_WERKFOON) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_SELFOON) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_EPOS) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_REKORDSTATUS) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_AANKOMSDATUM) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_GESINSROL) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_PREDIKANTSWYKGUID) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_WYK) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_STRAATADRES) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_KORTADRES) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_GESINSHOOFGUID) + ", " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_LIDMAATGUID) + ", " +
+                    "date(SUBSTR(" + col(LIDMATE_GEBOORTEDATUM) + ", 7,4) || '-' || SUBSTR(" + col(LIDMATE_GEBOORTEDATUM) + ", 4, 2) || '-' || SUBSTR(" + col(LIDMATE_GEBOORTEDATUM) + ", 1, 2)) AS birthdate, " +
+                    LIDMATE_TABLE_NAME + "." + col(LIDMATE_GEMEENTE)
 
 
         const val SELECTION_LIDMAAT_FROM_GESINSHOOF = " Members "
@@ -458,11 +457,7 @@ object WinkerkContract {
         const val argief_ResignationRemark = "ResignationRemark"
         const val argief_ArchiveDate = "ArchiveDate"
 
-        // LOCAL LIDMAAT INFO
-        const val INFO_LIDMAAT_GUID = "Member_GUID"
-        const val INFO_FOTO_PATH = "Foto_Path"
-        const val INFO_GROUP = "Group"
-        const val INFO_TABLENAME = "WKR_Info"
+
 
         // CONSTANTS
         const val THUMBSIZE = 96

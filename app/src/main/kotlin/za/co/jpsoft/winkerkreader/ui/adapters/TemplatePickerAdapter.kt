@@ -70,7 +70,7 @@ class TemplatePickerAdapter(
 
     override fun getItemCount(): Int = displayList.size
 
-    inner class ViewHolder(
+    class ViewHolder(
         private val binding: ItemTemplatePickerBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 

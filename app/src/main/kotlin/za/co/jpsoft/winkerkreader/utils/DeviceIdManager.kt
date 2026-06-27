@@ -4,6 +4,7 @@ import android.content.Context
 import android.provider.Settings
 import android.util.Log
 import java.util.UUID
+import za.co.jpsoft.winkerkreader.BuildConfig
 
 /**
  * DeviceIdManager - Privacy-compliant device identification
@@ -55,9 +56,9 @@ object DeviceIdManager {
                 .putString(PREF_DEVICE_ID, cachedDeviceId)
                 .apply()
 
-            Log.i(TAG, "Generated new device ID")
+            if (BuildConfig.DEBUG) Log.i(TAG, "Generated new device ID")
         } else {
-            Log.d(TAG, "Retrieved existing device ID")
+            if (BuildConfig.DEBUG) Log.d(TAG, "Retrieved existing device ID")
         }
 
         return cachedDeviceId!!
@@ -95,7 +96,7 @@ object DeviceIdManager {
                 Settings.Secure.ANDROID_ID
             ) ?: ""
         } catch (e: Exception) {
-            Log.e(TAG, "Error getting ANDROID_ID: ${e.message}")
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error getting ANDROID_ID: ${e.message}")
             ""
         }
     }

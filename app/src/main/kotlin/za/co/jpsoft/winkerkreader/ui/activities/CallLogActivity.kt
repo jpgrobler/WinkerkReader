@@ -28,6 +28,8 @@ import za.co.jpsoft.winkerkreader.data.DatabaseHelper
 import za.co.jpsoft.winkerkreader.databinding.ActivityCallLogBinding
 import za.co.jpsoft.winkerkreader.utils.UnifiedCallMonitor
 import za.co.jpsoft.winkerkreader.R.string.menu_call_log
+import za.co.jpsoft.winkerkreader.BuildConfig
+
 class CallLogActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityCallLogBinding
@@ -42,7 +44,7 @@ class CallLogActivity : AppCompatActivity() {
 
         supportActionBar?.apply {
             setDisplayHomeAsUpEnabled(true)
-            title = getString(R.string.menu_call_log)
+            title = getString(menu_call_log)
         }
 
         binding.clearButton.setOnClickListener { showClearLogsDialog() }
@@ -91,7 +93,7 @@ class CallLogActivity : AppCompatActivity() {
                     callLogAdapter.updateLogs(logs)
                 }
             } catch (e: Exception) {
-                Log.e("CallLogActivity", "Error loading call logs", e)
+                if (BuildConfig.DEBUG) Log.e("CallLogActivity", "Error loading call logs", e)
                 withContext(Dispatchers.Main) {
                     Toast.makeText(this@CallLogActivity, R.string.all_logs_cleared, Toast.LENGTH_SHORT).show()
                 }

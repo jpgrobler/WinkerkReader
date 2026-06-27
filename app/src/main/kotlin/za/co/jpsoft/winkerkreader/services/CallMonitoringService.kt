@@ -1,5 +1,6 @@
 package za.co.jpsoft.winkerkreader.services
 
+import android.app.ActivityManager
 import za.co.jpsoft.winkerkreader.ui.activities.MainActivity
 import za.co.jpsoft.winkerkreader.utils.CalendarManager
 import za.co.jpsoft.winkerkreader.utils.PhoneCallMonitor
@@ -17,6 +18,7 @@ import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.DatabaseHelper
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.KEY_SELECTED_CALENDAR_ID
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
@@ -29,43 +31,46 @@ class CallMonitoringService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        Log.d(TAG, "Call Monitoring Service created")
-        isRunning = true
+        if (BuildConfig.DEBUG) Log.d(TAG, "Call Monitoring Service created")
         createNotificationChannel()
         databaseHelper = DatabaseHelper.getInstance(this)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d(TAG, "Call Monitoring Service started")
+        if (BuildConfig.DEBUG) Log.d(TAG, "Call Monitoring Service started")
+        if (hasRequiredPermissions()) {
+            if (phoneCallMonitor == null) {
+                startCallMonitoring()
+            } else {
+                if (BuildConfig.DEBUG) Log.d(TAG, "Call monitoring already running")
+            }
+        } else {
+            if (BuildConfig.DEBUG) Log.w(TAG, "Missing required permissions, cannot start monitoring")
+            stopSelf()   // ✅ Stop immediately
+        }
+        
         startForeground(NOTIFICATION_ID, createNotification())
 
         if (intent != null && intent.hasExtra("incoming_number")) {
             val number = intent.getStringExtra("incoming_number")
             if (number != null) {
-                Log.d(TAG, "Received incoming number: $number")
-                pendingIncomingNumber = number
-                phoneCallMonitor?.setIncomingNumber(pendingIncomingNumber)
-                pendingIncomingNumber = null
+                if (BuildConfig.DEBUG) Log.d(TAG, "Received incoming number: $number")
+                if (phoneCallMonitor != null) {
+                    phoneCallMonitor?.setIncomingNumber(number)
+                } else {
+                    pendingIncomingNumber = number
+                }
             }
         }
 
-        if (hasRequiredPermissions()) {
-            if (phoneCallMonitor == null) {
-                startCallMonitoring()
-            } else {
-                Log.d(TAG, "Call monitoring already running")
-            }
-        } else {
-            Log.w(TAG, "Missing required permissions, cannot start monitoring")
-        }
+
 
         return START_STICKY
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        Log.d(TAG, "Call Monitoring Service destroyed")
-        isRunning = false
+        if (BuildConfig.DEBUG) Log.d(TAG, "Call Monitoring Service destroyed")
         phoneCallMonitor?.stopMonitoring()
         phoneCallMonitor = null
         databaseHelper?.close()
@@ -119,18 +124,18 @@ class CallMonitoringService : Service() {
     private fun startCallMonitoring() {
         try {
             if (!hasRequiredPermissions()) {
-                Log.w(TAG, "Missing required permissions for call monitoring")
+                if (BuildConfig.DEBUG) Log.w(TAG, "Missing required permissions for call monitoring")
                 return
             }
 
             val calendarManager = CalendarManager(this)
             val userPrefs = getSharedPreferences(PREFS_USER_INFO, MODE_PRIVATE)
-            var calendarId = userPrefs.getLong(KEY_SELECTED_CALENDAR_ID, DEFAULT_CALENDAR_ID)
+            var calendarId = userPrefs.getLong(KEY_SELECTED_CALENDAR_ID, NO_CALENDAR_ID)
 
             // Simple validation: use default if invalid (e.g., -1)
             if (calendarId < 0) {
-                Log.w(TAG, "Invalid calendar ID: $calendarId, using default")
-                calendarId = DEFAULT_CALENDAR_ID
+                if (BuildConfig.DEBUG) Log.w(TAG, "Invalid calendar ID: $calendarId, using default")
+                calendarId = NO_CALENDAR_ID
             }
 
             if (databaseHelper == null) {
@@ -145,25 +150,41 @@ class CallMonitoringService : Service() {
             }
 
             phoneCallMonitor?.startMonitoring()
-            Log.d(TAG, "Phone call monitoring started successfully")
+            if (BuildConfig.DEBUG) Log.d(TAG, "Phone call monitoring started successfully")
 
         } catch (e: Exception) {
-            Log.e(TAG, "Error starting call monitoring", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error starting call monitoring", e)
             stopSelf()
         }
     }
+
 
     companion object {
         private const val TAG = "CallMonitoringService"
         private const val CHANNEL_ID = "call_monitoring_channel"
         private const val NOTIFICATION_ID = 1
-        private const val DEFAULT_CALENDAR_ID = -1L
+        private const val NO_CALENDAR_ID = -1L
 
-        @Volatile
-        var isRunning = false
-            private set
+        fun isServiceRunning(context: Context): Boolean {
+            val manager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                // Type-safe API (requires API 23+)
+                context.getSystemService(ActivityManager::class.java)
+            } else {
+                // Legacy fallback with safe cast
+                context.getSystemService(ACTIVITY_SERVICE) as? ActivityManager
+            }
 
-        @JvmStatic
-        fun isServiceRunning(): Boolean = isRunning
+            // If manager is null, the service is not available
+            if (manager == null) return false
+
+            val serviceName = "${context.packageName}.${CallMonitoringService::class.java.simpleName}"
+            return try {
+                manager.getRunningServices(Int.MAX_VALUE)
+                    .any { it.service.className == serviceName }
+            } catch (e: Exception) {
+                // getRunningServices may throw on some devices; fallback to false
+                false
+            }
+        }
     }
 }

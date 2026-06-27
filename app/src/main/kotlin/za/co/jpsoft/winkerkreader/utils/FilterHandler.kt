@@ -38,14 +38,14 @@ class FilterHandler(
 
         // Save the current sort order BEFORE showing filter
         savedSortOrder = viewModel.sortOrder
-        val mainActivity = activity as MainActivity
-        mainActivity.setFilterRestoreState(savedSortOrder)
+        //val mainActivity = activity as MainActivity
+        //mainActivity.setFilterRestoreState(savedSortOrder)
 
         android.util.Log.d("FilterHandler", "Saved sort order before filter: '$savedSortOrder'")
 
         mainLayout.visibility = View.GONE
         filterLayout.visibility = View.VISIBLE
-
+        (activity as? MainActivity)?.mainViewModel?.setFilterVisible(true)
         setupFilterControls()
     }
 
@@ -120,30 +120,8 @@ class FilterHandler(
     }
 
     private fun cancelFilter() {
-        // Restore the original sort order
-        val mainActivity = activity as MainActivity
-        if (savedSortOrder.isNotEmpty()) {
-            android.util.Log.d("FilterHandler", "Restoring sort order: '$savedSortOrder'")
-            viewModel.sortOrder = savedSortOrder
-            val settings = SettingsManager.getInstance(activity)
-            settings.defLayout = savedSortOrder
-
-            // Update the sort order TextView
-            val sortOrderView = activity.findViewById<TextView>(R.id.sortorder)
-            sortOrderView?.text = savedSortOrder
-
-            // Clear the saved layout in MainActivity
-            mainActivity.clearFilterRestoreState()
-        }
-
-        // Clear any filter state
-        mainActivity.clearAppliedFilterList()
-        viewModel.soekList = false
-
-        closeFilterDialog()
-
-        // Refresh the dataset with original sort order
-        mainActivity.observeDataset()
+        // Delegate to MainActivity's cancelFilter()
+        activity.cancelFilter()
     }
 
     private fun addFilterFromUI(fieldName: String, editTextId: Int, spinnerId: Int, checkBoxId: Int) {
@@ -222,6 +200,7 @@ class FilterHandler(
 
         mainLayout?.visibility = View.VISIBLE
         filterLayout?.visibility = View.GONE
+        (activity as? MainActivity)?.mainViewModel?.setFilterVisible(false)
     }
 
     fun getFilterList(): MutableList<FilterBox> = filterList

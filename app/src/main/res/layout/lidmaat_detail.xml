@@ -585,7 +585,13 @@
                 android:focusedByDefault="true"
                 android:visibility="visible" />
 
-            <!-- ===== BEDIENING BLOCK (Pastoral reminders) ===== -->
+            <!-- ===================================================== -->
+            <!-- VERVANG ALLES VAN detail_bediening_block TOT DIE      -->
+            <!-- EINDE VAN DIE ScrollView se LinearLayout INHOUD       -->
+            <!-- (dit is die laaste blok voor </LinearLayout></ScrollView>) -->
+            <!-- ===================================================== -->
+
+            <!-- ── Bediening blok ──────────────────────────────────── -->
             <LinearLayout
                 android:id="@+id/detail_bediening_block"
                 android:layout_width="match_parent"
@@ -594,30 +600,32 @@
                 android:paddingTop="8dp"
                 android:paddingBottom="4dp">
 
-                <!-- Divider -->
+                <!-- Verdeler -->
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:background="?attr/dividerColor"
-                    android:layout_marginBottom="8dp" />
+                    android:layout_marginBottom="8dp"/>
 
-                <!-- Header row: label + Stel herinnering button -->
+                <!-- Header ry: ikoon + etiket + telling + knop -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
                     android:paddingHorizontal="16dp">
+
                     <ImageView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:src="@drawable/ic_bedienings"/>
+
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/detail_bediening"
-                        android:textAppearance="?attr/textAppearanceTitleSmall" />
+                        android:textAppearance="?attr/textAppearanceTitleSmall"/>
 
                     <TextView
                         android:id="@+id/detail_herinnering_count"
@@ -626,7 +634,7 @@
                         android:textAppearance="?attr/textAppearanceLabelSmall"
                         android:alpha="0.6"
                         android:layout_marginEnd="8dp"
-                        android:visibility="gone" />
+                        android:visibility="gone"/>
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/detail_stel_herinnering"
@@ -634,23 +642,133 @@
                         android:layout_width="wrap_content"
                         android:layout_height="40dp"
                         android:text="@string/detail_stel_herinnering"
-                        android:textSize="12sp" />
+                        android:textSize="12sp"/>
 
                 </LinearLayout>
 
-                <!-- Pending reminder mini-list -->
+                <!-- Herinnering mini-lys (bestaande, onveranderd) -->
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/detail_pending_reminders"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:maxHeight="150dp"
                     android:nestedScrollingEnabled="false"
                     android:paddingTop="4dp"
-                    android:visibility="gone" />
+                    android:paddingHorizontal="16dp"
+                    android:visibility="gone"/>
+
+                <!-- "Wys meer herinneringe" knop -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnWysAlHerinneringe"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:visibility="gone"
+                    android:text="Wys meer herinneringe…"
+                    android:textSize="12sp"/>
 
             </LinearLayout>
-            <!-- ===== END BEDIENING BLOCK ===== -->
+            <!-- ── Einde Bediening blok ─────────────────────────────── -->
 
+            <!-- ── Notas blok ───────────────────────────────────────── -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingHorizontal="16dp"
+                android:layout_marginTop="4dp">
+
+                <!-- Inklapbare header -->
+                <LinearLayout
+                    android:id="@+id/layoutDetailNotasHeader"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingVertical="8dp"
+                    android:background="?attr/selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="📝 Bedieningsnotas"
+                        android:textAppearance="?attr/textAppearanceTitleSmall"/>
+
+                    <TextView
+                        android:id="@+id/tvDetailNotaCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="4dp"
+                        android:visibility="gone"
+                        android:textAppearance="?attr/textAppearanceBodySmall"
+                        android:textColor="?attr/colorOnSurfaceVariant"/>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnDetailNuweNota"
+                        style="@style/Widget.Material3.Button.TextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="+ Nota"
+                        android:textSize="12sp"/>
+
+                    <ImageView
+                        android:id="@+id/ivDetailNotasChevron"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_marginEnd="4dp"
+                        android:src="@drawable/ic_chevron_down"
+                        android:contentDescription="Uitvou"
+                        app:tint="?attr/colorOnSurfaceVariant"/>
+
+                </LinearLayout>
+
+                <!-- Inklapbare inhoud — versteek by verstek -->
+                <LinearLayout
+                    android:id="@+id/layoutDetailNotasInhoud"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvDetailNotas"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:nestedScrollingEnabled="false"
+                        android:visibility="gone"/>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnDetailWysAlNotas"
+                        style="@style/Widget.Material3.Button.TextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:visibility="gone"
+                        android:text="Wys ouer notas…"
+                        android:textSize="12sp"/>
+
+                    <TextView
+                        android:id="@+id/tvDetailGeenNotas"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:visibility="gone"
+                        android:text="Geen bedieningsnotas nie"
+                        android:textAppearance="?attr/textAppearanceBodySmall"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textStyle="italic"
+                        android:paddingVertical="8dp"/>
+
+                </LinearLayout>
+
+            </LinearLayout>
+            <!-- ── Einde Notas blok ─────────────────────────────────── -->
+
+            <!-- Onderste spasiëring -->
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="24dp"/>
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

@@ -7,7 +7,6 @@ import android.content.*
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
-import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.Telephony
@@ -46,8 +45,12 @@ import za.co.jpsoft.winkerkreader.utils.Utils.fixphonenumber
 import androidx.core.content.edit
 import androidx.core.net.toUri
 import androidx.appcompat.app.AlertDialog
+import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.utils.forceShowIcons
 import java.util.*
+import za.co.jpsoft.winkerkreader.utils.MainNavigationController
+import android.os.Bundle
+import androidx.paging.PagingData
 
 class VerjaarSmsActivity : AppCompatActivity() {
 
@@ -55,7 +58,7 @@ class VerjaarSmsActivity : AppCompatActivity() {
         private const val TAG = "VerjaarSmsActivity"
         private const val MAX_SMS_MESSAGE_LENGTH = 160
     }
-
+    private val navigationController by lazy { MainNavigationController(this) }
     private lateinit var binding: VerjaarBinding
     private lateinit var memberListAdapter: MemberListAdapter
     private lateinit var eventViewModel: EventViewModel
@@ -94,6 +97,8 @@ class VerjaarSmsActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        saveRunnable?.let { saveHandler.removeCallbacks(it) }
+        saveRunnable = null
         super.onDestroy()
         // No cursor cleanup needed – ViewModel handles it
     }
@@ -133,14 +138,14 @@ class VerjaarSmsActivity : AppCompatActivity() {
     }
 
     private fun initializeSharedPreferences() {
-        val prefs = getSharedPreferences(PREFS_USER_INFO, Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences(PREFS_USER_INFO, MODE_PRIVATE)
         autoSms = prefs.getBoolean("AUTO_SMS", false)
         binding.timeHour.setText(prefs.getString("SMS-HOUR", "08"))
         binding.timeMinute.setText(prefs.getString("SMS-MINUTE", "00"))
     }
 
     private fun initializeViews() {
-        val prefs = getSharedPreferences(PREFS_USER_INFO, Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences(PREFS_USER_INFO, MODE_PRIVATE)
         binding.autosmsRadio.isChecked = autoSms
         binding.herinnerRadio.isChecked = prefs.getBoolean("HERINNER", false)
 
@@ -176,11 +181,14 @@ class VerjaarSmsActivity : AppCompatActivity() {
         )
 
         eventViewModel.eventList.observe(this) { members ->
-            Log.d(TAG, "Observer received ${members.size} members")
+            if (BuildConfig.DEBUG) Log.d(TAG, "Observer received ${members.size} members")
             if (members.isNotEmpty()) {
-                Log.d(TAG, "First member: ${members[0].name} ${members[0].surname}")
+                if (BuildConfig.DEBUG) Log.d(TAG, "First member: ${members[0].name} ${members[0].surname}")
             }
-            memberListAdapter.submitList(members)
+            lifecycleScope.launch {
+                val pagingData = PagingData.from(members)
+                memberListAdapter.submitData(pagingData)
+            }
         }
     }
 
@@ -213,7 +221,7 @@ class VerjaarSmsActivity : AppCompatActivity() {
     }
 
     private fun handleEventTypeChange(checkedId: Int) {
-        val prefs = getSharedPreferences(PREFS_USER_INFO, Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences(PREFS_USER_INFO, MODE_PRIVATE)
 
         when (checkedId) {
             R.id.Keuse_Verjaar -> {
@@ -258,7 +266,7 @@ class VerjaarSmsActivity : AppCompatActivity() {
             "Bely"    -> "BelyBoodskap"
             else      -> "VerjaarBoodskap"
         }
-        getSharedPreferences(PREFS_USER_INFO, Context.MODE_PRIVATE)
+        getSharedPreferences(PREFS_USER_INFO, MODE_PRIVATE)
             .edit { putString(key, binding.boodskap.text.toString()) }
     }
 
@@ -318,7 +326,7 @@ class VerjaarSmsActivity : AppCompatActivity() {
     private fun formatTimeUnit(unit: String) = if (unit.length < 2) "0$unit" else unit
 
     private fun saveTimeSettings(hour: String, minute: String) {
-        getSharedPreferences(PREFS_USER_INFO, Context.MODE_PRIVATE)
+        getSharedPreferences(PREFS_USER_INFO, MODE_PRIVATE)
             .edit {
                 putString("SMS-HOUR", hour)
                 putString("SMS-MINUTE", minute)
@@ -342,17 +350,22 @@ class VerjaarSmsActivity : AppCompatActivity() {
         val alarmIntent = Intent(this, AlarmReceiver::class.java).apply { action = "VerjaarSMS" }
         val pendingIntent = PendingIntent.getBroadcast(this, 0, alarmIntent,
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
-        (getSystemService(Context.ALARM_SERVICE) as AlarmManager).setRepeating(
+        (getSystemService(ALARM_SERVICE) as AlarmManager).setRepeating(
             AlarmManager.RTC_WAKEUP, triggerTime, AlarmManager.INTERVAL_DAY, pendingIntent)
     }
 
     private fun navigateToMainActivity() {
+
         SettingsManager.getInstance(this).defLayout = "VERJAAR"
-        Intent(this, MainActivity::class.java).apply {
-            putExtra("SENDER_CLASS_NAME", "WysVerjaar")
-            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            startActivity(this)
+//        Intent(this, MainActivity::class.java).apply {
+//            putExtra("SENDER_CLASS_NAME", "WysVerjaar")
+//            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+//            startActivity(this)
+//        }
+        val extras = Bundle().apply{
+            putString("SENDER_CLASS_NAME", "WysVerjaar")
         }
+        navigationController.navigateToMain(extras)
         finish()
     }
 
@@ -375,7 +388,7 @@ class VerjaarSmsActivity : AppCompatActivity() {
             logSentMessage(phone, personalized)
             true
         } catch (e: Exception) {
-            Log.e(TAG, "SMS failed: ${e.message}")
+            if (BuildConfig.DEBUG) Log.e(TAG, "SMS failed: ${e.message}")
             false
         }
     }
@@ -388,7 +401,7 @@ class VerjaarSmsActivity : AppCompatActivity() {
             return
         }
 
-        val members = memberListAdapter.currentList
+        val members = memberListAdapter.getCurrentItems()
         if (members.isEmpty()) {
             Toast.makeText(this, "Geen lede gevind nie", Toast.LENGTH_SHORT).show()
             return
@@ -435,7 +448,7 @@ class VerjaarSmsActivity : AppCompatActivity() {
             }
             contentResolver.insert(Telephony.Sms.Sent.CONTENT_URI, values)
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to log SMS: ${e.message}")
+            if (BuildConfig.DEBUG) Log.e(TAG, "Failed to log SMS: ${e.message}")
         }
     }
 
@@ -563,7 +576,7 @@ class VerjaarSmsActivity : AppCompatActivity() {
     }
 
     private fun handleAutoSMS() {
-        val prefs = getSharedPreferences(PREFS_USER_INFO, Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences(PREFS_USER_INFO, MODE_PRIVATE)
         autoSms = prefs.getBoolean("AUTO_SMS", false)
         val fromMenu = prefs.getBoolean("FROM_MENU", false)
         if (!fromMenu && autoSms) {

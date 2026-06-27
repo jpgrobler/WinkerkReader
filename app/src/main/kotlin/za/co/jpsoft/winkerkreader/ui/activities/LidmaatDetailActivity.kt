@@ -1,12 +1,12 @@
 package za.co.jpsoft.winkerkreader.ui.activities
 
-import android.app.Application
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.media.ThumbnailUtils
@@ -47,7 +47,10 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.pastoral.entities.FollowUpReminderEntity
 import za.co.jpsoft.winkerkreader.data.pastoral.model.TemplateContext
 import za.co.jpsoft.winkerkreader.ui.adapters.PendingReminderMiniAdapter
@@ -55,11 +58,16 @@ import za.co.jpsoft.winkerkreader.ui.bottomsheets.StelHerinneringBottomSheet
 import za.co.jpsoft.winkerkreader.ui.viewmodels.LidmaatDetailPastoralViewModel
 import za.co.jpsoft.winkerkreader.ui.viewmodels.LidmaatDetailPastoralViewModelFactory
 import za.co.jpsoft.winkerkreader.utils.PhotoHelper
-import java.time.Instant
+import za.co.jpsoft.winkerkreader.utils.Utils.toLocalDateSafe
 import java.time.LocalDate
-import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import za.co.jpsoft.winkerkreader.utils.MainNavigationController
+import za.co.jpsoft.winkerkreader.data.pastoral.entities.PastoralNoteEntity
+import za.co.jpsoft.winkerkreader.data.pastoral.repository.PastoralNoteRepository
+import za.co.jpsoft.winkerkreader.ui.adapters.PastoralNoteAdapter
+import za.co.jpsoft.winkerkreader.ui.bottomsheets.VoegNotaByBottomSheet
+import za.co.jpsoft.winkerkreader.utils.NoteAuthManager
 
 class LidmaatDetailActivity : AppCompatActivity() {
 
@@ -69,9 +77,12 @@ class LidmaatDetailActivity : AppCompatActivity() {
 
         const val EXTRA_MEMBER_GUID = "memberGUID"
     }
-
+    private val authManager by lazy { NoteAuthManager(this) }
+    private val autoHideTokens = mutableMapOf<String, Runnable>()
+    private val navigationController by lazy { MainNavigationController(this) }
     private lateinit var binding: LidmaatDetailBinding
     private lateinit var settingsManager: SettingsManager
+    private lateinit var bedieningSeksie: BedieningSeksieController
 
     private var current_id = 0
     private var mLidmaatGUID: String? = null
@@ -89,7 +100,10 @@ class LidmaatDetailActivity : AppCompatActivity() {
     private var mHuwelikstatus = "Ongetroud"
     private lateinit var mCurrentLidmaatUri: Uri
     private var mImageUri: Uri? = null
-
+    private lateinit var notaAdapter: PastoralNoteAdapter
+    private val noteRepo by lazy { PastoralNoteRepository(this) }
+    private var allPendingReminders: List<FollowUpReminderEntity> = emptyList()
+    private var allNotes: List<PastoralNoteEntity> = emptyList()
     // Photo Picker for gallery selection (Android 4.4+)
     private val photoPickerLauncher =
             registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
@@ -104,7 +118,7 @@ class LidmaatDetailActivity : AppCompatActivity() {
                 processSelectedImage(uri)
             } else {
                 if (uri == null) {
-                    Log.e(TAG, "Camera returned but image URI is null (activity state lost)")
+                    if (BuildConfig.DEBUG) Log.e(TAG, "Camera returned but image URI is null (activity state lost)")
                     Toast.makeText(this, "Camera error: lost image URI", Toast.LENGTH_SHORT).show()
                 }
             }
@@ -114,7 +128,7 @@ class LidmaatDetailActivity : AppCompatActivity() {
 
     private val pastoralViewModel: LidmaatDetailPastoralViewModel by viewModels {
         val guid = intent.getStringExtra(EXTRA_MEMBER_GUID) ?: ""
-        Log.d(TAG, "Pastoral ViewModel GUID: '$guid'")
+        if (BuildConfig.DEBUG) Log.d(TAG, "Pastoral ViewModel GUID: '$guid'")
         LidmaatDetailPastoralViewModelFactory(this, guid)
     }
 
@@ -157,19 +171,18 @@ class LidmaatDetailActivity : AppCompatActivity() {
         }
 
         recordStatus = intent.getStringExtra("RECORD_STATUS") ?: "0"
-        val guid = intent.getStringExtra(EXTRA_MEMBER_GUID)
-            ?: intent.getStringExtra("MEMBER_GUID")
+
 
         viewModel = ViewModelProvider(this)[LidmaatDetailViewModel::class.java]
 
-        if (intent.data != null) {
-            // Called from main list (has content URI)
-            viewModel.loadMember(intent.data!!, recordStatus)
-        } else if (!guid.isNullOrEmpty()) {
-            // Called from pastoral reminders (GUID only)
+        val guid = intent.getStringExtra(EXTRA_MEMBER_GUID) ?: intent.getStringExtra("MEMBER_GUID")
+        if (!guid.isNullOrEmpty()) {
             viewModel.loadMemberByGuid(guid, recordStatus)
+        } else if (intent.data != null) {
+            // fallback (e.g. if the URI is used directly from a shortcut)
+            viewModel.loadMember(intent.data!!, recordStatus)
         } else {
-            throw IllegalArgumentException("No data URI and no MEMBER_GUID provided")
+            throw IllegalArgumentException("No MEMBER_GUID provided")
         }
 
 
@@ -209,6 +222,7 @@ class LidmaatDetailActivity : AppCompatActivity() {
         }
 
         setupBedieningBlock()
+        setupCopyOnLongClick()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -216,34 +230,48 @@ class LidmaatDetailActivity : AppCompatActivity() {
         return true
     }
 
+
     private fun setupBedieningBlock() {
+        val memberGuid = intent.getStringExtra(EXTRA_MEMBER_GUID) ?: ""
+
+        // Herinnering mini-adapter
         miniAdapter = PendingReminderMiniAdapter(
             onComplete = { reminderId -> pastoralViewModel.completeReminder(reminderId) },
-            onClick = { reminder -> showReminderDetailsDialog(reminder) }
+            onClick    = { reminder  -> showReminderDetailsDialog(reminder) }
         )
         binding.detailPendingReminders.apply {
-            adapter = miniAdapter
+            adapter       = miniAdapter
             layoutManager = LinearLayoutManager(this@LidmaatDetailActivity)
             setHasFixedSize(false)
         }
 
+        // "Stel herinnering" knop
         binding.detailStelHerinnering.setOnClickListener {
-            StelHerinneringBottomSheet.newInstance(
-                intent.getStringExtra("MemberGUID") ?: ""
-            ).show(supportFragmentManager, StelHerinneringBottomSheet.TAG)
+            StelHerinneringBottomSheet
+                .newInstance(memberGuid)
+                .show(supportFragmentManager, StelHerinneringBottomSheet.TAG)
         }
 
-        // Observe pending reminders
+        // Observe herinneringe — max 3, dan "Wys meer"
         lifecycleScope.launch {
             pastoralViewModel.pendingReminders.collect { reminders ->
-                Log.d(TAG, "pendingReminders collected: ${reminders.size} items")
-                miniAdapter.submitList(reminders)
+                allPendingReminders = reminders
+
+                val showAll   = binding.btnWysAlHerinneringe.tag == "expanded"
+                val toDisplay = if (showAll) reminders else reminders.take(3)
+
+                miniAdapter.submitList(toDisplay)
+
                 binding.detailPendingReminders.visibility =
-                    if (reminders.isEmpty()) View.GONE else View.VISIBLE
+                    if (toDisplay.isEmpty()) View.GONE else View.VISIBLE
+
+                binding.btnWysAlHerinneringe.visibility =
+                    if (!showAll && reminders.size > 3) View.VISIBLE else View.GONE
+                binding.btnWysAlHerinneringe.text = "Wys al ${reminders.size} herinneringe…"
+
                 binding.detailHerinneringCount.visibility =
-                if (reminders.isEmpty()) View.GONE else View.VISIBLE
-                binding.detailHerinneringCount.text =
-                resources.getQuantityString(
+                    if (reminders.isEmpty()) View.GONE else View.VISIBLE
+                binding.detailHerinneringCount.text = resources.getQuantityString(
                     R.plurals.herinnering_created_count,
                     reminders.size,
                     reminders.size
@@ -251,42 +279,55 @@ class LidmaatDetailActivity : AppCompatActivity() {
             }
         }
 
-        // Toast on creation
+        binding.btnWysAlHerinneringe.setOnClickListener {
+            binding.btnWysAlHerinneringe.tag = "expanded"
+            miniAdapter.submitList(allPendingReminders)
+            binding.btnWysAlHerinneringe.visibility = View.GONE
+        }
+
+        // Toast by skepping
         lifecycleScope.launch {
             pastoralViewModel.created.collect { count ->
-                val msg = resources.getQuantityString(
-                    R.plurals.herinnering_created_count, count, count
-                )
-                Toast.makeText(this@LidmaatDetailActivity, msg, Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this@LidmaatDetailActivity,
+                    resources.getQuantityString(R.plurals.herinnering_created_count, count, count),
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
 
-        // Error Snackbar
+        // Fout Snackbar
         lifecycleScope.launch {
             pastoralViewModel.error.collect { message ->
                 Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
             }
         }
+
+        // Notas afdeling
+        setupNotasBlock(memberGuid)
     }
 
     private fun initializeViews() {
-        listOf(
-                        binding.detailNoemnaam,
-                        binding.detailVan,
-                        binding.detailNooiensvan,
-                        binding.detailVollename,
-                        binding.detailSelfoon,
-                        binding.detailTelefoon,
-                        binding.detailWyk,
-                        binding.detailGeboortedatum,
-                        binding.detailStraatadres,
-                        binding.detailPosadres,
-                        binding.detailEpos,
-                        binding.detailBeroep,
-                        binding.detailWerkgewer,
-                        binding.detailLidmaatstatus
-                )
-                .forEach { it.isEnabled = false }
+        // Hierdie velde word gedeaktiveer (nie die 7 spesifieke velde nie)
+        val fieldsToDisable = listOf(
+            binding.detailNoemnaam,
+            binding.detailVan,
+            binding.detailNooiensvan,
+            // binding.detailVollename,   // verwyder
+            // binding.detailSelfoon,     // verwyder
+            // binding.detailTelefoon,    // verwyder
+            binding.detailWyk,
+            // binding.detailGeboortedatum, // verwyder
+            // binding.detailStraatadres,   // verwyder
+            binding.detailPosadres,
+            // binding.detailEpos,          // verwyder
+            binding.detailBeroep,
+            binding.detailWerkgewer,
+            // binding.detailLidmaatstatus   // verwyder
+        )
+        fieldsToDisable.forEach { it.isEnabled = false }
+
+        // Spinners bly gedeaktiveer
         binding.huwelikstatus.isEnabled = false
         binding.geslag.isEnabled = false
 
@@ -337,49 +378,62 @@ class LidmaatDetailActivity : AppCompatActivity() {
         if (binding.buttonWysig.text == getString(R.string.wysig)) {
             enableEditing(true)
             binding.buttonWysig.text = getString(R.string.stoor)
-            binding.buttonWysig.setBackgroundColor(Color.RED)
+            binding.buttonWysig.setBackgroundTintList(ColorStateList.valueOf(Color.RED))
             mStraatAdres = binding.detailStraatadres.text.toString()
             mPosAdres = binding.detailPosadres.text.toString()
             showSoftKeyboard(binding.buttonWysig)
         } else {
             enableEditing(false)
             binding.buttonWysig.text = getString(R.string.wysig)
-            binding.buttonWysig.setBackgroundColor("#0A064F".toColorInt())
+            binding.buttonWysig.setBackgroundTintList(ColorStateList.valueOf("#0A064F".toColorInt()))
             viewModel.memberDetail.value?.let { wysigLidmaatData(it) }
             hideSoftKeyboard()
         }
     }
 
     private fun enableEditing(enable: Boolean) {
-        listOf(
-                        binding.detailNoemnaam,
-                        binding.detailVan,
-                        binding.detailNooiensvan,
-                        binding.detailVollename,
-                        binding.detailSelfoon,
-                        binding.detailTelefoon,
-                        binding.detailWyk,
-                        binding.detailGeboortedatum,
-                        binding.detailStraatadres,
-                        binding.detailPosadres,
-                        binding.detailEpos,
-                        binding.detailBeroep,
-                        binding.detailWerkgewer,
-                        binding.detailLidmaatstatus
-                )
-                .forEach { it.isEnabled = enable }
+        val fields = listOf(
+            binding.detailNoemnaam,
+            binding.detailVan,
+            binding.detailNooiensvan,
+            binding.detailVollename,
+            binding.detailSelfoon,
+            binding.detailTelefoon,
+            binding.detailWyk,
+            binding.detailGeboortedatum,
+            binding.detailStraatadres,
+            binding.detailPosadres,
+            binding.detailEpos,
+            binding.detailBeroep,
+            binding.detailWerkgewer,
+            binding.detailLidmaatstatus
+        )
+        fields.forEach {
+            it.isEnabled = enable
+            it.isFocusable = enable
+            it.isFocusableInTouchMode = enable
+        }
         binding.huwelikstatus.isEnabled = enable
         binding.geslag.isEnabled = enable
 
+        // All blocks that are conditionally hidden based on content
+        val conditionalBlocks = listOf(
+            binding.detailNooiensvanBlock,
+            binding.detailBeroepBlock,
+            binding.detailWerkgewerBlock,
+            binding.detailPosadresBlock,
+            binding.detailSelfoonBlock,
+            binding.detailTelefoonBlock,   // ← Landlyn
+            binding.detailEposBlock,
+            binding.detailStraatadresBlock
+        )
+
         if (enable) {
-            binding.detailSelfoonBlock.visibility = View.VISIBLE
-            binding.detailTelefoonBlock.visibility = View.VISIBLE
-            binding.detailStraatadresBlock.visibility = View.VISIBLE
-            binding.detailPosadresBlock.visibility = View.VISIBLE
-            binding.detailEposBlock.visibility = View.VISIBLE
-            binding.detailNooiensvanBlock.visibility = View.VISIBLE
-            binding.detailBeroepBlock.visibility = View.VISIBLE
-            binding.detailWerkgewerBlock.visibility = View.VISIBLE
+            // Show all conditional blocks so user can fill them
+            conditionalBlocks.forEach { it.visibility = View.VISIBLE }
+        } else {
+            // Restore original visibility based on data
+            viewModel.memberDetail.value?.let { displayMemberData(it) }
         }
     }
 
@@ -388,7 +442,7 @@ class LidmaatDetailActivity : AppCompatActivity() {
             try {
                 startActivity(Intent(Intent.ACTION_DIAL, "tel:$number".toUri()))
             } catch (e: Exception) {
-                Log.e(TAG, "Dial error", e)
+                if (BuildConfig.DEBUG) Log.e(TAG, "Dial error", e)
             }
         }
     }
@@ -417,7 +471,7 @@ class LidmaatDetailActivity : AppCompatActivity() {
                 val intent = Intent(Intent.ACTION_VIEW, "mailto:$email".toUri())
                 startActivity(intent)
             } catch (e: Exception) {
-                Log.e(TAG, "Email error", e)
+                if (BuildConfig.DEBUG) Log.e(TAG, "Email error", e)
             }
         }
     }
@@ -433,7 +487,7 @@ class LidmaatDetailActivity : AppCompatActivity() {
                         }
                 startActivity(intent)
             } catch (e: Exception) {
-                Log.e(TAG, "SMS error", e)
+                if (BuildConfig.DEBUG) Log.e(TAG, "SMS error", e)
             }
         }
     }
@@ -441,7 +495,7 @@ class LidmaatDetailActivity : AppCompatActivity() {
     private fun openMapForAddress() {
         val address = binding.detailStraatadres.text.toString()
         if (address.isNotEmpty()) {
-            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
             val clipData = "${binding.detailNoemnaam.text} ${binding.detailVan.text}\r\n$address"
             clipboard.setPrimaryClip(ClipData.newPlainText("text", clipData))
             Toast.makeText(this, clipData, Toast.LENGTH_SHORT).show()
@@ -602,21 +656,22 @@ class LidmaatDetailActivity : AppCompatActivity() {
                         )
                         tag = member.id
                         setOnClickListener {
-                            val gId = tag as Int
+                            val gId = tag as Long?
                             val guid = member.guid
-                            val intent =
-                                    Intent(
-                                            this@LidmaatDetailActivity,
-                                            LidmaatDetailActivity::class.java
-                                    ).apply {
-                                        data = ContentUris.withAppendedId(
-                                                winkerkEntry.CONTENT_URI,
-                                                gId.toLong()
-                                        )
-                                        putExtra("RECORD_STATUS", recordStatus)
-                                        putExtra(EXTRA_MEMBER_GUID, guid)
-                                    }
-                            startActivity(intent)
+//                            val intent =
+//                                    Intent(
+//                                            this@LidmaatDetailActivity,
+//                                            LidmaatDetailActivity::class.java
+//                                    ).apply {
+//                                        data = ContentUris.withAppendedId(
+//                                                winkerkEntry.CONTENT_URI,
+//                                                gId.toLong()
+//                                        )
+//                                        putExtra("RECORD_STATUS", recordStatus)
+//                                        putExtra(EXTRA_MEMBER_GUID, guid)
+//                                    }
+                            //startActivity(intent)
+                            navigationController.navigateToLidmaatDetail(guid, recordStatus, gId)
                             finish()
                         }
                     }
@@ -793,7 +848,7 @@ class LidmaatDetailActivity : AppCompatActivity() {
                     else -> ""
                 }
 
-        val prefs = getSharedPreferences(PREFS_USER_INFO, Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences(PREFS_USER_INFO, MODE_PRIVATE)
         val eposHtmlEnabled = prefs.getBoolean("EposHtml", false)
 
         val sendIntent =
@@ -812,20 +867,20 @@ class LidmaatDetailActivity : AppCompatActivity() {
         try {
             startActivity(sendIntent)
         } catch (e: Exception) {
-            Log.e(TAG, "Email intent failed", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Email intent failed", e)
         }
     }
 
     private fun hideSoftKeyboard() {
         currentFocus?.let {
-            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
             imm.hideSoftInputFromWindow(it.windowToken, 0)
         }
     }
 
     private fun showSoftKeyboard(view: View) {
         view.requestFocus()
-        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         imm.showSoftInput(view, 0)
     }
 
@@ -861,18 +916,18 @@ class LidmaatDetailActivity : AppCompatActivity() {
         binding.detailKontakFoto.tag = "synced"
 
         // Save reference in database (unchanged)
-        val values = ContentValues().apply {
-            put(winkerkEntry.INFO_FOTO_PATH, newPath)
-            put(winkerkEntry.INFO_LIDMAAT_GUID, mLidmaatGUID)
-            put(winkerkEntry.INFO_GROUP, "")
-        }
+//        val values = ContentValues().apply {
+//            put(winkerkEntry.INFO_FOTO_PATH, newPath)
+//            put(winkerkEntry.INFO_LIDMAAT_GUID, mLidmaatGUID)
+//            put(winkerkEntry.INFO_GROUP, "")
+//        }
 
-        contentResolver.update(
-            winkerkEntry.INFO_LOADER_FOTO_URI,
-            values,
-            "${winkerkEntry.INFO_LIDMAAT_GUID} = ?",
-            arrayOf(mLidmaatGUID)
-        )
+//        contentResolver.update(
+//            winkerkEntry.INFO_LOADER_FOTO_URI,
+//            values,
+//            "${winkerkEntry.INFO_LIDMAAT_GUID} = ?",
+//            arrayOf(mLidmaatGUID)
+//        )
 
         val id = current_id
         val memberValues = ContentValues().apply { put(winkerkEntry.LIDMATE_PICTUREPATH, newPath) }
@@ -941,6 +996,9 @@ class LidmaatDetailActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+
+        autoHideTokens.values.forEach { authManager.cancelAutoHide(it) }
+        autoHideTokens.clear()
         mImageUri = null
     }
 
@@ -958,18 +1016,7 @@ class LidmaatDetailActivity : AppCompatActivity() {
 
         return false
     }
-    private fun getPhotoPathFromDatabase(guid: String): String? {
-        val cursor = contentResolver.query(
-            winkerkEntry.INFO_LOADER_FOTO_URI,
-            arrayOf(winkerkEntry.INFO_FOTO_PATH),
-            "${winkerkEntry.INFO_LIDMAAT_GUID} = ?",
-            arrayOf(guid),
-            null
-        )
-        return cursor?.use {
-            if (it.moveToFirst()) it.getString(0) else null
-        }
-    }
+
     private fun getIdFromGuid(memberGuid: String): Long {
         val fullQuery = """
         SELECT _rowid_ FROM ${winkerkEntry.LIDMATE_TABLE_NAME}
@@ -988,9 +1035,7 @@ class LidmaatDetailActivity : AppCompatActivity() {
     }
 
     private fun showReminderDetailsDialog(reminder: FollowUpReminderEntity) {
-        val dueDate = Instant.ofEpochMilli(reminder.dueDateUtc)
-            .atZone(ZoneId.systemDefault())
-            .toLocalDate()
+        val dueDate = reminder.dueDateUtc.toLocalDateSafe() ?: LocalDate.now()
         val dateStr = DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault()).format(dueDate)
         val isOverdue = dueDate.isBefore(LocalDate.now())
 
@@ -1018,6 +1063,161 @@ class LidmaatDetailActivity : AppCompatActivity() {
             .setPositiveButton("Sluit", null)
             .show()
     }
+    private fun setupCopyOnLongClick() {
+        val clipboardManager = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+        val fields = listOf(
+            binding.detailVollename,
+            binding.detailLidmaatstatus,
+            binding.detailGeboortedatum,
+            binding.detailSelfoon,
+            binding.detailTelefoon,
+            binding.detailEpos,
+            binding.detailStraatadres
+        )
+        for (view in fields) {
+            // Maak hulle aktief maar nie fokusbaar nie
+            view.isEnabled = true
+            view.isFocusable = false
+            view.isFocusableInTouchMode = false
+            view.isLongClickable = true
+
+            view.setOnLongClickListener {
+                val text = view.text.toString()
+                if (text.isNotEmpty()) {
+                    val clip = ClipData.newPlainText("text", text)
+                    clipboardManager.setPrimaryClip(clip)
+                    Toast.makeText(this, "Gekopieer: $text", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this, "Geen teks om te kopieer", Toast.LENGTH_SHORT).show()
+                }
+                true
+            }
+        }
+    }
 
 
+
+    private fun setupNotasBlock(memberGuid: String) {
+        if (memberGuid.isBlank()) return
+
+        notaAdapter = PastoralNoteAdapter(
+
+            // ── Redigeer ──────────────────────────────────────────────────────
+            onEdit = { note ->
+                VoegNotaByBottomSheet.newInstanceForEdit(
+                    existingNoteId = note.noteId,
+                    memberDisplayName = note.memberDisplayNameCache
+                ).show(supportFragmentManager, VoegNotaByBottomSheet.TAG)
+            },
+
+            // ── Verwyder ──────────────────────────────────────────────────────
+            onDelete = { note ->
+                MaterialAlertDialogBuilder(this)
+                    .setTitle("Verwyder nota?")
+                    .setMessage("Hierdie nota sal permanent verwyder word.")
+                    .setPositiveButton("Verwyder") { _, _ ->
+                        lifecycleScope.launch {
+                            withContext(Dispatchers.IO) { noteRepo.delete(note.noteId) }
+                        }
+                    }
+                    .setNegativeButton("Kanselleer", null)
+                    .show()
+            },
+
+            // ── Vertroulike nota tik → biometrie ──────────────────────────────
+            onConfidentialTap = { note ->
+                if (!NoteAuthManager.isAuthAvailable(this)) {
+                    // Geen PIN/biometrie gestel — wys nota direk (toestel is nie beveilig nie)
+                    revealNoteTemporarily(note.noteId)
+                    return@PastoralNoteAdapter
+                }
+
+                authManager.authenticate(
+                    onSuccess = { revealNoteTemporarily(note.noteId) },
+                    onFailure = { reason ->
+                        Snackbar.make(binding.root, reason, Snackbar.LENGTH_SHORT).show()
+                    }
+                )
+            }
+        )
+
+        binding.rvDetailNotas.apply {
+            adapter       = notaAdapter
+            layoutManager = LinearLayoutManager(this@LidmaatDetailActivity)
+            setHasFixedSize(false)
+            isNestedScrollingEnabled = false
+        }
+
+        // ── Inklapbare header ──────────────────────────────────────────────────
+        binding.layoutDetailNotasHeader.setOnClickListener {
+            val isExpanded = binding.layoutDetailNotasInhoud.visibility == View.VISIBLE
+            if (isExpanded) {
+                binding.layoutDetailNotasInhoud.visibility = View.GONE
+                binding.ivDetailNotasChevron.animate().rotation(0f).setDuration(200).start()
+            } else {
+                binding.layoutDetailNotasInhoud.visibility = View.VISIBLE
+                binding.ivDetailNotasChevron.animate().rotation(180f).setDuration(200).start()
+            }
+        }
+
+        // ── "+ Nota" knop ──────────────────────────────────────────────────────
+        binding.btnDetailNuweNota.setOnClickListener {
+            val item = viewModel.memberDetail.value ?: return@setOnClickListener
+            VoegNotaByBottomSheet.newInstance(
+                memberGuid        = memberGuid,
+                familyHeadGuid    = item.familyHeadGuid.ifBlank { null },
+                memberDisplayName = "${item.name} ${item.surname}".trim(),
+                memberSurname     = item.surname.ifBlank { null },
+                memberGivenName   = item.name.ifBlank { null }
+            ).show(supportFragmentManager, VoegNotaByBottomSheet.TAG)
+        }
+
+        // ── Observe notas ──────────────────────────────────────────────────────
+        lifecycleScope.launch {
+            noteRepo.observeForMember(memberGuid).collect { notes ->
+                allNotes = notes
+
+                binding.tvDetailNotaCount.visibility = if (notes.isEmpty()) View.GONE else View.VISIBLE
+                binding.tvDetailNotaCount.text       = "(${notes.size})"
+
+                val showAll   = binding.btnDetailWysAlNotas.tag == "expanded"
+                val toDisplay = if (showAll) notes else notes.take(3)
+
+                notaAdapter.submitNotes(toDisplay)  // gebruik submitNotes, nie submitList
+
+                binding.rvDetailNotas.visibility =
+                    if (notes.isEmpty()) View.GONE else View.VISIBLE
+                binding.tvDetailGeenNotas.visibility =
+                    if (notes.isEmpty()) View.VISIBLE else View.GONE
+
+                binding.btnDetailWysAlNotas.visibility =
+                    if (!showAll && notes.size > 3) View.VISIBLE else View.GONE
+                binding.btnDetailWysAlNotas.text = "Wys al ${notes.size} notas…"
+            }
+        }
+
+        // ── "Wys ouer notas" klik ─────────────────────────────────────────────
+        binding.btnDetailWysAlNotas.setOnClickListener {
+            binding.btnDetailWysAlNotas.tag = "expanded"
+            notaAdapter.submitNotes(allNotes)
+            binding.btnDetailWysAlNotas.visibility = View.GONE
+        }
+    }
+
+// ── Biometrie hulpfunksies ─────────────────────────────────────────────────
+
+    private fun revealNoteTemporarily(noteId: String) {
+        // Kanselleer bestaande timer vir hierdie nota as dit al ontsluit was
+        autoHideTokens[noteId]?.let { authManager.cancelAutoHide(it) }
+
+        // Wys die nota-inhoud
+        notaAdapter.revealNote(noteId)
+
+        // Stel outomatiese versteek in na 30 sekondes
+        val token = authManager.scheduleAutoHide {
+            notaAdapter.hideNote(noteId)
+            autoHideTokens.remove(noteId)
+        }
+        autoHideTokens[noteId] = token
+    }
 }

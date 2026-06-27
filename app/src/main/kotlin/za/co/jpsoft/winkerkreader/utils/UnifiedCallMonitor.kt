@@ -5,10 +5,12 @@ import android.content.Context
 import android.util.Log
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.DatabaseHelper
 import za.co.jpsoft.winkerkreader.data.WinkerkContract
 import za.co.jpsoft.winkerkreader.data.models.CallType
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
 
 /**
  * Central singleton that handles all call logging (regular phone + VoIP).
@@ -72,9 +74,25 @@ class UnifiedCallMonitor private constructor(
         val contactName: String,
         val type: CallType,
         val startTime: Long,
-        val source: String
+        val source: String,
+        var isMissed: Boolean = false
     )
-
+    fun onCallMissed(callId: String, endTime: Long) {
+        val activeCall = activeCalls.remove(callId) ?: run {
+            if (BuildConfig.DEBUG) Log.w(TAG, "onCallMissed: no active call for ID: $callId")
+            return
+        }
+        // Mark as missed to prevent onCallEnded from logging it again
+        activeCall.isMissed = true
+        logCall(
+            contactInfo = activeCall.contactName,
+            callType = CallType.MISSED,
+            timestamp = activeCall.startTime,
+            duration = 0L,
+            source = activeCall.source
+        )
+        if (BuildConfig.DEBUG) Log.d(TAG, "Call marked as missed: $callId")
+    }
     /**
      * Call this when a call starts (ringing for incoming, off‑hook for outgoing).
      */
@@ -86,6 +104,7 @@ class UnifiedCallMonitor private constructor(
     timestamp: Long,
     displayName: String? = null
     ) {
+        pruneStaleActiveCalls()
         val sanitizedNumber = number?.takeIf { it.isNotBlank() && it != "Unknown" } ?: "Unknown Number"
         val contactName = displayName ?: sanitizedNumber
         val callType = determineCallType(source, direction)
@@ -99,36 +118,34 @@ class UnifiedCallMonitor private constructor(
             source = source
         )
         activeCalls[callId] = activeCall
-        Log.d(TAG, "Call detected: $callId, number=$sanitizedNumber, contact=$contactName, type=$callType, source=$source")
+        if (BuildConfig.DEBUG) Log.d(TAG, "Call detected: $callId, number=$sanitizedNumber, contact=$contactName, type=$callType, source=$source")
     }
 
         /**
      * Call this when the call ends (IDLE state for phone, "call ended" notification for VoIP).
      */
-    fun onCallEnded(callId: String, endTime: Long) {
-        val activeCall = activeCalls.remove(callId) ?: run {
-            Log.w(TAG, "No active call found for ID: $callId")
-            return
-        }
+        fun onCallEnded(callId: String, endTime: Long) {
+            val activeCall = activeCalls.remove(callId) ?: run {
+                if (BuildConfig.DEBUG) Log.w(TAG, "onCallEnded: no active call for ID: $callId")
+                return
+            }
 
-        val durationSeconds = (endTime - activeCall.startTime) / 1000
-        // For VoIP, if type is UNKNOWN try to infer from call log (could be improved)
-        val finalType = if (activeCall.type == CallType.UNKNOWN) {
-            // Default to INCOMING for VoIP if we have a number, otherwise UNKNOWN
-            if (activeCall.number != "Unknown Number") CallType.INCOMING else CallType.UNKNOWN
-        } else {
-            activeCall.type
-        }
+            // If we already logged this call as missed, skip further logging
+            if (activeCall.isMissed) {
+                if (BuildConfig.DEBUG) Log.d(TAG, "Call $callId already logged as missed, skipping onCallEnded")
+                return
+            }
 
-        logCall(
-            contactInfo = activeCall.contactName,
-            callType = finalType,
-            timestamp = activeCall.startTime,
-            duration = durationSeconds,
-            source = activeCall.source
-        )
-        Log.d(TAG, "Call ended: $callId, duration=${durationSeconds}s, type=$finalType")
-    }
+            val durationSeconds = maxOf(0L, (endTime - activeCall.startTime) / 1000)
+            logCall(
+                contactInfo = activeCall.contactName,
+                callType = activeCall.type,
+                timestamp = activeCall.startTime,
+                duration = durationSeconds,
+                source = activeCall.source
+            )
+            if (BuildConfig.DEBUG) Log.d(TAG, "Call ended: $callId, duration=${durationSeconds}s, type=${activeCall.type}")
+        }
 
     /**
      * Update the calendar ID if the user changes the selection.
@@ -162,18 +179,18 @@ class UnifiedCallMonitor private constructor(
     private fun logCall(contactInfo: String, callType: CallType, timestamp: Long, duration: Long, source: String) {
         val settingsManager = SettingsManager.getInstance(context)
         if (!settingsManager.callLogEnabled) {
-            Log.d(TAG, "Call logging disabled, skipping")
+            if (BuildConfig.DEBUG) Log.d(TAG, "Call logging disabled, skipping")
             return
         }
         if (callType == CallType.UNKNOWN) {
-            Log.d(TAG, "Skipping UNKNOWN call type: $contactInfo from $source")
+            if (BuildConfig.DEBUG) Log.d(TAG, "Skipping UNKNOWN call type: $contactInfo from $source")
             return
         }
 
         // Insert into local database
         val success = databaseHelper.insertCallLogWithType(contactInfo, timestamp, callType, source, duration)
         if (success) {
-            Log.d(TAG, "Call logged to DB: $contactInfo, type=$callType, source=$source")
+            if (BuildConfig.DEBUG) Log.d(TAG, "Call logged to DB: $contactInfo, type=$callType, source=$source")
             
             // Notify UI that call logs have been updated
             _callLogUpdates.tryEmit(Unit)
@@ -184,13 +201,17 @@ class UnifiedCallMonitor private constructor(
                     calendarId, contactInfo, timestamp, callType, source, duration
                 )
                 if (calendarSuccess) {
-                    Log.d(TAG, "Call logged to calendar")
+                    if (BuildConfig.DEBUG) Log.d(TAG, "Call logged to calendar")
                 } else {
-                    Log.e(TAG, "Failed to log call to calendar")
+                    if (BuildConfig.DEBUG) Log.e(TAG, "Failed to log call to calendar")
                 }
             }
         } else {
-            Log.e(TAG, "Failed to log call to DB")
+            if (BuildConfig.DEBUG) Log.e(TAG, "Failed to log call to DB")
         }
+    }
+    private fun pruneStaleActiveCalls() {
+        val cutoff = System.currentTimeMillis() - TimeUnit.HOURS.toMillis(4)
+        activeCalls.entries.removeIf { it.value.startTime < cutoff }
     }
 }

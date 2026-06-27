@@ -5,6 +5,7 @@ import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
+import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.models.CallLog
 import za.co.jpsoft.winkerkreader.data.models.CallType
 import za.co.jpsoft.winkerkreader.utils.CursorDataExtractor.getSafeLong
@@ -97,13 +98,13 @@ class DatabaseHelper private constructor(context: Context) : SQLiteOpenHelper(co
     ): Boolean {
         // Skip UNKNOWN types for VoIP
         if (callType == CallType.UNKNOWN && source != "Phone Call") {
-            Log.d(TAG, "Skipping UNKNOWN call type for source: $source")
+            if (BuildConfig.DEBUG) Log.d(TAG, "Skipping UNKNOWN call type for source: $source")
             return false
         }
 
         // Check for duplicate
         if (isDuplicateCall(callerInfo, timestamp, source)) {
-            Log.d(TAG, "Duplicate call detected, skipping insert: $callerInfo")
+            if (BuildConfig.DEBUG) Log.d(TAG, "Duplicate call detected, skipping insert: $callerInfo")
             return false
         }
 

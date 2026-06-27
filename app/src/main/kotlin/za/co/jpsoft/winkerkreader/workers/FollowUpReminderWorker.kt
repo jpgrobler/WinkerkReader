@@ -10,6 +10,7 @@ import za.co.jpsoft.winkerkreader.data.pastoral.repository.CongregationMemberGui
 import za.co.jpsoft.winkerkreader.utils.PastoralNotificationHelper
 import java.time.LocalDate
 import java.time.ZoneId
+import za.co.jpsoft.winkerkreader.BuildConfig
 
 class FollowUpReminderWorker(
     context: Context,
@@ -17,7 +18,7 @@ class FollowUpReminderWorker(
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
-        Log.d(TAG, "FollowUpReminderWorker started")
+        if (BuildConfig.DEBUG) Log.d(TAG, "FollowUpReminderWorker started")
 
         val zoneId    = ZoneId.systemDefault()
         val nowUtc    = System.currentTimeMillis()
@@ -32,7 +33,7 @@ class FollowUpReminderWorker(
 
             // Single query: all PENDING reminders due today-or-earlier, not snoozed
             val dueReminders = reminderDao.getPendingDue(endOfDayUtc, nowUtc)
-            Log.d(TAG, "Found ${dueReminders.size} due reminders")
+            if (BuildConfig.DEBUG) Log.d(TAG, "Found ${dueReminders.size} due reminders")
 
             var notified = 0
             dueReminders.forEach { reminder ->
@@ -75,11 +76,11 @@ class FollowUpReminderWorker(
                 }
             }
 
-            Log.i(TAG, "FollowUpReminderWorker complete — notified $notified reminders")
+            if (BuildConfig.DEBUG) Log.i(TAG, "FollowUpReminderWorker complete — notified $notified reminders")
             Result.success()
 
         } catch (e: Exception) {
-            Log.e(TAG, "FollowUpReminderWorker failed", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "FollowUpReminderWorker failed", e)
             // Retry once; WorkManager will back off automatically
             Result.retry()
         }

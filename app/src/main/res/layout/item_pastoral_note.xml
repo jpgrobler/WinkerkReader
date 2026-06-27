@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    item_pastoral_note.xml  — vervang die vorige weergawe
+    Nuut: tvNoteRevealHint (wys tydstatus wanneer vertroulike nota ontsluit is)
+-->
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="6dp"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="0dp"
+    app:strokeWidth="1dp"
+    app:strokeColor="?attr/colorOutlineVariant">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="12dp">
+
+        <!-- Header: simbool + kategorie + datum -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="4dp">
+
+            <TextView
+                android:id="@+id/tvNoteSymbol"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:layout_marginEnd="6dp"
+                tools:text="🏠"/>
+
+            <TextView
+                android:id="@+id/tvNoteCategory"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textAppearance="?attr/textAppearanceLabelMedium"
+                android:textColor="?attr/colorPrimary"
+                tools:text="Huisbesoek"/>
+
+            <TextView
+                android:id="@+id/tvNoteDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                tools:text="20 Jun 2026"/>
+
+        </LinearLayout>
+
+        <!-- Nota teks (gewone of ontsluite vertroulike nota) -->
+        <TextView
+            android:id="@+id/tvNoteText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:maxLines="4"
+            android:ellipsize="end"
+            android:visibility="gone"
+            tools:text="Besoek na ontslag. Goed herstel."
+            tools:visibility="visible"/>
+
+        <!-- Vertroulik slot (versteek teks) -->
+        <TextView
+            android:id="@+id/tvNoteConfidential"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:text="🔒 Vertroulik — tik om te ontsluit"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textStyle="italic"/>
+
+        <!-- Ontsluit status (wys tydhouer na biometrie) -->
+        <TextView
+            android:id="@+id/tvNoteRevealHint"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:visibility="gone"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorTertiary"
+            tools:text="🔓 Vertroulik · versteek oor 30s"
+            tools:visibility="visible"/>
+
+        <!-- Herinnering-koppeling badge -->
+        <TextView
+            android:id="@+id/tvNoteLinkedReminder"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:visibility="gone"
+            android:text="🔔 Herinnering gestel"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorSecondary"/>
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

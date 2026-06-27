@@ -21,6 +21,10 @@ import kotlinx.coroutines.delay
 import za.co.jpsoft.winkerkreader.data.WinkerkContract
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.WINKERK_DB
 import za.co.jpsoft.winkerkreader.data.WinkerkDbHelper
+import za.co.jpsoft.winkerkreader.BuildConfig
+import za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase
+import androidx.sqlite.db.SimpleSQLiteQuery
+
 
 class PhotoDownloadWorker(
     context: Context,
@@ -30,15 +34,14 @@ class PhotoDownloadWorker(
     private fun getAllMemberGuids(): List<String> {
         val guids = mutableListOf<String>()
         try {
-            val helper = WinkerkDbHelper.getInstance(applicationContext, WINKERK_DB)
-            val db = helper.readableDatabase
-            db.query("Members", arrayOf("MemberGUID"), null, null, null, null, null).use { cursor ->
+            val db = WinkerkDatabase.getInstance(applicationContext).openHelper.writableDatabase
+            db.query(SimpleSQLiteQuery("SELECT MemberGUID FROM Members")).use { cursor ->
                 while (cursor.moveToNext()) {
                     cursor.getString(0)?.takeIf { it.isNotEmpty() }?.let { guids.add(it) }
                 }
             }
         } catch (e: Exception) {
-            Log.e("PhotoDownloadWorker", "Failed to query database", e)
+            if (BuildConfig.DEBUG) Log.e("PhotoDownloadWorker", "Failed to query database", e)
         }
         return guids
     }
@@ -48,7 +51,7 @@ class PhotoDownloadWorker(
         if (serverIp.isNullOrEmpty()) {
             return@withContext Result.failure(workDataOf("ERROR" to "Geen IP adres"))
         }
-        Log.d("PhotoDownloadWorker", "Server IP: $serverIp")
+        if (BuildConfig.DEBUG) Log.d("PhotoDownloadWorker", "Server IP: $serverIp")
 
         val availableGuids = mutableSetOf<String>()
         try {
@@ -60,9 +63,9 @@ class PhotoDownloadWorker(
                     availableGuids.add(line!!)
                 }
             }
-            Log.d("PhotoDownloadWorker", "PC has ${availableGuids.size} photos available")
+            if (BuildConfig.DEBUG) Log.d("PhotoDownloadWorker", "PC has ${availableGuids.size} photos available")
         } catch (e: Exception) {
-            Log.e("PhotoDownloadWorker", "Failed to get photo list", e)
+            if (BuildConfig.DEBUG) Log.e("PhotoDownloadWorker", "Failed to get photo list", e)
             return@withContext Result.failure(workDataOf("ERROR" to "Could not retrieve photo list"))
         }
 
@@ -86,7 +89,7 @@ class PhotoDownloadWorker(
                 countSocket.getOutputStream().write("COUNT ${toDownload.size}\n".toByteArray())
             }
         } catch (e: Exception) {
-            Log.e("PhotoDownloadWorker", "Failed to send count", e)
+            if (BuildConfig.DEBUG) Log.e("PhotoDownloadWorker", "Failed to send count", e)
         }
 
         var successCount = guidsToDownload.size - toDownload.size // already present count
@@ -168,7 +171,7 @@ class PhotoDownloadWorker(
             }
             true
         } catch (e: Exception) {
-            Log.e("PhotoDownload", "Error for $guid", e)
+            if (BuildConfig.DEBUG) Log.e("PhotoDownload", "Error for $guid", e)
             false
         } finally {
             dataSocket?.close()

@@ -7,6 +7,7 @@ import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.models.MemberItem
 import za.co.jpsoft.winkerkreader.ui.bottomsheets.StelHerinneringBottomSheet
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel
+import za.co.jpsoft.winkerkreader.BuildConfig
 
 class MemberActionHandler(
     private val activity: AppCompatActivity,
@@ -76,7 +77,7 @@ class MemberActionHandler(
                     else -> false
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Error handling member action: $actionId", e)
+                if (BuildConfig.DEBUG) Log.e(TAG, "Error handling member action: $actionId", e)
                 Toast.makeText(activity, "Error performing action", Toast.LENGTH_SHORT).show()
                 false
             }

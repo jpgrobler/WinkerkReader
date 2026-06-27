@@ -19,6 +19,7 @@
             android:layout_width="40dp"
             android:layout_height="30dp"
             android:clickable="true"
+            android:focusable="true"
             android:scaleType="fitXY"
             android:src="@drawable/ic_launcher_round"
             android:paddingEnd="10dp"/>
@@ -29,7 +30,7 @@
             android:layout_height="wrap_content"
             android:text="@string/widget_pastoral_title"
             android:textColor="@android:color/background_dark"
-            android:textSize="14sp"
+            android:textSize="18sp"
             android:textStyle="bold"
             android:gravity="center"
             android:paddingBottom="4dp"

@@ -16,6 +16,10 @@ import android.util.Log
 import android.widget.Toast
 import za.co.jpsoft.winkerkreader.data.models.MemberItem
 import za.co.jpsoft.winkerkreader.ui.activities.LidmaatDetailActivity
+import za.co.jpsoft.winkerkreader.BuildConfig
+import za.co.jpsoft.winkerkreader.ui.bottomsheets.StelHerinneringBottomSheet
+import za.co.jpsoft.winkerkreader.ui.bottomsheets.VoegNotaByBottomSheet
+
 /**
  * Utility functions for common member actions: copying to clipboard,
  * creating a calendar note, and copying to device contacts.
@@ -34,7 +38,7 @@ object MemberUtils {
     fun copyToClipboard(context: Context, item: MemberItem) {
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
         if (clipboard == null) {
-            Log.e(TAG, "Clipboard service not available")
+            if (BuildConfig.DEBUG) Log.e(TAG, "Clipboard service not available")
             return
         }
 
@@ -67,7 +71,7 @@ object MemberUtils {
         try {
             context.startActivity(intent)
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to create calendar note", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Failed to create calendar note", e)
         }
     }
 
@@ -135,7 +139,7 @@ object MemberUtils {
         try {
             context.startActivity(intent)
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to copy to contacts", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Failed to copy to contacts", e)
         }
     }
 
@@ -146,7 +150,7 @@ object MemberUtils {
             val intent = Intent(Intent.ACTION_DIAL).apply { data = Uri.parse("tel:$formatted") }
             context.startActivity(intent)
         } catch (e: Exception) {
-            Log.e(TAG, "Error making call", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error making call", e)
         }
     }
 
@@ -161,7 +165,7 @@ object MemberUtils {
             }
             context.startActivity(intent)
         } catch (e: Exception) {
-            Log.e(TAG, "Error sending SMS", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error sending SMS", e)
         }
     }
 
@@ -192,7 +196,7 @@ object MemberUtils {
             }
             context.startActivity(intent)
         } catch (e: Exception) {
-            Log.e(TAG, "Error sending WhatsApp (method $method)", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error sending WhatsApp (method $method)", e)
             Toast.makeText(context, "WhatsApp not installed", Toast.LENGTH_SHORT).show()
         }
     }
@@ -203,13 +207,13 @@ object MemberUtils {
             val intent = Intent(Intent.ACTION_VIEW).apply { data = Uri.parse("mailto:$email") }
             context.startActivity(intent)
         } catch (e: Exception) {
-            Log.e(TAG, "Error sending email", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error sending email", e)
         }
     }
 
     fun openMemberDetail(context: Context, item: MemberItem, recordStatus: String) {
         try {
-            Log.d("MemberUtils", "Opening detail for ${item.name} ${item.surname}, GUID = ${item.guid}")
+            if (BuildConfig.DEBUG) Log.d("MemberUtils", "Opening detail for ${item.name} ${item.surname}, GUID = ${item.guid}")
             val intent = Intent(context, LidmaatDetailActivity::class.java).apply {
                 data = ContentUris.withAppendedId(
                     za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.CONTENT_URI,
@@ -220,8 +224,54 @@ object MemberUtils {
             }
             context.startActivity(intent)
         } catch (e: Exception) {
-            Log.e(TAG, "Error opening member detail", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error opening member detail", e)
         }
+    }
+
+
+    /**
+     * Opens [VoegNotaByBottomSheet] for the given member.
+     * Requires the calling Context to be an AppCompatActivity / FragmentActivity.
+     */
+    fun openVoegNotaBy(context: Context, item: MemberItem) {
+        val activity = context as? androidx.fragment.app.FragmentActivity
+        if (activity == null) {
+            if (BuildConfig.DEBUG) Log.e(TAG, "openVoegNotaBy: context is not a FragmentActivity")
+            return
+        }
+        val guid = item.guid
+        if (guid.isNullOrBlank()) {
+            if (BuildConfig.DEBUG) Log.e(TAG, "openVoegNotaBy: memberGuid is null/blank for ${item.name}")
+            return
+        }
+        VoegNotaByBottomSheet.newInstance(
+            memberGuid        = guid,
+            familyHeadGuid    = item.familyHead,
+            memberDisplayName = "${item.name} ${item.surname}".trim(),
+            memberSurname     = item.surname.ifBlank { null },
+            memberGivenName   = item.name.ifBlank { null }
+        ).show(activity.supportFragmentManager, VoegNotaByBottomSheet.TAG)
+    }
+
+    /**
+     * Opens [StelHerinneringBottomSheet] for the given member.
+     * Requires the calling Context to be an AppCompatActivity / FragmentActivity.
+     */
+    fun openStelHerinnering(context: Context, item: MemberItem) {
+        val activity = context as? androidx.fragment.app.FragmentActivity
+        if (activity == null) {
+            if (BuildConfig.DEBUG) Log.e(TAG, "openStelHerinnering: context is not a FragmentActivity")
+            return
+        }
+        val guid = item.guid
+        if (guid.isNullOrBlank()) {
+            if (BuildConfig.DEBUG) Log.e(TAG, "openStelHerinnering: memberGuid is null/blank for ${item.name}")
+            return
+        }
+        StelHerinneringBottomSheet.newInstance(
+            memberGuid     = guid,
+            familyHeadGuid = item.familyHead
+        ).show(activity.supportFragmentManager, StelHerinneringBottomSheet.TAG)
     }
 
     // -------------------------------------------------------------------------

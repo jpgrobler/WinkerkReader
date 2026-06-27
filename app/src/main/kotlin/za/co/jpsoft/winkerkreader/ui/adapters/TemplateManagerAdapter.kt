@@ -16,7 +16,7 @@ class TemplateManagerAdapter(
     private val onDelete: (templateId: String, titleAf: String) -> Unit
 ) : ListAdapter<TemplateWithSteps, TemplateManagerAdapter.ViewHolder>(DIFF) {
 
-    inner class ViewHolder(val binding: ItemTemplateManagerBinding) : RecyclerView.ViewHolder(binding.root)
+    class ViewHolder(val binding: ItemTemplateManagerBinding) : RecyclerView.ViewHolder(binding.root)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = ViewHolder(
         ItemTemplateManagerBinding.inflate(LayoutInflater.from(parent.context), parent, false)

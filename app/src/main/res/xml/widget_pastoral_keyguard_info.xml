@@ -5,4 +5,5 @@
     android:updatePeriodMillis="0"
     android:initialLayout="@layout/widget_pastoral_keyguard"
     android:widgetCategory="keyguard"
+    android:resizeMode="horizontal|vertical"
     android:description="@string/widget_pastoral_description" />

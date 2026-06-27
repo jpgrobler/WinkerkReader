@@ -15,6 +15,7 @@ import za.co.jpsoft.winkerkreader.data.pastoral.repository.PastoralReminderRepos
 import za.co.jpsoft.winkerkreader.databinding.ActivityTemplateManagerBinding
 import za.co.jpsoft.winkerkreader.ui.adapters.TemplateManagerAdapter
 import za.co.jpsoft.winkerkreader.ui.viewmodels.TemplateManagerViewModel
+import za.co.jpsoft.winkerkreader.utils.MainNavigationController
 
 class TemplateManagerActivity : AppCompatActivity() {
 
@@ -25,6 +26,8 @@ class TemplateManagerActivity : AppCompatActivity() {
         TemplateManagerViewModel.Factory(PastoralReminderRepository.create(this))
     }
 
+    private val navigationController by lazy { MainNavigationController(this) }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityTemplateManagerBinding.inflate(layoutInflater)
@@ -34,7 +37,7 @@ class TemplateManagerActivity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         adapter = TemplateManagerAdapter(
-            onOpen   = { templateId -> TemplateEditorActivity.launch(this, templateId) },
+            onOpen   = { templateId -> navigationController.navigateToTemplateEditor(templateId) },
             onToggleActive = { templateId, isActive -> viewModel.setActive(templateId, isActive) },
             onDelete = { templateId, titleAf -> confirmDelete(templateId, titleAf) }
         )
@@ -52,7 +55,7 @@ class TemplateManagerActivity : AppCompatActivity() {
         }
         lifecycleScope.launch {
             viewModel.templateCreated.collect { templateId ->
-                TemplateEditorActivity.launch(this@TemplateManagerActivity, templateId)
+                navigationController.navigateToTemplateEditor(templateId)
             }
         }
         lifecycleScope.launch {

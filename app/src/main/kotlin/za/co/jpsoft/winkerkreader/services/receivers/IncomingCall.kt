@@ -14,6 +14,7 @@ import android.util.Log
 import androidx.core.content.edit
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.KEY_OPROEPMONITOR
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
+import za.co.jpsoft.winkerkreader.BuildConfig
 
 class IncomingCall : BroadcastReceiver() {
     private fun String?.safeNumber(): String? {
@@ -72,14 +73,14 @@ class IncomingCall : BroadcastReceiver() {
      * SharedPreferences and [startCallerIdentificationService] will start the service fresh.
      */
     private fun forwardNumberToCallMonitoringService(context: Context, number: String) {
-        if (CallMonitoringService.isServiceRunning()) {
+        if (CallMonitoringService.isServiceRunning(context)) {
             try {
                 val intent = Intent(context, CallMonitoringService::class.java)
                     .putExtra("incoming_number", number)
                 context.startForegroundService(intent)
-                Log.d(TAG, "Forwarded incoming number to running CallMonitoringService: $number")
+                if (BuildConfig.DEBUG) Log.d(TAG, "Forwarded incoming number to running CallMonitoringService: $number")
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to forward number to CallMonitoringService", e)
+                if (BuildConfig.DEBUG) Log.e(TAG, "Failed to forward number to CallMonitoringService", e)
             }
         }
     }
@@ -89,9 +90,9 @@ class IncomingCall : BroadcastReceiver() {
             .putExtra(OproepDetailService.EXTRA_CALLER_ID, number)
         try {
             context.startForegroundService(serviceIntent)
-            Log.d(TAG, "Caller identification service started for $number")
+            if (BuildConfig.DEBUG) Log.d(TAG, "Caller identification service started for $number")
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to start caller identification service: ${e.message}")
+            if (BuildConfig.DEBUG) Log.e(TAG, "Failed to start caller identification service: ${e.message}")
         }
     }
 
@@ -107,9 +108,9 @@ class IncomingCall : BroadcastReceiver() {
         val serviceIntent = Intent(context, OproepDetailService::class.java)
         try {
             context.stopService(serviceIntent)
-            Log.d(TAG, "Caller identification service stopped")
+            if (BuildConfig.DEBUG) Log.d(TAG, "Caller identification service stopped")
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to stop caller identification service: ${e.message}")
+            if (BuildConfig.DEBUG) Log.e(TAG, "Failed to stop caller identification service: ${e.message}")
         }
     }
 
@@ -118,4 +119,4 @@ class IncomingCall : BroadcastReceiver() {
         private const val CALL_END_DELAY_MS = 2000L
         private const val PLACEHOLDER_NUMBER = "XXXXXXXXXX"
     }
-}
+}

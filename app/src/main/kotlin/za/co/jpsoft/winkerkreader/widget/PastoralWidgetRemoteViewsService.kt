@@ -21,6 +21,9 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import za.co.jpsoft.winkerkreader.BuildConfig
+import androidx.core.graphics.toColorInt
+import za.co.jpsoft.winkerkreader.utils.Utils.toLocalDateSafe
 
 class PastoralWidgetRemoteViewsService : RemoteViewsService() {
 
@@ -36,18 +39,18 @@ class PastoralWidgetRemoteViewsService : RemoteViewsService() {
         private val dateFormatter = DateTimeFormatter.ofPattern("dd/MM", Locale.getDefault())
 
         override fun onCreate() {
-            Log.d(TAG, "onCreate")
+            if (BuildConfig.DEBUG) Log.d(TAG, "onCreate")
         }
 
         override fun onDataSetChanged() {
-            Log.d(TAG, "onDataSetChanged - loading data")
+            if (BuildConfig.DEBUG) Log.d(TAG, "onDataSetChanged - loading data")
             try {
                 val db = PastoralDatabase.getInstance(context)
                 reminders = db.followUpReminderDao().getAllPending()
                     .sortedBy { it.dueDateUtc }
-                Log.d(TAG, "Loaded ${reminders.size} pending reminders")
+                if (BuildConfig.DEBUG) Log.d(TAG, "Loaded ${reminders.size} pending reminders")
             } catch (e: Exception) {
-                Log.e(TAG, "Error loading reminders", e)
+                if (BuildConfig.DEBUG) Log.e(TAG, "Error loading reminders", e)
                 reminders = emptyList()
             }
         }
@@ -58,17 +61,18 @@ class PastoralWidgetRemoteViewsService : RemoteViewsService() {
 
         override fun getCount(): Int {
             val count = reminders.size
-            Log.d(TAG, "getCount = $count")
+            if (BuildConfig.DEBUG) Log.d(TAG, "getCount = $count")
             return count
         }
 
         override fun getViewAt(position: Int): RemoteViews {
-            Log.d(TAG, "getViewAt position $position")
+            val darkGrey = "#444444".toColorInt()
+            if (BuildConfig.DEBUG) Log.d(TAG, "getViewAt position $position")
             val reminder = reminders[position]
             val views = RemoteViews(context.packageName, R.layout.widget_pastoral_item)
 
             val displayName = reminder.memberDisplayNameCache?.takeIf { it.isNotBlank() } ?: "Lidmaat"
-            val dueDate = Instant.ofEpochMilli(reminder.dueDateUtc).atZone(zoneId).toLocalDate()
+            val dueDate = reminder.dueDateUtc.toLocalDateSafe() ?: LocalDate.now()
             val today = LocalDate.now(zoneId)
             val isToday = dueDate == today
             val isOverdue = dueDate.isBefore(today)
@@ -100,7 +104,7 @@ class PastoralWidgetRemoteViewsService : RemoteViewsService() {
                 )
             } else {
                 spannable.setSpan(
-                    ForegroundColorSpan(ContextCompat.getColor(context, android.R.color.darker_gray)),
+                    ForegroundColorSpan(darkGrey),
                     0, dateEnd,
                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                 )
@@ -133,7 +137,7 @@ class PastoralWidgetRemoteViewsService : RemoteViewsService() {
                     )
                 } else {
                     spannable.setSpan(
-                    ForegroundColorSpan(ContextCompat.getColor(context, android.R.color.darker_gray)),
+                        ForegroundColorSpan(darkGrey),
                     nameStart, nameEnd,
                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                     )
@@ -165,7 +169,7 @@ class PastoralWidgetRemoteViewsService : RemoteViewsService() {
                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                 )
                 spannable.setSpan(
-                    ForegroundColorSpan(ContextCompat.getColor(context, android.R.color.darker_gray)),
+                    ForegroundColorSpan(darkGrey),
                     titleStart, fullText.length,
                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                 )
