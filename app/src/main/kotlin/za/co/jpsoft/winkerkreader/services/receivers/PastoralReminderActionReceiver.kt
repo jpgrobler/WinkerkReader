@@ -8,10 +8,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.pastoral.repository.PastoralReminderRepository
 import za.co.jpsoft.winkerkreader.utils.PastoralNotificationHelper
 import java.time.LocalDateTime
-import za.co.jpsoft.winkerkreader.BuildConfig
 
 class PastoralReminderActionReceiver : BroadcastReceiver() {
 

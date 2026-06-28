@@ -1,7 +1,5 @@
 package za.co.jpsoft.winkerkreader.utils
 
-import za.co.jpsoft.winkerkreader.ui.components.SearchCheckBox
-
 // SearchCheckBoxPreferences.kt
 
 
@@ -9,6 +7,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import za.co.jpsoft.winkerkreader.ui.components.SearchCheckBox
 import java.lang.reflect.Type
 
 class SearchCheckBoxPreferences(context: Context) {

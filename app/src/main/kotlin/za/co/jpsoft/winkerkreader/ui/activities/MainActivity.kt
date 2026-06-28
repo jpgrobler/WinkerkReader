@@ -1,72 +1,85 @@
 package za.co.jpsoft.winkerkreader.ui.activities
 
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.repeatOnLifecycle
-import android.app.*
-import android.content.*
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.ContentUris
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.provider.MediaStore
 import android.provider.Settings
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.BackgroundColorSpan
 import android.text.style.RelativeSizeSpan
 import android.util.Log
-import android.view.*
+import android.view.GestureDetector
+import android.view.Menu
+import android.view.MenuItem
+import android.view.MotionEvent
 import android.view.View
 import android.view.inputmethod.InputMethodManager
-import android.widget.*
+import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
-import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.SavedStateViewModelFactory
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import androidx.work.WorkInfo
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import androidx.lifecycle.ViewModel
-import java.util.concurrent.Executors
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
 import za.co.jpsoft.winkerkreader.data.models.FilterBox
 import za.co.jpsoft.winkerkreader.data.pastoral.PastoralDatabase
+import za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase
 import za.co.jpsoft.winkerkreader.databinding.ActivityMainBinding
 import za.co.jpsoft.winkerkreader.services.CallMonitoringService
 import za.co.jpsoft.winkerkreader.ui.adapters.MemberListAdapter
 import za.co.jpsoft.winkerkreader.ui.components.SearchCheckBox
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MainViewModel
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel
-import za.co.jpsoft.winkerkreader.utils.*
-import za.co.jpsoft.winkerkreader.widget.PastoralWidgetProvider
-import androidx.lifecycle.SavedStateViewModelFactory
-import androidx.work.WorkInfo
-import com.google.android.material.snackbar.Snackbar
-import za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase
 import za.co.jpsoft.winkerkreader.utils.AppAuthGuard
-import za.co.jpsoft.winkerkreader.utils.AppAuthState
+import za.co.jpsoft.winkerkreader.utils.BackPressHandler
+import za.co.jpsoft.winkerkreader.utils.BatteryOptimizationHelper
+import za.co.jpsoft.winkerkreader.utils.DeviceIdManager
+import za.co.jpsoft.winkerkreader.utils.MainNavigationController
+import za.co.jpsoft.winkerkreader.utils.MenuItemHandler
+import za.co.jpsoft.winkerkreader.utils.PastoralDatabaseBackup
+import za.co.jpsoft.winkerkreader.utils.PastoralNotificationHelper
+import za.co.jpsoft.winkerkreader.utils.PermissionHelper
+import za.co.jpsoft.winkerkreader.utils.PermissionManager
+import za.co.jpsoft.winkerkreader.utils.SearchCheckBoxPreferences
+import za.co.jpsoft.winkerkreader.utils.SettingsManager
+import za.co.jpsoft.winkerkreader.utils.WhatsAppContactLoader
+import za.co.jpsoft.winkerkreader.utils.WorkScheduler
 import za.co.jpsoft.winkerkreader.workers.PastoralBackupWorker
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import android.provider.MediaStore
-import android.content.ContentUris
-import android.database.Cursor
-import androidx.lifecycle.lifecycleScope
-import androidx.paging.PagingData
-import kotlinx.coroutines.flow.collectLatest
+import java.util.concurrent.Executors
+import androidx.core.view.isVisible
 
 class MainActivity : AppCompatActivity() {
 
@@ -387,6 +400,9 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         )
+        // ✅ Preserve scroll position when returning from detail
+        memberListAdapter.stateRestorationPolicy = RecyclerView.Adapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY
+
         binding.lidmaatList.apply {
             layoutManager = LinearLayoutManager(this@MainActivity)
             adapter = memberListAdapter
@@ -412,7 +428,7 @@ class MainActivity : AppCompatActivity() {
             memberListAdapter = memberListAdapter,
             findSearchView = ::findSearchView,
             hideFilterPanel = {
-                if (binding.mainFilter.visibility == View.VISIBLE) {
+                if (binding.mainFilter.isVisible) {
                     binding.mainFilter.visibility = View.GONE
                 }
             }
@@ -467,13 +483,17 @@ class MainActivity : AppCompatActivity() {
 //            }
 //        }
 
-//        viewModel.memberGuidsWithPendingReminders.observe(this) { guids ->
-//            memberListAdapter.updatePendingReminderGuids(guids)
-//        }
+        viewModel.memberGuidsWithPendingReminders.observe(this) { guids ->
+
+            Log.d(TAG, "🔄 Observer received ${guids.size} GUIDs: $guids")
+            memberListAdapter.updatePendingReminderGuids(guids)
+        }
         lifecycleScope.launch {
-            viewModel.pagingDataFlowWithRefresh.collectLatest { pagingData ->
-                memberListAdapter.submitData(pagingData)
-            }
+            viewModel.pagingDataFlowWithRefresh
+                .catch { e -> Log.e(TAG, "Paging flow error", e) }
+                .collectLatest { pagingData ->
+                    memberListAdapter.submitData(pagingData)
+                }
         }
         viewModel.getRowCount().observe(this) { count ->
             binding.mainCount.text = "[$count]"
@@ -806,6 +826,7 @@ class MainActivity : AppCompatActivity() {
                 if (BuildConfig.DEBUG) Log.d(TAG, "Pending reminders count: ${pendingReminders.size}")
 
                 val guids = pendingReminders.mapNotNull { reminder ->
+
                     var guid = reminder.memberGuid?.takeIf { it.isNotBlank() }
                     if (guid == null) {
                         // Fallback: resolve by name from memberDisplayNameCache
@@ -819,6 +840,7 @@ class MainActivity : AppCompatActivity() {
                     }
                     guid
                 }.distinct()
+                if (BuildConfig.DEBUG) Log.d(TAG, "📌 Final pending GUIDs: $guids")
 
                 if (BuildConfig.DEBUG) Log.d(TAG, "📌 Found ${guids.size} distinct member GUIDs with pending reminders: $guids")
                 withContext(Dispatchers.Main) {
@@ -828,6 +850,7 @@ class MainActivity : AppCompatActivity() {
                 if (BuildConfig.DEBUG) Log.e(TAG, "Failed to load pending reminder guids", e)
             }
         }
+
     }
 
     /**
@@ -902,7 +925,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun ensureServicesAreRunning() {
         if (settingsManager.callMonitorEnabled && !CallMonitoringService.isServiceRunning(this)) {
-            if (BuildConfig.DEBUG) Log.d(TAG, "CallMonitoring service was killed, restarting...")
+            if (BuildConfig.DEBUG) Log.d(TAG, "CallMonitoring service was killed, restarting…")
             startMonitoringServiceIfEnabled()
         }
     }
@@ -1125,9 +1148,18 @@ class MainActivity : AppCompatActivity() {
         settingsManager.defLayout = newSort
         viewModel.sortOrder = newSort
         mainViewModel.setSortOrder(newSort)
-        // 🔥 Update UI immediately
         binding.sortorder.text = newSort
         binding.sortorder.tag = newSort
+
+        // ✅ Update adapter's internal sortOrder so separator click logic works
+        memberListAdapter.updateState(
+            listView = settingsManager.listView,
+            soekList = viewModel.soekList,
+            soek = viewModel.soek,
+            recordStatus = viewModel.recordStatus,
+            sortOrder = newSort
+        )
+
         viewModel.refresh()
     }
 

@@ -2,7 +2,7 @@ package za.co.jpsoft.winkerkreader.utils
 
 // SQLiteStatementValidator.kt
 
-import java.util.*
+import java.util.Locale
 import java.util.regex.Pattern
 
 object SQLiteStatementValidator {

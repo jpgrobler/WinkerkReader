@@ -19,7 +19,6 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.databinding.FragmentUitlegPastoraalBinding
 import za.co.jpsoft.winkerkreader.ui.activities.UitlegActivity
@@ -346,8 +345,8 @@ class UitlegPastoraalFragment : Fragment() {
 
     private fun copyScriptToClipboard() {
         // ... (unchanged)
-        val scriptCode = """..."""
-        val instructions = """..."""
+        val scriptCode = """…"""
+        val instructions = """…"""
         val fullText = "$scriptCode\n\n$instructions"
         val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val clip = ClipData.newPlainText("WinkerkReader Script", fullText)

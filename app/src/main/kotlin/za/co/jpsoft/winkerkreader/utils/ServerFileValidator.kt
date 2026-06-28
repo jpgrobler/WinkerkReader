@@ -1,14 +1,12 @@
 package za.co.jpsoft.winkerkreader.utils
 
-import za.co.jpsoft.winkerkreader.WinkerkReader
-
 // File: ServerFileValidator.kt
 
 
 import android.util.Log
+import za.co.jpsoft.winkerkreader.BuildConfig
 import java.net.HttpURLConnection
 import java.net.URL
-import za.co.jpsoft.winkerkreader.BuildConfig
 
 /**
  * Utility class for validating server file availability

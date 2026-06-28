@@ -4,13 +4,13 @@ import android.content.Context
 import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.pastoral.PastoralDatabase
 import za.co.jpsoft.winkerkreader.data.pastoral.model.ScheduleType
 import za.co.jpsoft.winkerkreader.data.pastoral.repository.CongregationMemberGuidResolver
 import za.co.jpsoft.winkerkreader.utils.PastoralNotificationHelper
 import java.time.LocalDate
 import java.time.ZoneId
-import za.co.jpsoft.winkerkreader.BuildConfig
 
 class FollowUpReminderWorker(
     context: Context,

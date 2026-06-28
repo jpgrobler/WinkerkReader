@@ -1,5 +1,6 @@
 package za.co.jpsoft.winkerkreader.data.room
 
+import android.database.Cursor
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -7,7 +8,6 @@ import androidx.room.Query
 import androidx.room.RawQuery
 import androidx.room.Update
 import androidx.sqlite.db.SupportSQLiteQuery
-import android.database.Cursor
 
 @Dao
 interface MemberDao {

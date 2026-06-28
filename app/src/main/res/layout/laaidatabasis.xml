@@ -72,6 +72,7 @@
                     android:id="@+id/db_link"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:minHeight="60dp"
                     android:layout_alignParentStart="true"
                     android:layout_toStartOf="@id/dbLinkButton"
                     android:selectAllOnFocus="true"
@@ -86,7 +87,7 @@
                     android:background="@drawable/buttonshape"
                     android:text="@string/dbLinkButtonText"
                     android:textColor="@android:color/white"
-                    android:textSize="10dp" />
+                    android:textSize="10sp" />
 
                 <TextView
 
@@ -97,7 +98,7 @@
                     android:layout_alignBottom="@+id/tydText"
                     android:layout_alignParentStart="true"
                     android:paddingTop="5dp"
-                    android:text="Tyd:"
+                    android:text="@string/laai_tyd"
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
@@ -118,7 +119,7 @@
                     android:layout_below="@+id/db_link"
                     android:layout_toRightOf="@+id/tydText"
                     android:paddingTop="5dp"
-                    android:text="Dag:"
+                    android:text="@string/laai_dag"
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
@@ -139,7 +140,7 @@
                     android:layout_below="@+id/db_link"
                     android:layout_alignParentRight="true"
                     android:paddingTop="5dp"
-                    android:text="Auto dl\nInternet" />
+                    android:text="@string/laai_auto_dl_internet" />
 
                 <Button
                     android:id="@+id/button1"
@@ -147,7 +148,7 @@
                     android:layout_height="wrap_content"
                     android:layout_below="@+id/db_link"
                     android:layout_toRightOf="@+id/weeksdag"
-                    android:text="Opdateer\nTyd"
+                    android:text="@string/laai_opdateer_tyd"
                     android:visibility="gone" />
             </RelativeLayout>
 
@@ -188,7 +189,7 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_horizontal"
                         android:background="@drawable/buttonshape"
-                        android:text="Kies self"
+                        android:text="@string/laai_kies_self"
                         android:textColor="@android:color/white"
                         android:layout_marginRight="5dp"/>
                     <Button
@@ -197,7 +198,7 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_horizontal"
                         android:background="@drawable/buttonshape"
-                        android:text="WiFi"
+                        android:text="@string/laai_wifi"
                         android:textColor="@android:color/white"
                         android:layout_marginRight="5dp"/>
 
@@ -207,7 +208,7 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_horizontal"
                         android:background="@drawable/buttonshape"
-                        android:text="USB"
+                        android:text="@string/laai_usb"
                         android:textColor="@android:color/white" />
                 </LinearLayout>
 
@@ -235,19 +236,17 @@
                         android:id="@+id/ip_text"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="IP van PC:  "
+                        android:text="@string/laai_ip_van_pc"
                         android:textAlignment="center"
                         android:textColor="@color/colorPrimary"
-                        android:textSize="20dp" />
+                        android:textSize="20sp" />
                     <EditText
                         android:id="@+id/server_ip"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_alignParentStart="true"
-                        android:layout_toLeftOf="@id/dbLinkButton"
                         android:selectAllOnFocus="true"
-                        android:text="###.###.###.###"
-                        android:textSize="15dp" />
+                        android:text="@string/IP"
+                        android:textSize="15sp" />
                 </LinearLayout>
                 <ProgressBar
                     android:id="@+id/laai_status"
@@ -262,7 +261,7 @@
                     android:layout_height="wrap_content"
                     android:textAlignment="center"
                     android:textColor="@color/colorAccent"
-                    android:textSize="30dp" />
+                    android:textSize="30sp" />
             </LinearLayout>
             <LinearLayout
                 android:layout_width="match_parent"
@@ -272,18 +271,18 @@
                     android:id="@+id/force_sync_check"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Force Sync of aal photos" />
+                    android:text="@string/laai_force_sync_all_photos" />
                 <CheckBox
                     android:id="@+id/sync_photos"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Sync photos after database" />
+                    android:text="@string/laai_sync_photos_after_database" />
             </LinearLayout>
             <Button
                 android:id="@+id/start_photo_sync"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Sync Photos Now"
+                android:text="@string/laai_sync_photos_now"
                 android:visibility="visible" />
 
             <ProgressBar
@@ -298,7 +297,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:visibility="gone"
-                android:text="Syncing photos..." />
+                android:text="@string/laai_syncing_photos" />
         </LinearLayout>
 
     </ScrollView>

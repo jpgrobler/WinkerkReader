@@ -1,16 +1,20 @@
 package za.co.jpsoft.winkerkreader.utils
 
-import za.co.jpsoft.winkerkreader.workers.BirthdayReminderWorker
-import za.co.jpsoft.winkerkreader.workers.WidgetRefreshWorker
-import za.co.jpsoft.winkerkreader.workers.DropboxDownloadWorker
-
 import android.content.Context
 import android.util.Log
-import androidx.work.*
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
+import za.co.jpsoft.winkerkreader.BuildConfig
+import za.co.jpsoft.winkerkreader.workers.BirthdayReminderWorker
+import za.co.jpsoft.winkerkreader.workers.DropboxDownloadWorker
 import za.co.jpsoft.winkerkreader.workers.FollowUpReminderWorker
+import za.co.jpsoft.winkerkreader.workers.WidgetRefreshWorker
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
-import za.co.jpsoft.winkerkreader.BuildConfig
 
 object WorkManagerHelper {
 

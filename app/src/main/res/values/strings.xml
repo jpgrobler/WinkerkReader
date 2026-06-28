@@ -453,7 +453,7 @@
     <string name="laai_force_sync_all_photos">Force Sync of aal photos</string>
     <string name="laai_sync_photos_after_database">Sync photos after database</string>
     <string name="laai_sync_photos_now">Sync Photos Now</string>
-    <string name="laai_syncing_photos">Syncing photos...</string>
+    <string name="laai_syncing_photos">Syncing photos…</string>
     <string name="call_log_header">📋 Volledige oproep geskiedenis</string>
     <string name="call_log_clear_button">Vee Oproeplog uit</string>
     <string name="argief_datum">datum</string>
@@ -490,7 +490,7 @@
 
     <!-- LaaiDatabasisActivity strings -->
     <string name="time_format">%1$02d:%2$02d</string>
-    <string name="photo_sync_starting">Begin foto-sinkronisasie...</string>
+    <string name="photo_sync_starting">Begin foto-sinkronisasie…</string>
     <string name="photo_sync_done">Klaar: %1$d sukses, %2$d misluk</string>
     <string name="photo_sync_failed_status">Misluk</string>
     <string name="photo_sync_failed_toast">Foto-sinkronisasie het misluk</string>
@@ -499,7 +499,7 @@
     <string name="download_cancelled">Aflaai gekanselleer</string>
     <string name="error_invalid_ip">Voer geldige IP adres in asb</string>
     <string name="localhost_ip">127.0.0.1</string>
-    <string name="download_starting">Begin aflaai...</string>
+    <string name="download_starting">Begin aflaai…</string>
     <string name="download_received_percent">Ontvang: %1$d%%</string>
     <string name="download_completed">Aflaai voltooi</string>
     <string name="db_received_success">Databasis suksesvol ontvang</string>
@@ -698,5 +698,28 @@
     <string name="settings_app_biometric">Vereis verifikasie by opstart</string>
     <string name="settings_app_biometric_summary">Gebruik vingerafdruk, gesig of PIN om die app te ontsluit</string>
     <string name="herstel_rugsteun">Herstel Databasis Rugsteun</string>
+
+    <!-- Auto-generated from hardcoded layout/menu strings -->
+    <string name="vertroulik_tik_om_te_ontsluit">🔒 Vertroulik — tik om te ontsluit</string>
+    <string name="herinnering_gestel">🔔 Herinnering gestel</string>
+    <string name="herinneringe">🔔 Herinneringe</string>
+    <string name="nuut">+ Nuut</string>
+    <string name="wys_meer">Wys meer…</string>
+    <string name="geen_aktiewe_herinneringe_nie">Geen aktiewe herinneringe nie</string>
+    <string name="bedieningsnotas">📝 Bedieningsnotas</string>
+    <string name="uitvou">Uitvou</string>
+    <string name="wys_ouer_notas">Wys ouer notas…</string>
+    <string name="geen_bedieningsnotas_nie">Geen bedieningsnotas nie</string>
+    <string name="wys_meer_herinneringe">Wys meer herinneringe…</string>
+    <string name="nota">+ Nota</string>
+    <string name="opdateer_info">Opdateer info</string>
+    <string name="export_to_csv">Export to CSV</string>
+    <string name="share_2">Share</string>
+    <string name="vertroulik_versteek_oor_30s">🔓 Vertroulik - versteek oor 30s</string>
+    <string name="besoek_na_ontslag_goed_herstel">Besoek na ontslag. Goed herstel.</string>
+    <string name="Huisbesoek">Huisbesoek</string>
+    <string name="IP">###.###.###.###</string>
+
+
 </resources>
 

@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.Environment
 import android.util.Log
 import androidx.core.content.FileProvider
+import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.models.CallLog
 import java.io.File
 import java.io.FileOutputStream
@@ -14,7 +15,6 @@ import java.io.OutputStreamWriter
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import za.co.jpsoft.winkerkreader.BuildConfig
 
 object CallLogExporter {
     private const val TAG = "CallLogExporter"

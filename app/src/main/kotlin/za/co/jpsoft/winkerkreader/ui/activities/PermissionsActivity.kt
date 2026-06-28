@@ -3,7 +3,6 @@ package za.co.jpsoft.winkerkreader.ui.activities
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
@@ -18,9 +17,9 @@ import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.databinding.ActivityPermissionsBinding
 import za.co.jpsoft.winkerkreader.databinding.ItemPermissionBinding
-import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.utils.PermissionManager
 
 class PermissionsActivity : AppCompatActivity() {

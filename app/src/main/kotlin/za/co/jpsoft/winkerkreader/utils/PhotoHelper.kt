@@ -2,9 +2,9 @@ package za.co.jpsoft.winkerkreader.utils
 
 import android.content.Context
 import android.widget.ImageView
-import java.io.File
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.WinkerkContract
+import java.io.File
 
 object PhotoHelper {
 

@@ -1,7 +1,5 @@
 package za.co.jpsoft.winkerkreader.ui.components
 
-import android.os.Parcel
-import android.os.Parcelable
 import java.io.Serializable
 
 /**

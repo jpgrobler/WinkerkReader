@@ -4,7 +4,6 @@ import android.app.Notification
 import android.content.Intent
 import android.database.Cursor
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.provider.ContactsContract
 import android.service.notification.NotificationListenerService
@@ -21,8 +20,7 @@ import za.co.jpsoft.winkerkreader.utils.CalendarManager
 import za.co.jpsoft.winkerkreader.utils.CallerInfoResolver
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import za.co.jpsoft.winkerkreader.utils.UnifiedCallMonitor
-import java.time.InstantSource.system
-import java.util.*
+import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 
 class WhatsAppNotificationService : NotificationListenerService() {
@@ -474,7 +472,7 @@ class WhatsAppNotificationService : NotificationListenerService() {
     private fun isPossibleOutgoingCall(title: String, text: String, bigText: String, subText: String): Boolean {
         val combinedText = "$title $text $bigText $subText".lowercase(Locale.ROOT)
         val strongOutgoing = arrayOf(
-            "you called", "you are calling", "outgoing call", "call started", "calling...",
+            "you called", "you are calling", "outgoing call", "call started", "calling…",
             "uitgaande oproep", "jy het gebel", "jy bel", "ausgehender anruf", "du rufst an",
             "appel sortant", "vous appelez", "llamada saliente", "estas llamando", "estás llamando",
             "chamada efetuada", "ligacao efetuada", "ligação efetuada", "voce esta ligando", "você está ligando"

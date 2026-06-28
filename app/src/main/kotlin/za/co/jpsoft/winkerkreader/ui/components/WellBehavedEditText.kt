@@ -3,7 +3,6 @@ package za.co.jpsoft.winkerkreader.ui.components
 import android.content.Context
 import android.graphics.Rect
 import android.util.AttributeSet
-import android.view.ViewTreeObserver
 import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.widget.AppCompatEditText
 

@@ -2,11 +2,9 @@ package za.co.jpsoft.winkerkreader.ui.adapters
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.databinding.ItemReminderPreviewBinding
 import za.co.jpsoft.winkerkreader.ui.viewmodels.LidmaatDetailPastoralViewModel
 import java.time.format.DateTimeFormatter

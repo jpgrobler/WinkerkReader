@@ -4,10 +4,9 @@ package za.co.jpsoft.winkerkreader.utils
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.WinkerkContract
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.KEY_PASTORAL_SYNC_CALENDAR
-
-import za.co.jpsoft.winkerkreader.BuildConfig
 
 /**
  * Central manager for all app preferences.

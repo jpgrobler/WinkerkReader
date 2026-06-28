@@ -5,19 +5,22 @@ import android.database.Cursor
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.view.*
-import android.widget.*
+import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.cursoradapter.widget.CursorAdapter
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import za.co.jpsoft.winkerkreader.R
-import za.co.jpsoft.winkerkreader.utils.getStringOrNull
 import za.co.jpsoft.winkerkreader.databinding.ArgiefBinding
 import za.co.jpsoft.winkerkreader.databinding.ArgiefItemBinding
 import za.co.jpsoft.winkerkreader.ui.viewmodels.ArgiefViewModel
 import za.co.jpsoft.winkerkreader.utils.getStringOrEmpty
+import za.co.jpsoft.winkerkreader.utils.getStringOrNull
 
 class ArgiefListActivity : AppCompatActivity() {
 

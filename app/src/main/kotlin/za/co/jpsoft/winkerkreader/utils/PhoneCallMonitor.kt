@@ -1,6 +1,5 @@
 package za.co.jpsoft.winkerkreader.utils
 
-import za.co.jpsoft.winkerkreader.services.OproepDetailService
 import android.Manifest
 import android.content.Context
 import android.content.Intent
@@ -21,10 +20,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.DatabaseHelper
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
 import za.co.jpsoft.winkerkreader.data.models.CallType
-import za.co.jpsoft.winkerkreader.BuildConfig
+import za.co.jpsoft.winkerkreader.services.OproepDetailService
 
 class PhoneCallMonitor(
     private val context: Context,

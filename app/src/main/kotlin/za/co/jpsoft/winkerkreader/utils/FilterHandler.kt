@@ -1,20 +1,15 @@
 package za.co.jpsoft.winkerkreader.utils
 
-import za.co.jpsoft.winkerkreader.ui.activities.MainActivity
-import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel
-
 import android.view.View
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
-import android.widget.LinearLayout
 import android.widget.Spinner
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
-import za.co.jpsoft.winkerkreader.data.models.FilterBox
-import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
-import java.util.ArrayList
 import za.co.jpsoft.winkerkreader.R
+import za.co.jpsoft.winkerkreader.data.models.FilterBox
+import za.co.jpsoft.winkerkreader.ui.activities.MainActivity
+import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel
 
 /**
  * Handles filter dialog operations

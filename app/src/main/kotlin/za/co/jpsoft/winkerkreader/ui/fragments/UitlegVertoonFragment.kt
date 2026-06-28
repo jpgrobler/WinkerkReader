@@ -12,7 +12,6 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import yuku.ambilwarna.AmbilWarnaDialog
-import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.databinding.FragmentUitlegVertoonBinding
 import za.co.jpsoft.winkerkreader.utils.SettingsManager

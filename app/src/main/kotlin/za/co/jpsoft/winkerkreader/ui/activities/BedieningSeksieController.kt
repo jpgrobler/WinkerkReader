@@ -1,25 +1,21 @@
 package za.co.jpsoft.winkerkreader.ui.activities
 
 import android.view.View
-import android.view.animation.AnimationUtils
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.R
-import za.co.jpsoft.winkerkreader.data.pastoral.entities.PastoralNoteEntity
 import za.co.jpsoft.winkerkreader.data.pastoral.entities.FollowUpReminderEntity
-import za.co.jpsoft.winkerkreader.data.pastoral.model.ReminderStatus
+import za.co.jpsoft.winkerkreader.data.pastoral.entities.PastoralNoteEntity
 import za.co.jpsoft.winkerkreader.data.pastoral.repository.PastoralNoteRepository
 import za.co.jpsoft.winkerkreader.data.pastoral.repository.PastoralReminderRepository
 import za.co.jpsoft.winkerkreader.ui.adapters.PastoralNoteAdapter

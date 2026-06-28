@@ -6,7 +6,6 @@ import android.content.Context
 import android.database.Cursor
 import android.util.Log
 import za.co.jpsoft.winkerkreader.BuildConfig
-import za.co.jpsoft.winkerkreader.data.WinkerkContract.col
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
 import za.co.jpsoft.winkerkreader.data.models.FilterBox
 import za.co.jpsoft.winkerkreader.data.models.MemberItem

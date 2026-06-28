@@ -44,7 +44,7 @@
                 android:layout_weight="1"
                 android:textAppearance="?attr/textAppearanceLabelMedium"
                 android:textColor="?attr/colorPrimary"
-                tools:text="Huisbesoek"/>
+                tools:text="@string/Huisbesoek"/>
 
             <TextView
                 android:id="@+id/tvNoteDate"
@@ -65,7 +65,7 @@
             android:maxLines="4"
             android:ellipsize="end"
             android:visibility="gone"
-            tools:text="Besoek na ontslag. Goed herstel."
+            tools:text="@string/besoek_na_ontslag_goed_herstel"
             tools:visibility="visible"/>
 
         <!-- Vertroulik slot (versteek teks) -->
@@ -74,7 +74,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:visibility="gone"
-            android:text="🔒 Vertroulik — tik om te ontsluit"
+            android:text="@string/vertroulik_tik_om_te_ontsluit"
             android:textAppearance="?attr/textAppearanceBodySmall"
             android:textColor="?attr/colorOnSurfaceVariant"
             android:textStyle="italic"/>
@@ -88,7 +88,7 @@
             android:visibility="gone"
             android:textAppearance="?attr/textAppearanceBodySmall"
             android:textColor="?attr/colorTertiary"
-            tools:text="🔓 Vertroulik · versteek oor 30s"
+            tools:text="@string/vertroulik_versteek_oor_30s"
             tools:visibility="visible"/>
 
         <!-- Herinnering-koppeling badge -->
@@ -98,7 +98,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:visibility="gone"
-            android:text="🔔 Herinnering gestel"
+            android:text="@string/herinnering_gestel"
             android:textAppearance="?attr/textAppearanceBodySmall"
             android:textColor="?attr/colorSecondary"/>
 

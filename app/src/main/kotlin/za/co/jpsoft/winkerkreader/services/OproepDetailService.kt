@@ -26,17 +26,17 @@ import android.widget.TextView
 import androidx.core.app.NotificationCompat
 import androidx.core.content.edit
 import androidx.core.net.toUri
-import za.co.jpsoft.winkerkreader.BuildConfig
-import za.co.jpsoft.winkerkreader.R
-import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
-import za.co.jpsoft.winkerkreader.utils.CallerInfoResolver
-import java.lang.ref.WeakReference
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import za.co.jpsoft.winkerkreader.BuildConfig
+import za.co.jpsoft.winkerkreader.R
+import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
+import za.co.jpsoft.winkerkreader.utils.CallerInfoResolver
+import java.lang.ref.WeakReference
 
 class OproepDetailService : Service() {
 

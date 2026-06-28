@@ -14,11 +14,10 @@ import android.widget.RemoteViews
 import android.widget.RemoteViewsService
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
-import za.co.jpsoft.winkerkreader.ui.activities.VerjaarSmsActivity
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import za.co.jpsoft.winkerkreader.utils.WidgetDataRepository
-import za.co.jpsoft.winkerkreader.widget.WinkerkReaderWidgetProvider
 import za.co.jpsoft.winkerkreader.widget.WidgetRow
+import za.co.jpsoft.winkerkreader.widget.WinkerkReaderWidgetProvider
 import java.time.LocalDate
 
 /**

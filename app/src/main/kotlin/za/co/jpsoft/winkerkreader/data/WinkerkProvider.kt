@@ -1,7 +1,6 @@
 package za.co.jpsoft.winkerkreader.data
 
 import android.content.ContentProvider
-import android.content.ContentUris
 import android.content.ContentValues
 import android.content.UriMatcher
 import android.database.Cursor
@@ -10,8 +9,8 @@ import android.os.Bundle
 import android.util.Log
 import androidx.sqlite.db.SimpleSQLiteQuery
 import za.co.jpsoft.winkerkreader.BuildConfig
-import za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
+import za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase
 
 
 class WinkerkProvider : ContentProvider() {

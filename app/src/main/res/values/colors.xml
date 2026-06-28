@@ -49,5 +49,5 @@
     <color name="default_gemeente_1">#3F51B5</color>
     <color name="default_gemeente_2">#4CAF50</color>
     <color name="default_gemeente_3">#FF9800</color>
-
+    <color name="ripple_color">#33FFFFFF</color>
 </resources>

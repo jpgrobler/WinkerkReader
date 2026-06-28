@@ -5,7 +5,14 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.BuildConfig
 import java.io.File
 import java.io.FileOutputStream

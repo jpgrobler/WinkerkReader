@@ -1,9 +1,5 @@
 package za.co.jpsoft.winkerkreader.services.receivers
 
-import za.co.jpsoft.winkerkreader.utils.SettingsManager
-import za.co.jpsoft.winkerkreader.ui.activities.MainActivity
-import za.co.jpsoft.winkerkreader.services.CallMonitoringService
-
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
@@ -11,8 +7,11 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.util.Log
-import java.util.Calendar
 import za.co.jpsoft.winkerkreader.BuildConfig
+import za.co.jpsoft.winkerkreader.services.CallMonitoringService
+import za.co.jpsoft.winkerkreader.ui.activities.MainActivity
+import za.co.jpsoft.winkerkreader.utils.SettingsManager
+import java.util.Calendar
 
 /**
  * Combined boot receiver that handles device startup, package replacement,

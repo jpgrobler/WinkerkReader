@@ -1,14 +1,11 @@
 package za.co.jpsoft.winkerkreader.workers
 
-import za.co.jpsoft.winkerkreader.services.receivers.AlarmReceiver
-
 import android.content.Context
 import android.util.Log
-import androidx.work.*
-import java.util.Calendar
-import java.util.concurrent.TimeUnit
-import za.co.jpsoft.winkerkreader.utils.PastoralDatabaseBackup
+import androidx.work.CoroutineWorker
+import androidx.work.WorkerParameters
 import za.co.jpsoft.winkerkreader.BuildConfig
+import za.co.jpsoft.winkerkreader.utils.PastoralDatabaseBackup
 
 class DropboxDownloadWorker(
     context: Context,

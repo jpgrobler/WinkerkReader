@@ -6,8 +6,8 @@ import androidx.sqlite.db.SimpleSQLiteQuery
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.WinkerkContract
 import za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase
-import za.co.jpsoft.winkerkreader.widget.WidgetRow
 import za.co.jpsoft.winkerkreader.widget.WidgetQueryBuilder
+import za.co.jpsoft.winkerkreader.widget.WidgetRow
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 

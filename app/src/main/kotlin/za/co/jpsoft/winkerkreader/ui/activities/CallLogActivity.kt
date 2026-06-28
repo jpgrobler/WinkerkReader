@@ -1,10 +1,5 @@
 package za.co.jpsoft.winkerkreader.ui.activities
 
-import za.co.jpsoft.winkerkreader.ui.adapters.CallLogAdapter
-import za.co.jpsoft.winkerkreader.utils.CallLogExporter
-import za.co.jpsoft.winkerkreader.utils.PhoneCallMonitor
-
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -18,17 +13,17 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
+import za.co.jpsoft.winkerkreader.R.string.menu_call_log
 import za.co.jpsoft.winkerkreader.data.DatabaseHelper
 import za.co.jpsoft.winkerkreader.databinding.ActivityCallLogBinding
+import za.co.jpsoft.winkerkreader.ui.adapters.CallLogAdapter
+import za.co.jpsoft.winkerkreader.utils.CallLogExporter
 import za.co.jpsoft.winkerkreader.utils.UnifiedCallMonitor
-import za.co.jpsoft.winkerkreader.R.string.menu_call_log
-import za.co.jpsoft.winkerkreader.BuildConfig
 
 class CallLogActivity : AppCompatActivity() {
 

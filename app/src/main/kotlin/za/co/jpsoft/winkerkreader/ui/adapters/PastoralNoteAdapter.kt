@@ -7,7 +7,6 @@ import androidx.appcompat.widget.PopupMenu
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.pastoral.entities.PastoralNoteEntity
 import za.co.jpsoft.winkerkreader.data.pastoral.model.NoteCategory
 import za.co.jpsoft.winkerkreader.databinding.ItemPastoralNoteBinding

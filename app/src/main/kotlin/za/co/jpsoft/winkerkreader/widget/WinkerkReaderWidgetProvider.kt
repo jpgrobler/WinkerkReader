@@ -1,10 +1,5 @@
 package za.co.jpsoft.winkerkreader.widget
 
-import za.co.jpsoft.winkerkreader.ui.activities.VerjaarSmsActivity
-import za.co.jpsoft.winkerkreader.ui.activities.MainActivity
-import za.co.jpsoft.winkerkreader.services.ListViewWidgetService
-import za.co.jpsoft.winkerkreader.R
-
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
@@ -16,8 +11,12 @@ import android.net.Uri
 import android.os.Build
 import android.util.Log
 import android.widget.RemoteViews
-import java.util.Calendar
 import za.co.jpsoft.winkerkreader.BuildConfig
+import za.co.jpsoft.winkerkreader.R
+import za.co.jpsoft.winkerkreader.services.ListViewWidgetService
+import za.co.jpsoft.winkerkreader.ui.activities.MainActivity
+import za.co.jpsoft.winkerkreader.ui.activities.VerjaarSmsActivity
+import java.util.Calendar
 
 /**
  * Enhanced Widget Provider with modern Android compatibility and error handling.

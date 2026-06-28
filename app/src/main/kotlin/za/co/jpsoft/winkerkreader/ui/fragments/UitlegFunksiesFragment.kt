@@ -12,7 +12,6 @@ import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import za.co.jpsoft.winkerkreader.databinding.FragmentUitlegFunksiesBinding
-import za.co.jpsoft.winkerkreader.services.CallMonitoringService
 import za.co.jpsoft.winkerkreader.ui.activities.UitlegActivity
 import za.co.jpsoft.winkerkreader.ui.activities.UitlegCalendarSelectionListener
 import za.co.jpsoft.winkerkreader.utils.SettingsManager

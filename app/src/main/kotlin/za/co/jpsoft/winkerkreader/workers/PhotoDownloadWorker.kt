@@ -3,27 +3,19 @@ package za.co.jpsoft.winkerkreader.workers
 
 import android.content.Context
 import android.util.Log
+import androidx.sqlite.db.SimpleSQLiteQuery
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import za.co.jpsoft.winkerkreader.BuildConfig
+import za.co.jpsoft.winkerkreader.data.WinkerkContract
+import za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase
 import java.io.File
 import java.io.FileOutputStream
 import java.net.Socket
 import java.security.MessageDigest
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
-import kotlin.io.use
-import kotlin.use
-import android.database.sqlite.SQLiteDatabase
-import kotlinx.coroutines.delay
-import za.co.jpsoft.winkerkreader.data.WinkerkContract
-import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.WINKERK_DB
-import za.co.jpsoft.winkerkreader.data.WinkerkDbHelper
-import za.co.jpsoft.winkerkreader.BuildConfig
-import za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase
-import androidx.sqlite.db.SimpleSQLiteQuery
 
 
 class PhotoDownloadWorker(

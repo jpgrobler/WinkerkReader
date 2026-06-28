@@ -8,13 +8,13 @@ import android.content.pm.PackageManager
 import android.provider.CalendarContract
 import android.provider.CallLog
 import android.util.Log
+import androidx.annotation.WorkerThread
+import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.models.CallRecord
 import java.util.TimeZone
-import androidx.annotation.WorkerThread
-import androidx.core.content.ContextCompat
 
 class OproepUtils(
     private val prefs: SharedPreferences,

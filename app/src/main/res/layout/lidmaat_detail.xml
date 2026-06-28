@@ -664,7 +664,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="12dp"
                     android:visibility="gone"
-                    android:text="Wys meer herinneringe…"
+                    android:text="@string/wys_meer_herinneringe"
                     android:textSize="12sp"/>
 
             </LinearLayout>
@@ -694,7 +694,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="📝 Bedieningsnotas"
+                        android:text="@string/bedieningsnotas"
                         android:textAppearance="?attr/textAppearanceTitleSmall"/>
 
                     <TextView
@@ -711,7 +711,7 @@
                         style="@style/Widget.Material3.Button.TextButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="+ Nota"
+                        android:text="@string/nota"
                         android:textSize="12sp"/>
 
                     <ImageView
@@ -720,7 +720,7 @@
                         android:layout_height="20dp"
                         android:layout_marginEnd="4dp"
                         android:src="@drawable/ic_chevron_down"
-                        android:contentDescription="Uitvou"
+                        android:contentDescription="@string/uitvou"
                         app:tint="?attr/colorOnSurfaceVariant"/>
 
                 </LinearLayout>
@@ -746,7 +746,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:visibility="gone"
-                        android:text="Wys ouer notas…"
+                        android:text="@string/wys_ouer_notas"
                         android:textSize="12sp"/>
 
                     <TextView
@@ -754,7 +754,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:visibility="gone"
-                        android:text="Geen bedieningsnotas nie"
+                        android:text="@string/geen_bedieningsnotas_nie"
                         android:textAppearance="?attr/textAppearanceBodySmall"
                         android:textColor="?attr/colorOnSurfaceVariant"
                         android:textStyle="italic"

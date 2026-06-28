@@ -130,7 +130,7 @@
             android:scaleType="fitXY"
             android:layout_width="30dp"
             android:layout_height="30dp"
-            android:tooltipText="Opdateer info" />
+            android:tooltipText="@string/opdateer_info" />
     </LinearLayout>
     </LinearLayout>
 </ScrollView>

@@ -1,15 +1,14 @@
 package za.co.jpsoft.winkerkreader.ui.activities
 
-import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
-
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
 import za.co.jpsoft.winkerkreader.databinding.RegistreerBinding
+import za.co.jpsoft.winkerkreader.utils.SettingsManager
 
 class RegistreerActivity : AppCompatActivity() {
 

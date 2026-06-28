@@ -1,13 +1,12 @@
 package za.co.jpsoft.winkerkreader.workers
 
-import za.co.jpsoft.winkerkreader.widget.WinkerkReaderWidgetProvider
-import za.co.jpsoft.winkerkreader.widget.PastoralWidgetProvider
-
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import za.co.jpsoft.winkerkreader.widget.PastoralWidgetProvider
+import za.co.jpsoft.winkerkreader.widget.WinkerkReaderWidgetProvider
 
 class WidgetRefreshWorker(
     context: Context,

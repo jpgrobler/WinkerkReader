@@ -1,58 +1,80 @@
 package za.co.jpsoft.winkerkreader.ui.activities
 
 import android.Manifest
-import android.app.*
-import android.content.*
+import android.app.AlarmManager
+import android.app.AlertDialog
+import android.app.DownloadManager
+import android.app.PendingIntent
+import android.app.TimePickerDialog
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.database.sqlite.SQLiteDatabase
 import android.graphics.Color
 import android.media.MediaScannerConnection
 import android.net.Uri
-import android.os.*
+import android.os.Build
+import android.os.Bundle
+import android.os.Environment
+import android.os.Handler
+import android.os.Looper
 import android.text.InputType
 import android.util.Base64
 import android.util.Log
 import android.view.MenuItem
 import android.view.View
-import android.view.ViewGroup
-import android.widget.*
+import android.widget.AdapterView
+import android.widget.Button
+import android.widget.RadioButton
+import android.widget.RadioGroup
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.LinearLayoutCompat
 import androidx.core.app.ActivityCompat
-import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
-import androidx.work.*
+import androidx.work.Data
+import androidx.work.OneTimeWorkRequest
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.WinkerkContract
-import za.co.jpsoft.winkerkreader.data.WinkerkDbHelper
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
-
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.WINKERK_DB
-import za.co.jpsoft.winkerkreader.services.receivers.AlarmReceiver
-import za.co.jpsoft.winkerkreader.utils.SettingsManager
-import za.co.jpsoft.winkerkreader.workers.FileDownloadWorker
-import za.co.jpsoft.winkerkreader.workers.PhotoDownloadWorker
-import za.co.jpsoft.winkerkreader.databinding.LaaidatabasisBinding
-import za.co.jpsoft.winkerkreader.utils.PastoralDatabaseBackup
-import java.io.*
-import java.util.*
-import java.util.regex.Pattern
-import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.pastoral.PastoralDatabase
 import za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase
-import za.co.jpsoft.winkerkreader.services.WidgetViewsFactory
+import za.co.jpsoft.winkerkreader.databinding.LaaidatabasisBinding
+import za.co.jpsoft.winkerkreader.services.receivers.AlarmReceiver
 import za.co.jpsoft.winkerkreader.utils.MainNavigationController
+import za.co.jpsoft.winkerkreader.utils.PastoralDatabaseBackup
+import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import za.co.jpsoft.winkerkreader.utils.WidgetDataRepository
+import za.co.jpsoft.winkerkreader.workers.FileDownloadWorker
+import za.co.jpsoft.winkerkreader.workers.PhotoDownloadWorker
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
+import java.util.UUID
+import java.util.regex.Pattern
 
 class LaaiDatabasisActivity : AppCompatActivity() {
 
@@ -421,7 +443,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         }
         currentWorkInfoLiveData!!.observe(this, workInfoObserver)
 
-        Toast.makeText(this, "Foto-sinkronisasie begin...", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, "Foto-sinkronisasie begin…", Toast.LENGTH_SHORT).show()
     }
 
     private fun handleUpdateClick(unused: View) {

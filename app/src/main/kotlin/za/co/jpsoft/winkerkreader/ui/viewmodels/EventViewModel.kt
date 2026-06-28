@@ -2,18 +2,18 @@ package za.co.jpsoft.winkerkreader.ui.viewmodels
 
 import android.content.Context
 import android.database.Cursor
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.WinkerkContract
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.col
 import za.co.jpsoft.winkerkreader.data.models.MemberItem
 import java.time.LocalDate
-import android.util.Log
-import za.co.jpsoft.winkerkreader.BuildConfig
 
 class EventViewModel : ViewModel() {
 

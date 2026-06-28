@@ -5,16 +5,15 @@ import android.content.Intent
 import android.util.Log
 import android.widget.RemoteViews
 import android.widget.RemoteViewsService
+import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.pastoral.PastoralDatabase
 import za.co.jpsoft.winkerkreader.data.pastoral.entities.FollowUpReminderEntity
-import java.time.Instant
+import za.co.jpsoft.winkerkreader.utils.Utils.toLocalDateSafe
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import za.co.jpsoft.winkerkreader.BuildConfig
-import za.co.jpsoft.winkerkreader.utils.Utils.toLocalDateSafe
 
 class PastoralWidgetKeyguardRemoteViewsService : RemoteViewsService() {
 

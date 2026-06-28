@@ -4,6 +4,7 @@ import android.app.DatePickerDialog
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -23,7 +24,6 @@ import za.co.jpsoft.winkerkreader.data.pastoral.entities.PastoralNoteEntity
 import za.co.jpsoft.winkerkreader.data.pastoral.model.NoteCategory
 import za.co.jpsoft.winkerkreader.data.pastoral.repository.PastoralNoteRepository
 import za.co.jpsoft.winkerkreader.databinding.BottomSheetVoegNotaByBinding
-import android.util.Log
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId

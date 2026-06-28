@@ -6,8 +6,8 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import android.widget.RemoteViews
-import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.BuildConfig
+import za.co.jpsoft.winkerkreader.R
 
 class PastoralWidgetKeyguardProvider : AppWidgetProvider() {
 

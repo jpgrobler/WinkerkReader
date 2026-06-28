@@ -8,20 +8,19 @@ import android.content.Intent
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.pastoral.entities.FollowUpReminderEntity
 import za.co.jpsoft.winkerkreader.data.pastoral.model.ScheduleType
 import za.co.jpsoft.winkerkreader.receivers.PastoralReminderActionReceiver
 import za.co.jpsoft.winkerkreader.ui.activities.BedieningActivity
-
-import java.util.Locale
-import kotlin.math.abs
-import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.utils.Utils.toLocalDateSafe
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.time.LocalDate
+import java.util.Locale
+import kotlin.math.abs
 
 object PastoralNotificationHelper {
 

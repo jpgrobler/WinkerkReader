@@ -1,10 +1,6 @@
 package za.co.jpsoft.winkerkreader.services
 
 import android.app.ActivityManager
-import za.co.jpsoft.winkerkreader.ui.activities.MainActivity
-import za.co.jpsoft.winkerkreader.utils.CalendarManager
-import za.co.jpsoft.winkerkreader.utils.PhoneCallMonitor
-
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -19,10 +15,14 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import za.co.jpsoft.winkerkreader.BuildConfig
+import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.DatabaseHelper
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.KEY_SELECTED_CALENDAR_ID
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
-import za.co.jpsoft.winkerkreader.R
+import za.co.jpsoft.winkerkreader.ui.activities.MainActivity
+import za.co.jpsoft.winkerkreader.utils.CalendarManager
+import za.co.jpsoft.winkerkreader.utils.PhoneCallMonitor
+
 class CallMonitoringService : Service() {
 
     private var phoneCallMonitor: PhoneCallMonitor? = null

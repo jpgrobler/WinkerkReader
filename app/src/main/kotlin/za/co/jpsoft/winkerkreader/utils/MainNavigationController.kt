@@ -4,8 +4,18 @@ package za.co.jpsoft.winkerkreader.utils
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import za.co.jpsoft.winkerkreader.ui.activities.*
-import za.co.jpsoft.winkerkreader.data.pastoral.entities.FollowUpReminderEntity
+import za.co.jpsoft.winkerkreader.ui.activities.ArgiefListActivity
+import za.co.jpsoft.winkerkreader.ui.activities.BedieningActivity
+import za.co.jpsoft.winkerkreader.ui.activities.CallLogActivity
+import za.co.jpsoft.winkerkreader.ui.activities.LaaiDatabasisActivity
+import za.co.jpsoft.winkerkreader.ui.activities.LidmaatDetailActivity
+import za.co.jpsoft.winkerkreader.ui.activities.MainActivity
+import za.co.jpsoft.winkerkreader.ui.activities.PermissionsActivity
+import za.co.jpsoft.winkerkreader.ui.activities.RegistreerActivity
+import za.co.jpsoft.winkerkreader.ui.activities.TemplateEditorActivity
+import za.co.jpsoft.winkerkreader.ui.activities.TemplateManagerActivity
+import za.co.jpsoft.winkerkreader.ui.activities.UitlegActivity
+import za.co.jpsoft.winkerkreader.ui.activities.VerjaarSmsActivity
 
 /**
  * Centralised navigation for the entire app.

@@ -8,9 +8,10 @@ import androidx.work.workDataOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.WinkerkContract
-import za.co.jpsoft.winkerkreader.data.WinkerkDbHelper
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.WINKERK_DB
+import za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase
 import java.io.BufferedOutputStream
 import java.io.BufferedReader
 import java.io.BufferedWriter
@@ -22,8 +23,6 @@ import java.net.Socket
 import java.net.SocketTimeoutException
 import java.security.MessageDigest
 import java.util.concurrent.atomic.AtomicInteger
-import za.co.jpsoft.winkerkreader.BuildConfig
-import za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase
 
 class FileDownloadWorker(
     context: Context,

@@ -1,15 +1,15 @@
 package za.co.jpsoft.winkerkreader.utils
 
 import android.util.Log
+import org.json.JSONArray
+import za.co.jpsoft.winkerkreader.BuildConfig
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import za.co.jpsoft.winkerkreader.BuildConfig
-import org.json.JSONArray
-import org.json.JSONObject
+
 object PastoralTaskScriptManager {
 
     private const val TAG = "PastoralTaskScript"

@@ -3,11 +3,11 @@ package za.co.jpsoft.winkerkreader.utils
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.models.MemberItem
 import za.co.jpsoft.winkerkreader.ui.bottomsheets.StelHerinneringBottomSheet
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel
-import za.co.jpsoft.winkerkreader.BuildConfig
 
 class MemberActionHandler(
     private val activity: AppCompatActivity,

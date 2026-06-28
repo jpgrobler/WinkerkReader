@@ -2,7 +2,6 @@ package za.co.jpsoft.winkerkreader.ui.adapters
 
 import android.content.Intent
 import android.net.Uri
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,23 +9,22 @@ import android.widget.PopupMenu
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import za.co.jpsoft.winkerkreader.R
+import za.co.jpsoft.winkerkreader.data.pastoral.entities.FollowUpReminderEntity
 import za.co.jpsoft.winkerkreader.data.pastoral.model.ReminderWithMember
 import za.co.jpsoft.winkerkreader.data.pastoral.model.ScheduleType
+import za.co.jpsoft.winkerkreader.data.pastoral.model.TemplateContext
 import za.co.jpsoft.winkerkreader.databinding.ItemBedieningReminderBinding
 import za.co.jpsoft.winkerkreader.utils.PhotoHelper
-import za.co.jpsoft.winkerkreader.utils.Utils.fixphonenumber
+import za.co.jpsoft.winkerkreader.utils.Utils.toLocalDateSafe
+import java.io.File
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import com.bumptech.glide.Glide
-import za.co.jpsoft.winkerkreader.data.pastoral.entities.FollowUpReminderEntity
-import java.io.File
-import za.co.jpsoft.winkerkreader.data.pastoral.model.TemplateContext
-import za.co.jpsoft.winkerkreader.utils.Utils.toLocalDateSafe
-import java.time.LocalDate
 
 class BedieningReminderAdapter(
     private val onVoltooi:      (reminderId: String) -> Unit,

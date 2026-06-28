@@ -3,20 +3,23 @@ package za.co.jpsoft.winkerkreader.utils
 
 // CalendarManager.kt
 
-import za.co.jpsoft.winkerkreader.WinkerkReader
 import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
 import android.provider.CalendarContract
 import android.util.Log
+import za.co.jpsoft.winkerkreader.BuildConfig
+import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.models.CalendarInfo
 import za.co.jpsoft.winkerkreader.data.models.CallType
+import za.co.jpsoft.winkerkreader.utils.CalendarManager.Companion.PASTORAL_REMINDER_TOKEN
+import za.co.jpsoft.winkerkreader.utils.CalendarManager.Companion.PASTORAL_TITLE_PREFIX
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.util.*
-import za.co.jpsoft.winkerkreader.R
-import za.co.jpsoft.winkerkreader.BuildConfig
+import java.util.Calendar
+import java.util.Locale
+import java.util.TimeZone
 
 class CalendarManager(private val context: Context) {
     private val contentResolver = context.contentResolver

@@ -4,8 +4,8 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import za.co.jpsoft.winkerkreader.databinding.ItemCallLogBinding
 import za.co.jpsoft.winkerkreader.data.models.CallLog
+import za.co.jpsoft.winkerkreader.databinding.ItemCallLogBinding
 
 class CallLogAdapter(initialLogs: List<CallLog>) : RecyclerView.Adapter<CallLogAdapter.CallLogViewHolder>() {
 
@@ -69,4 +69,4 @@ class CallLogAdapter(initialLogs: List<CallLog>) : RecyclerView.Adapter<CallLogA
             return oldList[oldItemPosition] == newList[newItemPosition]
         }
     }
-}
+}

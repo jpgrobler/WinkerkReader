@@ -3,8 +3,8 @@ package za.co.jpsoft.winkerkreader.utils
 import android.content.Context
 import android.provider.Settings
 import android.util.Log
-import java.util.UUID
 import za.co.jpsoft.winkerkreader.BuildConfig
+import java.util.UUID
 
 /**
  * DeviceIdManager - Privacy-compliant device identification

@@ -14,9 +14,12 @@ import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.google.android.material.tabs.TabLayoutMediator
 import za.co.jpsoft.winkerkreader.BuildConfig
-import za.co.jpsoft.winkerkreader.databinding.ActivityUitlegBinding
 import za.co.jpsoft.winkerkreader.data.models.CalendarInfo
-import za.co.jpsoft.winkerkreader.ui.fragments.*
+import za.co.jpsoft.winkerkreader.databinding.ActivityUitlegBinding
+import za.co.jpsoft.winkerkreader.ui.fragments.UitlegFunksiesFragment
+import za.co.jpsoft.winkerkreader.ui.fragments.UitlegPastoraalFragment
+import za.co.jpsoft.winkerkreader.ui.fragments.UitlegVertoonFragment
+import za.co.jpsoft.winkerkreader.ui.fragments.UitlegWidgetFragment
 import za.co.jpsoft.winkerkreader.utils.CalendarManager
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
 

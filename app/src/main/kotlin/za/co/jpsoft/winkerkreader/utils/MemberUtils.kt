@@ -7,16 +7,15 @@ import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
-import android.database.Cursor
 import android.net.Uri
 import android.os.Build
 import android.provider.ContactsContract
 import android.text.format.DateUtils
 import android.util.Log
 import android.widget.Toast
+import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.models.MemberItem
 import za.co.jpsoft.winkerkreader.ui.activities.LidmaatDetailActivity
-import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.ui.bottomsheets.StelHerinneringBottomSheet
 import za.co.jpsoft.winkerkreader.ui.bottomsheets.VoegNotaByBottomSheet
 

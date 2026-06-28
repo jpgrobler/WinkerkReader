@@ -1,7 +1,6 @@
 package za.co.jpsoft.winkerkreader.ui.viewmodels
 
 import android.content.Context
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
@@ -10,15 +9,15 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
-import za.co.jpsoft.winkerkreader.BuildConfig
+import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.data.MemberPagingSource
 import za.co.jpsoft.winkerkreader.data.MemberRepository
 import za.co.jpsoft.winkerkreader.data.models.FilterBox
@@ -115,6 +114,9 @@ class MemberViewModel(
     fun loadData(context: Context, mode: MainQueryMode) {
         initRepository(context)
         val request = mode.toQueryRequest()
+        // Update the event type for paging
+        _eventType.value = request.eventType
+
         if (request.eventType == "FILTER_DATA") {
             currentFilterList = request.filterList ?: arrayListOf()
         }
@@ -125,14 +127,18 @@ class MemberViewModel(
         _filterList.value = currentFilterList
         // Trigger refresh
         refresh()
-        // For legacy LiveData, we can still fetch the first page or ignore
-        // We'll keep the old fetchData for count and search text
-        fetchData(context, request.eventType)
+        // Fetch for legacy LiveData on background thread
+        viewModelScope.launch(Dispatchers.IO) {
+            fetchData(context, request.eventType)
+        }
     }
 
-    private fun fetchData(context: Context, eventType: String) {
-        // Keep for search text and row count
-        viewModelScope.launch {
+    /**
+     * Fetches data from the repository on a background thread and updates LiveData.
+     * This is a suspend function that runs the database query on Dispatchers.IO.
+     */
+    private suspend fun fetchData(context: Context, eventType: String) {
+        withContext(Dispatchers.IO) {
             val items = repository.loadMembers(
                 eventType = eventType,
                 recordStatus = recordStatus,
@@ -140,15 +146,18 @@ class MemberViewModel(
                 filterList = currentFilterList,
                 sortOrder = sortOrder
             )
-            _memberList.postValue(items)
-            rowCount.postValue(items.size)
-            if (eventType == "SOEK_DATA") {
-                textLiveData.postValue(soek)
-            } else if (eventType == "FILTER_DATA") {
-                textLiveData.postValue(buildFilterText())
-            }
-            if (eventType == "LIDMAAT_DATA_VERJAAR") {
-                verjaarFlag.postValue(true)
+            // Update LiveData on the main thread
+            withContext(Dispatchers.Main) {
+                _memberList.value = items
+                rowCount.value = items.size
+                if (eventType == "SOEK_DATA") {
+                    textLiveData.value = soek
+                } else if (eventType == "FILTER_DATA") {
+                    textLiveData.value = buildFilterText()
+                }
+                if (eventType == "LIDMAAT_DATA_VERJAAR") {
+                    verjaarFlag.value = true
+                }
             }
         }
     }
@@ -193,7 +202,7 @@ class MemberViewModel(
     }
 
     // -------------------------------------------------------------------------
-    // Query mode conversion (unchanged)
+    // Query mode conversion
     // -------------------------------------------------------------------------
 
     private data class QueryRequest(
@@ -229,6 +238,7 @@ class MemberViewModel(
     private val _soek = MutableStateFlow("")
     private val _recordStatus = MutableStateFlow("0")
     private val _filterList = MutableStateFlow<ArrayList<FilterBox>?>(null)
+    private val _eventType = MutableStateFlow("LIDMAAT_DATA")   // dynamic event type
 
     private val _dummyRefresh = MutableStateFlow(0)
 
@@ -240,41 +250,49 @@ class MemberViewModel(
     }
 
     /**
-     * Main paging data flow – recreates the Pager whenever any parameter changes.
+     * Internal data class to hold paging parameters.
      */
-    val pagingDataFlowWithRefresh: Flow<PagingData<MemberItem>> = combine(
-        _sortOrder,
-        _soek,
-        _recordStatus,
-        _filterList,
-        _dummyRefresh
-    ) { sort, search, status, filters, _ ->
-        Pager(pagingConfig) {
-            MemberPagingSource(
-                contentResolver = context.contentResolver,
-                eventType = resolveEventType(sort),
-                recordStatus = status,
-                soek = search,
-                filterList = filters,
-                sortOrder = sort,
-                pageSize = 50
-            )
-        }.flow
-    }.flatMapLatest { it }
+    private data class PagingParams(
+        val sort: String,
+        val search: String,
+        val status: String,
+        val filters: ArrayList<FilterBox>?,
+        val eventType: String
+    )
 
-    private fun resolveEventType(sort: String): String = when (sort) {
-        "SOEK_DATA" -> "SOEK_DATA"
-        "FILTER_DATA" -> "FILTER_DATA"
-        "ADRES" -> "LIDMAAT_DATA_ADRES"
-        "GESINNE" -> "GESINNE_DATA"
-        "HUWELIK" -> "HUWELIK_DATA"
-        "OUDERDOM" -> "OUDERDOM_DATA"
-        "VAN" -> "LIDMAAT_DATA"
-        "VERJAAR" -> "LIDMAAT_DATA_VERJAAR"
-        "WYK" -> "LIDMAAT_DATA_WYK"
-        else -> "LIDMAAT_DATA"
+    /**
+     * Main paging data flow – recreates the Pager whenever any parameter changes.
+     * Made lazy to ensure context is initialised before first use.
+     */
+    val pagingDataFlowWithRefresh: Flow<PagingData<MemberItem>> by lazy {
+        combine(
+            _sortOrder,
+            _soek,
+            _recordStatus,
+            _filterList,
+            _eventType,
+            _dummyRefresh
+        ) { args ->
+            val sort = args[0] as String
+            val search = args[1] as String
+            val status = args[2] as String
+            val filters = args[3] as ArrayList<FilterBox>?
+            val eventType = args[4] as String
+            PagingParams(sort, search, status, filters, eventType)
+        }.flatMapLatest { params ->
+            Pager(pagingConfig) {
+                MemberPagingSource(
+                    contentResolver = context.contentResolver,
+                    eventType = params.eventType,
+                    recordStatus = params.status,
+                    soek = params.search,
+                    filterList = params.filters,
+                    sortOrder = params.sort,
+                    pageSize = 50
+                )
+            }.flow
+        }.cachedIn(viewModelScope)   // ✅ Add this line
     }
-
 
     override fun onCleared() {
         clearCache()

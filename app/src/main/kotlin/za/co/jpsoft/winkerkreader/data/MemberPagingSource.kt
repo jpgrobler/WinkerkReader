@@ -1,14 +1,13 @@
 package za.co.jpsoft.winkerkreader.data
 
 import android.content.ContentResolver
-import android.database.Cursor
+import android.util.Log
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.data.models.FilterBox
 import za.co.jpsoft.winkerkreader.data.models.MemberItem
-import za.co.jpsoft.winkerkreader.utils.CursorDataExtractor
-import za.co.jpsoft.winkerkreader.utils.getStringOrEmpty
-import kotlin.math.ceil
 
 class MemberPagingSource(
     private val contentResolver: ContentResolver,
@@ -20,53 +19,58 @@ class MemberPagingSource(
     private val pageSize: Int = 50
 ) : PagingSource<Int, MemberItem>() {
 
-    private var totalCount = -1
+    private val TAG = "MemberPagingSource"
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, MemberItem> {
-        val position = params.key ?: 0
-        val limit = params.loadSize.coerceAtMost(pageSize)
+        // Force all database operations onto the IO dispatcher
+        return withContext(Dispatchers.IO) {
+            val position = params.key ?: 0
+            val limit = params.loadSize.coerceAtMost(pageSize)
 
-        val sqlRequest = MemberQueryBuilder.buildQuery(
-            eventType = eventType,
-            recordStatus = recordStatus,
-            soek = soek,
-            filterList = filterList,
-            sortOrder = sortOrder
-        ) ?: return LoadResult.Error(IllegalStateException("Invalid query"))
+            val sqlRequest = MemberQueryBuilder.buildQuery(
+                eventType = eventType,
+                recordStatus = recordStatus,
+                soek = soek,
+                filterList = filterList,
+                sortOrder = sortOrder
+            ) ?: return@withContext LoadResult.Error(IllegalStateException("Invalid query"))
 
-        // Add LIMIT and OFFSET to the SQL
-        val finalSql = buildPagedQuery(sqlRequest.sql, position, limit)
+            val finalSql = buildPagedQuery(sqlRequest.sql, position, limit)
+            Log.d(TAG, "Executing SQL: $finalSql")
+            Log.d(TAG, "Args: ${sqlRequest.args.joinToString()}")
 
-        return try {
-            val cursor = contentResolver.query(
-                WinkerkContract.winkerkEntry.CONTENT_URI,
-                null,
-                finalSql,
-                sqlRequest.args,
-                null
-            ) ?: return LoadResult.Error(IllegalStateException("Query returned null cursor"))
+            try {
+                val cursor = contentResolver.query(
+                    WinkerkContract.winkerkEntry.CONTENT_URI,
+                    null,
+                    finalSql,
+                    sqlRequest.args,
+                    null
+                ) ?: return@withContext LoadResult.Error(IllegalStateException("Query returned null cursor"))
 
-            val items = mutableListOf<MemberItem>()
-            cursor.use {
-                if (totalCount < 0) {
-                    // Get total count (optimization: separate count query if needed)
-                    totalCount = getTotalCount(sqlRequest.sql, sqlRequest.args)
+                val items = mutableListOf<MemberItem>()
+                cursor.use {
+                    while (it.moveToNext()) {
+                        items.add(MemberItem.fromCursor(it))
+                    }
                 }
-                while (it.moveToNext()) {
-                    items.add(MemberItem.fromCursor(it))
-                }
+                Log.d(TAG, "Loaded ${items.size} items")
+
+                // Apply separators
+                val itemsWithSeparators = MemberItemSeparator.applySeparators(items, sortOrder)
+                Log.d(TAG, "Loaded ${itemsWithSeparators.size} items")
+
+                // Determine next key based on whether we received fewer items than requested
+                val nextKey = if (itemsWithSeparators.size < limit) null else position + itemsWithSeparators.size
+                LoadResult.Page(
+                    data = itemsWithSeparators,   // ✅ use the separated list
+                    prevKey = if (position == 0) null else position - 1,
+                    nextKey = nextKey
+                )
+            } catch (e: Exception) {
+                Log.e(TAG, "Paging load failed", e)
+                LoadResult.Error(e)
             }
-
-            val prevKey = if (position == 0) null else position - 1
-            val nextKey = if (position + items.size < totalCount) position + items.size else null
-
-            LoadResult.Page(
-                data = items,
-                prevKey = prevKey,
-                nextKey = nextKey
-            )
-        } catch (e: Exception) {
-            LoadResult.Error(e)
         }
     }
 
@@ -78,29 +82,8 @@ class MemberPagingSource(
     }
 
     private fun buildPagedQuery(baseSql: String, offset: Int, limit: Int): String {
-        // Remove trailing semicolon if present
         var sql = baseSql.trim()
         if (sql.endsWith(";")) sql = sql.dropLast(1)
         return "$sql LIMIT $limit OFFSET $offset"
-    }
-
-    private fun getTotalCount(sql: String, args: Array<String>): Int {
-        // Remove ORDER BY and LIMIT clauses to count all rows
-        var countSql = sql.replace(Regex("ORDER BY.*$", RegexOption.IGNORE_CASE), "")
-            .replace(Regex("LIMIT.*$", RegexOption.IGNORE_CASE), "")
-            .trim()
-        if (countSql.endsWith(";")) countSql = countSql.dropLast(1)
-        // Wrap in SELECT COUNT(*)
-        countSql = "SELECT COUNT(*) FROM ($countSql)"
-        val cursor = contentResolver.query(
-            WinkerkContract.winkerkEntry.CONTENT_URI,
-            null,
-            countSql,
-            args,
-            null
-        )
-        return cursor?.use {
-            if (it.moveToFirst()) it.getInt(0) else 0
-        } ?: 0
     }
 }

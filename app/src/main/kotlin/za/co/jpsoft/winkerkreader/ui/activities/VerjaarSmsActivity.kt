@@ -3,10 +3,12 @@ package za.co.jpsoft.winkerkreader.ui.activities
 import android.Manifest
 import android.app.AlarmManager
 import android.app.PendingIntent
-import android.content.*
+import android.content.ContentValues
+import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.Telephony
@@ -16,41 +18,41 @@ import android.text.TextWatcher
 import android.util.Log
 import android.view.MenuItem
 import android.view.View
-import android.widget.*
+import android.widget.RadioButton
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.app.ActivityCompat
+import androidx.core.content.edit
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.paging.PagingData
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.WinkerkContract
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
 import za.co.jpsoft.winkerkreader.data.models.MemberItem
+import za.co.jpsoft.winkerkreader.databinding.VerjaarBinding
 import za.co.jpsoft.winkerkreader.services.receivers.AlarmReceiver
 import za.co.jpsoft.winkerkreader.ui.adapters.MemberListAdapter
 import za.co.jpsoft.winkerkreader.ui.viewmodels.EventViewModel
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel
-import za.co.jpsoft.winkerkreader.databinding.VerjaarBinding
+import za.co.jpsoft.winkerkreader.utils.MainNavigationController
 import za.co.jpsoft.winkerkreader.utils.MemberActionHandler
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import za.co.jpsoft.winkerkreader.utils.Utils.fixphonenumber
-import androidx.core.content.edit
-import androidx.core.net.toUri
-import androidx.appcompat.app.AlertDialog
-import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.utils.forceShowIcons
-import java.util.*
-import za.co.jpsoft.winkerkreader.utils.MainNavigationController
-import android.os.Bundle
-import androidx.paging.PagingData
+import java.util.Calendar
 
 class VerjaarSmsActivity : AppCompatActivity() {
 
@@ -410,7 +412,7 @@ class VerjaarSmsActivity : AppCompatActivity() {
         // Show a progress dialog (optional)
         // Show a progress dialog
         val progressDialog = AlertDialog.Builder(this).apply {
-            setMessage("Besig om SMS'e te stuur...")
+            setMessage("Besig om SMS'e te stuur…")
             setCancelable(false)
         }.create()
         progressDialog.show()

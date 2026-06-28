@@ -5,9 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
-import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -16,7 +14,6 @@ import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.pastoral.entities.TemplateStepEntity
-import za.co.jpsoft.winkerkreader.data.pastoral.model.ScheduleType
 import za.co.jpsoft.winkerkreader.data.pastoral.repository.PastoralReminderRepository
 import za.co.jpsoft.winkerkreader.databinding.ActivityTemplateEditorBinding
 import za.co.jpsoft.winkerkreader.ui.adapters.StepEditorAdapter

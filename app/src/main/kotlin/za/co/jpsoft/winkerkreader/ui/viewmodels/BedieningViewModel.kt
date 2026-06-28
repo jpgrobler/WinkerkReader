@@ -2,17 +2,27 @@ package za.co.jpsoft.winkerkreader.ui.viewmodels
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.pastoral.model.ReminderWithMember
 import za.co.jpsoft.winkerkreader.data.pastoral.repository.PastoralReminderRepository
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
-import za.co.jpsoft.winkerkreader.BuildConfig
 
 class BedieningViewModel(
     private val repository: PastoralReminderRepository,

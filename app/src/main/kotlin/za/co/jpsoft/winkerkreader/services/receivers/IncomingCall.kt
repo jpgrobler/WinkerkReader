@@ -1,20 +1,18 @@
 package za.co.jpsoft.winkerkreader.services.receivers
 
-import za.co.jpsoft.winkerkreader.services.OproepDetailService
-import za.co.jpsoft.winkerkreader.services.CallMonitoringService
-
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.telephony.TelephonyManager
 import android.util.Log
 import androidx.core.content.edit
+import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.KEY_OPROEPMONITOR
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
-import za.co.jpsoft.winkerkreader.BuildConfig
+import za.co.jpsoft.winkerkreader.services.CallMonitoringService
+import za.co.jpsoft.winkerkreader.services.OproepDetailService
 
 class IncomingCall : BroadcastReceiver() {
     private fun String?.safeNumber(): String? {

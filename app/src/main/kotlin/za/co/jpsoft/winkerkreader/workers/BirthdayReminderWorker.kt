@@ -1,11 +1,8 @@
 package za.co.jpsoft.winkerkreader.workers
 
-import za.co.jpsoft.winkerkreader.services.receivers.AlarmReceiver
-
 import android.content.Context
-import androidx.work.*
-import java.util.Calendar
-import java.util.concurrent.TimeUnit
+import androidx.work.CoroutineWorker
+import androidx.work.WorkerParameters
 
 class BirthdayReminderWorker(
     context: Context,

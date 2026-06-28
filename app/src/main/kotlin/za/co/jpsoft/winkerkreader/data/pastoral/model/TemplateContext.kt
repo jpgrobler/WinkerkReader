@@ -1,6 +1,8 @@
 package za.co.jpsoft.winkerkreader.data.pastoral.model
 
 import org.json.JSONObject
+import za.co.jpsoft.winkerkreader.data.pastoral.model.TemplateContext.Companion.build
+import za.co.jpsoft.winkerkreader.data.pastoral.model.TemplateContext.Companion.from
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 

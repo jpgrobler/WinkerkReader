@@ -1,9 +1,5 @@
 package za.co.jpsoft.winkerkreader.services.receivers
 
-import za.co.jpsoft.winkerkreader.ui.activities.VerjaarSmsActivity
-import za.co.jpsoft.winkerkreader.ui.activities.LaaiDatabasisActivity
-import za.co.jpsoft.winkerkreader.WinkerkReader
-
 // AlarmReceiver.kt
 
 
@@ -17,9 +13,11 @@ import android.media.RingtoneManager
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import za.co.jpsoft.winkerkreader.R
+import za.co.jpsoft.winkerkreader.ui.activities.LaaiDatabasisActivity
+import za.co.jpsoft.winkerkreader.ui.activities.VerjaarSmsActivity
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.*
+import java.util.Locale
 
 class AlarmReceiver : BroadcastReceiver() {
 

@@ -1,12 +1,11 @@
 package za.co.jpsoft.winkerkreader.utils
 
-import za.co.jpsoft.winkerkreader.ui.activities.MainActivity
-import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel
-
 // NavigationHandler.kt
 
 
 import android.widget.TextView
+import za.co.jpsoft.winkerkreader.ui.activities.MainActivity
+import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel
 
 /**
  * Handles navigation between different data views via swipe gestures

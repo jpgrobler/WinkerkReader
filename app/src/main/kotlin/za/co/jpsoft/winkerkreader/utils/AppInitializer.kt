@@ -1,7 +1,6 @@
 // AppInitializer.kt
 package za.co.jpsoft.winkerkreader.utils
 
-import android.app.Application
 import android.content.Context
 import android.util.Log
 import androidx.lifecycle.LifecycleCoroutineScope
