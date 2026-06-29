@@ -10,9 +10,11 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
+import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import za.co.jpsoft.winkerkreader.R
 
 /**
  * Centralised permission manager for the entire app.
@@ -24,6 +26,23 @@ class PermissionManager(private val context: Context) {
     private val prefs = context.getSharedPreferences("PermissionPrefs", Context.MODE_PRIVATE)
 
     companion object {
+        fun getPermissionDisplayName(permission: String): String {
+            val map = mapOf(
+                Manifest.permission.READ_CONTACTS to "Read Contacts",
+                Manifest.permission.WRITE_CONTACTS to "Write Contacts",
+                Manifest.permission.SEND_SMS to "Send SMS",
+                Manifest.permission.READ_SMS to "Read SMS",
+                Manifest.permission.READ_PHONE_STATE to "Phone State",
+                Manifest.permission.READ_CALL_LOG to "Call Log",
+                Manifest.permission.READ_PHONE_NUMBERS to "Phone Numbers",
+                Manifest.permission.READ_CALENDAR to "Read Calendar",
+                Manifest.permission.WRITE_CALENDAR to "Write Calendar",
+                Manifest.permission.POST_NOTIFICATIONS to "Notifications",
+                Manifest.permission.SCHEDULE_EXACT_ALARM to "Exact Alarms"
+            )
+            return map[permission] ?: permission.substringAfterLast('.')
+        }
+
         // Request codes for different permission groups
         const val RC_ALL_PERMISSIONS = 1001
         const val RC_STORAGE = 1002
@@ -82,21 +101,16 @@ class PermissionManager(private val context: Context) {
         }.toTypedArray()
     }
 
-    /**
-     * Check if a specific permission is granted.
-     */
+    // ------------------------------------------------------------------------
+    // Basic permission checks and requests
+    // ------------------------------------------------------------------------
+
     fun isPermissionGranted(permission: String): Boolean =
         ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
 
-    /**
-     * Check if all permissions in the given array are granted.
-     */
     fun arePermissionsGranted(permissions: Array<String>): Boolean =
         permissions.all { isPermissionGranted(it) }
 
-    /**
-     * Request a set of permissions from an Activity.
-     */
     fun requestPermissions(activity: Activity, permissions: Array<String>, requestCode: Int) {
         val notGranted = permissions.filter { !isPermissionGranted(it) }.toTypedArray()
         if (notGranted.isNotEmpty()) {
@@ -104,22 +118,17 @@ class PermissionManager(private val context: Context) {
         }
     }
 
-    /**
-     * Request all essential app permissions from an Activity.
-     */
     fun requestAllPermissions(activity: Activity) {
         requestPermissions(activity, ALL_RUNTIME_PERMISSIONS, RC_ALL_PERMISSIONS)
     }
 
-    /**
-     * Check if the overlay permission (SYSTEM_ALERT_WINDOW) is granted.
-     */
+    // ------------------------------------------------------------------------
+    // Special permissions
+    // ------------------------------------------------------------------------
+
     fun isOverlayPermissionGranted(): Boolean =
         Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(context)
 
-    /**
-     * Get an Intent to request overlay permission.
-     */
     fun getOverlayPermissionIntent(): Intent? {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(context)) {
             Intent(
@@ -129,44 +138,26 @@ class PermissionManager(private val context: Context) {
         } else null
     }
 
-    /**
-     * Check if notification policy access is granted.
-     */
     fun isNotificationPolicyAccessGranted(): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return true
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         return manager.isNotificationPolicyAccessGranted
     }
 
-    /**
-     * Check if notification listener is enabled for this app.
-     */
     fun isNotificationListenerEnabled(): Boolean {
         return NotificationManagerCompat.getEnabledListenerPackages(context)
             .contains(context.packageName)
     }
 
-    /**
-     * Get an Intent to open notification policy settings.
-     */
     fun getNotificationPolicyIntent(): Intent =
         Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
 
-    /**
-     * Get an Intent to open notification listener settings.
-     */
     fun getNotificationListenerIntent(): Intent =
         Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
 
-    /**
-     * Check if the app can schedule exact alarms.
-     * Uses the type‑safe getSystemService(AlarmManager::class.java) on API 23+,
-     * otherwise falls back to the legacy cast with the import.
-     */
     fun canScheduleExactAlarms(): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return true
         val alarmManager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            // Type‑safe, no cast needed
             context.getSystemService(AlarmManager::class.java)
         } else {
             @Suppress("DEPRECATION")
@@ -175,9 +166,6 @@ class PermissionManager(private val context: Context) {
         return alarmManager?.canScheduleExactAlarms() ?: false
     }
 
-    /**
-     * Get an Intent to request exact alarm permission.
-     */
     fun getExactAlarmIntent(): Intent? {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
@@ -186,36 +174,10 @@ class PermissionManager(private val context: Context) {
         } else null
     }
 
-    /**
-     * Check if all essential permissions for core functionality are granted.
-     */
-    fun hasEssentialPermissions(): Boolean {
-        return arePermissionsGranted(CONTACT_PERMISSIONS) &&
-                arePermissionsGranted(SMS_PERMISSIONS) &&
-                arePermissionsGranted(PHONE_PERMISSIONS) &&
-                arePermissionsGranted(CALENDAR_PERMISSIONS) &&
-                (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || isPermissionGranted(Manifest.permission.POST_NOTIFICATIONS))
-    }
+    // ------------------------------------------------------------------------
+    // Helpers for prefs and counts
+    // ------------------------------------------------------------------------
 
-    /**
-     * Get a friendly name for a permission (for debugging/UI).
-     */
-    fun getPermissionDisplayName(permission: String): String {
-        val map = mapOf(
-            Manifest.permission.READ_CONTACTS to "Read Contacts",
-            Manifest.permission.WRITE_CONTACTS to "Write Contacts",
-            Manifest.permission.SEND_SMS to "Send SMS",
-            Manifest.permission.READ_SMS to "Read SMS",
-            Manifest.permission.READ_PHONE_STATE to "Phone State",
-            Manifest.permission.READ_CALL_LOG to "Call Log",
-            Manifest.permission.READ_PHONE_NUMBERS to "Phone Numbers",
-            Manifest.permission.READ_CALENDAR to "Read Calendar",
-            Manifest.permission.WRITE_CALENDAR to "Write Calendar",
-            Manifest.permission.POST_NOTIFICATIONS to "Notifications",
-            Manifest.permission.SCHEDULE_EXACT_ALARM to "Exact Alarms"
-        )
-        return map[permission] ?: permission.substringAfterLast('.')
-    }
     fun isFirstLaunch(): Boolean = prefs.getBoolean("isFirstLaunch", true)
     fun setFirstLaunchComplete() = prefs.edit().putBoolean("isFirstLaunch", false).apply()
     fun isCheckOnStartEnabled(): Boolean = prefs.getBoolean("checkPermissionsOnStart", true)
@@ -232,5 +194,128 @@ class PermissionManager(private val context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             !isPermissionGranted(Manifest.permission.POST_NOTIFICATIONS)) count++
         return count
+    }
+
+    fun hasEssentialPermissions(): Boolean {
+        return arePermissionsGranted(CONTACT_PERMISSIONS) &&
+                arePermissionsGranted(SMS_PERMISSIONS) &&
+                arePermissionsGranted(PHONE_PERMISSIONS) &&
+                arePermissionsGranted(CALENDAR_PERMISSIONS) &&
+                (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || isPermissionGranted(Manifest.permission.POST_NOTIFICATIONS))
+    }
+
+
+
+    // ------------------------------------------------------------------------
+    // Request with rationale (using the helper)
+    // ------------------------------------------------------------------------
+
+    fun requestWithRationale(
+        activity: Activity,
+        permissions: Array<String>,
+        requestCode: Int,
+        rationaleTitleResId: Int,
+        rationaleMessageResId: Int
+    ) {
+        PermissionRationaleHelper.requestWithRationale(
+            activity,
+            permissions,
+            requestCode,
+            rationaleTitleResId,
+            rationaleMessageResId
+        )
+    }
+
+    // Specific group methods
+    fun requestPhonePermissions(activity: Activity) {
+        requestWithRationale(
+            activity,
+            PHONE_PERMISSIONS,
+            RC_PHONE,
+            R.string.rationale_phone_title,
+            R.string.rationale_phone_message
+        )
+    }
+
+    fun requestContactsPermissions(activity: Activity) {
+        requestWithRationale(
+            activity,
+            CONTACT_PERMISSIONS,
+            RC_CONTACTS,
+            R.string.rationale_contacts_title,
+            R.string.rationale_contacts_message
+        )
+    }
+
+    fun requestSmsPermissions(activity: Activity) {
+        requestWithRationale(
+            activity,
+            SMS_PERMISSIONS,
+            RC_SMS,
+            R.string.rationale_sms_title,
+            R.string.rationale_sms_message
+        )
+    }
+
+    fun requestCalendarPermissions(activity: Activity) {
+        requestWithRationale(
+            activity,
+            CALENDAR_PERMISSIONS,
+            RC_CALENDAR,
+            R.string.rationale_calendar_title,
+            R.string.rationale_calendar_message
+        )
+    }
+
+    fun requestNotificationPermissions(activity: Activity) {
+        requestWithRationale(
+            activity,
+            NOTIFICATION_PERMISSIONS,
+            RC_NOTIFICATIONS,
+            R.string.rationale_notifications_title,
+            R.string.rationale_notifications_message
+        )
+    }
+
+    fun requestExactAlarmPermission(activity: Activity) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            requestWithRationale(
+                activity,
+                EXACT_ALARM_PERMISSIONS,
+                RC_EXACT_ALARM,
+                R.string.rationale_exact_alarm_title,
+                R.string.rationale_exact_alarm_message
+            )
+        }
+    }
+
+    fun requestOverlayPermissionWithRationale(activity: Activity) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return
+        if (Settings.canDrawOverlays(activity)) return
+
+        AlertDialog.Builder(activity)
+            .setTitle(R.string.rationale_overlay_title)
+            .setMessage(R.string.rationale_overlay_message)
+            .setPositiveButton(R.string.rationale_ok) { _, _ ->
+                val intent = Intent(
+                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:${activity.packageName}")
+                )
+                activity.startActivity(intent)
+            }
+            .setNegativeButton(R.string.rationale_deny, null)
+            .show()
+    }
+
+    fun requestNotificationListenerWithRationale(activity: Activity) {
+        // Show rationale first
+        AlertDialog.Builder(activity)
+            .setTitle(R.string.rationale_notification_listener_title)
+            .setMessage(R.string.rationale_notification_listener_message)
+            .setPositiveButton(R.string.rationale_ok) { _, _ ->
+                activity.startActivity(getNotificationListenerIntent())
+            }
+            .setNegativeButton(R.string.rationale_deny, null)
+            .show()
     }
 }

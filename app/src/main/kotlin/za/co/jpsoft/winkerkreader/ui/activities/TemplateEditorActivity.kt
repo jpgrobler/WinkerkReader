@@ -5,12 +5,14 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.pastoral.entities.TemplateStepEntity
@@ -27,12 +29,17 @@ class TemplateEditorActivity : AppCompatActivity() {
     private lateinit var stepAdapter: StepEditorAdapter
     private var isSystemTemplate = false
     private var templateCode = ""
+    private val _isLoading = MutableStateFlow(true)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityTemplateEditorBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
+        lifecycleScope.launch {
+            _isLoading.collect { isLoading ->
+                binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+            }
+        }
         templateId = intent.getStringExtra(EXTRA_TEMPLATE_ID)
             ?: run { finish(); return }
 
@@ -108,6 +115,7 @@ class TemplateEditorActivity : AppCompatActivity() {
 
     private fun loadTemplate() {
         lifecycleScope.launch {
+            _isLoading.value = true
             val data = repository.getTemplateWithSteps(templateId) ?: return@launch
             isSystemTemplate = data.template.isSystem
             templateCode = data.template.code
@@ -116,6 +124,7 @@ class TemplateEditorActivity : AppCompatActivity() {
             stepAdapter.submitSteps(data.steps.sortedBy { it.stepOrder })
             binding.etTemplateSymbol.setText(data.template.symbol ?: "")
             invalidateOptionsMenu()
+            _isLoading.value = false
         }
     }
 

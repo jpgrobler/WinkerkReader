@@ -60,6 +60,9 @@ class ArgiefListActivity : AppCompatActivity() {
 
         // FIX: Load data AFTER observer is attached
         viewModel.loadArchive(keuse)
+        viewModel.isLoading.observe(this) { loading ->
+            binding.argiefProgress.visibility = if (loading) View.VISIBLE else View.GONE
+        }
     }
 
     private fun setupSortRadioGroup() {

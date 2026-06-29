@@ -40,11 +40,15 @@ class WhatsAppNotificationService : NotificationListenerService() {
     }
 
     private fun initialize() {
-        settingsManager = SettingsManager.getInstance(this)
-        val databaseHelper = DatabaseHelper.getInstance(this)
-        val calendarManager = CalendarManager(this)
+        // Use application context to avoid leaking the service instance
+        val appContext = applicationContext
+
+        settingsManager = SettingsManager.getInstance(appContext)
+        val databaseHelper = DatabaseHelper.getInstance(appContext)
+        val calendarManager = CalendarManager(appContext)
         val calendarId = settingsManager.selectedCalendarId
-        unifiedMonitor = UnifiedCallMonitor.getInstance(this, databaseHelper, calendarManager, calendarId)
+
+        unifiedMonitor = UnifiedCallMonitor.getInstance(appContext, databaseHelper, calendarManager, calendarId)
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
@@ -58,9 +62,11 @@ class WhatsAppNotificationService : NotificationListenerService() {
     }
 
     override fun onDestroy() {
-        activeVoipCalls.clear()
-        serviceScope.cancel()
         super.onDestroy()
+        serviceScope.cancel()
+        activeVoipCalls.clear()
+        // The singleton still exists but uses application context, so no leak.
+        if (BuildConfig.DEBUG) Log.d(TAG, "WhatsAppNotificationService destroyed")
     }
 
     // -------------------------------------------------------------------------
@@ -257,7 +263,7 @@ class WhatsAppNotificationService : NotificationListenerService() {
                 }
                 isIncomingCall(title, text, bigText, subText) -> {
                     if (isUnknownCaller(callerInfo)) return@launch
-                    val callId = "voip_${appName}_${System.currentTimeMillis()}"//val callId = "voip_${appName}_${System.currentTimeMillis()}"
+                    val callId = "voip_${appName}_${System.currentTimeMillis()}"
                     activeVoipCalls[notificationKey] = callId
                     unifiedMonitor.onCallDetected(
                         callId = callId,
@@ -271,7 +277,7 @@ class WhatsAppNotificationService : NotificationListenerService() {
                 }
                 isPossibleOutgoingCall(title, text, bigText, subText) -> {
                     if (isUnknownCaller(callerInfo)) return@launch
-                    val callId = "voip_${appName}_${System.currentTimeMillis()}"//val callId = "voip_${appName}_${System.currentTimeMillis()}"
+                    val callId = "voip_${appName}_${System.currentTimeMillis()}"
                     activeVoipCalls[notificationKey] = callId
                     unifiedMonitor.onCallDetected(
                         callId = callId,
@@ -339,15 +345,11 @@ class WhatsAppNotificationService : NotificationListenerService() {
         if (isIncomingCall(title, text, bigText, subText)) return CallState.INCOMING
         if (isPossibleOutgoingCall(title, text, bigText, subText)) return CallState.OUTGOING
 
-        // 🔽 Changed from CallState.INCOMING to CallState.UNKNOWN
         return CallState.UNKNOWN
     }
 
     // -------------------------------------------------------------------------
-    // Modern caller info extraction (synchronous, but only string parsing – no I/O)
-    // We keep this for the rare case where no number is present, but it's now
-    // only called from the fallback branch after we have already tried
-    // `CallerInfoResolver` (which does I/O).
+    // Modern caller info extraction (synchronous string parsing)
     // -------------------------------------------------------------------------
 
     private fun extractCallerInfoModern(extras: Bundle): String {
@@ -375,7 +377,7 @@ class WhatsAppNotificationService : NotificationListenerService() {
         return ""
     }
 
-    // This method does I/O – only call from a background thread!
+    // I/O method – called from background thread only
     private fun resolveContactNameFromUri(contactUri: Uri): String {
         val projection = arrayOf(ContactsContract.Contacts.DISPLAY_NAME)
         var cursor: Cursor? = null

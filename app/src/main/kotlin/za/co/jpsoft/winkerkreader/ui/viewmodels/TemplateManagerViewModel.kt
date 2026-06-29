@@ -4,10 +4,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import za.co.jpsoft.winkerkreader.data.pastoral.model.TemplateWithSteps
@@ -19,7 +24,9 @@ class TemplateManagerViewModel(
 
     val templates: StateFlow<List<TemplateWithSteps>> =
         repository.observeAllTemplates()
-            .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+            .onStart { _isLoading.value = true }
+            .onCompletion { _isLoading.value = false }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed((5_000)), emptyList())
 
     private val _error = MutableSharedFlow<String>(extraBufferCapacity = 1)
     val error: SharedFlow<String> = _error.asSharedFlow()
@@ -27,7 +34,8 @@ class TemplateManagerViewModel(
     private val _templateCreated = MutableSharedFlow<String>(extraBufferCapacity = 1)
     /** Emits the new templateId so the Activity can immediately open the editor. */
     val templateCreated: SharedFlow<String> = _templateCreated.asSharedFlow()
-
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
     fun createTemplate(titleAf: String, descriptionAf: String?) {
         viewModelScope.launch {
             try {

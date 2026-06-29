@@ -44,7 +44,7 @@ class VoegNotaByBottomSheet : BottomSheetDialogFragment() {
     private var existingNote: PastoralNoteEntity? = null
 
     private val isEditMode get() = existingNote != null
-
+    private var isSaving = false
     // ── Lifecycle ──────────────────────────────────────────────────────────
 
     override fun onCreateView(
@@ -73,6 +73,7 @@ class VoegNotaByBottomSheet : BottomSheetDialogFragment() {
             insets
         }
         ViewCompat.requestApplyInsets(binding.contentContainer)
+
     }
 
     override fun onDestroyView() {
@@ -204,7 +205,9 @@ class VoegNotaByBottomSheet : BottomSheetDialogFragment() {
         val givenName      = requireArguments().getString(ARG_GIVEN_NAME)
         val displayName    = requireArguments().getString(ARG_DISPLAY_NAME) ?: ""
         val isConfidential = binding.switchVertroulik.isChecked
-
+        isSaving = true
+        binding.saveProgress.visibility = View.VISIBLE
+        binding.btnStoorNota.isEnabled = false
         lifecycleScope.launch {
             try {
                 val repo = PastoralNoteRepository(requireContext())
@@ -235,6 +238,10 @@ class VoegNotaByBottomSheet : BottomSheetDialogFragment() {
             } catch (e: Exception) {
                 if (BuildConfig.DEBUG) Log.e(TAG, "Failed to save note", e)
                 Toast.makeText(requireContext(), getString(R.string.nota_stoor_fout), Toast.LENGTH_SHORT).show()
+            } finally {
+                isSaving = false
+                binding.saveProgress.visibility = View.GONE
+                binding.btnStoorNota.isEnabled = true
             }
         }
     }
@@ -243,7 +250,9 @@ class VoegNotaByBottomSheet : BottomSheetDialogFragment() {
         val existing = existingNote ?: return
         val isConfidential = binding.switchVertroulik.isChecked
         val noteDateUtc = noteDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-
+        isSaving = true
+        binding.saveProgress.visibility = View.VISIBLE
+        binding.btnStoorNota.isEnabled = false
         lifecycleScope.launch {
             try {
                 val repo = PastoralNoteRepository(requireContext())
@@ -263,6 +272,11 @@ class VoegNotaByBottomSheet : BottomSheetDialogFragment() {
             } catch (e: Exception) {
                 if (BuildConfig.DEBUG) Log.e(TAG, "Failed to update note", e)
                 Toast.makeText(requireContext(), getString(R.string.nota_stoor_fout), Toast.LENGTH_SHORT).show()
+
+            } finally {
+                isSaving = false
+                binding.saveProgress.visibility = View.GONE
+                binding.btnStoorNota.isEnabled = true
             }
         }
     }

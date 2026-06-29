@@ -157,7 +157,7 @@
     <string name="Soek">Soek Resultate</string>
     <string name="stoor">Stoor</string>
     <string name="wysig">Wysig</string>
-    <string name="lyscount">%1$d\nsms\'e</string>
+    <string name="lyscount">%1$d sms\'e</string>
     <string name="mylpaal_gemeente">%1$s\n</string>
     <string name="list_naam">Naam</string>
     <string name="list_van">Van</string>
@@ -220,9 +220,7 @@
     <string name="groep_Wysig_Button_Text2">Opdateer</string>
     <string name="groep_Wis_Button_Text">Wis Uit</string>
 
-
-
-    <string name="sms_groep_telling">0\nSms\'e</string>
+    <string name="sms_groep_telling">0 Sms\'e</string>
     <string name="sms_groep_letters">160</string>
     <string name="sms_list_naam">Naam</string>
     <string name="sms_list_van">Van</string>
@@ -519,7 +517,7 @@
     <string name="call_monitoring_channel_description">Monitor inkomende oproepe in die agtergrond</string>
     <string name="call_logger_active">Oproeplogger Aktief</string>
     <string name="monitoring_calls">Moniteer Foon- en Voip-oproepe</string>
-    
+
     <string name="export_successful">Suksesvol Uitgevoer</string>
     <string name="export_success_msg">Oproeplog is suksesvol uitgevoer.\n\nWil jy die lêer deel?</string>
     <string name="share">Deel</string>
@@ -531,13 +529,13 @@
     <string name="failed_to_clear_logs">Kon nie logge uitvee nie</string>
     <string name="no_logs_to_export">Geen logge om uit te voer nie</string>
     <string name="error_exporting">Fout met uitvoer: %1$s</string>
-    
+
     <string name="calendar_event_title">%1$s %2$s %3$s Oproep - %4$s</string>
     <string name="calendar_details_header">Oproep Besonderhede:</string>
     <string name="calendar_contact">Kontak: %1$s</string>
     <string name="calendar_type">Tipe: %1$s</string>
     <string name="calendar_source">Bron: %1$s</string>
-    <string name="calendar_duration">Duration: %d minutes %d seconds</string>
+    <string name="calendar_duration">Duration: %1$d minutes %2$d seconds</string>
     <string name="calendar_time">Tyd: %1$s</string>
     <string name="calendar_added_by">Bygevoeg deur WinkerkReader-toepassing</string>
 
@@ -546,7 +544,7 @@
     <string name="call_type_missed">Gemis</string>
     <string name="call_type_ended">Beëindig</string>
     <string name="call_type_unknown">Onbekend</string>
-    
+
     <string name="source_whatsapp">WhatsApp</string>
     <string name="source_phone">Foonoproep</string>
     <string name="menu_call_log">Oproep Log</string>
@@ -592,7 +590,7 @@
     <string name="herinnering_kies_tyd">Kies tyd</string>
     <!-- Sprint F additions to strings.xml -->
     <string name="pastoral_import_gevind_titel">Pastorale rugsteun gevind</string>
-    <string name="pastoral_import_gevind_boodskap">\'n Pastorale databasis van %1$s (%2$s MB) is gevind.\n\nWil jy dit invoer?</string>
+    <string name="pastoral_import_gevind_boodskap">\'n Pastorale databasis van %1$s (%2$s MB) is gevind.  Wil jy dit invoer?</string>
     <string name="pastoral_import_ja">Ja</string>
     <string name="pastoral_import_nee">Nee</string>
     <string name="pastoral_import_besig">Databasis word ingevoer…</string>
@@ -693,7 +691,7 @@
     <string name="stel_herinnering">Stel herinnering</string>
 
     <string name="auth_wag_verifikasie">Verifieer om voort te gaan</string>
-    <string name="auth_misluк_probeer_weer">Verifikasie misluk. Probeer weer.</string>
+    <string name="auth_misluk_probeer_weer">Verifikasie misluk. Probeer weer.</string>
     <string name="auth_probeer_weer">Probeer weer</string>
     <string name="settings_app_biometric">Vereis verifikasie by opstart</string>
     <string name="settings_app_biometric_summary">Gebruik vingerafdruk, gesig of PIN om die app te ontsluit</string>
@@ -720,6 +718,35 @@
     <string name="Huisbesoek">Huisbesoek</string>
     <string name="IP">###.###.###.###</string>
 
+    <!-- Permission Rationale (Afrikaans) -->
+    <string name="rationale_phone_title">Toegang tot Foon &amp; Oproeplog</string>
+    <string name="rationale_phone_message">WinkerkReader gebruik foonstatus en oproeplog-toestemming om oproeperinligting uit die gemeentedatabasis te wys tydens inkomende oproepe. Sonder hierdie toestemmings sal die oproeperidentifikasie nie werk nie.</string>
 
+    <string name="rationale_contacts_title">Kontaktoegang</string>
+    <string name="rationale_contacts_message">WinkerkReader moet jou kontakte lees om WhatsApp-profiele op te spoor. Dit laat jou toe om vinnig WhatsApp-boodskappe aan lede te stuur. Ons verander nooit jou kontakte sonder jou uitdruklike toestemming nie.</string>
+
+    <string name="rationale_sms_title">SMS-toegang</string>
+    <string name="rationale_sms_message">WinkerkReader benodig toestemming om verjaarsdag- en geleentheid-SMS\'e aan lede te stuur. Dit word gebruik wanneer jy kies om SMS-groete te stuur. Ons lees nie jou persoonlike SMS\'e nie.</string>
+
+    <string name="rationale_calendar_title">Kalendertoegang</string>
+    <string name="rationale_calendar_message">WinkerkReader kan oproepe en pastorale herinnerings na jou kalender log. Dit help jou om interaksies en opvolgaksies by te hou. Jy kan kies watter kalender om te gebruik in die instellings.</string>
+
+    <string name="rationale_notifications_title">Kennisgewings</string>
+    <string name="rationale_notifications_message">WinkerkReader gebruik kennisgewings om jou te herinner aan pastorale take, verjaarsdag-SMS-herinnerings en oproepmoniteringstatus. Dit hou jou ingelig selfs wanneer die app op die agtergrond is.</string>
+
+    <string name="rationale_overlay_title">Vertoon oor ander programme</string>
+    <string name="rationale_overlay_message">WinkerkReader benodig toestemming om oproeperinligting as \'n swewende oorleg tydens oproepe te wys. Dit is opsioneel, maar bied \'n beter oproeperidentifikasie-ervaring.</string>
+
+    <string name="rationale_exact_alarm_title">Presiese Alarmtoestemming</string>
+    <string name="rationale_exact_alarm_message">WinkerkReader gebruik presiese alarms vir daaglikse verjaarsdag-SMS-herinnerings en geskeduleerde databasis-afsettings. Dit verseker dat hulle op die regte tyd plaasvind, selfs wanneer die toestel ledig is.</string>
+
+    <string name="rationale_notification_listener_title">Kennisgewingtoegang</string>
+    <string name="rationale_notification_listener_message">WinkerkReader benodig kennisgewingtoegang om VoIP-oproepe (WhatsApp, Skype, ens.) op te spoor. Dit maak dit moontlik om hierdie oproepe te log. Die app lees slegs oproepverwante kennisgewings en stoor geen ander kennisgewingdata nie.</string>
+
+    <string name="rationale_all_permissions_title">Toestemmings Benodig</string>
+    <string name="rationale_all_permissions_message">WinkerkReader benodig verskeie toestemmings om volle funksionaliteit te bied. Gee asseblief die volgende toestemmings om voort te gaan.</string>
+    <string name="rationale_generic_title">Toestemming Benodig</string>
+    <string name="rationale_generic_message">Om hierdie funksie te gebruik, benodig WinkerkReader die volgende toestemming: %1$s</string>
+    <string name="rationale_ok">OK</string>
+    <string name="rationale_deny">Weier</string>
 </resources>
-

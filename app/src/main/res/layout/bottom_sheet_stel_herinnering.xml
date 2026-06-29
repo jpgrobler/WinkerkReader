@@ -36,7 +36,12 @@
                 android:textAppearance="?attr/textAppearanceTitleMedium"
                 android:paddingHorizontal="24dp"
                 android:paddingBottom="8dp" />
-
+            <ProgressBar
+                android:id="@+id/progressBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:visibility="gone" />
             <!-- Mode toggle -->
             <com.google.android.material.tabs.TabLayout
                 android:id="@+id/tab_mode"
@@ -55,7 +60,12 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:visibility="visible">
-
+                <ProgressBar
+                    android:id="@+id/templateProgress"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:visibility="gone" />
                 <!-- Template picker -->
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rv_templates"

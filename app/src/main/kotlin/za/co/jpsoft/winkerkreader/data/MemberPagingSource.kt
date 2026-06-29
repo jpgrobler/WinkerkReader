@@ -6,6 +6,7 @@ import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.models.FilterBox
 import za.co.jpsoft.winkerkreader.data.models.MemberItem
 
@@ -36,8 +37,8 @@ class MemberPagingSource(
             ) ?: return@withContext LoadResult.Error(IllegalStateException("Invalid query"))
 
             val finalSql = buildPagedQuery(sqlRequest.sql, position, limit)
-            Log.d(TAG, "Executing SQL: $finalSql")
-            Log.d(TAG, "Args: ${sqlRequest.args.joinToString()}")
+            if (BuildConfig.DEBUG) Log.d(TAG, "Executing SQL: $finalSql")
+            if (BuildConfig.DEBUG) Log.d(TAG, "Args: ${sqlRequest.args.joinToString()}")
 
             try {
                 val cursor = contentResolver.query(
@@ -54,31 +55,37 @@ class MemberPagingSource(
                         items.add(MemberItem.fromCursor(it))
                     }
                 }
-                Log.d(TAG, "Loaded ${items.size} items")
+                if (BuildConfig.DEBUG) Log.d(TAG, "Loaded ${items.size} items")
 
                 // Apply separators
                 val itemsWithSeparators = MemberItemSeparator.applySeparators(items, sortOrder)
-                Log.d(TAG, "Loaded ${itemsWithSeparators.size} items")
+                if (BuildConfig.DEBUG) Log.d(TAG, "Loaded ${itemsWithSeparators.size} items")
 
                 // Determine next key based on whether we received fewer items than requested
                 val nextKey = if (itemsWithSeparators.size < limit) null else position + itemsWithSeparators.size
                 LoadResult.Page(
-                    data = itemsWithSeparators,   // ✅ use the separated list
-                    prevKey = if (position == 0) null else position - 1,
+                    data = itemsWithSeparators,
+                    prevKey = if (position == 0) null else (position - limit).coerceAtLeast(0),
                     nextKey = nextKey
                 )
             } catch (e: Exception) {
-                Log.e(TAG, "Paging load failed", e)
+                if (BuildConfig.DEBUG) Log.e(TAG, "Paging load failed", e)
                 LoadResult.Error(e)
             }
         }
     }
 
     override fun getRefreshKey(state: PagingState<Int, MemberItem>): Int? {
-        return state.anchorPosition?.let { anchorPosition ->
-            state.closestPageToPosition(anchorPosition)?.prevKey?.plus(1)
-                ?: state.closestPageToPosition(anchorPosition)?.nextKey?.minus(1)
+        val anchorPosition = state.anchorPosition ?: return null
+        var itemsBefore = 0
+        for (page in state.pages) {
+            if (itemsBefore + page.data.size > anchorPosition) {
+                val offsetInPage = anchorPosition - itemsBefore
+                return (page.prevKey ?: 0) + offsetInPage
+            }
+            itemsBefore += page.data.size
         }
+        return null
     }
 
     private fun buildPagedQuery(baseSql: String, offset: Int, limit: Int): String {

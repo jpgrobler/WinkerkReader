@@ -93,6 +93,17 @@ class MemberViewModel(
             repository = MemberRepository(context.applicationContext)
         }
         this.context = context.applicationContext
+        syncPagingStateFlows()
+    }
+
+    private var pagingStateFlowsSynced = false
+
+    private fun syncPagingStateFlows() {
+        if (pagingStateFlowsSynced) return
+        _sortOrder.value = sortOrder
+        _soek.value = soek
+        _recordStatus.value = recordStatus
+        pagingStateFlowsSynced = true
     }
 
     // -------------------------------------------------------------------------
@@ -114,20 +125,37 @@ class MemberViewModel(
     fun loadData(context: Context, mode: MainQueryMode) {
         initRepository(context)
         val request = mode.toQueryRequest()
-        // Update the event type for paging
-        _eventType.value = request.eventType
 
         if (request.eventType == "FILTER_DATA") {
             currentFilterList = request.filterList ?: arrayListOf()
         }
-        // Update state flows so paging source refreshes
-        sortOrder = sortOrder
-        _soek.value = soek
-        _recordStatus.value = recordStatus
-        _filterList.value = currentFilterList
-        // Trigger refresh
-        refresh()
-        // Fetch for legacy LiveData on background thread
+
+        val nextEventType = request.eventType
+        val nextSoek = soek
+        val nextRecordStatus = recordStatus
+        val nextFilterList = currentFilterList
+        val nextSortOrder = sortOrder
+
+        val paramsChanged = _eventType.value != nextEventType
+            || _soek.value != nextSoek
+            || _recordStatus.value != nextRecordStatus
+            || _filterList.value != nextFilterList
+            || _sortOrder.value != nextSortOrder
+
+        _eventType.value = nextEventType
+        _soek.value = nextSoek
+        _recordStatus.value = nextRecordStatus
+        _filterList.value = nextFilterList
+        if (_sortOrder.value != nextSortOrder) {
+            _sortOrder.value = nextSortOrder
+        }
+
+        // Same query → invalidate so getRefreshKey() preserves scroll position.
+        // Changed query → flatMapLatest recreates the Pager automatically.
+        if (!paramsChanged) {
+            refresh()
+        }
+
         viewModelScope.launch(Dispatchers.IO) {
             fetchData(context, request.eventType)
         }
@@ -233,20 +261,22 @@ class MemberViewModel(
         enablePlaceholders = false
     )
 
-    // State flows that trigger Pager recreation
+    // State flows that trigger Pager recreation when query parameters change
     private val _sortOrder = MutableStateFlow("VAN")
     private val _soek = MutableStateFlow("")
     private val _recordStatus = MutableStateFlow("0")
     private val _filterList = MutableStateFlow<ArrayList<FilterBox>?>(null)
-    private val _eventType = MutableStateFlow("LIDMAAT_DATA")   // dynamic event type
+    private val _eventType = MutableStateFlow("LIDMAAT_DATA")
 
-    private val _dummyRefresh = MutableStateFlow(0)
+    @Volatile
+    private var currentPagingSource: MemberPagingSource? = null
 
     /**
-     * Refresh the current paging data by incrementing the dummy flow.
+     * Reload the current page set without recreating the Pager.
+     * [MemberPagingSource.getRefreshKey] keeps the list scroll position.
      */
     fun refresh() {
-        _dummyRefresh.value++
+        currentPagingSource?.invalidate()
     }
 
     /**
@@ -261,8 +291,8 @@ class MemberViewModel(
     )
 
     /**
-     * Main paging data flow – recreates the Pager whenever any parameter changes.
-     * Made lazy to ensure context is initialised before first use.
+     * Main paging data flow – recreates the Pager only when query parameters change.
+     * Same-parameter reloads use [refresh] → [PagingSource.invalidate].
      */
     val pagingDataFlowWithRefresh: Flow<PagingData<MemberItem>> by lazy {
         combine(
@@ -270,15 +300,15 @@ class MemberViewModel(
             _soek,
             _recordStatus,
             _filterList,
-            _eventType,
-            _dummyRefresh
+            _eventType
         ) { args ->
-            val sort = args[0] as String
-            val search = args[1] as String
-            val status = args[2] as String
-            val filters = args[3] as ArrayList<FilterBox>?
-            val eventType = args[4] as String
-            PagingParams(sort, search, status, filters, eventType)
+            PagingParams(
+                sort = args[0] as String,
+                search = args[1] as String,
+                status = args[2] as String,
+                filters = args[3] as ArrayList<FilterBox>?,
+                eventType = args[4] as String
+            )
         }.flatMapLatest { params ->
             Pager(pagingConfig) {
                 MemberPagingSource(
@@ -289,9 +319,9 @@ class MemberViewModel(
                     filterList = params.filters,
                     sortOrder = params.sort,
                     pageSize = 50
-                )
+                ).also { currentPagingSource = it }
             }.flow
-        }.cachedIn(viewModelScope)   // ✅ Add this line
+        }.cachedIn(viewModelScope)
     }
 
     override fun onCleared() {

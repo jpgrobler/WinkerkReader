@@ -12,10 +12,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.time.withTimeoutOrNull
+import kotlinx.coroutines.withTimeoutOrNull
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.pastoral.model.ReminderWithMember
 import za.co.jpsoft.winkerkreader.data.pastoral.repository.PastoralReminderRepository
@@ -23,10 +27,11 @@ import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
+import kotlin.time.Duration.Companion.milliseconds
 
 class BedieningViewModel(
     private val repository: PastoralReminderRepository,
-    private val settingsManager: SettingsManager   // ← new parameter
+    private val settingsManager: SettingsManager
 ) : ViewModel() {
 
     // -------------------------------------------------------------------------
@@ -34,6 +39,9 @@ class BedieningViewModel(
     // -------------------------------------------------------------------------
 
     enum class Filter { VANDAG, AGTERSTALLIG, HIERDIE_WEEK, ALS }
+
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     private val _activeFilter = MutableStateFlow(Filter.VANDAG)
     val activeFilter: StateFlow<Filter> = _activeFilter.asStateFlow()
@@ -54,7 +62,7 @@ class BedieningViewModel(
     private val nowUtc get()    = System.currentTimeMillis()
 
     // -------------------------------------------------------------------------
-    // Dashboard
+    // Dashboard (infinite flow)
     // -------------------------------------------------------------------------
 
     private val dashboard = repository.observeVandagDashboard()
@@ -106,6 +114,26 @@ class BedieningViewModel(
     }
 
     // -------------------------------------------------------------------------
+    // Loading state control
+    // -------------------------------------------------------------------------
+
+    init {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                // Wait for first real emission (skip initial placeholder) with timeout
+                withTimeoutOrNull(2000L.milliseconds) {
+                    displayItems.drop(1).first()
+                }
+            } catch (e: Exception) {
+                // Ignore – we hide the spinner anyway
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------------
     // Actions
     // -------------------------------------------------------------------------
 
@@ -145,16 +173,7 @@ class BedieningViewModel(
         }
     }
 
-    /**
-     * Sync a reminder to Google Tasks.
-     * This method is called when the user taps the overflow menu item
-     * and the Google Tasks mode is set to API.
-     *
-     * At the moment, the full API flow is not yet implemented.
-     * A placeholder message is shown to guide the user.
-     */
     fun syncReminderToGoogleTasks(reminderId: String) {
-
         viewModelScope.launch {
             try {
                 val url = settingsManager.tasksScriptUrl
@@ -169,6 +188,7 @@ class BedieningViewModel(
             }
         }
     }
+
     private val _error = MutableSharedFlow<String>(extraBufferCapacity = 1)
     val error: SharedFlow<String> = _error.asSharedFlow()
 

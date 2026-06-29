@@ -30,35 +30,40 @@ class LidmaatDetailViewModel(application: Application) : AndroidViewModel(applic
     val familyMembers: LiveData<List<FamilyMemberItem>> = _familyMembers
 
     private val contentResolver = application.contentResolver
-
+    private val _isLoading = MutableLiveData(false)
+    val isLoading: LiveData<Boolean> = _isLoading
     // ------------------------------------------------------------------------
     // Public entry points – launch coroutines
     // ------------------------------------------------------------------------
 
     fun loadMemberByGuid(memberGuid: String, recordStatus: String) {
+        _isLoading.value = true
         viewModelScope.launch {
-            val result = withContext(Dispatchers.IO) {
-                queryMemberByGuid(memberGuid, recordStatus)
-            }
+            val result = withContext(Dispatchers.IO) { queryMemberByGuid(memberGuid, recordStatus) }
             _memberDetail.postValue(result)
+            _isLoading.value = false
         }
     }
 
     fun loadMember(memberUri: Uri, recordStatus: String) {
+        _isLoading.value = true
         viewModelScope.launch {
             val result = withContext(Dispatchers.IO) {
                 queryMemberByUri(memberUri, recordStatus)
             }
             _memberDetail.postValue(result)
+            _isLoading.value = false
         }
     }
 
     fun loadFamily(familyHeadGuid: String, recordStatus: String) {
+        _isLoading.value = true
         viewModelScope.launch {
             val result = withContext(Dispatchers.IO) {
                 queryFamilyMembers(familyHeadGuid, recordStatus)
             }
             _familyMembers.postValue(result)
+            _isLoading.value = false
         }
     }
 

@@ -2,6 +2,7 @@ package za.co.jpsoft.winkerkreader.ui.adapters
 
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -194,6 +195,7 @@ class BedieningReminderAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        Log.d("BedieningAdapter", "onCreateViewHolder called")
         val binding = ItemBedieningReminderBinding.inflate(
             LayoutInflater.from(parent.context), parent, false
         )
@@ -201,6 +203,7 @@ class BedieningReminderAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        Log.d("BedieningAdapter", "Binding item at position $position")
         holder.bind(getItem(position))
     }
 
@@ -215,5 +218,16 @@ class BedieningReminderAdapter(
             override fun areContentsTheSame(a: ReminderWithMember, b: ReminderWithMember) =
                 a == b
         }
+    }
+
+    override fun submitList(list: List<ReminderWithMember>?) {
+        Log.d("BedieningAdapter", "submitList called with ${list?.size ?: 0} items")
+        super.submitList(list)
+    }
+
+    override fun getItemCount(): Int {
+        val count = super.getItemCount()
+        Log.d("BedieningAdapter", "getItemCount = $count")
+        return count
     }
 }

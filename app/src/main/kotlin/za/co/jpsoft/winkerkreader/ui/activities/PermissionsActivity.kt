@@ -21,6 +21,7 @@ import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.databinding.ActivityPermissionsBinding
 import za.co.jpsoft.winkerkreader.databinding.ItemPermissionBinding
 import za.co.jpsoft.winkerkreader.utils.PermissionManager
+import za.co.jpsoft.winkerkreader.utils.PermissionRationaleHelper
 
 class PermissionsActivity : AppCompatActivity() {
     private val permissionManager by lazy { PermissionManager(this) }
@@ -40,6 +41,9 @@ class PermissionsActivity : AppCompatActivity() {
         refreshPermissions()
     }
 
+    // Request code for individual runtime permission requests
+    private val REQUEST_CODE_RUNTIME = 100
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityPermissionsBinding.inflate(layoutInflater)
@@ -49,8 +53,7 @@ class PermissionsActivity : AppCompatActivity() {
             title = "App Permissions"
             setDisplayHomeAsUpEnabled(true)
         }
-        val missing = PermissionManager.ALL_RUNTIME_PERMISSIONS
-            .filter { !permissionManager.isPermissionGranted(it) }
+
         binding.recyclerViewPermissions.layoutManager = LinearLayoutManager(this)
 
         initializePermissionsList()
@@ -188,25 +191,39 @@ class PermissionsActivity : AppCompatActivity() {
 
     private fun requestSpecialPermission(item: PermissionItem) {
         when (item.type) {
+            PermissionType.RUNTIME -> {
+                item.permission?.let {
+                    PermissionRationaleHelper.requestWithRationale(
+                        this,
+                        arrayOf(it),
+                        REQUEST_CODE_RUNTIME,
+                        getRationaleTitle(it),
+                        getRationaleMessage(it)
+                    )
+                }
+            }
             PermissionType.OVERLAY -> requestOverlayPermission()
             PermissionType.EXACT_ALARM -> requestExactAlarmPermission()
             PermissionType.NOTIFICATION_POLICY -> requestNotificationPolicyAccess()
             PermissionType.NOTIFICATION_LISTENER -> requestNotificationListenerAccess()
-            PermissionType.RUNTIME -> {
-                item.permission?.let {
-                    runtimePermissionLauncher.launch(arrayOf(it))
-                }
-            }
         }
     }
 
     private fun requestOverlayPermission() {
         if (!Settings.canDrawOverlays(this)) {
-            val intent = Intent(
-                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                "package:$packageName".toUri()
-            )
-            overlayPermissionLauncher.launch(intent)
+            // Show rationale first
+            AlertDialog.Builder(this)
+                .setTitle(R.string.rationale_overlay_title)
+                .setMessage(R.string.rationale_overlay_message)
+                .setPositiveButton(R.string.rationale_ok) { _, _ ->
+                    val intent = Intent(
+                        Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        "package:$packageName".toUri()
+                    )
+                    overlayPermissionLauncher.launch(intent)
+                }
+                .setNegativeButton(R.string.rationale_deny, null)
+                .show()
         } else {
             Toast.makeText(this, "Toestemming reeds gegee", Toast.LENGTH_SHORT).show()
         }
@@ -214,10 +231,18 @@ class PermissionsActivity : AppCompatActivity() {
 
     private fun requestExactAlarmPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
-                data = "package:$packageName".toUri()
-            }
-            startActivity(intent)
+            // Show rationale first
+            AlertDialog.Builder(this)
+                .setTitle(R.string.rationale_exact_alarm_title)
+                .setMessage(R.string.rationale_exact_alarm_message)
+                .setPositiveButton(R.string.rationale_ok) { _, _ ->
+                    val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                        data = "package:$packageName".toUri()
+                    }
+                    startActivity(intent)
+                }
+                .setNegativeButton(R.string.rationale_deny, null)
+                .show()
         }
     }
 
@@ -232,15 +257,16 @@ class PermissionsActivity : AppCompatActivity() {
     }
 
     private fun requestNotificationListenerAccess() {
-        val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
-        startActivity(intent)
+        // Show rationale first
         AlertDialog.Builder(this)
-            .setTitle("Enable Notification Access")
-            .setMessage("Gee asb vir WinkerkReader Notification Access om VOIP oproepe te monitor.")
-            .setPositiveButton("OK", null)
+            .setTitle(R.string.rationale_notification_listener_title)
+            .setMessage(R.string.rationale_notification_listener_message)
+            .setPositiveButton(R.string.rationale_ok) { _, _ ->
+                startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+            }
+            .setNegativeButton(R.string.rationale_deny, null)
             .show()
     }
-
 
     override fun onResume() {
         super.onResume()
@@ -257,8 +283,48 @@ class PermissionsActivity : AppCompatActivity() {
         return true
     }
 
+    // ------------------------------------------------------------------------
+    // Rationale title & message helpers
+    // ------------------------------------------------------------------------
 
+    private fun getRationaleTitle(permission: String): Int {
+        return when (permission) {
+            Manifest.permission.READ_PHONE_STATE,
+            Manifest.permission.READ_CALL_LOG,
+            Manifest.permission.READ_PHONE_NUMBERS -> R.string.rationale_phone_title
+            Manifest.permission.READ_CONTACTS,
+            Manifest.permission.WRITE_CONTACTS -> R.string.rationale_contacts_title
+            Manifest.permission.SEND_SMS,
+            Manifest.permission.READ_SMS -> R.string.rationale_sms_title
+            Manifest.permission.READ_CALENDAR,
+            Manifest.permission.WRITE_CALENDAR -> R.string.rationale_calendar_title
+            Manifest.permission.POST_NOTIFICATIONS -> R.string.rationale_notifications_title
+            Manifest.permission.SCHEDULE_EXACT_ALARM -> R.string.rationale_exact_alarm_title
+            else -> R.string.rationale_generic_title
+        }
+    }
+
+    private fun getRationaleMessage(permission: String): Int {
+        return when (permission) {
+            Manifest.permission.READ_PHONE_STATE,
+            Manifest.permission.READ_CALL_LOG,
+            Manifest.permission.READ_PHONE_NUMBERS -> R.string.rationale_phone_message
+            Manifest.permission.READ_CONTACTS,
+            Manifest.permission.WRITE_CONTACTS -> R.string.rationale_contacts_message
+            Manifest.permission.SEND_SMS,
+            Manifest.permission.READ_SMS -> R.string.rationale_sms_message
+            Manifest.permission.READ_CALENDAR,
+            Manifest.permission.WRITE_CALENDAR -> R.string.rationale_calendar_message
+            Manifest.permission.POST_NOTIFICATIONS -> R.string.rationale_notifications_message
+            Manifest.permission.SCHEDULE_EXACT_ALARM -> R.string.rationale_exact_alarm_message
+            else -> R.string.rationale_generic_message
+        }
+    }
+
+    // ------------------------------------------------------------------------
     // Inner classes
+    // ------------------------------------------------------------------------
+
     enum class PermissionType {
         RUNTIME, OVERLAY, EXACT_ALARM, NOTIFICATION_POLICY, NOTIFICATION_LISTENER
     }
@@ -282,7 +348,13 @@ class PermissionsActivity : AppCompatActivity() {
                     permission != null && ContextCompat.checkSelfPermission(activity, permission) == PackageManager.PERMISSION_GRANTED
                 }
                 PermissionType.OVERLAY -> Settings.canDrawOverlays(activity)
-                PermissionType.EXACT_ALARM -> true // assume granted for simplicity
+                PermissionType.EXACT_ALARM -> {
+                    // Check if exact alarm permission is granted
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        val alarmManager = getSystemService(ALARM_SERVICE) as android.app.AlarmManager
+                        alarmManager.canScheduleExactAlarms()
+                    } else true
+                }
                 PermissionType.NOTIFICATION_POLICY -> {
                     val manager = activity.getSystemService(NOTIFICATION_SERVICE) as android.app.NotificationManager
                     manager.isNotificationPolicyAccessGranted
@@ -311,7 +383,7 @@ class PermissionsActivity : AppCompatActivity() {
 
         override fun getItemCount(): Int = items.size
 
-        inner class ViewHolder(private val itemBinding: ItemPermissionBinding) : 
+        inner class ViewHolder(private val itemBinding: ItemPermissionBinding) :
             RecyclerView.ViewHolder(itemBinding.root) {
 
             fun bind(item: PermissionItem) {

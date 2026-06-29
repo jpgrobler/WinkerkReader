@@ -139,8 +139,6 @@ class LidmaatDetailActivity : AppCompatActivity() {
     }
 
     private lateinit var miniAdapter: PendingReminderMiniAdapter
-
-
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         mImageUri?.let { outState.putString(STATE_IMAGE_URI, it.toString()) }
@@ -190,7 +188,10 @@ class LidmaatDetailActivity : AppCompatActivity() {
         } else {
             throw IllegalArgumentException("No MEMBER_GUID provided")
         }
-
+        viewModel.isLoading.observe(this) { loading ->
+            binding.detailIndeterminateBar.visibility = if (loading) View.VISIBLE else View.GONE
+            // Also hide content if you want – but typically you keep content and show overlay
+        }
 
         viewModel.memberDetail.observe(this) { item ->
             if (item != null) {

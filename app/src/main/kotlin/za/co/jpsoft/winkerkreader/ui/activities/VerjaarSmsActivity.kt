@@ -96,6 +96,9 @@ class VerjaarSmsActivity : AppCompatActivity() {
                 finish()
             }
         })
+        eventViewModel.isLoading.observe(this) { loading ->
+            binding.verjaarProgress.visibility = if (loading) View.VISIBLE else View.GONE
+        }
     }
 
     override fun onDestroy() {

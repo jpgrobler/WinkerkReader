@@ -27,6 +27,7 @@ import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.ViewCompat
@@ -44,7 +45,6 @@ import androidx.work.WorkInfo
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.BuildConfig
@@ -67,7 +67,6 @@ import za.co.jpsoft.winkerkreader.utils.MainNavigationController
 import za.co.jpsoft.winkerkreader.utils.MenuItemHandler
 import za.co.jpsoft.winkerkreader.utils.PastoralDatabaseBackup
 import za.co.jpsoft.winkerkreader.utils.PastoralNotificationHelper
-import za.co.jpsoft.winkerkreader.utils.PermissionHelper
 import za.co.jpsoft.winkerkreader.utils.PermissionManager
 import za.co.jpsoft.winkerkreader.utils.SearchCheckBoxPreferences
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
@@ -80,6 +79,9 @@ import java.util.Date
 import java.util.Locale
 import java.util.concurrent.Executors
 import androidx.core.view.isVisible
+import androidx.paging.LoadState
+import za.co.jpsoft.winkerkreader.utils.ReminderEventBus
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -106,6 +108,7 @@ class MainActivity : AppCompatActivity() {
     private var workInfoObserver: Observer<WorkInfo?> = Observer { }
     private var searchList: ArrayList<SearchCheckBox> = arrayListOf()
     private var bedieningBadgeCount = 0
+    private var savedListScroll: MemberListScrollHelper.ScrollState? = null
 
     val mainViewModel: MainViewModel by viewModels(
         factoryProducer = { SavedStateViewModelFactory(application, this, intent?.extras) }
@@ -161,13 +164,6 @@ class MainActivity : AppCompatActivity() {
             onCancelled = ::handleResultCancelled
         )
 
-//        mainDataLoader = MainDataLoader(
-//            context = this,
-//            binding = binding,
-//            settingsManager = settingsManager,
-//            executor = backgroundExecutor
-//        )
-
         workScheduler = WorkScheduler(this, settingsManager)
         workScheduler.scheduleAll()
 
@@ -181,8 +177,16 @@ class MainActivity : AppCompatActivity() {
             binding = binding,
             actions = object : StartupActions {
                 override fun checkAndRequestPermissions() {
-                    // Delegate to PermissionManager
-                    permissionManager.requestAllPermissions(this@MainActivity)
+                    // Use the new rationale-enabled methods for critical permission groups
+                    permissionManager.requestPhonePermissions(this@MainActivity)
+                    permissionManager.requestContactsPermissions(this@MainActivity)
+                    permissionManager.requestSmsPermissions(this@MainActivity)
+                    permissionManager.requestCalendarPermissions(this@MainActivity)
+
+                    // Notification permission is optional but nice to have on startup (Android 13+)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        permissionManager.requestNotificationPermissions(this@MainActivity)
+                    }
                 }
                 override fun startMonitoringServiceIfEnabled() {
                     this@MainActivity.startMonitoringServiceIfEnabled()
@@ -225,12 +229,8 @@ class MainActivity : AppCompatActivity() {
                 startupCoordinator.runOnCreate()
             }
 
-        )
 
-//        PastoralBackupWorker.schedule(
-//            context           = this,
-//            exportToDownloads = prefs.getBoolean(PREF_BACKUP_TO_DOWNLOADS, false)
-//        )
+        )
 
         backPressHandler = BackPressHandler(
             activity = this,
@@ -249,24 +249,10 @@ class MainActivity : AppCompatActivity() {
         checkForNewerBackup()
         setupViewModelObservers()
         loadPendingReminderGuids()
+        setupReminderEventBus()
     }
     private fun setupViewModelObservers() {
-//        lifecycleScope.launch {
-//            repeatOnLifecycle(Lifecycle.State.STARTED) {
-//                mainViewModel.sortOrder.collect { sort ->
-//                    if (BuildConfig.DEBUG) Log.d(TAG, "sortOrder collected: $sort")
-//                    binding.sortorder.text = sort
-//                    binding.sortorder.tag = sort
-//                }
-//            }
-//        }
-//        lifecycleScope.launch {
-//            repeatOnLifecycle(Lifecycle.State.STARTED) {
-//                mainViewModel.churchName.collect { name ->
-//                    binding.mainGemeentenaam.text = name
-//                }
-//            }
-//        }
+
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 mainViewModel.pendingReminderCount.collect { count ->
@@ -276,25 +262,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-//    private fun setupViewModelObservers() {
-//        lifecycleScope.launch {
-//            mainViewModel.sortOrder.collect { sort ->
-//                binding.sortorder.text = sort
-//                binding.sortorder.tag = sort
-//            }
-//        }
-//        lifecycleScope.launch {
-//            mainViewModel.churchName.collect { name ->
-//                binding.mainGemeentenaam.text = name
-//            }
-//        }
-//        lifecycleScope.launch {
-//            mainViewModel.pendingReminderCount.collect { count ->
-//                bedieningBadgeCount = count
-//                invalidateOptionsMenu()
-//            }
-//        }
-//    }
+
 
     // ------------------------------------------------------------
     // Filter & cancellation
@@ -321,7 +289,6 @@ class MainActivity : AppCompatActivity() {
         // ✅ Force reload with restored mode
         val mode = searchFilterCoordinator.resolveQueryMode(settingsManager.defLayout)
         viewModel.loadData(this, mode)
-        viewModel.refresh()
     }
 
     fun setFilterRestoreState(savedSortOrder: String) {
@@ -347,6 +314,11 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onPause() {
+        savedListScroll = MemberListScrollHelper.saveScrollState(binding.lidmaatList)
+        super.onPause()
+    }
+
     override fun onResume() {
         if (BuildConfig.DEBUG) Log.d(TAG, "onResume called")
         if (::authGuard.isInitialized) {
@@ -366,6 +338,7 @@ class MainActivity : AppCompatActivity() {
             loadPendingReminderGuids()
             loadChurchInfoAndUpdateHeader()
         }
+        binding.lidmaatList.post { restoreListScrollIfNeeded() }
         super.onResume()
     }
 
@@ -406,11 +379,13 @@ class MainActivity : AppCompatActivity() {
         binding.lidmaatList.apply {
             layoutManager = LinearLayoutManager(this@MainActivity)
             adapter = memberListAdapter
+            setHasFixedSize(true)
+            itemAnimator = null
         }
     }
 
     private fun setupViewModel() {
-        //viewModel = ViewModelProvider(this)[MemberViewModel::class.java]
+
         viewModel = ViewModelProvider(
             this,
             SavedStateViewModelFactory(application, this, intent?.extras)
@@ -462,42 +437,43 @@ class MainActivity : AppCompatActivity() {
             if (BuildConfig.DEBUG) Log.d(TAG, "verjaarFlag: $showBirthday")
         }
 
-//        viewModel.getMemberList().observe(this) { items ->
-//            if (BuildConfig.DEBUG) Log.d(TAG, "Observer received ${items.size} items")
-//            val isVerjaar = settingsManager.defLayout == "VERJAAR"
-//            memberListAdapter.updateState(
-//                listView = settingsManager.listView,
-//                soekList = viewModel.soekList,
-//                soek = viewModel.soek,
-//                recordStatus = viewModel.recordStatus,
-//                sortOrder = viewModel.sortOrder
-//            )
-//            memberListAdapter.submitList(items) {
-//                if (isVerjaar && items.isNotEmpty()) {
-//                    BirthdayScrollHelper.scrollToNextBirthday(
-//                        binding.lidmaatList,
-//                        items,
-//                        backgroundExecutor
-//                    )
-//                }
-//            }
-//        }
-
         viewModel.memberGuidsWithPendingReminders.observe(this) { guids ->
-
-            Log.d(TAG, "🔄 Observer received ${guids.size} GUIDs: $guids")
+            if (BuildConfig.DEBUG) Log.d(TAG, "🔄 Observer received ${guids.size} GUIDs: $guids")
             memberListAdapter.updatePendingReminderGuids(guids)
+            //memberListAdapter.rebindVisibleItems(binding.lidmaatList)
+            restoreListScrollIfNeeded()
         }
         lifecycleScope.launch {
-            viewModel.pagingDataFlowWithRefresh
-                .catch { e -> Log.e(TAG, "Paging flow error", e) }
-                .collectLatest { pagingData ->
-                    memberListAdapter.submitData(pagingData)
-                }
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.pagingDataFlowWithRefresh
+                    .catch { e -> Log.e(TAG, "Paging flow error", e) }
+                    .collect { pagingData ->
+                        memberListAdapter.submitData(lifecycle, pagingData)
+                    }
+            }
         }
         viewModel.getRowCount().observe(this) { count ->
             binding.mainCount.text = "[$count]"
         }
+        lifecycleScope.launch {
+            memberListAdapter.loadStateFlow.collect { loadStates ->
+                val isLoading = loadStates.refresh is LoadState.Loading
+                binding.indeterminateBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+//                if (loadStates.refresh is LoadState.NotLoading) {
+//                    restoreListScrollIfNeeded()
+//                }
+                if (loadStates.refresh is LoadState.Error) {
+                    // show error message
+                }
+            }
+        }
+    }
+
+    private fun restoreListScrollIfNeeded() {
+        val state = savedListScroll ?: return
+        if (memberListAdapter.itemCount <= state.position) return
+        MemberListScrollHelper.restoreScrollState(binding.lidmaatList, state)
+        savedListScroll = null
     }
 
     private fun setupPermissions() {
@@ -633,6 +609,9 @@ class MainActivity : AppCompatActivity() {
 //        }
 //    }
     private fun loadInitialData() {
+        if (::memberListAdapter.isInitialized && memberListAdapter.itemCount > 0) {
+            savedListScroll = MemberListScrollHelper.saveScrollState(binding.lidmaatList)
+        }
         initializeData(null)
         currentFocus?.let {
             val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
@@ -643,7 +622,6 @@ class MainActivity : AppCompatActivity() {
         // Die kerknaam word outomaties deur die ViewModel-observer opgedateer.
         // Verfris die lys en laai WhatsApp-kontakte.
         searchFilterCoordinator.refresh()
-        viewModel.refresh()
         WhatsAppContactLoader.loadWhatsAppContactsAtomic(this, lifecycleScope)
         loadChurchInfoAndUpdateHeader()
     }
@@ -693,8 +671,20 @@ class MainActivity : AppCompatActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putParcelableArrayList(SEARCH_CHECK_BOX, searchList)
+        (binding.lidmaatList.layoutManager as? LinearLayoutManager)?.let { lm ->
+            outState.putInt("scroll_position", lm.findFirstVisibleItemPosition())
+        }
     }
 
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        val position = savedInstanceState.getInt("scroll_position", -1)
+        if (position != -1) {
+            binding.lidmaatList.post {
+                binding.lidmaatList.scrollToPosition(position)
+            }
+        }
+    }
     // ------------------------------------------------------------
     // Swipe gesture detector
     // ------------------------------------------------------------
@@ -909,12 +899,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-        private fun checkOverlayPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
-            PermissionHelper.getSystemAlertWindowPermissionIntent(this)?.let {
-                activityResultCoordinator.overlayPermissionLauncher.launch(it)
-            }
-        }
+    private fun checkOverlayPermission() {
+        permissionManager.requestOverlayPermissionWithRationale(this)
     }
 
     private fun createNotificationChannel() {
@@ -1116,7 +1102,7 @@ class MainActivity : AppCompatActivity() {
                     return tempFile
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to query MediaStore for backups", e)
+                if (BuildConfig.DEBUG) Log.e(TAG, "Failed to query MediaStore for backups", e)
             } finally {
                 cursor?.close()
             }
@@ -1159,10 +1145,14 @@ class MainActivity : AppCompatActivity() {
             recordStatus = viewModel.recordStatus,
             sortOrder = newSort
         )
-
-        viewModel.refresh()
     }
 
-
+    private fun setupReminderEventBus() {
+        lifecycleScope.launch {
+            ReminderEventBus.refreshPending.collect {
+                loadPendingReminderGuids()
+            }
+        }
+    }
 
 }

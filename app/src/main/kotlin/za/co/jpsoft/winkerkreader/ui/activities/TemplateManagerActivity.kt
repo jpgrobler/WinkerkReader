@@ -3,12 +3,14 @@ package za.co.jpsoft.winkerkreader.ui.activities
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.pastoral.repository.PastoralReminderRepository
@@ -27,6 +29,7 @@ class TemplateManagerActivity : AppCompatActivity() {
     }
 
     private val navigationController by lazy { MainNavigationController(this) }
+    private val _isLoading = MutableStateFlow(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,6 +64,11 @@ class TemplateManagerActivity : AppCompatActivity() {
         lifecycleScope.launch {
             viewModel.error.collect { message ->
                 Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
+            }
+        }
+        lifecycleScope.launch {
+            viewModel.isLoading.collect { isLoading ->
+                binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
             }
         }
     }
