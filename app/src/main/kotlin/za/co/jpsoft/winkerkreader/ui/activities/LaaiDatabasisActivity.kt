@@ -260,26 +260,26 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         val hour = settings.getString("DL-HOUR", "12") ?: "12"
         val minute = settings.getString("DL-MINUTE", "00") ?: "00"
 
-        binding.tydText.inputType = InputType.TYPE_NULL
-        binding.tydText.setText("$hour:$minute")
-        binding.tydText.setOnClickListener { showTimePicker() }
+//        binding.tydText.inputType = InputType.TYPE_NULL
+//        binding.tydText.setText("$hour:$minute")
+//        binding.tydText.setOnClickListener { showTimePicker() }
 
         binding.serverIp.setText(settings.getString("IP", ""))
     }
 
-    private fun showTimePicker() {
-        val calendar = Calendar.getInstance()
-        val currentHour = calendar[Calendar.HOUR_OF_DAY]
-        val currentMinutes = calendar[Calendar.MINUTE]
-
-        val picker = TimePickerDialog(this, { _, selectedHour, selectedMinute ->
-            val timeText = "$selectedHour:$selectedMinute"
-            binding.tydText.setText(timeText)
-            saveTimeSettings(selectedHour, selectedMinute)
-            Toast.makeText(this, "Tyd opgedateer", Toast.LENGTH_SHORT).show()
-        }, currentHour, currentMinutes, true)
-        picker.show()
-    }
+//    private fun showTimePicker() {
+//        val calendar = Calendar.getInstance()
+//        val currentHour = calendar[Calendar.HOUR_OF_DAY]
+//        val currentMinutes = calendar[Calendar.MINUTE]
+//
+//        val picker = TimePickerDialog(this, { _, selectedHour, selectedMinute ->
+//            val timeText = "$selectedHour:$selectedMinute"
+//            binding.tydText.setText(timeText)
+//            saveTimeSettings(selectedHour, selectedMinute)
+//            Toast.makeText(this, "Tyd opgedateer", Toast.LENGTH_SHORT).show()
+//        }, currentHour, currentMinutes, true)
+//        picker.show()
+//    }
 
     private fun saveTimeSettings(hour: Int, minute: Int) {
         settings.edit {
@@ -291,16 +291,16 @@ class LaaiDatabasisActivity : AppCompatActivity() {
     }
 
     private fun initializeSpinnerUI() {
-        val day = settings.getInt("DL-DAY", 6)
-        val weeksdagStatusAdapter = za.co.jpsoft.winkerkreader.ui.adapters.SpinnerAdapter(this, null, weeksdagArray)
-        binding.weeksdag.adapter = weeksdagStatusAdapter
-        binding.weeksdag.setSelection(day - 1)
-        binding.weeksdag.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                saveDaySelection(position + 1)
-            }
-            override fun onNothingSelected(parent: AdapterView<*>?) {}
-        }
+//        val day = settings.getInt("DL-DAY", 6)
+//        val weeksdagStatusAdapter = za.co.jpsoft.winkerkreader.ui.adapters.SpinnerAdapter(this, null, weeksdagArray)
+//        binding.weeksdag.adapter = weeksdagStatusAdapter
+//        binding.weeksdag.setSelection(day - 1)
+//        binding.weeksdag.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+//            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+//                saveDaySelection(position + 1)
+//            }
+//            override fun onNothingSelected(parent: AdapterView<*>?) {}
+//        }
     }
 
     private fun saveDaySelection(day: Int) {
@@ -308,16 +308,16 @@ class LaaiDatabasisActivity : AppCompatActivity() {
     }
 
     private fun initializeCheckboxUI() {
-        binding.alDropBox.isChecked = AutoDL
-        binding.alDropBox.setOnClickListener {
-            AutoDL = binding.alDropBox.isChecked
-            settings.edit { putBoolean("AUTO_DL", AutoDL) }
-            if (AutoDL) {
-                setupAlarmForDownload()
-            } else {
-                cancelAlarmForDownload()
-            }
-        }
+//        binding.alDropBox.isChecked = AutoDL
+//        binding.alDropBox.setOnClickListener {
+//            AutoDL = binding.alDropBox.isChecked
+//            settings.edit { putBoolean("AUTO_DL", AutoDL) }
+//            if (AutoDL) {
+//                setupAlarmForDownload()
+//            } else {
+//                cancelAlarmForDownload()
+//            }
+//        }
     }
 
     private fun setupAlarmForDownload() {
@@ -369,7 +369,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
     }
 
     private fun initializeButtons() {
-        binding.button1.setOnClickListener { handleUpdateClick(it) }
+        //binding.button1.setOnClickListener { handleUpdateClick(it) }
         binding.dbLinkButton.setOnClickListener { handleDropboxDownload() }
         binding.laaiLaai.setOnClickListener { handleLoadDatabase() }
         binding.laaiPicker.setOnClickListener { handlePickFile() }
@@ -446,25 +446,25 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         Toast.makeText(this, "Foto-sinkronisasie begin…", Toast.LENGTH_SHORT).show()
     }
 
-    private fun handleUpdateClick(unused: View) {
-        val timeStr = binding.tydText.text.toString()
-        val parts = timeStr.split(":")
-        var hour = if (parts.isNotEmpty()) parts[0] else "12"
-        var minute = if (parts.size > 1) parts[1] else "00"
-
-        if (hour.length < 2) hour = "0$hour"
-        if (minute.length < 2) minute = "0$minute"
-
-        settings.edit {
-            putString("DL-HOUR", hour)
-            putString("DL-MINUTE", minute)
-            putBoolean("DL-TIMEUPDATE", true)
-        }
-
-        Toast.makeText(this, "Tyd opgedateer", Toast.LENGTH_SHORT).show()
-
-        setupAlarmAndNavigateToMain(hour, minute)
-    }
+//    private fun handleUpdateClick(unused: View) {
+//        val timeStr = binding.tydText.text.toString()
+//        val parts = timeStr.split(":")
+//        var hour = if (parts.isNotEmpty()) parts[0] else "12"
+//        var minute = if (parts.size > 1) parts[1] else "00"
+//
+//        if (hour.length < 2) hour = "0$hour"
+//        if (minute.length < 2) minute = "0$minute"
+//
+//        settings.edit {
+//            putString("DL-HOUR", hour)
+//            putString("DL-MINUTE", minute)
+//            putBoolean("DL-TIMEUPDATE", true)
+//        }
+//
+//        Toast.makeText(this, "Tyd opgedateer", Toast.LENGTH_SHORT).show()
+//
+//        setupAlarmAndNavigateToMain(hour, minute)
+//    }
 
     private fun setupAlarmAndNavigateToMain(hour: String, minute: String) {
         val calendar = Calendar.getInstance().apply {

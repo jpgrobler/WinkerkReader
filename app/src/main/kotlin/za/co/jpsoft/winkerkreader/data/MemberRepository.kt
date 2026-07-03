@@ -5,6 +5,8 @@ import android.content.ContentResolver
 import android.content.Context
 import android.database.Cursor
 import android.util.Log
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
 import za.co.jpsoft.winkerkreader.data.models.FilterBox
@@ -339,4 +341,54 @@ class MemberRepository(private val context: Context) {
         if (parts.size == 3) LocalDate.of(parts[2].toInt(), parts[1].toInt(), parts[0].toInt())
         else null
     } catch (_: Exception) { null }
+
+    fun countMembers(
+        eventType: String,
+        recordStatus: String,
+        soek: String,
+        filterList: ArrayList<FilterBox>?,
+        sortOrder: String
+    ): Int {
+        // Build the COUNT query – returns (sql, args)
+        val (sql, args) = MemberQueryBuilder.buildCountQuery(
+            eventType, recordStatus, soek, filterList, sortOrder
+        )
+        val cursor = contentResolver.query(
+            WinkerkContract.winkerkEntry.CONTENT_URI,
+            null,
+            sql,       // ✅ the SQL string
+            args,      // ✅ the arguments array
+            null
+        )
+        cursor?.use {
+            if (it.moveToFirst()) return it.getInt(0)
+        }
+        return 0
+    }
+
+    suspend fun countMembersBeforeBirthday(
+        eventType: String,
+        recordStatus: String,
+        soek: String,
+        filterList: ArrayList<FilterBox>?,
+        sortOrder: String,
+        todayMonth: String,
+        todayDay: String
+    ): Int {
+        val (sql, args) = MemberQueryBuilder.buildCountBeforeBirthdayQuery(
+            eventType, recordStatus, soek, filterList, sortOrder, todayMonth, todayDay
+        )
+        return withContext(Dispatchers.IO) {
+            val cursor = contentResolver.query(
+                WinkerkContract.winkerkEntry.CONTENT_URI,
+                null,
+                sql,
+                args,
+                null
+            )
+            cursor?.use {
+                if (it.moveToFirst()) it.getInt(0) else 0
+            } ?: 0
+        }
+    }
 }

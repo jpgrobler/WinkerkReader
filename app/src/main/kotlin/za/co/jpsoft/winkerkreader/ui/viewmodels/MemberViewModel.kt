@@ -1,6 +1,7 @@
 package za.co.jpsoft.winkerkreader.ui.viewmodels
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
@@ -14,7 +15,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -24,6 +28,8 @@ import za.co.jpsoft.winkerkreader.data.models.FilterBox
 import za.co.jpsoft.winkerkreader.data.models.MemberItem
 import za.co.jpsoft.winkerkreader.ui.components.SearchCheckBox
 import za.co.jpsoft.winkerkreader.ui.models.MainQueryMode
+import kotlinx.coroutines.flow.debounce
+import za.co.jpsoft.winkerkreader.BuildConfig
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MemberViewModel(
@@ -49,13 +55,19 @@ class MemberViewModel(
             _sortOrder.value = value
         }
 
-    var soek: String
-        get() = savedStateHandle[KEY_SOEK] ?: ""
-        set(value) = savedStateHandle.set(KEY_SOEK, value)
-
     var recordStatus: String
         get() = savedStateHandle[KEY_RECORD_STATUS] ?: "0"
-        set(value) = savedStateHandle.set(KEY_RECORD_STATUS, value)
+        set(value) {
+            savedStateHandle.set(KEY_RECORD_STATUS, value)
+            _recordStatus.value = value   // ✅ update the flow
+        }
+
+    var soek: String
+        get() = savedStateHandle[KEY_SOEK] ?: ""
+        set(value) {
+            savedStateHandle.set(KEY_SOEK, value)
+            _soek.value = value           // ✅ update the flow
+        }
 
     var soekList: Boolean
         get() = savedStateHandle[KEY_SOEK_LIST] ?: false
@@ -88,9 +100,46 @@ class MemberViewModel(
     private lateinit var context: Context
 
     /** Call once with application context. */
+//    fun initRepository(context: Context) {
+//        if (!::repository.isInitialized) {
+//            repository = MemberRepository(context.applicationContext)
+//        }
+//        this.context = context.applicationContext
+//        syncPagingStateFlows()
+//    }
     fun initRepository(context: Context) {
         if (!::repository.isInitialized) {
             repository = MemberRepository(context.applicationContext)
+            viewModelScope.launch {
+                // Collect paging parameters and update total count
+                combine(
+                    _sortOrder,
+                    _soek,
+                    _recordStatus,
+                    _filterList,
+                    _eventType
+                ) { args ->
+                    PagingParams(
+                        sort = args[0] as String,
+                        search = args[1] as String,
+                        status = args[2] as String,
+                        filters = args[3] as ArrayList<FilterBox>?,
+                        eventType = args[4] as String
+                    )
+                }.debounce(300) // avoid frequent DB queries
+                    .collect { params ->
+                        val count = withContext(Dispatchers.IO) {
+                            repository.countMembers(
+                                eventType = params.eventType,
+                                recordStatus = params.status,
+                                soek = params.search,
+                                filterList = params.filters,
+                                sortOrder = params.sort
+                            )
+                        }
+                        _totalCount.value = count
+                    }
+            }
         }
         this.context = context.applicationContext
         syncPagingStateFlows()
@@ -120,6 +169,8 @@ class MemberViewModel(
     fun updatePendingRemindersSet(guids: Set<String>) {
         _memberGuidsWithPendingReminders.value = guids
     }
+    private val _totalCount = MutableStateFlow(0)
+    val totalCount: StateFlow<Int> = _totalCount.asStateFlow()
 
     @Deprecated("Use pagingDataFlow for the main list; kept for compatibility")
     fun loadData(context: Context, mode: MainQueryMode) {
@@ -257,7 +308,7 @@ class MemberViewModel(
 
     private val pagingConfig = PagingConfig(
         pageSize = 50,
-        prefetchDistance = 10,
+        prefetchDistance = 500,   // was 10 – loads more pages ahead
         enablePlaceholders = false
     )
 
@@ -323,9 +374,111 @@ class MemberViewModel(
             }.flow
         }.cachedIn(viewModelScope)
     }
+    /**
+     * Updates the sort order and the corresponding event type,
+     * then invalidates the current PagingSource to reload with the new parameters.
+     */
+    fun updateSortOrder(newSort: String) {
 
+        if (BuildConfig.DEBUG) Log.d("MemberViewModel", "updateSortOrder: newSort=$newSort")
+        sortOrder = newSort
+
+        val newEventType = when (newSort) {
+            "ADRES" -> "LIDMAAT_DATA_ADRES"
+            "GESINNE" -> "GESINNE_DATA"
+            "WYK" -> "LIDMAAT_DATA_WYK"
+            "VERJAAR" -> "LIDMAAT_DATA_VERJAAR"
+            "OUDERDOM" -> "OUDERDOM_DATA"
+            "HUWELIK" -> "HUWELIK_DATA"
+            else -> "LIDMAAT_DATA"
+        }
+        if (BuildConfig.DEBUG) Log.d("MemberViewModel", "updateSortOrder: newEventType=$newEventType")
+        _eventType.value = newEventType
+
+        refresh()
+    }
+
+    /**
+     * Updates the ViewModel state for a filter operation.
+     * @param filters The list of active filters.
+     */
+    fun updateFilter(filters: ArrayList<FilterBox>) {
+        if (BuildConfig.DEBUG) Log.d(TAG, "updateFilter: filters size=${filters.size}")
+        _filterList.value = filters
+        _eventType.value = "FILTER_DATA"
+        sortOrder = "Filter"
+        soekList = false
+        soek = ""
+
+        currentFilterList = filters  // store for buildFilterText()
+        // ✅ Build and set the filter summary text
+        textLiveData.value = buildFilterText()
+    }
+
+    /**
+     * Updates the ViewModel state for a search operation.
+     * @param searchTerm The search string (non‑blank).
+     */
+    fun updateSearch(searchTerm: String) {
+        soek = searchTerm
+        soekList = true
+        _eventType.value = "SOEK_DATA"
+        sortOrder = "SOEK_DATA"
+        _filterList.value = null
+        // ✅ Set the search term in the summary
+        textLiveData.value = searchTerm
+    }
+    fun clearFilterSummary() {
+        textLiveData.value = ""
+    }
+    /**
+     * Resets search/filter state and restores a regular sort order.
+     * @param sort The sort order to restore (e.g., "VAN", "GESINNE").
+     */
+    fun resetToSort(sort: String) {
+        soek = ""
+        soekList = false
+        _filterList.value = null
+        val newEventType = when (sort) {
+            "ADRES" -> "LIDMAAT_DATA_ADRES"
+            "GESINNE" -> "GESINNE_DATA"
+            "WYK" -> "LIDMAAT_DATA_WYK"
+            "VERJAAR" -> "LIDMAAT_DATA_VERJAAR"
+            "OUDERDOM" -> "OUDERDOM_DATA"
+            "HUWELIK" -> "HUWELIK_DATA"
+            else -> "LIDMAAT_DATA"
+        }
+        _eventType.value = newEventType
+        sortOrder = sort
+        //refresh()
+    }
+    fun getEventType(): String = _eventType.value
+    fun getFilterListSize(): Int = _filterList.value?.size ?: 0
     override fun onCleared() {
         clearCache()
         super.onCleared()
+    }
+
+    suspend fun getBirthdayOffset(sortOrder: String): Int {
+        if (!::repository.isInitialized) return 0
+        val today = java.time.LocalDate.now()
+        val month = "%02d".format(today.monthValue)
+        val day = "%02d".format(today.dayOfMonth)
+
+        // Determine the correct event type for the given sort order
+        val eventType = when (sortOrder) {
+            "VERJAAR", "VERJAARSDAG" -> "LIDMAAT_DATA_VERJAAR"
+            else -> "LIDMAAT_DATA" // fallback
+        }
+
+        return repository.countMembersBeforeBirthday(
+            eventType = eventType,
+            recordStatus = recordStatus,
+            soek = soek,
+            filterList = _filterList.value,
+            sortOrder = sortOrder,
+            todayMonth = month,
+            todayDay = day
+        )
     }
 }

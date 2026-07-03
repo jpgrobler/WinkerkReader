@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -9,11 +9,15 @@
     android:focusable="true"
     android:fillViewport="true"
     android:fitsSystemWindows="true"
-    android:focusableInTouchMode="true">
+    android:focusableInTouchMode="true"
+    android:background="?attr/colorSurface">
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:padding="16dp">
+
         <TextView
             android:focusable="true"
             android:focusableInTouchMode="true"
@@ -22,83 +26,15 @@
             android:layout_marginBottom="10dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            />
-    <TextView
-    android:textColor="@android:color/holo_red_dark"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:textStyle="bold"
-    android:text="@string/registreer_titel"/>
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-    <TextView
-        android:layout_width="70dp"
-        android:layout_height="wrap_content"
-        android:text="@string/registreer_naam"/>
-    <EditText
-        android:id="@+id/reg_naam"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:inputType="textCapWords"/>
-    </LinearLayout>
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
+            android:textColor="?attr/colorOnSurface" />
+
         <TextView
-            android:layout_width="70dp"
-            android:layout_height="wrap_content"
-            android:text="@string/registreer_van"/>
-        <EditText
-            android:id="@+id/reg_van"
+            android:textColor="?attr/colorPrimary"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="textCapWords"/>
-    </LinearLayout>
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-        <TextView
-            android:layout_width="70dp"
-            android:layout_height="wrap_content"
-            android:text="@string/registreer_epos"/>
-        <EditText
-            android:id="@+id/reg_epos"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="textEmailAddress"/>
-    </LinearLayout>
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-        <TextView
-            android:layout_width="70dp"
-            android:layout_height="wrap_content"
-            android:text="@string/registreer_selfoon"/>
-        <EditText
-            android:id="@+id/reg_selno"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="phone"/>
-    </LinearLayout>
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-        <TextView
-            android:layout_width="70dp"
-            android:layout_height="wrap_content"
-            android:text="@string/registreer_gemeente"/>
-        <EditText
-            android:id="@+id/reg_gemeente"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="text"/>
-    </LinearLayout>
+            android:textStyle="bold"
+            android:text="@string/registreer_titel" />
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -106,31 +42,127 @@
             <TextView
                 android:layout_width="70dp"
                 android:layout_height="wrap_content"
-                android:text="@string/registreer_gemeente_epos"/>
+                android:text="@string/registreer_naam"
+                android:textColor="?attr/colorOnSurface" />
+            <EditText
+                android:id="@+id/reg_naam"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textCapWords"
+                android:textColor="?attr/colorOnSurface"
+                android:backgroundTint="?attr/colorPrimary" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="70dp"
+                android:layout_height="wrap_content"
+                android:text="@string/registreer_van"
+                android:textColor="?attr/colorOnSurface" />
+            <EditText
+                android:id="@+id/reg_van"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textCapWords"
+                android:textColor="?attr/colorOnSurface"
+                android:backgroundTint="?attr/colorPrimary" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="70dp"
+                android:layout_height="wrap_content"
+                android:text="@string/registreer_epos"
+                android:textColor="?attr/colorOnSurface" />
+            <EditText
+                android:id="@+id/reg_epos"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textEmailAddress"
+                android:textColor="?attr/colorOnSurface"
+                android:backgroundTint="?attr/colorPrimary" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="70dp"
+                android:layout_height="wrap_content"
+                android:text="@string/registreer_selfoon"
+                android:textColor="?attr/colorOnSurface" />
+            <EditText
+                android:id="@+id/reg_selno"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="phone"
+                android:textColor="?attr/colorOnSurface"
+                android:backgroundTint="?attr/colorPrimary" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="70dp"
+                android:layout_height="wrap_content"
+                android:text="@string/registreer_gemeente"
+                android:textColor="?attr/colorOnSurface" />
+            <EditText
+                android:id="@+id/reg_gemeente"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:textColor="?attr/colorOnSurface"
+                android:backgroundTint="?attr/colorPrimary" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="70dp"
+                android:layout_height="wrap_content"
+                android:text="@string/registreer_gemeente_epos"
+                android:textColor="?attr/colorOnSurface" />
             <EditText
                 android:id="@+id/reg_gemeente_epos"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="textEmailAddress"/>
+                android:inputType="textEmailAddress"
+                android:textColor="?attr/colorOnSurface"
+                android:backgroundTint="?attr/colorPrimary" />
         </LinearLayout>
-    <LinearLayout
-        android:layout_marginTop="10dp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-        <TextView
-            android:layout_width="wrap_content"
+
+        <LinearLayout
+            android:layout_marginTop="10dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textStyle="bold"
-            android:text="@string/registreer_opdateer" />
-        <ImageView
-            android:layout_marginStart="50dp"
-            android:id="@+id/reg_opdateer"
-            android:src="@drawable/update"
-            android:scaleType="fitXY"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:tooltipText="@string/opdateer_info" />
-    </LinearLayout>
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textStyle="bold"
+                android:text="@string/registreer_opdateer"
+                android:textColor="?attr/colorOnSurface" />
+            <ImageView
+                android:layout_marginStart="50dp"
+                android:id="@+id/reg_opdateer"
+                android:src="@drawable/update"
+                android:scaleType="fitXY"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                app:tint="?attr/colorPrimary"
+                android:tooltipText="@string/opdateer_info" />
+        </LinearLayout>
     </LinearLayout>
 </ScrollView>

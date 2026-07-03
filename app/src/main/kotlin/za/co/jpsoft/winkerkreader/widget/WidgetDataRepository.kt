@@ -27,6 +27,11 @@ object WidgetDataRepository {
         try {
             val rows = queryWidgetData(context)
             cachedRows = rows
+            // Save timestamp
+            context.getSharedPreferences("widget_prefs", Context.MODE_PRIVATE)
+                .edit()
+                .putLong("last_refresh_time", System.currentTimeMillis())
+                .apply()
             if (BuildConfig.DEBUG) Log.d(TAG, "Cache refreshed with ${rows.size} rows")
         } catch (e: Exception) {
             if (BuildConfig.DEBUG) Log.e(TAG, "Failed to refresh widget cache", e)

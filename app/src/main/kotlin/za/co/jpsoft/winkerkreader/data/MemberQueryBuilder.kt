@@ -1,10 +1,15 @@
 // File: data/MemberQueryBuilder.kt
 package za.co.jpsoft.winkerkreader.data
 
+import android.content.Context
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.col
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
 import za.co.jpsoft.winkerkreader.data.models.FilterBox
 
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.debounce
 /**
  * Builds SQL queries for the member list.
  * All raw SQL strings are isolated here for easier maintenance and future migration.
@@ -291,4 +296,172 @@ object MemberQueryBuilder {
             }
         }
     }
+    // File: data/MemberQueryBuilder.kt
+
+    /**
+     * Build a COUNT query for the current filters (no ORDER BY).
+     * Returns the SQL string and arguments, similar to SqlRequest but just the SQL.
+     * We'll return a pair (sql, args) for simplicity.
+     */
+    fun buildCountQuery(
+        eventType: String,
+        recordStatus: String,
+        soek: String,
+        filterList: ArrayList<FilterBox>?,
+        sortOrder: String
+    ): Pair<String, Array<String>> {
+        val where = StringBuilder()
+        val argsList = mutableListOf<String>()
+
+        // Record status filter (same as in buildMemberQuery)
+        if (recordStatus != "*") {
+            where.append(" (").append(winkerkEntry.LIDMATE_TABLE_NAME).append(".")
+                .append(col(winkerkEntry.LIDMATE_REKORDSTATUS)).append(" = '")
+                .append(recordStatus).append("' )")
+        } else {
+            where.append(" ((").append(winkerkEntry.LIDMATE_TABLE_NAME).append(".")
+                .append(col(winkerkEntry.LIDMATE_REKORDSTATUS)).append(" = '0' ) OR ")
+                .append(" (").append(winkerkEntry.LIDMATE_TABLE_NAME).append(".")
+                .append(col(winkerkEntry.LIDMATE_REKORDSTATUS)).append(" = '2' ))")
+        }
+
+        // Append search/filter WHERE clauses (same as buildMemberQuery)
+        appendWhereClause(eventType, where, argsList, soek, filterList)
+
+        // Determine FROM clause (same as buildMemberQuery)
+        val fromClause = if (eventType == "GESINNE_DATA" || eventType == "LIDMAAT_DATA_WYK" || eventType == "LIDMAAT_DATA_ADRES") {
+            winkerkEntry.SELECTION_LIDMAAT_FROM_GESINSHOOF
+        } else {
+            " Members "
+        }
+
+        val sql = if (where.isEmpty()) {
+            "SELECT COUNT(*) FROM $fromClause;"
+        } else {
+            "SELECT COUNT(*) FROM $fromClause WHERE $where;"
+        }
+
+        return sql to argsList.toTypedArray()
+    }
+    /**
+     * Builds a COUNT query with an additional condition that the birthday month/day
+     * is strictly before the given [todayMonth] and [todayDay].
+     */
+    /**
+     * Builds a COUNT query with an additional condition that the birthday month/day
+     * is strictly before the given [todayMonth] and [todayDay].
+     */
+    /**
+     * Builds a COUNT query that counts members whose birthday month/day is before today.
+     * The WHERE clause includes all existing filters from the event type, and adds the birthday condition.
+     */
+    /**
+     * Builds a COUNT query that counts members whose birthday (month/day) is strictly
+     * before today's month/day. This gives the offset (number of items before the
+     * first birthday >= today) in the filtered result set.
+     */
+    fun buildCountBeforeBirthdayQuery(
+        eventType: String,
+        recordStatus: String,
+        soek: String,
+        filterList: ArrayList<FilterBox>?,
+        sortOrder: String,
+        todayMonth: String,
+        todayDay: String
+    ): Pair<String, Array<String>> {
+        // Reuse the existing count query to get the base SQL and arguments
+        val (baseSql, baseArgs) = buildCountQuery(eventType, recordStatus, soek, filterList, sortOrder)
+
+        // Build the birthday-before condition
+        val birthdayCondition = "((CAST(SUBSTR(Geboortedatum, 4, 2) AS INTEGER) < ?) OR (CAST(SUBSTR(Geboortedatum, 4, 2) AS INTEGER) = ? AND CAST(SUBSTR(Geboortedatum, 1, 2) AS INTEGER) < ?))"
+
+        // Insert the condition into the WHERE clause
+        val sql = insertBirthdayCondition(baseSql, birthdayCondition)
+
+        // Append the three extra parameters (todayMonth, todayMonth, todayDay)
+        val args = baseArgs + arrayOf(todayMonth, todayMonth, todayDay)
+        return sql to args
+    }
+
+    /**
+     * Inserts the birthday condition into the SQL query, handling cases where
+     * there is no WHERE clause or an existing WHERE clause.
+     */
+    private fun insertBirthdayCondition(sql: String, condition: String): String {
+        val whereIndex = sql.indexOf(" WHERE ", ignoreCase = true)
+        return if (whereIndex == -1) {
+            // No WHERE clause – add one before ORDER BY (if any)
+            val orderIndex = sql.indexOf(" ORDER BY ", ignoreCase = true)
+            if (orderIndex == -1) {
+                // No ORDER BY – just append WHERE at the end
+                val fromIndex = sql.indexOf(" FROM ", ignoreCase = true)
+                val beforeFrom = sql.substring(0, fromIndex + " FROM ".length)
+                val rest = sql.substring(fromIndex + " FROM ".length)
+                "$beforeFrom$rest WHERE $condition"
+            } else {
+                val beforeOrder = sql.substring(0, orderIndex)
+                val afterOrder = sql.substring(orderIndex)
+                "$beforeOrder WHERE $condition $afterOrder"
+            }
+        } else {
+            // Existing WHERE – insert after it, before ORDER BY (if any)
+            val orderIndex = sql.indexOf(" ORDER BY ", ignoreCase = true)
+            if (orderIndex == -1) {
+                val beforeWhere = sql.substring(0, whereIndex + " WHERE ".length)
+                val afterWhere = sql.substring(whereIndex + " WHERE ".length)
+                "$beforeWhere$condition AND $afterWhere"
+            } else {
+                val beforeOrder = sql.substring(0, orderIndex)
+                val afterOrder = sql.substring(orderIndex)
+                "$beforeOrder AND $condition $afterOrder"
+            }
+        }
+    }
+
+    /**
+     * Inserts an extra condition into the WHERE clause of a SELECT COUNT query.
+     * Handles cases with no WHERE, with ORDER BY, and with trailing semicolon.
+     */
+    private fun insertConditionIntoWhere(sql: String, condition: String): String {
+        var cleanSql = sql.trim()
+        var hasSemicolon = false
+        if (cleanSql.endsWith(";")) {
+            cleanSql = cleanSql.dropLast(1).trim()
+            hasSemicolon = true
+        }
+
+        val lower = cleanSql.lowercase()
+        val whereIndex = lower.indexOf(" where ")
+        val orderIndex = lower.indexOf(" order by ")
+
+        val newSql = if (whereIndex == -1) {
+            // No WHERE clause – add after FROM
+            val fromIndex = lower.indexOf(" from ")
+            if (fromIndex == -1) {
+                // Should not happen for a valid SELECT COUNT
+                cleanSql
+            } else {
+                // Split into before FROM and after FROM
+                val beforeFrom = cleanSql.substring(0, fromIndex + " from ".length)
+                val afterFrom = cleanSql.substring(fromIndex + " from ".length)
+                "$beforeFrom$afterFrom WHERE $condition"
+            }
+        } else {
+            // Insert the condition into the WHERE clause
+            val beforeWhere = cleanSql.substring(0, whereIndex + " where ".length)
+            val afterWhere = cleanSql.substring(whereIndex + " where ".length)
+            // If there's an ORDER BY after WHERE, we need to insert before it
+            if (orderIndex != -1 && orderIndex > whereIndex) {
+                val beforeOrder = cleanSql.substring(0, orderIndex)
+                val afterOrder = cleanSql.substring(orderIndex)
+                "$beforeOrder AND $condition $afterOrder"
+            } else {
+                // No ORDER BY, just append AND condition
+                "$beforeWhere$condition AND $afterWhere"
+            }
+        }
+
+        return if (hasSemicolon) "$newSql;" else newSql
+    }
+    private val birthdayCondition = "(CAST(SUBSTR(Geboortedatum, 4, 2) AS INTEGER) < ?) OR (CAST(SUBSTR(Geboortedatum, 4, 2) AS INTEGER) = ? AND CAST(SUBSTR(Geboortedatum, 1, 2) AS INTEGER) < ?)"
 }

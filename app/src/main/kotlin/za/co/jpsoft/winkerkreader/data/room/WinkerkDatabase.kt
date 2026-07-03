@@ -10,7 +10,7 @@ import za.co.jpsoft.winkerkreader.data.WinkerkContract
 
 @Database(
     entities = [MemberEntity::class, ArgiefEntity::class, DatumEntity::class],
-    version = 4,   // Bumped to 4 to run the new correction migration
+    version = 4,
     exportSchema = false
 )
 abstract class WinkerkDatabase : RoomDatabase() {
@@ -35,56 +35,154 @@ abstract class WinkerkDatabase : RoomDatabase() {
                 WinkerkDatabase::class.java,
                 WinkerkContract.winkerkEntry.WINKERK_DB
             )
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                .addMigrations(MIGRATION_1_4)   // Only one migration from 1 to 4
                 .build()
         }
 
-        // ===== Migration 1 → 2 (unchanged) =====
-        private val MIGRATION_1_2 = object : Migration(1, 2) {
+        // ─── Column lists for each table (exact match to entity definitions) ───
+
+        private val memberColumns = listOf(
+            "_id",
+            "Tag",
+            "Aankomsdatum",
+            "Aansluitmetode",
+            "Allergieë",
+            "Bedieningstyl",
+            "Belydenisaflegging Anniversary Period",
+            "Belydenisaflegging Comment",
+            "Belydenisaflegging Date",
+            "Belydenisaflegging Minister",
+            "Belydenisopmerking",
+            "Beroep",
+            "Beskikbaarheid",
+            "Bewysstatus",
+            "Datatoestemming",
+            "Datum ontvang",
+            "Doop Anniversary Period",
+            "Doop Comment",
+            "Doop Date",
+            "Doop Minister",
+            "Doopopmerking",
+            "Epos",
+            "Faks",
+            "FamilyHeadGUID",
+            "Fotostoorplek",
+            "Geboortedatum",
+            "Gebruikervlag",
+            "Gemeente",
+            "Gemeente epos",
+            "Gesinshoof",
+            "Gesinshoofnaam",
+            "Gesinsrol",
+            "Geslag",
+            "Groepsindikator",
+            "Huisdokter",
+            "Huisdokter tel",
+            "Huwelik Anniversary Period",
+            "Huwelik Comment",
+            "Huwelik Date",
+            "Huwelik Minister",
+            "Huwelikstatus",
+            "Kommentaar",
+            "Kroniese medikasie",
+            "Landlyn",
+            "Lidmaat nommer",
+            "Lidmaatstatus",
+            "Mediesefondsafhanklikekode",
+            "Mediesefondshooflid",
+            "Mediesefondsnaam",
+            "Mediesefondsnommer",
+            "MemberGUID",
+            "Naam",
+            "Noemnaam",
+            "Noodkontaknommer",
+            "Noodkontakpersoon",
+            "Nooiensvan",
+            "Ouderdom",
+            "Posadres",
+            "Predekantswyk",
+            "Rekordstatus",
+            "Selfoon",
+            "ShortAddress",
+            "Straatadres",
+            "Stuur SMS",
+            "Stuur epos",
+            "Titel",
+            "User 1",
+            "User 2",
+            "User 3",
+            "User 4",
+            "User 5",
+            "User 6",
+            "Van",
+            "Verjaardag",
+            "Voorletters",
+            "Vorige gemeente",
+            "Werk tel",
+            "Werkgewer",
+            "Wyk"
+        )
+
+        private val argiefColumns = listOf(
+            "_id",
+            "Tag",
+            "ArchiveGUID",
+            "Surname",
+            "Name",
+            "MaidenName",
+            "MemberStatus",
+            "CertificateStatus",
+            "PreviousCongregation",
+            "DateReceived",
+            "Comment",
+            "Reason",
+            "ResignationDetail",
+            "DepartureTo",
+            "DepartureDate",
+            "DocCode",
+            "Document",
+            "OldAddress",
+            "NewAddress",
+            "DateOfBirth",
+            "Gender",
+            "MaritalStatus",
+            "BaptismDate",
+            "BaptismMinister",
+            "Father",
+            "Mother",
+            "ConfessionDate",
+            "ConfessionMinister",
+            "ConfessionRemark",
+            "AcceptanceDate",
+            "ArchiveDate",
+            "ResignationRemark",
+            "User",
+            "Gemeente",
+            "Gemeente epos"
+        )
+
+        private val datumColumns = listOf(
+            "_id",
+            "DataDatum"
+        )
+
+        // ─── Migration 1 → 4 (single step, corrects schema and removes NOT NULL where needed) ───
+
+        private val MIGRATION_1_4 = object : Migration(1, 4) {
             override fun migrate(db: SupportSQLiteDatabase) {
+                // Drop any existing indexes (they will be recreated by Room later if needed)
                 dropAllIndexes(db, "Members")
                 dropAllIndexes(db, "Argief")
                 dropAllIndexes(db, "Datum")
 
-                recreateTable(db, "Members", withNotNull = true)
-                recreateTable(db, "Argief", withNotNull = false)
-                recreateTable(db, "Datum", withNotNull = false)
+                // Recreate each table with the exact column list expected by the entities
+                recreateTable(db, "Members", memberColumns, withNotNullId = true)
+                recreateTable(db, "Argief", argiefColumns, withNotNullId = false)
+                recreateTable(db, "Datum", datumColumns, withNotNullId = false)
             }
         }
 
-        // ===== Migration 2 → 3 (added NOT NULL to all, but incorrectly for Argief/Datum) =====
-        private val MIGRATION_2_3 = object : Migration(2, 3) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                dropAllIndexes(db, "Members")
-                dropAllIndexes(db, "Argief")
-                dropAllIndexes(db, "Datum")
-
-                // This was the mistake: added NOT NULL to Argief and Datum too.
-                // We'll correct it in MIGRATION_3_4.
-                recreateTable(db, "Members", withNotNull = true)
-                recreateTable(db, "Argief", withNotNull = true)   // wrong
-                recreateTable(db, "Datum", withNotNull = true)    // wrong
-            }
-        }
-
-        // ===== Migration 3 → 4: correct Argief and Datum to not have NOT NULL =====
-        private val MIGRATION_3_4 = object : Migration(3, 4) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                dropAllIndexes(db, "Members")
-                dropAllIndexes(db, "Argief")
-                dropAllIndexes(db, "Datum")
-
-                // Recreate Members with NOT NULL (as before)
-                recreateTable(db, "Members", withNotNull = true)
-                // Recreate Argief and Datum WITHOUT NOT NULL
-                recreateTable(db, "Argief", withNotNull = false)
-                recreateTable(db, "Datum", withNotNull = false)
-            }
-        }
-
-        // -------------------------------------------------------------------------
-        // Helper functions
-        // -------------------------------------------------------------------------
+        // ─── Helper functions ──────────────────────────────────────────────────────
 
         private fun dropAllIndexes(db: SupportSQLiteDatabase, tableName: String) {
             db.query("SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='$tableName'").use { cursor ->
@@ -100,36 +198,37 @@ abstract class WinkerkDatabase : RoomDatabase() {
         private fun recreateTable(
             db: SupportSQLiteDatabase,
             tableName: String,
-            withNotNull: Boolean
+            expectedColumns: List<String>,
+            withNotNullId: Boolean = true
         ) {
-            // Get current column names
-            val columns = mutableListOf<String>()
+            // Get existing columns from the old table
+            val existingColumns = mutableListOf<String>()
             db.query("PRAGMA table_info('$tableName')").use { cursor ->
                 while (cursor.moveToNext()) {
-                    val name = cursor.getString(cursor.getColumnIndex("name"))
-                    columns.add(name)
+                    existingColumns.add(cursor.getString(cursor.getColumnIndex("name")))
                 }
             }
 
+            // Build CREATE TABLE with only expected columns
             val newTable = "${tableName}_new"
-            val columnDefs = columns.joinToString(", ") { name ->
+            val columnDefs = expectedColumns.joinToString(", ") { name ->
                 if (name == "_id") {
-                    if (withNotNull) {
-                        "[_id] INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL"
-                    } else {
-                        "[_id] INTEGER PRIMARY KEY AUTOINCREMENT"
-                    }
+                    if (withNotNullId) "[_id] INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL"
+                    else "[_id] INTEGER PRIMARY KEY AUTOINCREMENT"
                 } else {
                     "[$name] TEXT"
                 }
             }
             db.execSQL("CREATE TABLE $newTable ($columnDefs)")
 
-            // Copy data (include all columns)
-            val cols = columns.joinToString(", ") { "[$it]" }
-            db.execSQL("INSERT INTO $newTable ($cols) SELECT $cols FROM $tableName")
+            // Copy data only for columns that exist in both old and new
+            val commonColumns = existingColumns.intersect(expectedColumns.toSet())
+            if (commonColumns.isNotEmpty()) {
+                val cols = commonColumns.joinToString(", ") { "[$it]" }
+                db.execSQL("INSERT INTO $newTable ($cols) SELECT $cols FROM $tableName")
+            }
 
-            // Drop old and rename
+            // Replace old table
             db.execSQL("DROP TABLE $tableName")
             db.execSQL("ALTER TABLE $newTable RENAME TO $tableName")
         }

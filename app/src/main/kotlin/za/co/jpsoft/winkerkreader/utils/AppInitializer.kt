@@ -10,6 +10,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.DatabaseInitializer
+import za.co.jpsoft.winkerkreader.data.calllog.CallLogDatabase
 import za.co.jpsoft.winkerkreader.services.CallMonitoringService
 import za.co.jpsoft.winkerkreader.widget.PastoralWidgetProvider
 
@@ -40,7 +41,12 @@ object AppInitializer {
         val scope = lifecycleScope ?: kotlinx.coroutines.CoroutineScope(Dispatchers.IO + SupervisorJob())
         scope.launch {
             withContext(Dispatchers.IO) {
+                val callLogDb = CallLogDatabase.getInstance(appContext)
+                CallLogImporter.importIfNeeded(appContext, callLogDb)
+                ActiveCallReconciler.reconcile(callLogDb.callLogDao())
+
                 val settings = SettingsManager.getInstance(appContext)
+                settings.ensureDefaultColors()
                 if (!settings.isDatabaseInitialized()) {
                     DatabaseInitializer.initializeDatabase(
                         context = appContext,

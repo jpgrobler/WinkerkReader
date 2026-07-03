@@ -3,36 +3,33 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true">
+    android:fitsSystemWindows="true"
+    android:background="?attr/colorSurface">
 
     <com.google.android.material.appbar.AppBarLayout
-        app:navigationIcon="?attr/homeAsUpIndicator"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:fitsSystemWindows="true"
-        android:background="@color/primary_blue">   <!-- set background -->
+        android:background="?attr/colorPrimary">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/bediening_toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/primary_blue"
-            app:navigationIcon="@drawable/ic_bedienings"
+            android:background="?attr/colorPrimary"
+            app:navigationIcon="@drawable/ic_bediening"
             app:title="@string/bediening_title"
-            app:titleTextColor="@android:color/white"
-            app:popupTheme="@style/ThemeOverlay.WinkerkReader.PopupMenu"
-            app:theme="@style/ThemeOverlay.MaterialComponents.Dark.ActionBar" />
+            app:titleTextColor="?attr/colorOnPrimary"
+            app:popupTheme="@style/ThemeOverlay.WinkerkReader.PopupMenu" />
 
         <com.google.android.material.tabs.TabLayout
             android:id="@+id/bediening_tab_layout"
             android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/primary_blue"
-            app:tabGravity="fill"
-            app:tabMode="fixed"
-            app:tabTextColor="@android:color/white"
-            app:tabSelectedTextColor="@android:color/white" />
+            android:background="?attr/colorPrimary"
+            app:tabTextColor="?attr/colorOnPrimary"
+            app:tabSelectedTextColor="?attr/colorOnPrimary" />
 
     </com.google.android.material.appbar.AppBarLayout>
 

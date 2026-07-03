@@ -19,8 +19,11 @@ class MemberPagingSource(
     private val sortOrder: String,
     private val pageSize: Int = 50
 ) : PagingSource<Int, MemberItem>() {
-
     private val TAG = "MemberPagingSource"
+    init {
+        if (BuildConfig.DEBUG) Log.d(TAG, "MemberPagingSource created with eventType=$eventType, filterList size=${filterList?.size ?: 0}")
+    }
+
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, MemberItem> {
         // Force all database operations onto the IO dispatcher

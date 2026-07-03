@@ -16,7 +16,8 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
-import za.co.jpsoft.winkerkreader.data.DatabaseHelper
+import za.co.jpsoft.winkerkreader.data.calllog.CallLogDao
+import za.co.jpsoft.winkerkreader.data.calllog.CallLogDatabase
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.KEY_SELECTED_CALENDAR_ID
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
 import za.co.jpsoft.winkerkreader.ui.activities.MainActivity
@@ -26,14 +27,14 @@ import za.co.jpsoft.winkerkreader.utils.PhoneCallMonitor
 class CallMonitoringService : Service() {
 
     private var phoneCallMonitor: PhoneCallMonitor? = null
-    private var databaseHelper: DatabaseHelper? = null
+    private var callLogDao: CallLogDao? = null   // was: private var databaseHelper: DatabaseHelper? = null
     private var pendingIncomingNumber: String? = null
 
     override fun onCreate() {
         super.onCreate()
         if (BuildConfig.DEBUG) Log.d(TAG, "Call Monitoring Service created")
         createNotificationChannel()
-        databaseHelper = DatabaseHelper.getInstance(this)
+        callLogDao = CallLogDatabase.getInstance(this).callLogDao()   // was: databaseHelper = DatabaseHelper.getInstance(this)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -73,8 +74,9 @@ class CallMonitoringService : Service() {
         if (BuildConfig.DEBUG) Log.d(TAG, "Call Monitoring Service destroyed")
         phoneCallMonitor?.stopMonitoring()
         phoneCallMonitor = null
-        databaseHelper?.close()
-        databaseHelper = null
+        // Room's CallLogDatabase is a process-wide singleton like DatabaseHelper
+        // was — don't close it here, just drop this service's local reference.
+        callLogDao = null
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -138,11 +140,11 @@ class CallMonitoringService : Service() {
                 calendarId = NO_CALENDAR_ID
             }
 
-            if (databaseHelper == null) {
-                databaseHelper = DatabaseHelper.getInstance(this)
+            if (callLogDao == null) {
+                callLogDao = CallLogDatabase.getInstance(this).callLogDao()
             }
 
-            phoneCallMonitor = PhoneCallMonitor(this, databaseHelper!!, calendarManager, calendarId)
+            phoneCallMonitor = PhoneCallMonitor(this, callLogDao!!, calendarManager, calendarId)
 
             if (pendingIncomingNumber != null) {
                 phoneCallMonitor?.setIncomingNumber(pendingIncomingNumber)

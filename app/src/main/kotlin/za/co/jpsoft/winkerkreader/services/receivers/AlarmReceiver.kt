@@ -51,7 +51,7 @@ class AlarmReceiver : BroadcastReceiver() {
                     val id = now.format(formatter).toInt()
 
                     val builder = NotificationCompat.Builder(context, channelId)
-                        .setSmallIcon(R.mipmap.ic_stat_family_roof)
+                        .setSmallIcon(R.drawable.family_roof)
                         .setContentTitle("WinkerkReader")
                         .setContentText("Stuur verjaarsdag SMS'e")
                         .setSound(alarmSound)
@@ -76,7 +76,7 @@ class AlarmReceiver : BroadcastReceiver() {
                     val id = now.format(formatter).toInt()
 
                     val builder = NotificationCompat.Builder(context, channelId)
-                        .setSmallIcon(R.mipmap.ic_stat_family_roof)
+                        .setSmallIcon(R.drawable.family_roof)
                         .setContentTitle("WinkerkReader")
                         .setContentText("Laai data van DropBox")
                         .setSound(alarmSound)

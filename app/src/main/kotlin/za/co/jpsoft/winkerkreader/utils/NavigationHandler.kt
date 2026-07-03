@@ -40,9 +40,7 @@ object NavigationHandler {
 
     private fun switchTo(activity: MainActivity, sortOrderView: TextView, sortOrder: String, layout: String, viewModel: MemberViewModel) {
         sortOrderView.background = null
-        viewModel.sortOrder = sortOrder
-        SettingsManager.getInstance(activity).defLayout = layout
         viewModel.soekList = false
-        activity.observeDataset()
+        activity.updateSortOrder(sortOrder)   // ✅ this updates settingsManager, text, eventType, AND refreshes
     }
 }

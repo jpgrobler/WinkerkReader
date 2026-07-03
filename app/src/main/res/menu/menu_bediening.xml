@@ -5,17 +5,14 @@
     <item
         android:id="@+id/action_deel_rugsteun"
         android:title="@string/pastoral_deel_rugsteun"
-        android:icon="@android:drawable/ic_menu_share"
         app:showAsAction="never" />
     <!-- res/menu/menu_bediening.xml (or equivalent) -->
     <item
         android:id="@+id/action_herstel_rugsteun"
         android:title="@string/herstel_rugsteun"
-        android:icon="@drawable/update"
         app:showAsAction="never" />
     <item
         android:id="@+id/action_bestuur_sjablone"
         android:title="@string/template_bestuur_titel"
-        android:icon="@drawable/update2"
         app:showAsAction="never" />
 </menu>

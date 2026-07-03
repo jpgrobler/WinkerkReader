@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="horizontal"
     android:gravity="center_vertical"
     android:paddingVertical="6dp"
-    android:paddingHorizontal="16dp">
+    android:paddingHorizontal="16dp"
+    android:background="?attr/colorSurface">
 
     <LinearLayout
         android:layout_width="0dp"
@@ -19,6 +20,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorOnSurface"
             android:maxLines="1"
             android:ellipsize="end" />
 
@@ -27,6 +29,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textAppearance="?attr/textAppearanceLabelSmall"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:alpha="0.6" />
 
     </LinearLayout>
@@ -38,7 +41,7 @@
         android:layout_height="wrap_content"
         android:text="@string/bediening_agterstallig"
         android:textSize="9sp"
-        android:textColor="@android:color/white"
+        android:textColor="?attr/colorOnPrimary"
         android:background="@drawable/bg_badge_red"
         android:paddingHorizontal="4dp"
         android:paddingVertical="2dp"
@@ -51,6 +54,7 @@
         android:layout_width="32dp"
         android:layout_height="32dp"
         android:src="@drawable/ic_check_circle"
+        app:tint="?attr/colorSecondary"
         android:contentDescription="@string/herinnering_voltooi"
         android:background="?attr/selectableItemBackgroundBorderless" />
 

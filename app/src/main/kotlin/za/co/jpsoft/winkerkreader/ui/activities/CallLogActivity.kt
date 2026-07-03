@@ -19,7 +19,9 @@ import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.R.string.menu_call_log
-import za.co.jpsoft.winkerkreader.data.DatabaseHelper
+import za.co.jpsoft.winkerkreader.data.calllog.CallLogDao
+import za.co.jpsoft.winkerkreader.data.calllog.CallLogDatabase
+import za.co.jpsoft.winkerkreader.data.models.CallLog
 import za.co.jpsoft.winkerkreader.databinding.ActivityCallLogBinding
 import za.co.jpsoft.winkerkreader.ui.adapters.CallLogAdapter
 import za.co.jpsoft.winkerkreader.utils.CallLogExporter
@@ -29,7 +31,7 @@ class CallLogActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityCallLogBinding
     private lateinit var callLogAdapter: CallLogAdapter
-    private lateinit var databaseHelper: DatabaseHelper
+    private lateinit var callLogDao: CallLogDao   // was: private lateinit var databaseHelper: DatabaseHelper
     private var currentCallLogs: List<za.co.jpsoft.winkerkreader.data.models.CallLog> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,7 +45,7 @@ class CallLogActivity : AppCompatActivity() {
         }
 
         binding.clearButton.setOnClickListener { showClearLogsDialog() }
-        databaseHelper = DatabaseHelper.getInstance(this)
+        callLogDao = CallLogDatabase.getInstance(this).callLogDao()
 
         setupRecyclerView()
         loadCallLogs()
@@ -82,7 +84,7 @@ class CallLogActivity : AppCompatActivity() {
     private fun loadCallLogs() {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                val logs = databaseHelper.getAllCallLogs()
+                val logs = callLogDao.getAll().map { it.toDisplayModel() }
                 currentCallLogs = logs
                 withContext(Dispatchers.Main) {
                     callLogAdapter.updateLogs(logs)
@@ -95,7 +97,15 @@ class CallLogActivity : AppCompatActivity() {
             }
         }
     }
-
+    private fun za.co.jpsoft.winkerkreader.data.calllog.CallLogEntity.toDisplayModel() = CallLog(
+        id = id,
+        callerInfo = callerInfo,
+        timestamp = timestamp,
+        formattedDateTime = dateTime,
+        callType = callType.name,
+        source = source,
+        duration = duration
+    )
     private fun exportToCSV() {
         if (currentCallLogs.isEmpty()) {
             Toast.makeText(this, R.string.no_logs_to_export, Toast.LENGTH_SHORT).show()
@@ -206,7 +216,7 @@ class CallLogActivity : AppCompatActivity() {
             .setMessage("Is jy seker jy wil al die oproepinligting uitvee?\n Dit kan nie omgekeer word nie!")
             .setPositiveButton("Wis uit") { _, _ ->
                 lifecycleScope.launch(Dispatchers.IO) {
-                    val success = databaseHelper.clearAllCallLogs()
+                    val success = callLogDao.clearAll() >= 0   // was: databaseHelper.clearAllCallLogs()
                     withContext(Dispatchers.Main) {
                         if (success) {
                             Toast.makeText(this@CallLogActivity, R.string.all_logs_cleared, Toast.LENGTH_SHORT).show()

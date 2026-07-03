@@ -6,22 +6,22 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:fitsSystemWindows="true"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:background="?attr/colorSurface">
 
-    <!-- Progress bar top -->
     <ProgressBar
         android:id="@+id/detail_indeterminateBar"
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:focusedByDefault="true"
+        android:progressTint="?attr/colorPrimary"
         android:visibility="visible" />
 
-    <!-- Header with church name and edit button -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:background="?attr/colorSurface"
+        android:padding="8dp">
 
         <TextView
             android:id="@+id/detail_gemeentenaam"
@@ -32,7 +32,7 @@
             android:marqueeRepeatLimit="marquee_forever"
             android:maxLines="1"
             android:text="@string/detail_gemeente"
-            android:textColor="@android:color/black"
+            android:textColor="?attr/colorOnSurface"
             android:visibility="visible"
             app:layout_constraintEnd_toStartOf="@id/buttonWysig"
             app:layout_constraintStart_toStartOf="parent"
@@ -43,139 +43,166 @@
             android:id="@+id/buttonWysig"
             android:layout_width="wrap_content"
             android:layout_height="40dp"
-            android:background="@drawable/buttonshape"
-            android:scaleX=".9"
-            android:scaleY=".85"
+            style="@style/Widget.WinkerkReader.Button.Primary"
             android:text="@string/detail_wysig"
-            android:textColor="@android:color/white"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- Scrollable content area -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="?attr/colorSurface"
         android:scrollbarSize="12dp"
         android:scrollbars="vertical">
 
-        <!-- SINGLE direct child: LinearLayout that wraps all scrollable content -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:padding="8dp">
 
             <!-- ConstraintLayout with all member details -->
+
+            <!-- Bottom progress bar -->
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
-                <!-- Contact photo -->
-                <ImageView
-                    android:id="@+id/detail_kontak_foto"
-                    android:layout_width="100dp"
-                    android:layout_height="100dp"
-                    android:layout_gravity="center_horizontal"
-                    android:scaleType="centerInside"
-                    android:src="@drawable/kontak"
-                    android:tag="default"
-                    android:visibility="visible"
-                    app:layout_constraintTop_toTopOf="parent"
+                <!-- Group: photo + spinners, centered horizontally -->
+                <LinearLayout
+                    android:id="@+id/photo_spinner_group"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent" />
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
 
-                <!-- Row 1: Noemnaam + Geslag + Huwelikstatus -->
+                    <!-- Contact photo -->
+                    <ImageView
+                        android:id="@+id/detail_kontak_foto"
+                        android:layout_width="100dp"
+                        android:layout_height="100dp"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/kontak"
+                        android:tag="default"
+                        android:visibility="visible" />
+
+                    <!-- Vertical container for spinners -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginStart="8dp">
+
+                        <Spinner
+                            android:id="@+id/geslag"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:backgroundTint="?attr/colorPrimary" />
+
+                        <Spinner
+                            android:id="@+id/huwelikstatus"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:backgroundTint="?attr/colorPrimary" />
+
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Row 1: Noemnaam label + EditText (positioned below the group) -->
                 <TextView
                     android:id="@+id/label_noemnaam"
                     style="@style/CategoryStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:text="@string/detail_naam"
-                    app:layout_constraintTop_toBottomOf="@id/detail_kontak_foto"
+                    android:textColor="?attr/colorPrimary"
                     app:layout_constraintStart_toStartOf="parent"
-                    android:layout_marginTop="8dp" />
+                    app:layout_constraintTop_toBottomOf="@id/photo_spinner_group"
+                    android:layout_marginTop="16dp" />
 
                 <EditText
                     android:id="@+id/detail_noemnaam"
                     style="@style/EditorFieldStyle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="8dp"
                     android:text="@string/detail_noemnaam"
                     android:textIsSelectable="true"
-                    app:layout_constraintTop_toTopOf="@id/label_noemnaam"
                     app:layout_constraintStart_toEndOf="@id/label_noemnaam"
-                    app:layout_constraintEnd_toStartOf="@id/geslag"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginEnd="8dp" />
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/label_noemnaam" />
 
-                <Spinner
-                    android:id="@+id/geslag"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    app:layout_constraintTop_toTopOf="@id/label_noemnaam"
-                    app:layout_constraintEnd_toStartOf="@id/huwelikstatus"
-                    android:layout_marginEnd="8dp" />
 
-                <Spinner
-                    android:id="@+id/huwelikstatus"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    app:layout_constraintTop_toTopOf="@id/label_noemnaam"
-                    app:layout_constraintEnd_toEndOf="parent" />
 
                 <!-- Row 2: Vollename -->
                 <TextView
                     android:id="@+id/label_vollename"
                     style="@style/CategoryStyle"
+                    android:textColor="?attr/colorPrimary"
+                    android:layout_marginTop="8dp"
                     android:text="@string/detail_vollename"
-                    app:layout_constraintTop_toBottomOf="@id/label_noemnaam"
                     app:layout_constraintStart_toStartOf="parent"
-                    android:layout_marginTop="8dp" />
+                    app:layout_constraintTop_toBottomOf="@id/label_noemnaam" />
 
                 <EditText
                     android:id="@+id/detail_vollename"
                     style="@style/EditorFieldStyle"
+                    android:textColor="?attr/colorOnSurface"
+                    android:layout_marginStart="8dp"
                     android:text="@string/detail_vollename"
                     android:textIsSelectable="true"
-                    app:layout_constraintTop_toTopOf="@id/label_vollename"
-                    app:layout_constraintStart_toEndOf="@id/label_vollename"
                     app:layout_constraintEnd_toEndOf="parent"
-                    android:layout_marginStart="8dp" />
+                    app:layout_constraintStart_toEndOf="@id/label_vollename"
+                    app:layout_constraintTop_toTopOf="@id/label_vollename" />
 
                 <!-- Row 3: Van -->
                 <TextView
                     android:id="@+id/label_van"
                     style="@style/CategoryStyle"
+                    android:textColor="?attr/colorPrimary"
+                    android:layout_marginTop="8dp"
                     android:text="@string/detail_van"
-                    app:layout_constraintTop_toBottomOf="@id/label_vollename"
                     app:layout_constraintStart_toStartOf="parent"
-                    android:layout_marginTop="8dp" />
+                    app:layout_constraintTop_toBottomOf="@id/label_vollename" />
 
                 <EditText
                     android:id="@+id/detail_van"
                     style="@style/EditorFieldStyle"
+                    android:textColor="?attr/colorOnSurface"
+                    android:layout_marginStart="8dp"
                     android:text="@string/detail_van"
                     android:textIsSelectable="true"
-                    app:layout_constraintTop_toTopOf="@id/label_van"
-                    app:layout_constraintStart_toEndOf="@id/label_van"
                     app:layout_constraintEnd_toEndOf="parent"
-                    android:layout_marginStart="8dp" />
+                    app:layout_constraintStart_toEndOf="@id/label_van"
+                    app:layout_constraintTop_toTopOf="@id/label_van" />
 
                 <!-- Row 4: Nooiensvan (optional block) -->
                 <LinearLayout
                     android:id="@+id/detail_nooiensvanBlock"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
                     android:orientation="horizontal"
-                    app:layout_constraintTop_toBottomOf="@id/label_van"
-                    app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
-                    android:layout_marginTop="8dp">
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/label_van">
 
                     <TextView
                         style="@style/CategoryStyle"
+                        android:textColor="?attr/colorPrimary"
                         android:text="@string/detail_Nooiensvan" />
 
                     <EditText
                         android:id="@+id/detail_nooiensvan"
                         style="@style/EditorFieldStyle"
+                        android:textColor="?attr/colorOnSurface"
                         android:text="@string/detail_Nooiensvan"
                         android:textIsSelectable="true" />
                 </LinearLayout>
@@ -184,31 +211,34 @@
                 <EditText
                     android:id="@+id/detail_Werkgewer"
                     style="@style/EditorFieldStyle"
+                    android:textColor="?attr/colorOnSurface"
+                    android:layout_marginTop="8dp"
                     android:textIsSelectable="true"
-                    tools:text="@string/detail_werkgewer"
-                    app:layout_constraintTop_toBottomOf="@id/detail_nooiensvanBlock"
-                    app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
-                    android:layout_marginTop="8dp" />
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/detail_nooiensvanBlock"
+                    tools:text="@string/detail_werkgewer" />
 
                 <!-- Row 6: Lidmaatstatus -->
                 <LinearLayout
                     android:id="@+id/detail_lidmaatstatusBlock"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
                     android:orientation="horizontal"
-                    app:layout_constraintTop_toBottomOf="@id/detail_Werkgewer"
-                    app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
-                    android:layout_marginTop="8dp">
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/detail_Werkgewer">
 
                     <TextView
                         style="@style/CategoryStyle"
+                        android:textColor="?attr/colorOnSurfaceVariant"
                         android:text="@string/detail_lidmaatskap" />
 
                     <EditText
                         android:id="@+id/detail_Lidmaatstatus"
                         style="@style/EditorFieldStyle"
+                        android:textColor="?attr/colorOnSurface"
                         android:text="@string/detail_lidmaatskap"
                         android:textIsSelectable="true" />
                 </LinearLayout>
@@ -217,52 +247,57 @@
                 <TextView
                     android:id="@+id/label_gebore"
                     style="@style/CategoryStyle"
+                    android:textColor="?attr/colorPrimary"
+                    android:layout_marginTop="8dp"
                     android:text="@string/detail_gebore"
-                    app:layout_constraintTop_toBottomOf="@id/detail_lidmaatstatusBlock"
                     app:layout_constraintStart_toStartOf="parent"
-                    android:layout_marginTop="8dp" />
+                    app:layout_constraintTop_toBottomOf="@id/detail_lidmaatstatusBlock" />
 
                 <EditText
                     android:id="@+id/detail_geboortedatum"
                     style="@style/EditorFieldStyle"
+                    android:textColor="?attr/colorOnSurface"
                     android:layout_width="0dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="8dp"
                     android:layout_weight="1"
                     android:text="@string/detail_gebore"
                     android:textIsSelectable="true"
-                    app:layout_constraintTop_toTopOf="@id/label_gebore"
-                    app:layout_constraintStart_toEndOf="@id/label_gebore"
                     app:layout_constraintEnd_toStartOf="@id/detail_jareoud"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginEnd="8dp" />
+                    app:layout_constraintStart_toEndOf="@id/label_gebore"
+                    app:layout_constraintTop_toTopOf="@id/label_gebore" />
 
                 <TextView
                     android:id="@+id/detail_jareoud"
+                    android:textColor="?attr/colorOnSurfaceVariant"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="8dp"
                     android:layout_marginStart="4dp"
+                    android:layout_marginEnd="8dp"
                     android:text=""
-                    app:layout_constraintTop_toTopOf="@id/label_gebore"
-                    app:layout_constraintEnd_toEndOf="parent" />
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/label_gebore" />
 
                 <!-- Row 8: Selfoon + icons -->
                 <LinearLayout
                     android:id="@+id/detail_selfoonBlock"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
                     android:orientation="horizontal"
-                    app:layout_constraintTop_toBottomOf="@id/label_gebore"
-                    app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
-                    android:layout_marginTop="8dp">
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/label_gebore">
 
                     <TextView
                         style="@style/CategoryStyle"
+                        android:textColor="?attr/colorPrimary"
                         android:text="@string/detail_selfoon" />
 
                     <EditText
                         android:id="@+id/detail_selfoon"
                         style="@style/EditorFieldStyle"
+                        android:textColor="?attr/colorOnSurface"
                         android:text="@string/detail_selfoon"
                         android:textIsSelectable="true" />
 
@@ -272,21 +307,24 @@
                         android:layout_height="32dp"
                         android:layout_marginEnd="16dp"
                         android:scaleType="fitXY"
-                        android:src="@drawable/whatsapp" />
+                        android:src="@drawable/whatsapp"
+                        />
 
                     <ImageView
                         android:id="@+id/detail_sms_icon"
                         android:layout_width="32dp"
                         android:layout_height="32dp"
                         android:layout_marginEnd="16dp"
-                        android:src="@drawable/sms2" />
+                        android:src="@drawable/sms2"
+                        app:tint="?attr/colorOnSurfaceVariant"/>
 
                     <ImageView
                         android:id="@+id/detail_selfoon_icon"
                         android:layout_width="32dp"
                         android:layout_height="32dp"
                         android:layout_marginEnd="8dp"
-                        android:src="@drawable/cell3" />
+                        android:src="@drawable/cell3"
+                        app:tint="?attr/colorOnSurfaceVariant"/>
                 </LinearLayout>
 
                 <!-- Row 9: Landlyn + icon -->
@@ -294,19 +332,21 @@
                     android:id="@+id/detail_telefoonBlock"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
                     android:orientation="horizontal"
-                    app:layout_constraintTop_toBottomOf="@id/detail_selfoonBlock"
-                    app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
-                    android:layout_marginTop="8dp">
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/detail_selfoonBlock">
 
                     <TextView
                         style="@style/CategoryStyle"
+                        android:textColor="?attr/colorPrimary"
                         android:text="@string/detail_landlyn" />
 
                     <EditText
                         android:id="@+id/detail_telefoon"
                         style="@style/EditorFieldStyle"
+                        android:textColor="?attr/colorOnSurface"
                         android:text="@string/detail_landlyn"
                         android:textIsSelectable="true" />
 
@@ -316,6 +356,7 @@
                         android:layout_height="32dp"
                         android:layout_marginEnd="8dp"
                         android:src="@drawable/oldphone" />
+
                 </LinearLayout>
 
                 <!-- Row 10: Epos + icon -->
@@ -323,19 +364,21 @@
                     android:id="@+id/detail_eposBlock"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
                     android:orientation="horizontal"
-                    app:layout_constraintTop_toBottomOf="@id/detail_telefoonBlock"
-                    app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
-                    android:layout_marginTop="8dp">
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/detail_telefoonBlock">
 
                     <TextView
                         style="@style/CategoryStyle"
+                        android:textColor="?attr/colorPrimary"
                         android:text="@string/detail_epos" />
 
                     <EditText
                         android:id="@+id/detail_epos"
                         style="@style/EditorFieldStyle"
+                        android:textColor="?attr/colorOnSurface"
                         android:text="@string/detail_epos"
                         android:textIsSelectable="true" />
 
@@ -352,19 +395,21 @@
                     android:id="@+id/detail_BeroepBlock"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
                     android:orientation="horizontal"
-                    app:layout_constraintTop_toBottomOf="@id/detail_eposBlock"
-                    app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
-                    android:layout_marginTop="8dp">
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/detail_eposBlock">
 
                     <TextView
                         style="@style/CategoryStyle"
+                        android:textColor="?attr/colorPrimary"
                         android:text="@string/detail_beroep" />
 
                     <EditText
                         android:id="@+id/detail_Beroep"
                         style="@style/EditorFieldStyle"
+                        android:textColor="?attr/colorOnSurface"
                         android:textIsSelectable="true"
                         tools:text="@string/detail_beroep" />
                 </LinearLayout>
@@ -374,15 +419,12 @@
                     android:id="@+id/detail_WerkgewerBlock"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
                     android:orientation="horizontal"
-                    app:layout_constraintTop_toBottomOf="@id/detail_BeroepBlock"
-                    app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
-                    android:layout_marginTop="8dp">
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/detail_BeroepBlock">
 
-                    <TextView
-                        style="@style/CategoryStyle"
-                        android:text="@string/detail_werkgewer" />
                 </LinearLayout>
 
                 <!-- Row 13: Wyk -->
@@ -390,19 +432,21 @@
                     android:id="@+id/detail_wykBlock"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
                     android:orientation="horizontal"
-                    app:layout_constraintTop_toBottomOf="@id/detail_WerkgewerBlock"
-                    app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
-                    android:layout_marginTop="8dp">
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/detail_WerkgewerBlock">
 
                     <TextView
                         style="@style/CategoryStyle"
+                        android:textColor="?attr/colorPrimary"
                         android:text="@string/detail_wyk" />
 
                     <EditText
                         android:id="@+id/detail_wyk"
                         style="@style/EditorFieldStyle"
+                        android:textColor="?attr/colorOnSurface"
                         android:textIsSelectable="true"
                         tools:text="@string/detail_wyk" />
                 </LinearLayout>
@@ -412,19 +456,21 @@
                     android:id="@+id/detail_straatadresBlock"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
                     android:orientation="horizontal"
-                    app:layout_constraintTop_toBottomOf="@id/detail_wykBlock"
-                    app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
-                    android:layout_marginTop="8dp">
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/detail_wykBlock">
 
                     <TextView
                         style="@style/CategoryStyle"
+                        android:textColor="?attr/colorPrimary"
                         android:text="@string/detail_straatadres" />
 
                     <EditText
                         android:id="@+id/detail_straatadres"
                         style="@style/EditorFieldStyle"
+                        android:textColor="?attr/colorOnSurface"
                         android:textIsSelectable="true"
                         tools:text="@string/detail_straatadres" />
 
@@ -441,14 +487,15 @@
                     android:id="@+id/detail_posadresBlock"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
                     android:orientation="horizontal"
-                    app:layout_constraintTop_toBottomOf="@id/detail_straatadresBlock"
-                    app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
-                    android:layout_marginTop="8dp">
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/detail_straatadresBlock">
 
                     <TextView
                         style="@style/CategoryStyle"
+                        android:textColor="?attr/colorPrimary"
                         android:text="@string/detail_posadres" />
                 </LinearLayout>
 
@@ -457,14 +504,15 @@
                     android:id="@+id/detail_mylpaleBlock2"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
                     android:orientation="horizontal"
-                    app:layout_constraintTop_toBottomOf="@id/detail_posadresBlock"
-                    app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
-                    android:layout_marginTop="8dp">
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/detail_posadresBlock">
 
                     <TextView
                         style="@style/CategoryStyle"
+                        android:textColor="?attr/colorPrimary"
                         android:layout_gravity="top"
                         android:paddingEnd="8dp"
                         android:text="@string/detail_mylpale" />
@@ -481,20 +529,22 @@
                     android:id="@+id/detail_gesinBlock"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
                     android:orientation="vertical"
-                    app:layout_constraintTop_toBottomOf="@id/detail_mylpaleBlock2"
-                    app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
-                    android:layout_marginTop="8dp">
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/detail_mylpaleBlock2">
 
                     <EditText
                         android:id="@+id/detail_posadres"
                         style="@style/EditorFieldStyle"
+                        android:textColor="?attr/colorOnSurface"
                         android:textIsSelectable="true"
                         tools:text="@string/detail_posadres" />
 
                     <TextView
                         style="@style/CategoryStyle"
+                        android:textColor="?attr/colorPrimary"
                         android:layout_width="wrap_content"
                         android:text="@string/detail_gesin" />
                 </LinearLayout>
@@ -504,14 +554,15 @@
                     android:id="@+id/detail_groepBlockm"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
                     android:orientation="vertical"
-                    app:layout_constraintTop_toBottomOf="@id/detail_gesinBlock"
-                    app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
-                    android:layout_marginTop="8dp">
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/detail_gesinBlock">
 
                     <TextView
                         style="@style/CategoryStyle"
+                        android:textColor="?attr/colorPrimary"
                         android:layout_width="wrap_content"
                         android:text="@string/detail_groepe" />
 
@@ -527,14 +578,15 @@
                     android:id="@+id/detail_meelewingBlock"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
                     android:orientation="vertical"
-                    app:layout_constraintTop_toBottomOf="@id/detail_groepBlockm"
-                    app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
-                    android:layout_marginTop="8dp">
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/detail_groepBlockm">
 
                     <TextView
                         style="@style/CategoryStyle"
+                        android:textColor="?attr/colorPrimary"
                         android:layout_width="wrap_content"
                         android:text="@string/detail_meelewing" />
                 </LinearLayout>
@@ -544,14 +596,15 @@
                     android:id="@+id/detail_gawesBlock"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
                     android:orientation="vertical"
-                    app:layout_constraintTop_toBottomOf="@id/detail_meelewingBlock"
-                    app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
-                    android:layout_marginTop="8dp">
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/detail_meelewingBlock">
 
                     <TextView
                         style="@style/CategoryStyle"
+                        android:textColor="?attr/colorPrimary"
                         android:layout_width="wrap_content"
                         android:text="@string/detail_gawes" />
                 </LinearLayout>
@@ -561,22 +614,22 @@
                     android:id="@+id/detail_passieBlock"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    app:layout_constraintTop_toBottomOf="@id/detail_gawesBlock"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
                     android:layout_marginTop="8dp"
-                    android:layout_marginBottom="8dp">
+                    android:layout_marginBottom="8dp"
+                    android:orientation="vertical"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/detail_gawesBlock">
 
                     <TextView
                         style="@style/CategoryStyle"
+                        android:textColor="?attr/colorPrimary"
                         android:layout_width="wrap_content"
                         android:text="@string/detail_passie" />
                 </LinearLayout>
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
-            <!-- Bottom progress bar -->
             <ProgressBar
                 android:id="@+id/detail_indeterminateBar2"
                 style="?android:attr/progressBarStyleHorizontal"
@@ -618,7 +671,7 @@
                     <ImageView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:src="@drawable/ic_bedienings"/>
+                        android:src="@drawable/ic_bediening"/>
 
                     <TextView
                         android:layout_width="0dp"

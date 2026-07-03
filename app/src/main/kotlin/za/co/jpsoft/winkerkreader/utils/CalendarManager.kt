@@ -21,6 +21,7 @@ import java.util.Calendar
 import java.util.Locale
 import java.util.TimeZone
 
+
 class CalendarManager(private val context: Context) {
     private val contentResolver = context.contentResolver
 
@@ -364,6 +365,7 @@ class CalendarManager(private val context: Context) {
             CallType.MISSED -> "📵"
             CallType.ENDED -> "📞"
             CallType.UNKNOWN -> "?"
+            CallType.OTHER -> "??"
         }
 
         val sourceEmoji = when {
@@ -378,6 +380,7 @@ class CalendarManager(private val context: Context) {
             CallType.MISSED -> context.getString(R.string.call_type_missed)
             CallType.ENDED -> context.getString(R.string.call_type_ended)
             CallType.UNKNOWN -> context.getString(R.string.call_type_unknown)
+            CallType.OTHER -> context.getString(R.string.call_type_other)
         }
 
         return context.getString(R.string.calendar_event_title, typeEmoji, sourceEmoji, localizedType, callerInfo)
@@ -400,6 +403,7 @@ class CalendarManager(private val context: Context) {
             CallType.MISSED -> context.getString(R.string.call_type_missed)
             CallType.ENDED -> context.getString(R.string.call_type_ended)
             CallType.UNKNOWN -> context.getString(R.string.call_type_unknown)
+            CallType.OTHER -> context.getString(R.string.call_type_other)
         }
         sb.append(context.getString(R.string.calendar_type, localizedType)).append("\n")
         

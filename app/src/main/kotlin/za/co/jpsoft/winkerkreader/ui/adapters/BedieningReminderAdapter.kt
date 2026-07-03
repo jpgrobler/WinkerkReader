@@ -26,6 +26,8 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import za.co.jpsoft.winkerkreader.BuildConfig
+
 
 class BedieningReminderAdapter(
     private val onVoltooi:      (reminderId: String) -> Unit,
@@ -78,14 +80,14 @@ class BedieningReminderAdapter(
                     Glide.with(binding.ivMemberPhoto)
                         .load(file)
                         .circleCrop()
-                        .placeholder(R.drawable.kontaks)
+                        .placeholder(R.drawable.kontak)
                         .transition(DrawableTransitionOptions.withCrossFade())
                         .into(binding.ivMemberPhoto)
                 } else {
-                    binding.ivMemberPhoto.setImageResource(R.drawable.kontaks)
+                    binding.ivMemberPhoto.setImageResource(R.drawable.kontak)
                 }
             } else {
-                binding.ivMemberPhoto.setImageResource(R.drawable.kontaks)
+                binding.ivMemberPhoto.setImageResource(R.drawable.kontak)
             }
 
             binding.ivMemberPhoto.setOnClickListener {
@@ -195,7 +197,7 @@ class BedieningReminderAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        Log.d("BedieningAdapter", "onCreateViewHolder called")
+        if (BuildConfig.DEBUG) Log.d("BedieningAdapter", "onCreateViewHolder called")
         val binding = ItemBedieningReminderBinding.inflate(
             LayoutInflater.from(parent.context), parent, false
         )
@@ -203,7 +205,7 @@ class BedieningReminderAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        Log.d("BedieningAdapter", "Binding item at position $position")
+        if (BuildConfig.DEBUG) Log.d("BedieningAdapter", "Binding item at position $position")
         holder.bind(getItem(position))
     }
 
@@ -221,13 +223,13 @@ class BedieningReminderAdapter(
     }
 
     override fun submitList(list: List<ReminderWithMember>?) {
-        Log.d("BedieningAdapter", "submitList called with ${list?.size ?: 0} items")
+        if (BuildConfig.DEBUG) Log.d("BedieningAdapter", "submitList called with ${list?.size ?: 0} items")
         super.submitList(list)
     }
 
     override fun getItemCount(): Int {
         val count = super.getItemCount()
-        Log.d("BedieningAdapter", "getItemCount = $count")
+        if (BuildConfig.DEBUG) Log.d("BedieningAdapter", "getItemCount = $count")
         return count
     }
 }

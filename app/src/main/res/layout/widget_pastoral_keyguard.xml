@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/widget_pastoral_title"
-        android:textColor="@android:color/white"
+        android:textColor="@color/white"
         android:textSize="10sp"
         android:textStyle="bold"
         android:gravity="center" />
@@ -23,14 +23,15 @@
         android:layout_weight="1"
         android:divider="@android:color/transparent"
         android:dividerHeight="1dp"
-        android:paddingBottom="2dp" />
+        android:paddingBottom="2dp"
+        android:background="@android:color/transparent" />
 
     <TextView
         android:id="@+id/widget_pastoral_keyguard_empty"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/widget_pastoral_empty"
-        android:textColor="@android:color/white"
+        android:textColor="@color/white"
         android:textSize="9sp"
         android:gravity="center"
         android:visibility="gone" />

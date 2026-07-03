@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true">
+    android:fillViewport="true"
+    android:background="?attr/colorSurface">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -10,205 +12,310 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Icons Section (2 columns) -->
-        <LinearLayout
+        <!-- Icons Section -->
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/section_frame"
             android:layout_marginBottom="12dp"
-            android:padding="8dp">
+            app:cardCornerRadius="8dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="?attr/colorSurface">
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@color/primary_blue_dark"
-                android:text="@string/uitleg_icons_title"
-                android:textAlignment="center"
-                android:textColor="@color/surface_light"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:padding="4dp"
-                android:layout_marginBottom="8dp" />
-
-            <Button
-                android:id="@+id/uitleg_stoor"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="@string/stoor"
-                android:textColor="#FFFF"
-                android:enabled="false"
-                android:background="@drawable/buttonshape"
-                android:layout_marginBottom="8dp" />
-
-            <!-- 2-column grid -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:orientation="vertical"
+                android:padding="8dp">
 
-                <!-- Left column -->
-                <LinearLayout
-                    android:layout_width="0dp"
+                <TextView
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:paddingEnd="4dp">
+                    android:background="?attr/colorPrimary"
+                    android:text="@string/uitleg_icons_title"
+                    android:textAlignment="center"
+                    android:textColor="?attr/colorOnPrimary"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:padding="4dp"
+                    android:layout_marginBottom="8dp" />
 
-                    <CheckBox
-                        android:id="@+id/uitleg_foto"
-                        android:text="@string/uitleg_foto"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content" />
-                    <CheckBox
-                        android:id="@+id/uitleg_epos"
-                        android:text="@string/uitleg_epos"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content" />
-                    <CheckBox
-                        android:id="@+id/uitleg_whatsap"
-                        android:text="@string/uitleg_whatsapp"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content" />
-                    <CheckBox
-                        android:id="@+id/uitleg_verjaarsdag"
-                        android:text="@string/uitleg_verjaarsdag"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content" />
-                    <CheckBox
-                        android:id="@+id/uitleg_ouderdom"
-                        android:text="@string/filter_ouderdom"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content" />
-                </LinearLayout>
-
-                <!-- Right column -->
-                <LinearLayout
-                    android:layout_width="0dp"
+                <Button
+                    android:id="@+id/uitleg_stoor"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:paddingStart="4dp">
+                    android:layout_gravity="center"
+                    android:text="@string/stoor"
+                    android:textColor="?attr/colorOnPrimary"
+                    android:enabled="false"
+                    style="@style/Widget.WinkerkReader.Button.Primary"
+                    android:layout_marginBottom="8dp" />
 
-                    <CheckBox
-                        android:id="@+id/uitleg_Huweliksdag"
-                        android:text="@string/uitleg_huweliksdatum"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content" />
-                    <CheckBox
-                        android:id="@+id/uitleg_wyk"
-                        android:text="@string/list_wyk"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content" />
-                    <CheckBox
-                        android:id="@+id/uitleg_selfoon"
-                        android:text="@string/list_selfoon"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content" />
-                    <CheckBox
-                        android:id="@+id/uitleg_telefoon"
-                        android:text="@string/list_telefoon"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content" />
+                <!-- 2‑column grid -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:paddingEnd="4dp">
+
+                        <CheckBox
+                            android:id="@+id/uitleg_foto"
+                            android:text="@string/uitleg_foto"
+                            android:textColor="?attr/colorOnSurface"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content" />
+                        <CheckBox
+                            android:id="@+id/uitleg_epos"
+                            android:text="@string/uitleg_epos"
+                            android:textColor="?attr/colorOnSurface"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content" />
+                        <CheckBox
+                            android:id="@+id/uitleg_whatsap"
+                            android:text="@string/uitleg_whatsapp"
+                            android:textColor="?attr/colorOnSurface"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content" />
+                        <CheckBox
+                            android:id="@+id/uitleg_verjaarsdag"
+                            android:text="@string/uitleg_verjaarsdag"
+                            android:textColor="?attr/colorOnSurface"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content" />
+                        <CheckBox
+                            android:id="@+id/uitleg_ouderdom"
+                            android:text="@string/filter_ouderdom"
+                            android:textColor="?attr/colorOnSurface"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:paddingStart="4dp">
+
+                        <CheckBox
+                            android:id="@+id/uitleg_Huweliksdag"
+                            android:text="@string/uitleg_huweliksdatum"
+                            android:textColor="?attr/colorOnSurface"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content" />
+                        <CheckBox
+                            android:id="@+id/uitleg_wyk"
+                            android:text="@string/list_wyk"
+                            android:textColor="?attr/colorOnSurface"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content" />
+                        <CheckBox
+                            android:id="@+id/uitleg_selfoon"
+                            android:text="@string/list_selfoon"
+                            android:textColor="?attr/colorOnSurface"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content" />
+                        <CheckBox
+                            android:id="@+id/uitleg_telefoon"
+                            android:text="@string/list_telefoon"
+                            android:textColor="?attr/colorOnSurface"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
-        </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- Default Layout -->
-        <LinearLayout
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/section_frame"
-            android:padding="8dp"
-            android:layout_marginBottom="12dp">
+            android:layout_marginBottom="12dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="?attr/colorSurface">
 
-            <TextView
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingTop="8dp"
-                android:text="@string/uitleg_default_layout"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+                android:orientation="vertical"
+                android:padding="8dp">
 
-            <Spinner
-                android:id="@+id/layoutOpsies"
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="8dp"
+                    android:text="@string/uitleg_default_layout"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorOnSurface" />
+
+                <Spinner
+                    android:id="@+id/layoutOpsies"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:entries="@array/layoutoptions"
+                    android:minHeight="24dp"
+                    android:layout_marginBottom="8dp"
+                    android:backgroundTint="?attr/colorPrimary" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+        <!-- Theme Selection -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="?attr/colorSurface">
+
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:entries="@array/layoutoptions"
-                android:minHeight="24dp"
-                android:layout_marginBottom="8dp" />
-        </LinearLayout>
+                android:orientation="vertical"
+                android:padding="8dp">
 
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="8dp"
+                    android:text="Tema (Dark / Light)"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorOnSurface" />
+
+                <RadioGroup
+                    android:id="@+id/theme_mode_group"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="8dp">
+
+                    <RadioButton
+                        android:id="@+id/theme_mode_system"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:text="Stelsel"
+                        android:textColor="?attr/colorOnSurface" />
+
+                    <RadioButton
+                        android:id="@+id/theme_mode_light"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:text="Lig"
+                        android:textColor="?attr/colorOnSurface" />
+
+                    <RadioButton
+                        android:id="@+id/theme_mode_dark"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:text="Donker"
+                        android:textColor="?attr/colorOnSurface" />
+
+                </RadioGroup>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
         <!-- Colors Section -->
-        <LinearLayout
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/section_frame"
-            android:padding="8dp">
+            app:cardCornerRadius="8dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="?attr/colorSurface">
 
-            <TextView
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@color/primary_blue_dark"
-                android:text="@string/gemeente_kleur"
-                android:textAlignment="center"
-                android:textColor="@color/surface_light"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:padding="4dp"
-                android:layout_marginBottom="8dp" />
+                android:orientation="vertical"
+                android:padding="8dp">
 
-            <Button
-                android:id="@+id/saveColor"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="@string/stoor"
-                android:textColor="#FFFF"
-                android:enabled="false"
-                android:background="@drawable/buttonshape"
-                android:layout_marginBottom="8dp" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/colorPrimary"
+                    android:text="@string/gemeente_kleur"
+                    android:textAlignment="center"
+                    android:textColor="?attr/colorOnPrimary"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:padding="4dp"
+                    android:layout_marginBottom="8dp" />
 
-            <TextView
-                android:id="@+id/gem1"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginBottom="8dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center"
-                android:text="@string/uitleg_gemeente_1"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+                <Button
+                    android:id="@+id/saveColor"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="@string/stoor"
+                    android:textColor="?attr/colorOnPrimary"
+                    android:enabled="false"
+                    style="@style/Widget.WinkerkReader.Button.Primary"
+                    android:layout_marginBottom="8dp" />
 
-            <TextView
-                android:id="@+id/gem2"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginBottom="8dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center"
-                android:text="@string/uitleg_gemeente_2"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+                <TextView
+                    android:id="@+id/gem1"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginBottom="8dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:text="@string/uitleg_gemeente_1"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorOnSurface"
+                    android:background="?attr/colorSurfaceVariant" />
 
-            <TextView
-                android:id="@+id/gem3"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginBottom="8dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center"
-                android:text="@string/uitleg_gemeente_3"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+                <TextView
+                    android:id="@+id/gem2"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginBottom="8dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:text="@string/uitleg_gemeente_2"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorOnSurface"
+                    android:background="?attr/colorSurfaceVariant" />
 
-        </LinearLayout>
+                <TextView
+                    android:id="@+id/gem3"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginBottom="8dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:text="@string/uitleg_gemeente_3"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorOnSurface"
+                    android:background="?attr/colorSurfaceVariant" />
+                <TextView
+                    android:id="@+id/inactive_color_preview"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginBottom="8dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:text="Onaktief"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorOnSurface"
+                    android:background="?attr/colorSurfaceVariant" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
     </LinearLayout>
 </ScrollView>

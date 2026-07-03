@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.fragment.app.Fragment
 import yuku.ambilwarna.AmbilWarnaDialog
 import za.co.jpsoft.winkerkreader.R
@@ -25,10 +26,13 @@ class UitlegVertoonFragment : Fragment() {
     private var isInitializing = true
     private var isDirty = false
 
-    // Aanvanklike waardes
+    // Initial values: [gem1, gem2, gem3, inactive]
     private var initialCheckboxes = mutableMapOf<Int, Boolean>()
     private var initialLayout: String = "GESINNE"
-    private var initialColors = mutableListOf(-1, -1, -1)
+    private val initialColors = mutableListOf(
+        Int.MIN_VALUE, Int.MIN_VALUE, Int.MIN_VALUE, Int.MIN_VALUE
+    ) // gem1, gem2, gem3, inactive
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -47,10 +51,34 @@ class UitlegVertoonFragment : Fragment() {
         isInitializing = false
         isDirty = false
 
-        // Wag totdat die spinner adapter gelaai is
+        when (settingsManager.themeMode) {
+            SettingsManager.ThemeMode.LIGHT -> binding.themeModeLight.isChecked = true
+            SettingsManager.ThemeMode.DARK -> binding.themeModeDark.isChecked = true
+            else -> binding.themeModeSystem.isChecked = true
+        }
+
+        binding.themeModeGroup.setOnCheckedChangeListener { _, checkedId ->
+            val mode = when (checkedId) {
+                R.id.theme_mode_light -> SettingsManager.ThemeMode.LIGHT
+                R.id.theme_mode_dark -> SettingsManager.ThemeMode.DARK
+                else -> SettingsManager.ThemeMode.SYSTEM
+            }
+            settingsManager.themeMode = mode
+            applyTheme(mode)
+            Toast.makeText(requireContext(), "Tema verander. Herbegin die app.", Toast.LENGTH_SHORT).show()
+        }
+
         Handler(Looper.getMainLooper()).postDelayed({
             updateSaveButtonState()
         }, 300)
+    }
+
+    private fun applyTheme(mode: SettingsManager.ThemeMode) {
+        when (mode) {
+            SettingsManager.ThemeMode.LIGHT -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+            SettingsManager.ThemeMode.DARK -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+            SettingsManager.ThemeMode.SYSTEM -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+        }
     }
 
     private fun loadPreferences() {
@@ -81,13 +109,16 @@ class UitlegVertoonFragment : Fragment() {
             }
         }
 
-        // Colors
+        // Colors: gem1, gem2, gem3, inactive
         initialColors[0] = settingsManager.gemeenteKleur
         initialColors[1] = settingsManager.gemeente2Kleur
         initialColors[2] = settingsManager.gemeente3Kleur
+        initialColors[3] = settingsManager.inactiveBackgroundColor
+
         updateTextViewBackground(binding.gem1, initialColors[0])
         updateTextViewBackground(binding.gem2, initialColors[1])
         updateTextViewBackground(binding.gem3, initialColors[2])
+        updateTextViewBackground(binding.inactiveColorPreview, initialColors[3])
     }
 
     private fun setupListeners() {
@@ -110,6 +141,7 @@ class UitlegVertoonFragment : Fragment() {
         binding.gem1.setOnClickListener { openColorPickerDialog(it, 1) }
         binding.gem2.setOnClickListener { openColorPickerDialog(it, 2) }
         binding.gem3.setOnClickListener { openColorPickerDialog(it, 3) }
+        binding.inactiveColorPreview.setOnClickListener { openColorPickerDialog(it, 4) }
 
         // Save buttons
         binding.uitlegStoor.setOnClickListener { saveDisplaySettings() }
@@ -142,21 +174,19 @@ class UitlegVertoonFragment : Fragment() {
         val currentLayout = binding.layoutOpsies.selectedItem?.toString() ?: "GESINNE"
         if (currentLayout != initialLayout) return true
 
-        // Colors
-        if (getCurrentGemColor(1) != initialColors[0]) return true
-        if (getCurrentGemColor(2) != initialColors[1]) return true
-        if (getCurrentGemColor(3) != initialColors[2]) return true
+        // Colors: gem1, gem2, gem3, inactive
+        if (getCurrentColor(R.id.gem1) != initialColors[0]) return true
+        if (getCurrentColor(R.id.gem2) != initialColors[1]) return true
+        if (getCurrentColor(R.id.gem3) != initialColors[2]) return true
+        if (getCurrentColor(R.id.inactive_color_preview) != initialColors[3]) return true
 
         return false
     }
 
-    private fun getCurrentGemColor(index: Int): Int {
-        return when (index) {
-            1 -> (binding.gem1.background as? android.graphics.drawable.ColorDrawable)?.color ?: -1
-            2 -> (binding.gem2.background as? android.graphics.drawable.ColorDrawable)?.color ?: -1
-            3 -> (binding.gem3.background as? android.graphics.drawable.ColorDrawable)?.color ?: -1
-            else -> -1
-        }
+    // Helper to get current color from any TextView's background
+    private fun getCurrentColor(viewId: Int): Int {
+        val view = binding.root.findViewById<TextView>(viewId) ?: return -1
+        return (view.background as? android.graphics.drawable.ColorDrawable)?.color ?: -1
     }
 
     private fun saveDisplaySettings() {
@@ -189,22 +219,28 @@ class UitlegVertoonFragment : Fragment() {
     }
 
     private fun saveColorSettings() {
-        initialColors[0] = getCurrentGemColor(1)
-        initialColors[1] = getCurrentGemColor(2)
-        initialColors[2] = getCurrentGemColor(3)
+        // Save all four colours
+        initialColors[0] = getCurrentColor(R.id.gem1)
+        initialColors[1] = getCurrentColor(R.id.gem2)
+        initialColors[2] = getCurrentColor(R.id.gem3)
+        initialColors[3] = getCurrentColor(R.id.inactive_color_preview)
+
         settingsManager.gemeenteKleur = initialColors[0]
         settingsManager.gemeente2Kleur = initialColors[1]
         settingsManager.gemeente3Kleur = initialColors[2]
+        settingsManager.inactiveBackgroundColor = initialColors[3]
+
         isDirty = false
         updateSaveButtonState()
         Toast.makeText(requireContext(), "Kleure gestoor", Toast.LENGTH_SHORT).show()
     }
 
-    private fun openColorPickerDialog(view: View, gemeenteIndex: Int) {
-        val currentColor = when (gemeenteIndex) {
+    private fun openColorPickerDialog(view: View, colorIndex: Int) {
+        val currentColor = when (colorIndex) {
             1 -> settingsManager.gemeenteKleur
             2 -> settingsManager.gemeente2Kleur
             3 -> settingsManager.gemeente3Kleur
+            4 -> settingsManager.inactiveBackgroundColor
             else -> -1
         }
         val dialog = AmbilWarnaDialog(
@@ -213,14 +249,14 @@ class UitlegVertoonFragment : Fragment() {
             object : AmbilWarnaDialog.OnAmbilWarnaListener {
                 override fun onCancel(dialog: AmbilWarnaDialog) {}
                 override fun onOk(dialog: AmbilWarnaDialog, color: Int) {
-                    handleColorSelected(view, gemeenteIndex, color)
+                    handleColorSelected(view, colorIndex, color)
                 }
             }
         )
         dialog.show()
     }
 
-    private fun handleColorSelected(view: View, gemeenteIndex: Int, color: Int) {
+    private fun handleColorSelected(view: View, colorIndex: Int, color: Int) {
         if (view is TextView) {
             updateTextViewBackground(view, color)
         } else {
@@ -230,10 +266,15 @@ class UitlegVertoonFragment : Fragment() {
     }
 
     private fun updateTextViewBackground(textView: TextView, color: Int) {
-        if (color != -1 && color != 0) {
+        // Only apply if it's NOT the sentinel and NOT transparent
+        if (color != Int.MIN_VALUE && color != 0) {
             textView.background = android.graphics.drawable.ColorDrawable(color)
             val darkness = 1 - (0.299 * Color.red(color) + 0.587 * Color.green(color) + 0.114 * Color.blue(color)) / 255
             textView.setTextColor(if (darkness >= 0.5) Color.WHITE else Color.BLACK)
+        } else {
+            // Reset to default background
+            textView.background = null
+            textView.setTextColor(android.R.attr.textColorPrimary)
         }
     }
 

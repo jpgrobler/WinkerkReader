@@ -4,7 +4,8 @@
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="16dp"
+    android:background="?attr/colorSurface">
 
     <TextView
         android:layout_width="match_parent"
@@ -12,22 +13,23 @@
         android:text="@string/permissions_title"
         android:textSize="24sp"
         android:textStyle="bold"
-        android:paddingBottom="8dp"/>
+        android:textColor="?attr/colorOnSurface"
+        android:paddingBottom="8dp" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/permissions_intro"
         android:textSize="14sp"
-        android:paddingBottom="16dp"
-        android:textColor="@android:color/darker_gray"/>
+        android:textColor="?attr/colorOnSurfaceVariant"
+        android:paddingBottom="16dp" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewPermissions"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:scrollbars="vertical"/>
+        android:scrollbars="vertical" />
 
     <Button
         android:id="@+id/btnRequestAllPermissions"
@@ -36,6 +38,7 @@
         android:layout_marginTop="16dp"
         android:text="@string/permissions_request_all"
         android:textAllCaps="false"
-        android:padding="12dp"/>
+        android:padding="12dp"
+        style="@style/Widget.WinkerkReader.Button.Primary" />
 
 </LinearLayout>

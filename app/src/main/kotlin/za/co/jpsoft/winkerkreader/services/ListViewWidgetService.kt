@@ -59,16 +59,20 @@ class WidgetViewsFactory(
     }
 
     override fun onDataSetChanged() {
-        if (BuildConfig.DEBUG) Log.d(tag, "onDataSetChanged - refreshing cache")
-        // Refresh the cache from the database (this runs on a background thread)
+        if (BuildConfig.DEBUG) Log.d("WidgetViewsFactory", "onDataSetChanged - refreshing cache")
         WidgetDataRepository.refreshCache(context)
+        val rows = WidgetDataRepository.getWidgetRows()
+        if (BuildConfig.DEBUG) Log.d("WidgetViewsFactory", "Rows loaded: ${rows.size}")
     }
 
     override fun getCount(): Int {
-        return WidgetDataRepository.getWidgetRows().size
+        val count = WidgetDataRepository.getWidgetRows().size
+        if (BuildConfig.DEBUG) Log.d("WidgetViewsFactory", "getCount = $count")
+        return count
     }
 
     override fun getViewAt(position: Int): RemoteViews {
+        if (BuildConfig.DEBUG) Log.d("WidgetViewsFactory", "getViewAt position=$position")
         val rows = WidgetDataRepository.getWidgetRows()
         if (position >= rows.size) {
             return createErrorRow("Invalid position")

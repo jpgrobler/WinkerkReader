@@ -104,6 +104,39 @@ class WinkerkProvider : ContentProvider() {
 
     override fun insert(uri: Uri, contentValues: ContentValues?): Uri? = null
 
+//    override fun update(
+//        uri: Uri,
+//        contentValues: ContentValues?,
+//        selection: String?,
+//        selectionArgs: Array<out String>?
+//    ): Int {
+//        val db = database ?: return 0
+//        val match = uriMatcher.match(uri)
+//
+//        return when (match) {
+//            LIDMAAT_GUID, LIDMAAT_LIST -> {
+//                if (contentValues == null || contentValues.size() == 0) return 0
+//                // Build dynamic UPDATE statement
+//                val setClauses = mutableListOf<String>()
+//                val args = mutableListOf<String>()
+//                contentValues.keySet().forEach { key ->
+//                    setClauses.add("[$key] = ?")
+//                    args.add(contentValues.getAsString(key))
+//                }
+//                // Add the selection args at the end
+//                selectionArgs?.let { args.addAll(it) }
+//
+//                val sql = StringBuilder("UPDATE Members SET ")
+//                sql.append(setClauses.joinToString(", "))
+//                sql.append(" WHERE $selection")
+//                db.openHelper.writableDatabase.execSQL(sql.toString(), args.toTypedArray())
+//
+//                // Return rows affected – we don't know, but we can guess 1
+//                1
+//            }
+//            else -> 0
+//        }
+//    }
     override fun update(
         uri: Uri,
         contentValues: ContentValues?,
@@ -116,6 +149,7 @@ class WinkerkProvider : ContentProvider() {
         return when (match) {
             LIDMAAT_GUID, LIDMAAT_LIST -> {
                 if (contentValues == null || contentValues.size() == 0) return 0
+
                 // Build dynamic UPDATE statement
                 val setClauses = mutableListOf<String>()
                 val args = mutableListOf<String>()
@@ -127,17 +161,22 @@ class WinkerkProvider : ContentProvider() {
                 selectionArgs?.let { args.addAll(it) }
 
                 val sql = StringBuilder("UPDATE Members SET ")
-                sql.append(setClauses.joinToString(", "))
-                sql.append(" WHERE $selection")
-                db.openHelper.writableDatabase.execSQL(sql.toString(), args.toTypedArray())
+                    .append(setClauses.joinToString(", "))
+                    .append(" WHERE $selection")
+                    .toString()
 
-                // Return rows affected – we don't know, but we can guess 1
-                1
+                // Use compileStatement to get the affected row count
+                val statement = db.openHelper.writableDatabase.compileStatement(sql)
+                args.forEachIndexed { index, value ->
+                    statement.bindString(index + 1, value)
+                }
+                val rows = statement.executeUpdateDelete()
+                statement.close()
+                rows
             }
             else -> 0
         }
     }
-
     override fun delete(uri: Uri, selection: String?, selectionArgs: Array<out String>?): Int = 0
 
     override fun getType(uri: Uri): String? {

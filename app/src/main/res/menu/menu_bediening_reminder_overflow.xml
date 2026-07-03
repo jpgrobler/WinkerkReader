@@ -1,19 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@+id/action_uitstel"
-        android:title="@string/herinnering_uitstel_kies"
-        android:icon="@drawable/update2"/>
+        android:title="@string/herinnering_uitstel_kies"/>
     <item
         android:id="@+id/action_verwyder"
-        android:title="@string/herinnering_verwyder"
-        android:icon="@android:drawable/ic_menu_delete" />
+        android:title="@string/herinnering_verwyder"/>
     <item android:id="@+id/action_voeg_by_kalender"
-        android:icon="@drawable/kalenders"
         android:title="@string/herinnering_voeg_by_kalender" />
     <item
         android:id="@+id/action_voeg_by_google_tasks"
         android:title="@string/herinnering_voeg_by_tasks" />
     <item android:id="@+id/action_verwyder_reeks"
-        android:icon="@android:drawable/ic_menu_delete"
         android:title="@string/herinnering_verwyder_reeks" />
 </menu>

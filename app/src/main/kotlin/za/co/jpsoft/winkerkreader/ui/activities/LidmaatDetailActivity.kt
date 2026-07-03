@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.BitmapFactory
 import android.graphics.Color
+import android.graphics.Outline
 import android.media.ThumbnailUtils
 import android.net.Uri
 import android.os.Bundle
@@ -74,6 +75,9 @@ import java.io.FileOutputStream
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import android.view.ViewOutlineProvider
+import za.co.jpsoft.winkerkreader.ui.controllers.BedieningSeksieController
+
 
 class LidmaatDetailActivity : AppCompatActivity() {
 
@@ -100,7 +104,7 @@ class LidmaatDetailActivity : AppCompatActivity() {
     private val huwelikStatusArray =
             arrayOf("Getroud", "Ongetroud", "Geskei", "Weduwee", "Wewenaar", "Onbekend")
     private val geslagteArray = arrayOf("Vroulik", "Manlik")
-    private val geslagPrente = intArrayOf(R.drawable.female, R.drawable.male)
+    private val geslagPrente = intArrayOf(R.drawable.kvrou, R.drawable.kman)
 
     private var mGeslagB = ""
     private var mHuwelikstatus = "Ongetroud"
@@ -594,8 +598,8 @@ class LidmaatDetailActivity : AppCompatActivity() {
                     .load(file)
                     .override(pixels, pixels)
                     .centerCrop()
-                    .placeholder(R.drawable.kontaks)
-                    .error(R.drawable.kontaks)
+                    .placeholder(R.drawable.kontak)
+                    .error(R.drawable.kontak)
                     .into(binding.detailKontakFoto)
 
                 binding.detailKontakFoto.tag = "synced"
@@ -628,7 +632,13 @@ class LidmaatDetailActivity : AppCompatActivity() {
                     ImageView(this).apply {
                         layoutParams = LinearLayout.LayoutParams(256, 256)
                         scaleType = ImageView.ScaleType.FIT_XY
-                        setImageResource(R.drawable.circle_crop)
+                        //setImageResource(R.drawable.circle_crop)
+                        outlineProvider = object : ViewOutlineProvider() {
+                            override fun getOutline(view: View, outline: Outline) {
+                                outline.setOval(0, 0, view.width, view.height)
+                            }
+                        }
+                        clipToOutline = true
                     }
             val imageView = ImageView(this).apply {
                 layoutParams = LinearLayout.LayoutParams(256, 256)
@@ -768,7 +778,7 @@ class LidmaatDetailActivity : AppCompatActivity() {
         binding.detailKontakFoto.layoutParams.height = pixels
         binding.detailKontakFoto.layoutParams.width = pixels
         binding.detailKontakFoto.requestLayout()
-        binding.detailKontakFoto.setImageResource(R.drawable.kontaks)
+        binding.detailKontakFoto.setImageResource(R.drawable.kontak)
         binding.detailKontakFoto.tag = "default"
     }
 
@@ -916,8 +926,8 @@ class LidmaatDetailActivity : AppCompatActivity() {
             .load(photoFile)
             .override(pixels, pixels)
             .centerCrop()
-            .placeholder(R.drawable.kontaks)
-            .error(R.drawable.kontaks)
+            .placeholder(R.drawable.kontak)
+            .error(R.drawable.kontak)
             .into(binding.detailKontakFoto)
 
         binding.detailKontakFoto.tag = "synced"

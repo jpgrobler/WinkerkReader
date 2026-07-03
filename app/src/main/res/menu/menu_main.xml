@@ -11,114 +11,98 @@
         app:showAsAction="ifRoom" />
     <item
         android:id="@+id/action_search"
-        android:icon="@drawable/searchmenu2"
         android:title="@string/mainmenu_soek"
         app:showAsAction="collapseActionView"
         app:actionViewClass="androidx.appcompat.widget.SearchView"
          />
     <item
         android:id="@+id/filter_options"
-        android:icon="@drawable/filter3s"
         android:title="@string/mainmenu_filter">
     </item>
     <item
         android:id="@+id/action_bediening"
         android:title="@string/mainmenu_bediening"
-        android:icon="@drawable/ic_bedienings"
         app:showAsAction="never" />
     <item
-        android:title="@string/mainmenu_taggedtitle"
-        android:icon="@drawable/selectedb">
+        android:title="@string/mainmenu_taggedtitle">
         <menu>
         <item
             android:id="@+id/tagged"
-            android:icon="@drawable/selected"
             android:title="@string/mainmenu_tagged">
         </item>
         <item
             android:id="@+id/deselect"
             android:title="@string/mainmenu_untagged"
-            android:icon="@drawable/selectednone"
             app:showAsAction="never"
             />
         </menu>
     </item>
     <item
         android:title="@string/mainmenu_sorteer"
-        android:icon="@android:drawable/ic_menu_sort_by_size">
+        android:id="@+id/menu_sorteer_titel"
+        app:showAsAction="never" >
         <menu >
             <item
                 android:id="@+id/sort_wyk"
-                android:icon="@android:drawable/ic_menu_sort_alphabetically"
                 android:title="@string/mainmenu_sort_wyk"
                 app:showAsAction="never" />
             <item
                 android:id="@+id/sort_van"
                 android:title="@string/mainmenu_sort_van"
-                android:icon="@android:drawable/ic_menu_sort_alphabetically"
                 app:showAsAction="never" />
             <item
                 android:id="@+id/sort_ouderdom"
                 android:title="@string/mainmenu_sort_ouderdom"
-                android:icon="@android:drawable/ic_menu_sort_by_size"
                 app:showAsAction="never" />
             <item
                 android:id="@+id/sort_adres"
-                android:title="@string/mainmenu_adres"
-                android:icon="@drawable/construction"
+                android:title="@string/mainmenu_sort_adres"
                 app:showAsAction="never"
                 />
             <item
                 android:id="@+id/verjaar"
-                android:title="@string/mainmenu_verjaar"
-                android:icon="@drawable/bdayw"
+                android:title="@string/mainmenu_sort_verjaar"
                 app:showAsAction="never"
                 />
             <item
                 android:id="@+id/sort_gesin"
-                android:title="@string/mainmenu_gesin"
-                android:icon="@drawable/ic_family"
+                android:title="@string/mainmenu_sort_gesin"
                 android:visible="true"
                 app:showAsAction="never"
                 />
         </menu>
     </item>
     <item
-    android:title="@string/mainmenu_admin"
-    android:icon="@drawable/admin">
+        android:title="@string/mainmenu_admin"
+        android:id="@+id/menu_andmin_titel"
+        app:showAsAction="never">
         <menu>
             <item
                 android:id="@+id/laai"
                 android:title="@string/mainmenu_laai"
                 app:showAsAction="never"
-                android:icon="@drawable/downs"
                 />
             <item
                 android:id="@+id/RegistreerActivity"
                 android:title="@string/mainmenu_registreer"
                 app:showAsAction="never"
-                android:icon="@drawable/indexs"
                 />
             <item
                 android:id="@+id/uitleg"
                 android:title="@string/mainmenu_uitleg_funksies"
                 app:showAsAction="never"
-                android:icon="@drawable/uitleg"
                 />
             <item
                 android:id="@+id/menu_permissions"
                 android:title="@string/mainmenu_manage_permissions"
-                android:icon="@android:drawable/ic_lock_lock"
                 app:showAsAction="never" />
             <item
                 android:id="@+id/menu_permission_settings"
                 android:title="@string/mainmenu_permission_settings"
-                android:icon="@android:drawable/ic_menu_preferences"
                 app:showAsAction="never" />
             <item
                 android:id="@+id/menu_battery_optimization"
                 android:title="@string/battery_optimization_title"
-                android:icon="@android:drawable/ic_menu_info_details"
                 app:showAsAction="never" />
         </menu>
     </item>
@@ -126,18 +110,15 @@
         android:id="@+id/sms_verjaar"
         android:title="@string/mainmenu_sms_verjaar"
         app:showAsAction="never"
-        android:icon="@drawable/bdaysmss"
         />
     <item
         android:id="@+id/argief"
         android:title="@string/mainmenu_argief"
         app:showAsAction="never"
-        android:icon="@drawable/argiefs"
         />
     <item
         android:id="@+id/action_view_call_log"
         android:title="@string/mainmenu_view_call_log"
-        android:icon="@android:drawable/ic_menu_recent_history"
         app:showAsAction="never"
         />
 </menu>

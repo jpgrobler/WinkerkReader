@@ -23,12 +23,13 @@ import kotlinx.coroutines.launch
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.DatabaseHelper
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
+import za.co.jpsoft.winkerkreader.data.calllog.CallLogDao
 import za.co.jpsoft.winkerkreader.data.models.CallType
 import za.co.jpsoft.winkerkreader.services.OproepDetailService
 
 class PhoneCallMonitor(
     private val context: Context,
-    databaseHelper: DatabaseHelper,
+    callLogDao: CallLogDao,  //databaseHelper: DatabaseHelper,
     calendarManager: CalendarManager,
     calendarId: Long
 ) {
@@ -51,7 +52,7 @@ class PhoneCallMonitor(
 
     init {
         telephonyManager = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-        unifiedMonitor = UnifiedCallMonitor.getInstance(context, databaseHelper, calendarManager, calendarId)
+        unifiedMonitor = UnifiedCallMonitor.getInstance(context, callLogDao, calendarManager, calendarId)
     }
 
     fun setIncomingNumber(number: String?) {
@@ -192,7 +193,9 @@ class PhoneCallMonitor(
         when {
             isCallActive && callId != null -> {
                 val callEndTime = System.currentTimeMillis()
-                unifiedMonitor?.onCallEnded(callId, callEndTime)
+                monitorScope.launch {
+                    unifiedMonitor?.onCallEnded(callId, callEndTime)
+                }
             }
             currentIncomingNumber != null && callId != null -> {
                 if (currentIncomingNumber == "Unknown Number") {
@@ -217,7 +220,9 @@ class PhoneCallMonitor(
                         unifiedMonitor?.onCallEnded(callId, System.currentTimeMillis())
                     }
                 } else {
-                    unifiedMonitor?.onCallEnded(callId, System.currentTimeMillis())
+                    monitorScope.launch {
+                        unifiedMonitor?.onCallEnded(callId, System.currentTimeMillis())
+                    }
                 }
             }
         }

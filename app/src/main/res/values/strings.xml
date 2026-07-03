@@ -34,7 +34,7 @@
     <string name="widget_sterf_content_desc">Death information content</string>
 
     <!-- Common Widget Strings -->
-    <string name="widget_last_updated">Updated: %1$s</string>
+    <string name="widget_last_updated">Laas opgedateer: %1$s</string>
     <string name="widget_no_data">No data available</string>
     <string name="widget_error">Error loading data</string>
     <string name="widget_tap_to_refresh">Tap to refresh</string>
@@ -167,7 +167,7 @@
     <string name="list_voorname">Voorname</string>
     <string name="list_geboortedatum">Geboortedatum</string>
     <string name="list_verjaar">dd-mm</string>
-    <string name="ongereg">"Ongeregistreerd ~ Ongeregistreerd ~ Ongeregistreerd ~ Ongeregistreerd ~ Ongeregistreerd ~ Ongeregistreerd ~ "</string>
+    <string name="ongereg">"Ongeregistreerd"</string>
     <string name="dankie">Dankie vir registrasie</string>
     <string name="oproep_titel">Inkomende oproep</string>
 
@@ -180,8 +180,8 @@
 
 
 
-    <string name="gallery">Foto van gallery</string>
-    <string name="kamera">Foto van kamera</string>
+    <string name="gallery">🖼️ Foto van gallery</string>
+    <string name="kamera">📷 Foto van kamera</string>
 
     <string name="registreer_titel">Gebruiker inligting:</string>
     <string name="registreer_naam">Naam:</string>
@@ -282,50 +282,52 @@
     <string name="laai_radio">Wis \'DATABASIS\' uit na dit gelaai is</string>
     <string name="laai_button">Laai databasis\nuit foon</string>
     <string name="dbLink">Paste Link</string>
-    <string name="dbLinkButtonText">Laai databasis van\nInternet Skakel</string>
+    <string name="dbLinkButtonText">🌐\nInternet</string>
     <string name="updateAppButtonText">Opdateer\nApp</string>
 
-    <string name="Groepfunksie_sms_selected">SMS geslekteerdes</string>
-    <string name="Groepfunksie_sms_groep">SMS subgroep</string>
+    <string name="Groepfunksie_sms_selected">💬 SMS geslekteerdes</string>
+    <string name="Groepfunksie_sms_groep">💬 SMS subgroep</string>
 
-    <string name="lidmaatlistmenu_detail">Detail</string>
-    <string name="lidmaatlistmenu_skakel">Skakel</string>
-    <string name="lidmaatlistmenu_bel_selfoon">Selfoon</string>
-    <string name="lidmaatlistmenu_bel_landlyn">Landlyn</string>
-    <string name="lidmaatlistmenu_teks">Stuur Teks</string>
-    <string name="lidmaatlistmenu_stuur_sms">Sms</string>
-    <string name="lidmaatlistmenu_stuur_whatsapp">Whatsapp</string>
-    <string name="lidmaatlistmenu_stuur_whatsapp2">Whatsapp2</string>
-    <string name="lidmaatlistmenu_stuur_whatsapp3">Whatsapp3</string>
-    <string name="lidmaatlistmenu_stuur_epos">E-pos</string>
-    <string name="lidmaatlistmenu_ander">Ander</string>
-    <string name="lidmaatlistmenu_copy_to_clipboard">Kopieër na klipbord</string>
-    <string name="lidmaatlistmenu_copy_to_contacts">Laai as Android kontak</string>
-    <string name="lidmaatlistmenu_nota">Kalender inskrywing</string>
+    <!-- Lidmaatlist Menu (Contact Action Menu) -->
+    <string name="lidmaatlistmenu_detail">ℹ️ Detail</string>
+    <string name="lidmaatlistmenu_skakel">📞 Skakel</string>
+    <string name="lidmaatlistmenu_bel_selfoon">📱 Selfoon</string>
+    <string name="lidmaatlistmenu_bel_landlyn">☎️ Landlyn</string>
+    <string name="lidmaatlistmenu_teks">✏️ Stuur Teks</string>
+    <string name="lidmaatlistmenu_stuur_sms">💬 Sms</string>
+    <string name="lidmaatlistmenu_stuur_whatsapp">🟩 Whatsapp</string>
+    <string name="lidmaatlistmenu_stuur_whatsapp2">💚 Whatsapp2</string>
+    <string name="lidmaatlistmenu_stuur_whatsapp3">🟢 Whatsapp3</string>
+    <string name="lidmaatlistmenu_stuur_epos">📧 E-pos</string>
+    <string name="lidmaatlistmenu_ander">➕ Ander</string>
+    <string name="lidmaatlistmenu_copy_to_clipboard">📋 Kopieër na klipbord</string>
+    <string name="lidmaatlistmenu_copy_to_contacts">👤+ Laai as Android kontak</string>
+    <string name="lidmaatlistmenu_nota">📅 Kalender inskrywing</string>
 
-    <string name="mainmenu_soek">Soek</string>
-    <string name="mainmenu_tagged">Wys Geselekteerdes</string>
-    <string name="mainmenu_untagged">Geen Geselekteerdes</string>
-    <string name="mainmenu_taggedtitle">Geselekteerdes</string>
-    <string name="mainmenu_soek_opsies">Soek Opsies</string>
-    <string name="mainmenu_filter">Filter</string>
-    <string name="mainmenu_groepelys">Groepe</string>
-    <string name="mainmenu_sorteer">Sorteer</string>
-    <string name="mainmenu_sort_wyk">Wyk</string>
-    <string name="mainmenu_sort_van">Van</string>
-    <string name="mainmenu_sort_ouderdom">Ouderdom</string>
-    <string name="mainmenu_adres">Adres</string>
-    <string name="mainmenu_verjaar">Sort Verjaarsdag</string>
-    <string name="mainmenu_gesin">Gesin</string>
-    <string name="mainmenu_huwelik">Huwelik</string>
-    <string name="mainmenu_admin">Admin</string>
-    <string name="mainmenu_laai">Laai nuwe databasis</string>
-    <string name="mainmenu_fotos">Sync fotos</string>
-    <string name="mainmenu_registreer">Gebruiker Info</string>
-    <string name="mainmenu_sms_verjaar">Stuur verjaar sms\'e</string>
-    <string name="mainmenu_argief">Argief</string>
-    <string name="mainmenu_uitleg">Uitleg</string>
-    <string name="opdateerApp">App Opdatering ?</string>
+    <!-- Main Menu (App Navigation Menu) -->
+    <string name="mainmenu_soek">🔍 Soek</string>
+    <string name="mainmenu_tagged">⭐ Wys Geselekteerdes</string>
+    <string name="mainmenu_untagged">⬜ Geen Geselekteerdes</string>
+    <string name="mainmenu_taggedtitle">✅ Geselekteerdes</string>
+    <string name="mainmenu_soek_opsies">⚙️ Soek Opsies</string>
+    <string name="mainmenu_filter">🎛️ Filter</string>
+    <string name="mainmenu_groepelys">👥 Groepe</string>
+    <string name="mainmenu_sorteer">🔀 Sorteer</string>
+    <string name="mainmenu_sort_wyk">⇵🏘️ Wyk</string>
+    <string name="mainmenu_sort_van">⇵🔤 Van</string>
+    <string name="mainmenu_sort_ouderdom">⇵🎂 Ouderdom</string>
+    <string name="mainmenu_sort_adres">⇵📍 Adres</string>
+    <string name="mainmenu_sort_verjaar">⇵🥳 Verjaarsdag</string>
+    <string name="mainmenu_sort_gesin">⇵👨‍👩‍👧‍👦 Gesin</string>
+    <string name="mainmenu_sort_huwelik">⇵💍 Huwelik</string>
+    <string name="mainmenu_admin">⚙️ Admin</string>
+    <string name="mainmenu_laai">📥 Laai nuwe databasis</string>
+    <string name="mainmenu_fotos">🖼️ Sync fotos</string>
+    <string name="mainmenu_registreer">🆔 Gebruiker Info</string>
+    <string name="mainmenu_sms_verjaar">🎂💬 Stuur verjaar sms\'e</string>
+    <string name="mainmenu_argief">🗄️ Argief</string>
+    <string name="mainmenu_uitleg">🖥️ Uitleg</string>
+    <string name="opdateerApp">⬆️ App Opdatering ?</string>
     <string-array name="filterouderdomoptions">
         <item>gelyk</item>
         <item>kleiner as</item>
@@ -400,7 +402,7 @@
     <string name="check_for_updates">Toets vir opdatering</string>
     <string name="tap_check_for_updates">Opdatering beskikbaar?</string>
     <string name="app_icon">WinkerkReader</string>
-    <string name="argief_soek">Soek</string>
+    <string name="argief_soek">🔍 Soek</string>
     <string name="separator_format">%1$s %2$s</string>
     <string name="filter_aktief_text">Aktief</string>
     <string name="filter_onaktief_text">OnAktief</string>
@@ -443,15 +445,15 @@
     <string name="laai_dag">Dag:</string>
     <string name="laai_auto_dl_internet">Auto dl\nInternet</string>
     <string name="laai_opdateer_tyd">Opdateer\nTyd</string>
-    <string name="laai_kies_self">Kies self</string>
-    <string name="laai_wifi">WiFi</string>
-    <string name="laai_usb">USB</string>
-    <string name="laai_ip_van_pc">IP van PC:  </string>
+    <string name="laai_kies_self">📂 Kies</string>
+    <string name="laai_wifi">🛜 WiFi</string>
+    <string name="laai_usb">🔌 USB</string>
+    <string name="laai_ip_van_pc">🌐 IP van PC:  </string>
     <string name="laai_ip_hint">###.###.###.###</string>
-    <string name="laai_force_sync_all_photos">Force Sync of aal photos</string>
-    <string name="laai_sync_photos_after_database">Sync photos after database</string>
-    <string name="laai_sync_photos_now">Sync Photos Now</string>
-    <string name="laai_syncing_photos">Syncing photos…</string>
+    <string name="laai_force_sync_all_photos">🔄 Sinkroniseer\n📸 fotos</string>
+    <string name="laai_sync_photos_after_database">🔄 Sinkroniseer 📸 fotos\nna databasis</string>
+    <string name="laai_sync_photos_now">🔄 Sinkroniseer\n📸 fotos</string>
+    <string name="laai_syncing_photos">🔄 Sinkroniseer 📸 fotos…</string>
     <string name="call_log_header">📋 Volledige oproep geskiedenis</string>
     <string name="call_log_clear_button">Vee Oproeplog uit</string>
     <string name="argief_datum">datum</string>
@@ -481,10 +483,10 @@
     <string name="permission_granted">Granted</string>
     <string name="time_unit_leading_zero">0%1$s</string>
     <string name="mainmenu_filter_aktief">Aktief/Onaktief/Beide</string>
-    <string name="mainmenu_uitleg_funksies">Uitleg + Funksies</string>
+    <string name="mainmenu_uitleg_funksies">🖥️ Uitleg + Funksies</string>
     <string name="mainmenu_manage_permissions">Manage Permissions</string>
     <string name="mainmenu_permission_settings">Permission Settings</string>
-    <string name="mainmenu_view_call_log">View Call Log</string>
+    <string name="mainmenu_view_call_log">📞✏️ View Call Log</string>
 
     <!-- LaaiDatabasisActivity strings -->
     <string name="time_format">%1$02d:%2$02d</string>
@@ -507,7 +509,7 @@
     <string name="db_file_item_format">%1$s\n%2$d Mb%3$s</string>
 
     <!-- Battery Optimization -->
-    <string name="battery_optimization_title">Battery Optimization</string>
+    <string name="battery_optimization_title">🪫🔋 Battery Verstelling</string>
     <string name="battery_optimization_message">Om te verseker dat oproep-registrasie betroubaar in die agtergrond werk, moet WinkerkReader vrygestel word van battery-optimering. Dit verhoed dat Android die diens stop wanneer die skerm af is.</string>
     <string name="battery_optimization_button">Stel vry</string>
     <string name="battery_optimization_already_optimized">Battery optimering is reeds afgestel</string>
@@ -544,10 +546,11 @@
     <string name="call_type_missed">Gemis</string>
     <string name="call_type_ended">Beëindig</string>
     <string name="call_type_unknown">Onbekend</string>
+    <string name="call_type_other">Ander</string>
 
     <string name="source_whatsapp">WhatsApp</string>
     <string name="source_phone">Foonoproep</string>
-    <string name="menu_call_log">Oproep Log</string>
+    <string name="menu_call_log">📞✏️ Oproep Log</string>
 
     <!-- Pastoral -->
     <string name="bediening_channel_description">Herinnerings vir pastorale opvolg</string>
@@ -561,13 +564,13 @@
     <string name="bediening_filter_agterstallig_count">Agterstallig (%d)</string>
     <string name="bediening_filter_hierdie_week">Hierdie week</string>
     <string name="bediening_filter_als">Als</string>
-    <string name="mainmenu_bediening">Bediening</string>
-    <string name="mainmenu_bediening_badge">Bediening (%d)</string>
+    <string name="mainmenu_bediening">❤️ Bediening</string>
+    <string name="mainmenu_bediening_badge">❤️ Bediening (%d)</string>
     <string name="herinnering_bel">Bel</string>
     <string name="herinnering_whatsapp">WhatsApp</string>
-    <string name="herinnering_maak_lid_oop">Maak lid oop</string>
-    <string name="herinnering_uitstel_kies">Stel herinnering uit</string>
-    <string name="herinnering_voeg_by_kalender">Voeg by kalender</string>
+    <string name="herinnering_maak_lid_oop">🕴️ Maak lid oop</string>
+    <string name="herinnering_uitstel_kies">⏰ Stel herinnering uit</string>
+    <string name="herinnering_voeg_by_kalender">📅 Voeg by kalender</string>
     <string name="snooze_more">Môre (08:00)</string>
     <string name="snooze_drie_dae">3 dae</string>
     <string name="snooze_een_week">1 week</string>
@@ -602,7 +605,7 @@
     <string name="pastoral_deel_rugsteun">Deel / Rugsteun</string>
     <string name="pastoral_rugsteun_nie_gevind">Geen rugsteun-lêer gevind nie</string>
     <string name="pastoral_rugsteun_deel_onderwerp">WKR Pastorale databasis</string>
-    <string name="lidmaatlistmenu_stel_herinnering">Stel herinnering</string>
+    <string name="lidmaatlistmenu_stel_herinnering">❤️ Stel herinnering</string>
     <string name="context_hospitaal">Hospitaal</string>
     <string name="context_naam_oorledene">Naam van oorledene</string>
     <string name="context_geboortedatum_oorledene">Geboortedatum van oorledene</string>
@@ -643,8 +646,8 @@
     <string name="tasks_teken_in">Teken in by Google</string>
     <string name="tasks_aangeteken_as">Aangeteken as: %1$s</string>
     <string name="tasks_taaklys">Taaklys</string>
-    <string name="tasks_deel_titel">Deel herinnering</string>
-    <string name="herinnering_voeg_by_tasks">Voeg by Google Tasks</string>
+    <string name="tasks_deel_titel">⏩ Deel herinnering</string>
+    <string name="herinnering_voeg_by_tasks">📋 Voeg by Google Tasks</string>
     <string name="tasks_nie_geaktiveer">Google Tasks is nie geaktiveer nie — stel dit op in Instellings</string>
     <string name="tasks_waarskuwing_offline">Let wel: as \'n herinnering voltooi of uitgestel word terwyl jy nie by Google aangeteken is nie, sal die ooreenstemmende Google-taak nie outomaties verwyder word nie.</string>
 
@@ -654,11 +657,11 @@
     <string name="test_item">Test Item</string>
     <string name="pastoral_titel">Bedienings Reminders</string>
     <string name="uitleg_pastoral_calendar_label">Log ⛪ kalender📅:</string>
-    <string name="herinnering_verwyder">Verwyder</string>
+    <string name="herinnering_verwyder">🚫 Verwyder</string>
     <string name="herinnering_verwyder_titel">Verwyder die Bedieningsherinnering</string>
     <string name="herinnering_verwyder_boodskap">Verwyder</string>
     <string name="pastoral_calendar_auto_sync_label">Skryf outomaties na kalender\n</string>
-    <string name="herinnering_verwyder_reeks">Verwyder reeks</string>
+    <string name="herinnering_verwyder_reeks">🚫 Verwyder reeks</string>
     <string name="gemeente_kleur">Gemeente kleur</string>
     <string name="herinnering_verwyder_reeks_titel">Verwyder reeks</string>
     <string name="herinnering_verwyder_reeks_boodskap">Is jy seker jy wil die hele reeks herinnerings verwyder? Dit sal ook die Google Take verwyder.</string>
@@ -688,7 +691,7 @@
     <!-- Generic (only add if not already present) -->
     <string name="kanselleer">Kanselleer</string>
     <string name="voeg_nota_by">📝 Voeg nota by</string>
-    <string name="stel_herinnering">Stel herinnering</string>
+    <string name="stel_herinnering">❤️ Stel herinnering</string>
 
     <string name="auth_wag_verifikasie">Verifieer om voort te gaan</string>
     <string name="auth_misluk_probeer_weer">Verifikasie misluk. Probeer weer.</string>
@@ -749,4 +752,6 @@
     <string name="rationale_generic_message">Om hierdie funksie te gebruik, benodig WinkerkReader die volgende toestemming: %1$s</string>
     <string name="rationale_ok">OK</string>
     <string name="rationale_deny">Weier</string>
+    <string name="nuwe_databasis_reeds_op_foon">Nuwe databasis is reeds op foon</string>
+    <string name="widget_last_updated_placeholder">Laas opgedateer: %1$s</string>
 </resources>

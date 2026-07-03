@@ -46,7 +46,7 @@ object PhotoHelper {
         imageView.layoutParams.height = pixels
         imageView.layoutParams.width = pixels
         imageView.requestLayout()
-        imageView.setImageResource(R.drawable.kontaks)
+        imageView.setImageResource(R.drawable.kontak)
         imageView.tag = "default"
     }
 }

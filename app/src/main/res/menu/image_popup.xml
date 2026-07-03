@@ -3,14 +3,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/gallery_foto"
-        android:icon="@drawable/ic_photo"
         android:title="@string/gallery" />
     <item
         android:id="@+id/kamera_foto"
-        android:icon="@drawable/ic_linked_camera"
         android:title="@string/kamera" />
     <item
         android:id="@+id/whatsapp_foto"
-        android:icon="@drawable/whatsapp"
         android:title="@string/Groepfunksie_sms_selected" />
 </menu>

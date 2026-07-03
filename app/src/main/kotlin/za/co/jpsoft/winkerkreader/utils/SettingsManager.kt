@@ -4,15 +4,17 @@ package za.co.jpsoft.winkerkreader.utils
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import androidx.core.content.ContextCompat
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.WinkerkContract
+import za.co.jpsoft.winkerkreader.data.WinkerkContract.KEY_INACTIVE_BG_COLOR
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.KEY_PASTORAL_SYNC_CALENDAR
-
+import za.co.jpsoft.winkerkreader.R
 /**
  * Central manager for all app preferences.
  * All preference keys are defined in [WinkerkContract].
  */
-class SettingsManager(context: Context) {
+class SettingsManager(private val context: Context) {
 
     companion object {
         private const val PREF_DB_INITIALIZED = "db_initialized"
@@ -167,17 +169,23 @@ class SettingsManager(context: Context) {
         set(value) = prefs.edit().putBoolean(WinkerkContract.KEY_WIDGET_STERF, value).apply()
 
     // ===== Color settings =====
+    // SettingsManager.kt
+
     var gemeenteKleur: Int
-        get() = prefs.getInt(WinkerkContract.KEY_GEMEENTE_KLEUR, -1)
+        get() = prefs.getInt(WinkerkContract.KEY_GEMEENTE_KLEUR, Int.MIN_VALUE)
         set(value) = prefs.edit().putInt(WinkerkContract.KEY_GEMEENTE_KLEUR, value).apply()
 
     var gemeente2Kleur: Int
-        get() = prefs.getInt(WinkerkContract.KEY_GEMEENTE2_KLEUR, -3355444)
+        get() = prefs.getInt(WinkerkContract.KEY_GEMEENTE2_KLEUR, Int.MIN_VALUE)  // changed from -3355444
         set(value) = prefs.edit().putInt(WinkerkContract.KEY_GEMEENTE2_KLEUR, value).apply()
 
     var gemeente3Kleur: Int
-        get() = prefs.getInt(WinkerkContract.KEY_GEMEENTE3_KLEUR, -256)
+        get() = prefs.getInt(WinkerkContract.KEY_GEMEENTE3_KLEUR, Int.MIN_VALUE)  // changed from -256
         set(value) = prefs.edit().putInt(WinkerkContract.KEY_GEMEENTE3_KLEUR, value).apply()
+
+    var inactiveBackgroundColor: Int
+        get() = prefs.getInt(KEY_INACTIVE_BG_COLOR, Int.MIN_VALUE)  // changed from ContextCompat.getColor(...)
+        set(value) = prefs.edit().putInt(KEY_INACTIVE_BG_COLOR, value).apply()
 
     var gemeenteNaam: String
         get() = prefs.getString("Gemeente", "") ?: ""
@@ -325,4 +333,44 @@ class SettingsManager(context: Context) {
     var backupExportToDownloads: Boolean
         get() = prefs.getBoolean("backup_export_to_downloads", false)
         set(value) = prefs.edit().putBoolean("backup_export_to_downloads", value).apply()
+
+    var diagnosticCallCaptureEnabled: Boolean
+        get() = prefs.getBoolean("pref_diagnostic_call_capture", false)
+        set(value) = prefs.edit().putBoolean("pref_diagnostic_call_capture", value).apply()
+
+    var callLogImportedToRoom: Boolean
+        get() = prefs.getBoolean("pref_call_log_imported_to_room", false)
+        set(value) = prefs.edit().putBoolean("pref_call_log_imported_to_room", value).apply()
+
+    enum class ThemeMode { SYSTEM, LIGHT, DARK }
+
+    var themeMode: ThemeMode
+        get() {
+            val value = prefs.getString("theme_mode", "light") // ← change default to "light"
+            return when (value) {
+                "light" -> ThemeMode.LIGHT
+                "dark" -> ThemeMode.DARK
+                else -> ThemeMode.SYSTEM
+            }
+        }
+        set(value) {
+            prefs.edit().putString("theme_mode", value.name.lowercase()).apply()
+        }
+
+// Inside SettingsManager class, add this method:
+
+    fun ensureDefaultColors() {
+        if (gemeenteKleur == Int.MIN_VALUE) {
+            gemeenteKleur = androidx.core.content.ContextCompat.getColor(context, R.color.default_gemeente_1)
+        }
+        if (gemeente2Kleur == Int.MIN_VALUE) {
+            gemeente2Kleur = androidx.core.content.ContextCompat.getColor(context, R.color.default_gemeente_2)
+        }
+        if (gemeente3Kleur == Int.MIN_VALUE) {
+            gemeente3Kleur = androidx.core.content.ContextCompat.getColor(context, R.color.default_gemeente_3)
+        }
+        if (inactiveBackgroundColor == Int.MIN_VALUE) {
+            inactiveBackgroundColor = androidx.core.content.ContextCompat.getColor(context, R.color.inactive_background)
+        }
+    }
 }

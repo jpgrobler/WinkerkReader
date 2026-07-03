@@ -16,8 +16,11 @@ import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.services.ListViewWidgetService
 import za.co.jpsoft.winkerkreader.ui.activities.MainActivity
 import za.co.jpsoft.winkerkreader.ui.activities.VerjaarSmsActivity
+import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import java.util.Calendar
-
+import java.util.Date
+import java.util.Locale
+import java.text.SimpleDateFormat
 /**
  * Enhanced Widget Provider with modern Android compatibility and error handling.
  * Maintains compatibility with original layout while adding reliability improvements.
@@ -120,6 +123,14 @@ class WinkerkReaderWidgetProvider : AppWidgetProvider() {
                     context, 0, listClickIntent, pendingIntentFlags
                 )
                 setPendingIntentTemplate(R.id.words, listClickPI)
+                // ✅ Add timestamp (same logic as pastoral widget)
+                val prefs = context.getSharedPreferences("widget_prefs", Context.MODE_PRIVATE)
+                val lastRefresh = prefs.getLong("last_refresh_time", System.currentTimeMillis())
+                val timeStr = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(lastRefresh))
+                setTextViewText(R.id.widget_update_time, "Laas opgedateer: $timeStr")
+                setEmptyView(R.id.words, R.id.widget_empty)
+                val headerText = getEventEmojis(context)
+                setTextViewText(R.id.widget_header, headerText)
             }
 
             // Notify data changed before updating widget
@@ -132,7 +143,21 @@ class WinkerkReaderWidgetProvider : AppWidgetProvider() {
             if (BuildConfig.DEBUG) Log.e(TAG, "Error updating widget $appWidgetId", e)
         }
     }
+    private fun getEventEmojis(context: Context): String {
+        val settings = SettingsManager.getInstance(context)
+        val emojis = mutableListOf<String>()
 
+        // Always include birthdays (Verjaar) – they are not filtered
+        emojis.add("🎂")
+
+        // Add other events based on user settings
+        if (settings.widgetDoop) emojis.add("💧")
+        if (settings.widgetHuwelik) emojis.add("💍")
+        if (settings.widgetBelydenis) emojis.add("⛪")
+        if (settings.widgetSterf) emojis.add("🪦")
+
+        return emojis.joinToString(" ")
+    }
     /**
      * Schedule the next automatic widget update.
      */

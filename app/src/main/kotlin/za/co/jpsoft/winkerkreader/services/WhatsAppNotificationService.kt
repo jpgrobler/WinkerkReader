@@ -5,6 +5,8 @@ import android.content.Intent
 import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.provider.ContactsContract
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
@@ -22,6 +24,10 @@ import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import za.co.jpsoft.winkerkreader.utils.UnifiedCallMonitor
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
+import android.content.ComponentName
+import za.co.jpsoft.winkerkreader.utils.CallNotificationDiagnostics
+import za.co.jpsoft.winkerkreader.data.calllog.CallLogDatabase
 
 class WhatsAppNotificationService : NotificationListenerService() {
 
@@ -29,43 +35,95 @@ class WhatsAppNotificationService : NotificationListenerService() {
     private lateinit var settingsManager: SettingsManager
 
     // Thread‑safe map for active VoIP calls
-    private val activeVoipCalls = ConcurrentHashMap<String, String>()
+    private data class TrackedVoipCall(val callId: String, val startTime: Long)
+    private val activeVoipCalls = ConcurrentHashMap<String, TrackedVoipCall>()
+
+
 
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-
+    private val pruneHandler = Handler(Looper.getMainLooper())
+    private val pruneRunnable = object : Runnable {
+        override fun run() {
+            pruneStaleVoipCalls()
+            pruneHandler.postDelayed(this, TimeUnit.MINUTES.toMillis(30))
+        }
+    }
     override fun onCreate() {
         super.onCreate()
         initialize()
+        //pruneHandler.post(pruneRunnable)
         if (BuildConfig.DEBUG) Log.d(TAG, "WhatsAppNotificationService created")
     }
 
     private fun initialize() {
-        // Use application context to avoid leaking the service instance
         val appContext = applicationContext
 
         settingsManager = SettingsManager.getInstance(appContext)
-        val databaseHelper = DatabaseHelper.getInstance(appContext)
+        val callLogDao = CallLogDatabase.getInstance(appContext).callLogDao()   // was: DatabaseHelper.getInstance(appContext)
         val calendarManager = CalendarManager(appContext)
         val calendarId = settingsManager.selectedCalendarId
 
-        unifiedMonitor = UnifiedCallMonitor.getInstance(appContext, databaseHelper, calendarManager, calendarId)
+        unifiedMonitor = UnifiedCallMonitor.getInstance(appContext, callLogDao, calendarManager, calendarId)
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         super.onNotificationPosted(sbn)
+        pruneStaleVoipCalls()
         if (!settingsManager.voipLogEnabled) return
 
         val packageName = sbn.packageName
         val appName = VOIP_PACKAGES[packageName] ?: return
 
+        // Gate entry into the whole pipeline. WhatsApp (and most VoIP apps)
+        // posts many non-call notifications under the same package — chat
+        // messages, group updates, backup status, etc. Without this check,
+        // ordinary messages reach fallbackTextBasedProcessing's unclassified
+        // branch and get misclassified as calls.
+        if (!looksLikeCallNotification(sbn)) return
+
         processVoIPNotification(sbn, appName)
+    }
+
+    /**
+     * Cheap, synchronous pre-filter: does this notification plausibly
+     * represent a call at all? Only notifications that pass this should ever
+     * reach fallbackTextBasedProcessing's "unclassified" branch.
+     */
+    private fun looksLikeCallNotification(sbn: StatusBarNotification): Boolean {
+        val notification = sbn.notification
+        val extras = notification.extras ?: return false
+        val category = notification.category
+        val callTypeExtra = extras.getInt(Notification.EXTRA_CALL_TYPE, -1)
+
+        if (category == Notification.CATEGORY_CALL || category == Notification.CATEGORY_MISSED_CALL) return true
+        if (callTypeExtra in 1..3) return true
+
+        // Real call notifications (ringing/ongoing) are marked ongoing; chat
+        // messages are not. Strongest language-independent signal we have.
+        if ((notification.flags and Notification.FLAG_ONGOING_EVENT) != 0) return true
+
+        // Last resort: text strongly suggests a call (covers "call ended" /
+        // "missed call" notifications, which usually aren't ongoing by the
+        // time they post).
+        val title = extras.getString(Notification.EXTRA_TITLE) ?: ""
+        val text = extras.getString(Notification.EXTRA_TEXT) ?: ""
+        val bigText = extras.getString(Notification.EXTRA_BIG_TEXT) ?: ""
+        val subText = extras.getString(Notification.EXTRA_SUB_TEXT) ?: ""
+        return isCallEndedNotification(title, text, bigText, subText) ||
+                isMissedCall(title, text, bigText, subText) ||
+                isIncomingCall(title, text, bigText, subText) ||
+                isPossibleOutgoingCall(title, text, bigText, subText)
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        // Remove any pending handler messages (even if none are posted)
+        pruneHandler.removeCallbacksAndMessages(null)
+        // Cancel all coroutines
         serviceScope.cancel()
+        // Clear active calls map
         activeVoipCalls.clear()
-        // The singleton still exists but uses application context, so no leak.
+        // Release any other heavy references (e.g., to the monitor? None held directly)
         if (BuildConfig.DEBUG) Log.d(TAG, "WhatsAppNotificationService destroyed")
     }
 
@@ -99,40 +157,49 @@ class WhatsAppNotificationService : NotificationListenerService() {
                 handleIncomingOrScreeningCall(notificationKey, callId, appName, extras, callStartTime)
             }
             CallState.OUTGOING -> {
-                activeVoipCalls[notificationKey] = callId
                 serviceScope.launch {
-                    val number = extractPhoneNumberFromExtras(extras)
-                    val finalNumber = if (number.isBlank()) {
-                        extractPhoneNumber(title, text,
-                            extras.getString(Notification.EXTRA_BIG_TEXT) ?: "",
-                            extras.getString(Notification.EXTRA_SUB_TEXT) ?: "")
-                    } else number
+                    try {
+                        val number = extractPhoneNumberFromExtras(extras)
+                        val finalNumber = if (number.isBlank()) {
+                            extractPhoneNumber(title, text,
+                                extras.getString(Notification.EXTRA_BIG_TEXT) ?: "",
+                                extras.getString(Notification.EXTRA_SUB_TEXT) ?: "")
+                        } else number
 
-                    val resolvedName = if (finalNumber.isNotBlank()) {
-                        CallerInfoResolver.getCallerDisplayInfo(contentResolver, finalNumber)
-                    } else {
-                        val name = extractCallerInfoModern(extras)
-                        if (name.isNotBlank()) name else "Unknown Caller"
+                        val resolvedName = if (finalNumber.isNotBlank()) {
+                            CallerInfoResolver.getCallerDisplayInfo(contentResolver, finalNumber)
+                        } else {
+                            val name = extractCallerInfoModern(extras)
+                            if (name.isNotBlank()) name else "Unknown Caller"
+                        }
+
+                        if (finalNumber.isBlank() && (resolvedName.isBlank() || resolvedName == "Unknown Contact")) {
+                            if (BuildConfig.DEBUG) Log.d(TAG, "Skipping outgoing call: no usable number/name")
+                            return@launch
+                        }
+
+                        unifiedMonitor.onCallDetected(
+                            callId = callId,
+                            number = if (finalNumber.isNotBlank()) finalNumber else resolvedName,
+                            direction = "outgoing",
+                            source = appName,
+                            timestamp = System.currentTimeMillis(),
+                            displayName = resolvedName
+                        )
+                        // Only commit to the map once registration with UnifiedMonitor succeeded.
+                        activeVoipCalls[notificationKey] = TrackedVoipCall(callId, callStartTime)
+                    } catch (e: Exception) {
+                        if (BuildConfig.DEBUG) Log.e(TAG, "Failed to process outgoing VoIP call", e)
+                        // Nothing was registered, so nothing needs cleanup.
                     }
-
-                    if (finalNumber.isBlank() && (resolvedName.isBlank() || resolvedName == "Unknown Contact")) {
-                        return@launch
-                    }
-
-                    unifiedMonitor.onCallDetected(
-                        callId = callId,
-                        number = if (finalNumber.isNotBlank()) finalNumber else resolvedName,
-                        direction = "outgoing",
-                        source = appName,
-                        timestamp = System.currentTimeMillis(),
-                        displayName = resolvedName
-                    )
                 }
             }
             CallState.MISSED -> {
                 val existingCallId = activeVoipCalls.remove(notificationKey)
                 if (existingCallId != null) {
-                    unifiedMonitor.onCallMissed(existingCallId, System.currentTimeMillis())
+                    serviceScope.launch {
+                        unifiedMonitor.onCallMissed(existingCallId.callId, System.currentTimeMillis())
+                    }
                 } else {
                     val callIdMissed = "voip_missed_${System.currentTimeMillis()}"
                     serviceScope.launch {
@@ -151,9 +218,11 @@ class WhatsAppNotificationService : NotificationListenerService() {
                 }
             }
             CallState.ENDED -> {
-                val callId = activeVoipCalls.remove(notificationKey)
-                if (callId != null) {
-                    unifiedMonitor.onCallEnded(callId, System.currentTimeMillis())
+                val tracked = activeVoipCalls.remove(notificationKey)
+                if (tracked != null) {
+                    serviceScope.launch {
+                        unifiedMonitor.onCallEnded(tracked.callId, System.currentTimeMillis())
+                    }
                 } else {
                     if (BuildConfig.DEBUG) Log.w(TAG, "Ended call without matching start: $notificationKey")
                 }
@@ -178,40 +247,46 @@ class WhatsAppNotificationService : NotificationListenerService() {
         extras: Bundle,
         callStartTime: Long
     ) {
-        activeVoipCalls[notificationKey] = callId
         serviceScope.launch {
-            val number = extractPhoneNumberFromExtras(extras)
-            val finalNumber = if (number.isBlank()) {
-                extractPhoneNumber(
-                    extras.getString(Notification.EXTRA_TITLE) ?: "",
-                    extras.getString(Notification.EXTRA_TEXT) ?: "",
-                    extras.getString(Notification.EXTRA_BIG_TEXT) ?: "",
-                    extras.getString(Notification.EXTRA_SUB_TEXT) ?: ""
+            try {
+                val number = extractPhoneNumberFromExtras(extras)
+                val finalNumber = if (number.isBlank()) {
+                    extractPhoneNumber(
+                        extras.getString(Notification.EXTRA_TITLE) ?: "",
+                        extras.getString(Notification.EXTRA_TEXT) ?: "",
+                        extras.getString(Notification.EXTRA_BIG_TEXT) ?: "",
+                        extras.getString(Notification.EXTRA_SUB_TEXT) ?: ""
+                    )
+                } else number
+
+                val resolvedName = if (finalNumber.isNotBlank()) {
+                    CallerInfoResolver.getCallerDisplayInfo(contentResolver, finalNumber)
+                } else {
+                    val name = extractCallerInfoModern(extras)
+                    if (name.isNotBlank()) name else "Unknown Caller"
+                }
+
+                if (finalNumber.isBlank() && (resolvedName.isBlank() || resolvedName == "Unknown Contact")) {
+                    if (BuildConfig.DEBUG) Log.d(TAG, "Skipping incoming/screening call: no usable number/name")
+                    return@launch
+                }
+
+                val displayNumber = if (finalNumber.isNotBlank()) finalNumber else resolvedName
+
+                unifiedMonitor.onCallDetected(
+                    callId = callId,
+                    number = displayNumber,
+                    direction = "incoming",
+                    source = appName,
+                    timestamp = callStartTime,
+                    displayName = resolvedName
                 )
-            } else number
-
-            val resolvedName = if (finalNumber.isNotBlank()) {
-                CallerInfoResolver.getCallerDisplayInfo(contentResolver, finalNumber)
-            } else {
-                val name = extractCallerInfoModern(extras)
-                if (name.isNotBlank()) name else "Unknown Caller"
+                // Only commit to the map once registration with UnifiedMonitor succeeded.
+                activeVoipCalls[notificationKey] = TrackedVoipCall(callId, callStartTime)
+                triggerVoipCallerPopup(resolvedName, displayNumber)
+            } catch (e: Exception) {
+                if (BuildConfig.DEBUG) Log.e(TAG, "Failed to process incoming/screening VoIP call", e)
             }
-
-            if (finalNumber.isBlank() && (resolvedName.isBlank() || resolvedName == "Unknown Contact")) {
-                return@launch
-            }
-
-            val displayNumber = if (finalNumber.isNotBlank()) finalNumber else resolvedName
-
-            unifiedMonitor.onCallDetected(
-                callId = callId,
-                number = displayNumber,
-                direction = "incoming",
-                source = appName,
-                timestamp = callStartTime,
-                displayName = resolvedName
-            )
-            triggerVoipCallerPopup(resolvedName, displayNumber)
         }
     }
 
@@ -229,65 +304,92 @@ class WhatsAppNotificationService : NotificationListenerService() {
         val extractedNumber = extractPhoneNumber(title, text, bigText, subText)
 
         serviceScope.launch {
-            // Resolve caller info asynchronously (uses ContentProvider + Contacts)
-            val callerInfo = if (extractedNumber.isNotBlank()) {
-                CallerInfoResolver.getCallerDisplayInfo(contentResolver, extractedNumber)
-            } else {
-                // If no number, try to extract a name from the text (pure string parsing)
-                extractCallerInfo(title, text, bigText, subText)
-            }
-
-            when {
-                isCallEndedNotification(title, text, bigText, subText) -> {
-                    val callId = activeVoipCalls.remove(notificationKey)
-                    if (callId != null) {
-                        unifiedMonitor.onCallEnded(callId, System.currentTimeMillis())
-                    }
+            try {
+                val callerInfo = if (extractedNumber.isNotBlank()) {
+                    CallerInfoResolver.getCallerDisplayInfo(contentResolver, extractedNumber)
+                } else {
+                    extractCallerInfo(title, text, bigText, subText)
                 }
-                isMissedCall(title, text, bigText, subText) -> {
-                    val callId = activeVoipCalls.remove(notificationKey)
-                    if (callId != null) {
-                        unifiedMonitor.onCallEnded(callId, System.currentTimeMillis())
-                    } else {
-                        val callIdMissed = "voip_missed_${System.currentTimeMillis()}"
+
+                when {
+                    isCallEndedNotification(title, text, bigText, subText) -> {
+                        val tracked = activeVoipCalls.remove(notificationKey)
+                        if (tracked != null) {
+                            unifiedMonitor.onCallEnded(tracked.callId, System.currentTimeMillis())
+                        }
+                    }
+                    isMissedCall(title, text, bigText, subText) -> {
+                        val tracked = activeVoipCalls.remove(notificationKey)
+                        if (tracked != null) {
+                            unifiedMonitor.onCallEnded(tracked.callId, System.currentTimeMillis())
+                        } else {
+                            val callIdMissed = "voip_missed_${System.currentTimeMillis()}"
+                            unifiedMonitor.onCallDetected(
+                                callId = callIdMissed,
+                                number = extractedNumber,
+                                direction = "missed",
+                                source = appName,
+                                timestamp = System.currentTimeMillis(),
+                                displayName = callerInfo
+                            )
+                            unifiedMonitor.onCallEnded(callIdMissed, System.currentTimeMillis())
+                        }
+                    }
+                    isIncomingCall(title, text, bigText, subText) -> {
+                        if (isUnknownCaller(callerInfo)) return@launch
+                        val callTimestamp = System.currentTimeMillis()
+                        val callId = "voip_${appName}_$callTimestamp"
                         unifiedMonitor.onCallDetected(
-                            callId = callIdMissed,
+                            callId = callId,
                             number = extractedNumber,
-                            direction = "missed",
+                            direction = "incoming",
                             source = appName,
-                            timestamp = System.currentTimeMillis(),
+                            timestamp = callTimestamp,
                             displayName = callerInfo
                         )
-                        unifiedMonitor.onCallEnded(callIdMissed, System.currentTimeMillis())
+                        activeVoipCalls[notificationKey] = TrackedVoipCall(callId, callTimestamp)
+                        triggerVoipCallerPopup(callerInfo, extractedNumber)
+                    }
+                    isPossibleOutgoingCall(title, text, bigText, subText) -> {
+                        if (isUnknownCaller(callerInfo)) return@launch
+                        val callTimestamp = System.currentTimeMillis()
+                        val callId = "voip_${appName}_$callTimestamp"
+                        unifiedMonitor.onCallDetected(
+                            callId = callId,
+                            number = extractedNumber,
+                            direction = "outgoing",
+                            source = appName,
+                            timestamp = callTimestamp,
+                            displayName = callerInfo
+                        )
+                        activeVoipCalls[notificationKey] = TrackedVoipCall(callId, callTimestamp)
+                    }
+                    else -> {
+                        // Genuinely unclassifiable. Record it as OTHER rather than
+                        // dropping it silently, and capture a diagnostic sample.
+                        recordUnrecognizedCallNotification(appName, title, text, bigText, subText)
+
+                        if (!isUnknownCaller(callerInfo)) {
+                            val callId = "voip_${appName}_${System.currentTimeMillis()}"
+                            unifiedMonitor.onCallDetected(
+                                callId = callId,
+                                number = extractedNumber,
+                                direction = "other",
+                                source = appName,
+                                timestamp = System.currentTimeMillis(),
+                                displayName = callerInfo
+                            )
+                            activeVoipCalls[notificationKey] = TrackedVoipCall(callId, System.currentTimeMillis())
+                            // No matching "ended" pattern for this app, so we can't
+                            // reliably time it — close it out immediately with a
+                            // zero/estimated duration rather than leaving it "active"
+                            // indefinitely with no way to end it.
+                            unifiedMonitor.onCallEnded(callId, System.currentTimeMillis())
+                        }
                     }
                 }
-                isIncomingCall(title, text, bigText, subText) -> {
-                    if (isUnknownCaller(callerInfo)) return@launch
-                    val callId = "voip_${appName}_${System.currentTimeMillis()}"
-                    activeVoipCalls[notificationKey] = callId
-                    unifiedMonitor.onCallDetected(
-                        callId = callId,
-                        number = extractedNumber,
-                        direction = "incoming",
-                        source = appName,
-                        timestamp = System.currentTimeMillis(),
-                        displayName = callerInfo
-                    )
-                    triggerVoipCallerPopup(callerInfo, extractedNumber)
-                }
-                isPossibleOutgoingCall(title, text, bigText, subText) -> {
-                    if (isUnknownCaller(callerInfo)) return@launch
-                    val callId = "voip_${appName}_${System.currentTimeMillis()}"
-                    activeVoipCalls[notificationKey] = callId
-                    unifiedMonitor.onCallDetected(
-                        callId = callId,
-                        number = extractedNumber,
-                        direction = "outgoing",
-                        source = appName,
-                        timestamp = System.currentTimeMillis(),
-                        displayName = callerInfo
-                    )
-                }
+            } catch (e: Exception) {
+                if (BuildConfig.DEBUG) Log.e(TAG, "Failed fallback VoIP notification processing", e)
             }
         }
     }
@@ -694,18 +796,65 @@ class WhatsAppNotificationService : NotificationListenerService() {
         val appName = VOIP_PACKAGES[packageName] ?: return
 
         val notificationKey = sbn.key
-        val callId = activeVoipCalls.remove(notificationKey)
-        if (callId != null) {
-            if (BuildConfig.DEBUG) Log.d(TAG, "VoIP notification removed, ending call: $callId ($appName)")
-            unifiedMonitor.onCallEnded(callId, System.currentTimeMillis())
+        val tracked = activeVoipCalls.remove(notificationKey)
+        if (tracked != null) {
+            if (BuildConfig.DEBUG) Log.d(TAG, "VoIP notification removed, ending call: ${tracked.callId} ($appName)")
+            serviceScope.launch {
+                unifiedMonitor.onCallEnded(tracked.callId, System.currentTimeMillis())
+            }
         }
     }
 
     override fun onListenerConnected() {
         super.onListenerConnected()
         if (BuildConfig.DEBUG) Log.d(TAG, "Notification listener connected")
+        reconcileStaleActiveCalls()
     }
 
+    override fun onListenerDisconnected() {
+        super.onListenerDisconnected()
+        if (BuildConfig.DEBUG) Log.w(TAG, "Notification listener disconnected — requesting rebind")
+        // Ask the system to rebind us as soon as possible (API 24+).
+        // Without this, some OEMs (MIUI, EMUI, ColorOS) can leave the listener
+        // unbound indefinitely after Doze/battery-manager kills it, silently
+        // stopping all VoIP call logging until the user manually re-toggles
+        // notification access.
+        requestRebind(
+            ComponentName(applicationContext, WhatsAppNotificationService::class.java)
+        )
+    }
+
+    private fun pruneStaleVoipCalls() {
+        val cutoff = System.currentTimeMillis() - VOIP_CALL_TTL_MS
+        val removed = activeVoipCalls.entries.removeIf { it.value.startTime < cutoff }
+        // optional but useful while you're diagnosing fragmentation:
+        // if (BuildConfig.DEBUG && removed) Log.w(TAG, "Pruned stale VoIP call entries")
+    }
+
+    /**
+     * Called after (re)connecting to the notification listener service.
+     * A rebind means [activeVoipCalls] has been reset (new service instance),
+     * so any VoIP calls this service had marked "active" before the disconnect
+     * can no longer receive their real "ended" event. Close them out now with
+     * a best-effort end time (now) instead of letting them sit until
+     * UnifiedCallMonitor's 4-hour prune silently drops them.
+     */
+    private fun reconcileStaleActiveCalls() {
+        if (!::unifiedMonitor.isInitialized) return
+        serviceScope.launch {
+            val orphaned = unifiedMonitor.endActiveVoipCallsFromOtherSources()
+            if (BuildConfig.DEBUG && orphaned > 0) {
+                Log.w(TAG, "Reconciled $orphaned VoIP call(s) left active across a listener rebind")
+            }
+        }
+    }
+
+    private fun recordUnrecognizedCallNotification(
+        appName: String, title: String, text: String, bigText: String, subText: String
+    ) {
+        if (BuildConfig.DEBUG) Log.w(TAG, "Unrecognized call-app notification from $appName: '$title' / '$text'")
+        CallNotificationDiagnostics.record(applicationContext, appName, title, text, bigText, subText)
+    }
     companion object {
         private const val TAG = "VoIPCallLogger"
         private val VOIP_PACKAGES = mapOf(
@@ -720,6 +869,9 @@ class WhatsAppNotificationService : NotificationListenerService() {
             "com.facebook.orca" to "Messenger",
             "com.google.android.apps.tachyon" to "Google Meet"
         )
+        // VoIP calls essentially never last this long; anything older is an orphan
+        // (dropped "ended"/"removed" notification, listener rebind, etc.)
+        val VOIP_CALL_TTL_MS = java.util.concurrent.TimeUnit.HOURS.toMillis(1)
     }
 
     private enum class CallState {

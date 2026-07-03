@@ -15,10 +15,12 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-class DatabaseHelper private constructor(context: Context) : SQLiteOpenHelper(context.applicationContext, DATABASE_NAME, null, DATABASE_VERSION) {
+class DatabaseHelper private constructor(context: Context) :
+    SQLiteOpenHelper(context.applicationContext, DATABASE_NAME, null, DATABASE_VERSION) {
 
     companion object {
         private const val TAG = "DatabaseHelper"
+
         @Volatile
         private var instance: DatabaseHelper? = null
 
@@ -27,10 +29,11 @@ class DatabaseHelper private constructor(context: Context) : SQLiteOpenHelper(co
                 instance ?: DatabaseHelper(context.applicationContext).also { instance = it }
             }
         }
-        const val DATABASE_NAME = "whatsapp_call_logs.db"
-        const val DATABASE_VERSION = 2
 
-        // Table name
+        const val DATABASE_NAME = "whatsapp_call_logs.db"
+        const val DATABASE_VERSION = 3   // was 2 — bumped for active_calls table
+
+        // Table name (finished call log)
         const val TABLE_CALL_LOGS = "call_logs"
 
         // Column names
@@ -41,6 +44,15 @@ class DatabaseHelper private constructor(context: Context) : SQLiteOpenHelper(co
         const val COLUMN_CALL_TYPE = "call_type"
         const val COLUMN_SOURCE = "source"
         const val COLUMN_DURATION = "duration"
+
+        // Table name (durable "call in progress" backstop)
+        const val TABLE_ACTIVE_CALLS = "active_calls"
+        const val COL_ACTIVE_CALL_ID = "call_id"
+        const val COL_ACTIVE_NUMBER = "number"
+        const val COL_ACTIVE_CONTACT_NAME = "contact_name"
+        const val COL_ACTIVE_CALL_TYPE = "call_type"
+        const val COL_ACTIVE_SOURCE = "source"
+        const val COL_ACTIVE_START_TIME = "start_time"
     }
 
     override fun onCreate(db: SQLiteDatabase) {
@@ -56,6 +68,7 @@ class DatabaseHelper private constructor(context: Context) : SQLiteOpenHelper(co
             )
         """.trimIndent()
         db.execSQL(createTable)
+        db.execSQL(createActiveCallsTableSql())
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
@@ -70,7 +83,30 @@ class DatabaseHelper private constructor(context: Context) : SQLiteOpenHelper(co
                 onCreate(db)
             }
         }
+        if (oldVersion < 3) {
+            try {
+                db.execSQL(createActiveCallsTableSql())
+            } catch (e: Exception) {
+                // Table may already exist from a fresh install; ignore.
+                if (BuildConfig.DEBUG) Log.w(TAG, "active_calls table creation skipped", e)
+            }
+        }
     }
+
+    private fun createActiveCallsTableSql() = """
+        CREATE TABLE IF NOT EXISTS $TABLE_ACTIVE_CALLS (
+            $COL_ACTIVE_CALL_ID TEXT PRIMARY KEY,
+            $COL_ACTIVE_NUMBER TEXT NOT NULL,
+            $COL_ACTIVE_CONTACT_NAME TEXT NOT NULL,
+            $COL_ACTIVE_CALL_TYPE TEXT NOT NULL,
+            $COL_ACTIVE_SOURCE TEXT NOT NULL,
+            $COL_ACTIVE_START_TIME INTEGER NOT NULL
+        )
+    """.trimIndent()
+
+    // -------------------------------------------------------------------
+    // Finished call log (unchanged from before this feature was added)
+    // -------------------------------------------------------------------
 
     private fun isDuplicateCall(callerInfo: String, timestamp: Long, source: String, timeWindowMs: Long = 3000): Boolean {
         val query = """
@@ -88,7 +124,6 @@ class DatabaseHelper private constructor(context: Context) : SQLiteOpenHelper(co
         return false
     }
 
-    // Update your insertCallLogWithType method to check for duplicates
     fun insertCallLogWithType(
         callerInfo: String,
         timestamp: Long,
@@ -108,7 +143,6 @@ class DatabaseHelper private constructor(context: Context) : SQLiteOpenHelper(co
             return false
         }
 
-        // Proceed with insertion...
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
         val formattedDateTime = Instant.ofEpochMilli(timestamp)
             .atZone(ZoneId.systemDefault())
@@ -162,5 +196,69 @@ class DatabaseHelper private constructor(context: Context) : SQLiteOpenHelper(co
     fun clearAllCallLogs(): Boolean {
         val result = writableDatabase.delete(TABLE_CALL_LOGS, null, null)
         return result >= 0
+    }
+
+    // -------------------------------------------------------------------
+    // Durable "active call" backstop (survives process death mid-call)
+    // -------------------------------------------------------------------
+
+    data class PersistedActiveCall(
+        val callId: String,
+        val number: String,
+        val contactName: String,
+        val callType: String,
+        val source: String,
+        val startTime: Long
+    )
+
+    fun upsertActiveCall(call: PersistedActiveCall): Boolean {
+        val values = ContentValues().apply {
+            put(COL_ACTIVE_CALL_ID, call.callId)
+            put(COL_ACTIVE_NUMBER, call.number)
+            put(COL_ACTIVE_CONTACT_NAME, call.contactName)
+            put(COL_ACTIVE_CALL_TYPE, call.callType)
+            put(COL_ACTIVE_SOURCE, call.source)
+            put(COL_ACTIVE_START_TIME, call.startTime)
+        }
+        return try {
+            writableDatabase.insertWithOnConflict(
+                TABLE_ACTIVE_CALLS, null, values, SQLiteDatabase.CONFLICT_REPLACE
+            ) != -1L
+        } catch (e: Exception) {
+            if (BuildConfig.DEBUG) Log.e(TAG, "Failed to persist active call", e)
+            false
+        }
+    }
+
+    fun removeActiveCall(callId: String) {
+        try {
+            writableDatabase.delete(TABLE_ACTIVE_CALLS, "$COL_ACTIVE_CALL_ID = ?", arrayOf(callId))
+        } catch (e: Exception) {
+            if (BuildConfig.DEBUG) Log.e(TAG, "Failed to remove active call", e)
+        }
+    }
+
+    fun getAllActiveCalls(): List<PersistedActiveCall> {
+        val result = mutableListOf<PersistedActiveCall>()
+        return try {
+            readableDatabase.rawQuery("SELECT * FROM $TABLE_ACTIVE_CALLS", null).use { cursor ->
+                while (cursor.moveToNext()) {
+                    result.add(
+                        PersistedActiveCall(
+                            callId = getSafeString(cursor, COL_ACTIVE_CALL_ID, "") ?: "",
+                            number = getSafeString(cursor, COL_ACTIVE_NUMBER, "") ?: "",
+                            contactName = getSafeString(cursor, COL_ACTIVE_CONTACT_NAME, "") ?: "",
+                            callType = getSafeString(cursor, COL_ACTIVE_CALL_TYPE, "UNKNOWN") ?: "UNKNOWN",
+                            source = getSafeString(cursor, COL_ACTIVE_SOURCE, "") ?: "",
+                            startTime = getSafeLong(cursor, COL_ACTIVE_START_TIME, 0L)
+                        )
+                    )
+                }
+            }
+            result
+        } catch (e: Exception) {
+            if (BuildConfig.DEBUG) Log.e(TAG, "Failed to read active calls", e)
+            emptyList()
+        }
     }
 }

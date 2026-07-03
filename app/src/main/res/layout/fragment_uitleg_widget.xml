@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true">
+    android:fillViewport="true"
+    android:background="?attr/colorSurface">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -10,57 +12,69 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <LinearLayout
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/section_frame"
-            android:padding="8dp">
+            app:cardCornerRadius="8dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="?attr/colorSurface">
 
-            <TextView
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@color/primary_blue_dark"
-                android:text="@string/uitleg_widget_title"
-                android:textAlignment="center"
-                android:textColor="@color/surface_light"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:padding="4dp"
-                android:layout_marginBottom="8dp" />
+                android:orientation="vertical"
+                android:padding="8dp">
 
-            <Button
-                android:id="@+id/save_widget"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="@string/stoor"
-                android:enabled="false"
-                android:textColor="#FFFF"
-                android:background="@drawable/buttonshape"
-                android:layout_marginBottom="8dp" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/colorPrimary"
+                    android:text="@string/uitleg_widget_title"
+                    android:textAlignment="center"
+                    android:textColor="?attr/colorOnPrimary"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:padding="4dp"
+                    android:layout_marginBottom="8dp" />
 
-            <CheckBox
-                android:id="@+id/widget_Doop_select"
-                android:text="@string/uitleg_doopdatum"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-            <CheckBox
-                android:id="@+id/widget_Belydenis_select"
-                android:text="@string/uitleg_belydenisdatum"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-            <CheckBox
-                android:id="@+id/widget_Huwelik_select"
-                android:text="@string/uitleg_huweliksdatum"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-            <CheckBox
-                android:id="@+id/widget_Sterf"
-                android:text="@string/uitleg_sterfdatum"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-        </LinearLayout>
+                <Button
+                    android:id="@+id/save_widget"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="@string/stoor"
+                    android:textColor="?attr/colorOnPrimary"
+                    style="@style/Widget.WinkerkReader.Button.Primary"
+                    android:enabled="false"
+                    android:layout_marginBottom="8dp" />
+
+                <CheckBox
+                    android:id="@+id/widget_Doop_select"
+                    android:text="@string/uitleg_doopdatum"
+                    android:textColor="?attr/colorOnSurface"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+                <CheckBox
+                    android:id="@+id/widget_Belydenis_select"
+                    android:text="@string/uitleg_belydenisdatum"
+                    android:textColor="?attr/colorOnSurface"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+                <CheckBox
+                    android:id="@+id/widget_Huwelik_select"
+                    android:text="@string/uitleg_huweliksdatum"
+                    android:textColor="?attr/colorOnSurface"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+                <CheckBox
+                    android:id="@+id/widget_Sterf"
+                    android:text="@string/uitleg_sterfdatum"
+                    android:textColor="?attr/colorOnSurface"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
     </LinearLayout>
 </ScrollView>

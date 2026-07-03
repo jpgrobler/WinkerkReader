@@ -9,7 +9,8 @@
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:fillViewport="true">
+        android:fillViewport="true"
+        android:background="?attr/colorSurface">
 
         <LinearLayout
             android:id="@+id/content_container"
@@ -25,15 +26,15 @@
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="4dp"
                 android:layout_marginBottom="6dp"
-                android:background="@drawable/bg_badge_red"
+                android:background="?attr/colorPrimary"
                 android:alpha="0.3" />
 
-            <!-- Title -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/detail_stel_herinnering"
                 android:textAppearance="?attr/textAppearanceTitleMedium"
+                android:textColor="?attr/colorOnSurface"
                 android:paddingHorizontal="24dp"
                 android:paddingBottom="8dp" />
             <ProgressBar
@@ -201,14 +202,12 @@
             <!-- ===== CONFIRM BUTTON ===== -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_bevestig"
+                style="@style/Widget.Material3.Button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginHorizontal="24dp"
                 android:layout_marginTop="16dp"
-                android:textColor="@color/text_primary_dark"
-                android:background="@drawable/buttonshape"
-                app:backgroundTint="@null"
                 android:text="@string/herinnering_bevestig"
                 android:enabled="false" />
 

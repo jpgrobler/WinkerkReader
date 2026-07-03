@@ -14,7 +14,7 @@ object WinkerkContract {
     const val DATABASE_VERSION = 1
     const val CONTENT_AUTHORITY = "za.co.jpsoft.winkerkreader"
     private val BASE_CONTENT_URI = Uri.parse("content://$CONTENT_AUTHORITY")
-
+    const val KEY_INACTIVE_BG_COLOR = "inactive_bg_color"
     const val SEARCH_LIST_REQUEST = 16895
     const val FILTER_LIST_REQUEST = 16896
     const val PREFS_USER_INFO = "WinkerkReader_UserInfo"

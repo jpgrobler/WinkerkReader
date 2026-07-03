@@ -6,396 +6,460 @@
     android:layout_height="fill_parent"
     android:fitsSystemWindows="true"
     tools:context="za.co.jpsoft.winkerkreader.ui.activities.MainActivity">
-<LinearLayout
-    android:id="@+id/main_main"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical">
-
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:id="@+id/search_item_block">
-        <TextView
-            android:layout_alignParentStart="true"
-            android:layout_centerVertical="true"
-            android:textAlignment="center"
-            android:textColor="@android:color/white"
-            android:background="@android:color/darker_gray"
-            android:textStyle="bold"
-            android:paddingStart="10dp"
-            android:paddingEnd="0dp"
-            android:layout_toStartOf="@+id/main_search_text_close"
-            android:layout_width="match_parent"
-            android:layout_height="30dp"
-            android:id="@+id/search_text"
-            android:text="@string/main_soek"
-            android:maxLines="1"
-            android:ellipsize="marquee"
-            android:marqueeRepeatLimit="marquee_forever"
-            android:visibility="visible"/>
-        <ImageView
-            android:layout_alignParentEnd="true"
-            android:id="@+id/main_search_text_close"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:contentDescription="@string/close_search_description"
-            android:src="@drawable/ic_close"/>
-    </RelativeLayout>
 
     <LinearLayout
+        android:id="@+id/main_main"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:id="@+id/main">
-    <ProgressBar
-        android:id="@+id/indeterminateBar"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:visibility="visible" />
+        android:background="?attr/colorPrimary">>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:id="@+id/search_item_block">
+            <TextView
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:textAlignment="center"
+                android:textColor="?attr/colorOnSurface"
+                android:background="?attr/colorSurfaceVariant"
+                android:textStyle="bold"
+                android:paddingStart="10dp"
+                android:paddingEnd="0dp"
+                android:layout_toStartOf="@+id/main_search_text_close"
+                android:layout_width="match_parent"
+                android:layout_height="30dp"
+                android:id="@+id/search_text"
+                android:text="@string/main_soek"
+                android:maxLines="1"
+                android:ellipsize="marquee"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:visibility="visible"/>
+
+            <ImageView
+                android:id="@+id/main_search_text_close"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_alignParentEnd="true"
+                android:contentDescription="@string/close_search_description"
+                app:srcCompat="@drawable/ic_close2" />
+        </RelativeLayout>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
-            <TextView
-                android:id="@+id/version"
-                android:layout_width="wrap_content"
+            android:orientation="vertical"
+            android:id="@+id/main">
+            <ProgressBar
+                android:id="@+id/indeterminateBar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingEnd="4dp"
-                android:paddingStart="0dp"
-                android:visibility="gone"
-                android:text="@string/version_prefix" />
-            <TextView
-                android:paddingLeft="4dp"
-                android:paddingRight="4dp"
-                android:layout_weight="1"
-                android:layout_width="0dp"
+                android:progressTint="?attr/colorPrimary"
+                android:visibility="visible" />
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/main_gemeentenaam"
-                android:id="@+id/main_gemeentenaam"
-                android:ellipsize="marquee"
-                android:scrollHorizontally="true"
-                android:marqueeRepeatLimit="marquee_forever"
-                android:textAlignment="center"
-                android:textColor="@android:color/black"
-                android:maxLines="1"
-                android:layout_marginTop="2dp"
-                android:visibility="visible"/>
-            <TextView
-                android:paddingStart="4dp"
-                android:paddingEnd="0dp"
-                android:id="@+id/main_Count"
-                android:layout_width="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:id="@+id/version"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingEnd="4dp"
+                    android:paddingStart="0dp"
+                    android:visibility="gone"
+                    android:text="@string/version_prefix"
+                    android:textColor="?attr/colorOnSurface" />
+                <TextView
+                    android:paddingLeft="4dp"
+                    android:paddingRight="4dp"
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/main_gemeentenaam"
+                    android:id="@+id/main_gemeentenaam"
+                    android:ellipsize="marquee"
+                    android:scrollHorizontally="true"
+                    android:marqueeRepeatLimit="marquee_forever"
+                    android:textAlignment="center"
+                    android:textColor="?attr/colorOnPrimary"
+                    android:maxLines="1"
+                    android:layout_marginTop="2dp"
+                    android:visibility="visible"/>
+                <TextView
+                    android:paddingStart="4dp"
+                    android:paddingEnd="0dp"
+                    android:id="@+id/main_Count"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/main_count_symbol"
+                    android:textColor="?attr/colorOnPrimary"
+                    android:layout_marginTop="2dp"
+                    android:layout_marginEnd="4dp" />
+                <TextView
+                    android:textStyle="bold"
+                    android:layout_marginTop="2dp"
+                    android:id="@+id/sortorder"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/main_sortorder"
+                    android:textColor="?attr/colorOnPrimary"  />
+            </LinearLayout>
+
+            <ProgressBar
+                android:id="@+id/main_indeterminateBar3"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/main_count_symbol"
-                android:layout_marginTop="2dp"
-                android:layout_marginEnd="4dp" />
-            <TextView
-                android:textStyle="bold"
-                android:layout_marginTop="2dp"
-                android:id="@+id/sortorder"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/main_sortorder"/>
+                android:focusedByDefault="true"
+                android:progressTint="?attr/colorPrimary"
+                android:visibility="visible" />
         </LinearLayout>
-        <ProgressBar
-            android:id="@+id/main_indeterminateBar3"
-            style="?android:attr/progressBarStyleHorizontal"
-            android:focusedByDefault="true"
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/lidmaat_list"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:visibility="visible" />
+            android:scrollbars="vertical"
+            android:background="?attr/colorSurface" />
+
     </LinearLayout>
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/lidmaat_list"
+    <!-- filter -->
+    <LinearLayout
+        android:id="@+id/main_filter"
+        android:visibility="gone"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:scrollbars="vertical" />
+        android:orientation="vertical"
+        android:background="?attr/colorSurface">
 
-</LinearLayout>
-<LinearLayout
-android:id="@+id/main_filter"
-android:visibility="gone"
-android:layout_width="match_parent"
-android:layout_height="wrap_content"
-android:orientation="vertical">
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_gravity="center_horizontal"
-        android:gravity="center_vertical">
-
-        <Button
-            android:id="@+id/filter_aktief"
-            android:layout_height="30dp"
-            android:layout_width="30dp"
-            android:background="@drawable/aktief0"
-            app:backgroundTint="@null"
-            android:backgroundTintMode="src_over"
-            android:layout_alignParentStart="true" />
-        <TextView
-            android:layout_width="wrap_content"
+        <RelativeLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_toEndOf="@+id/filter_aktief"
-            android:layout_margin="5dp"
-            android:text="@string/filter_aktief_text"/>
-
-        <Button
-            android:id="@+id/filter_onaktief"
-            android:layout_height="30dp"
-            android:layout_width="30dp"
-            android:background="@drawable/onaktief"
-            app:backgroundTint="@null"
-            android:backgroundTintMode="src_over"
-            android:layout_below="@+id/filter_aktief"/>
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_toEndOf="@+id/filter_onaktief"
-            android:layout_below="@+id/filter_aktief"
-            android:layout_margin="2dp"
-            android:text="@string/filter_onaktief_text"/>
-
-        <Button
-            android:id="@+id/run_filter2"
-            android:layout_height="50dp"
-            android:layout_width="50dp"
-            android:background="@mipmap/ic_run"
-            app:backgroundTint="@null"
-            android:backgroundTintMode="src_over"
-            android:layout_centerHorizontal="true"/>
-
-        <Button
-            android:id="@+id/cancel_filter2"
-            android:layout_height="30dp"
-            android:layout_width="30dp"
-            android:background="@drawable/ic_close"
-            app:backgroundTint="@null"
-            android:backgroundTintMode="src_over"
-            android:layout_alignParentEnd="true"
+            android:orientation="horizontal"
+            android:layout_gravity="center_horizontal"
             android:gravity="center_vertical"
-            android:layout_centerVertical="true"/>
-    </RelativeLayout>
-<ScrollView
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+            android:padding="4dp">
 
-        <CheckBox
-            android:id="@+id/filter_selfoon"
-            android:layout_width="110dp"
-            android:layout_height="wrap_content"
-            android:layout_alignParentStart="true"
-            android:text="@string/filter_selfoon" />
-        <CheckBox
-            android:layout_toEndOf="@+id/filter_selfoon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/filter_geslag_check"
-            android:text="@string/filter_geslag"/>
-        <Spinner
-            android:layout_toEndOf="@+id/filter_geslag_check"
-            android:layout_alignParentEnd="true"
-            android:layout_above="@+id/filter_huwelikstatus_opsies"
-            android:id="@+id/filter_geslag_opsies"
-            android:entries="@array/filtergeslagoptions"
-            android:textAlignment="textEnd"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-        </Spinner>
+            <Button
+                android:id="@+id/filter_aktief"
+                android:layout_height="30dp"
+                android:layout_width="30dp"
+                android:background="@drawable/aktief0"
+                app:backgroundTint="@null"
+                android:backgroundTintMode="src_over"
+                android:layout_alignParentStart="true" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@+id/filter_aktief"
+                android:layout_margin="5dp"
+                android:text="@string/filter_aktief_text"
+                android:textColor="?attr/colorOnSurface" />
 
-        <CheckBox
-            android:id="@+id/filter_landlyn"
-            android:layout_width="110dp"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/filter_selfoon"
-            android:text="@string/filter_landlyn" />
-        <CheckBox
-            android:layout_toEndOf="@+id/filter_landlyn"
-            android:layout_below="@+id/filter_selfoon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/filter_huwelikstatus_check"
-            android:text="@string/filter_huwelikstatus"/>
-        <Spinner
-            android:layout_toEndOf="@+id/filter_huwelikstatus_check"
-            android:layout_below="@+id/filter_selfoon"
-            android:layout_above="@+id/filter_lidmaatsakp_opsies"
-            android:id="@+id/filter_huwelikstatus_opsies"
-            android:entries="@array/filterhuwelikstatusoptions"
-            android:textAlignment="textEnd"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-        </Spinner>
+            <Button
+                android:id="@+id/filter_onaktief"
+                android:layout_height="30dp"
+                android:layout_width="30dp"
+                android:background="@drawable/onaktief2"
+                app:backgroundTint="@null"
+                android:backgroundTintMode="src_over"
+                android:layout_below="@+id/filter_aktief"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@+id/filter_onaktief"
+                android:layout_below="@+id/filter_aktief"
+                android:layout_margin="2dp"
+                android:text="@string/filter_onaktief_text"
+                android:textColor="?attr/colorOnSurface" />
 
-        <CheckBox
-            android:id="@+id/filter_epos"
-            android:layout_width="110dp"
-            android:layout_height="wrap_content"
-            android:layout_alignParentStart="true"
-            android:layout_below="@+id/filter_landlyn"
-            android:text="@string/filter_epos" />
-        <CheckBox
-            android:layout_toEndOf="@+id/filter_epos"
-            android:layout_below="@+id/filter_landlyn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/filter_lidmaatsakapstatus_check"
-            android:text="@string/filter_lidmaatskap"/>
-        <Spinner
-            android:layout_alignParentEnd="true"
-            android:layout_toEndOf="@+id/filter_lidmaatsakapstatus_check"
-            android:layout_below="@+id/filter_landlyn"
-            android:layout_above="@+id/filter_wyk_opsies"
-            android:id="@+id/filter_lidmaatsakp_opsies"
-            android:entries="@array/filterlidmaatsakpstatusoptions"
-            android:textAlignment="textEnd"
+            <Button
+                android:id="@+id/run_filter2"
+                android:layout_height="50dp"
+                android:layout_width="50dp"
+                android:background="@drawable/ic_run"
+                app:backgroundTint="@null"
+                android:backgroundTintMode="src_over"
+                android:layout_centerHorizontal="true"/>
+
+            <Button
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:id="@+id/cancel_filter2"
+                android:layout_height="48dp"
+                android:layout_width="48dp"
+                android:background="@drawable/ic_close2"
+                app:backgroundTint="@null"
+                android:backgroundTintMode="src_over"
+                android:layout_alignParentEnd="true"
+                android:gravity="center_vertical"
+                android:layout_centerVertical="true"
+                />
+        </RelativeLayout>
+
+        <ScrollView
+            android:descendantFocusability="beforeDescendants"
+            android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-        </Spinner>
-        <CheckBox
-            android:id="@+id/filter_gesinshoof"
-            android:layout_alignParentStart="true"
-            android:layout_below="@+id/filter_epos"
-            android:layout_width="110dp"
-            android:layout_height="wrap_content"
-            android:text="@string/filter_gesinshoof" />
-        <CheckBox
-            android:layout_below="@+id/filter_epos"
-            android:layout_toEndOf="@+id/filter_gesinshoof"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/filter_wyk_check"
-            android:text="@string/filter_wyk"/>
-        <Spinner
-            android:layout_below="@+id/filter_epos"
-            android:layout_toEndOf="@+id/filter_wyk_check"
-            android:layout_alignParentEnd="true"
-            android:layout_above="@+id/filter_wyk"
-            android:textAlignment="textEnd"
-            android:id="@+id/filter_wyk_opsies"
-            android:entries="@array/filtertextoptions"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-        </Spinner>
-        <EditText
-            android:layout_below="@+id/filter_wyk_check"
-            android:layout_alignParentEnd="true"
-            android:id="@+id/filter_wyk"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_toEndOf="@+id/filter_wyk_check" />
-        <CheckBox
-            android:layout_alignParentStart="true"
-            android:layout_below="@+id/filter_wyk"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/filter_ouderdom_check"
-            android:text="@string/filter_ouderdom"/>
-        <Spinner
-            android:layout_below="@+id/filter_wyk"
-            android:layout_above="@+id/en"
-            android:layout_toEndOf="@+id/filter_ouderdom_check"
-            android:id="@+id/filter_ouderdom_opsies"
-            android:textAlignment="textEnd"
-            android:entries="@array/filterouderdomoptions"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-        </Spinner>
-        <EditText
-            android:layout_below="@+id/filter_ouderdom_check"
-            android:layout_alignParentStart="true"
-            android:layout_toStartOf="@+id/en"
-            android:id="@+id/filter_ouderdom1"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-        <TextView
-            android:id="@+id/en"
-            android:layout_below="@+id/filter_ouderdom_check"
-            android:layout_above="@+id/filter_van_opsies"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:gravity="center_vertical"
-            android:text="@string/filter_en"/>
-        <EditText
-            android:layout_below="@+id/filter_ouderdom_check"
-            android:layout_alignParentEnd="true"
-            android:layout_toEndOf="@+id/en"
-            android:id="@+id/filter_ouderdom2"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-        <CheckBox
-            android:layout_below="@id/filter_ouderdom1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/filter_van_check"
-            android:text="@string/filter_van"/>
-        <Spinner
-            android:layout_below="@id/filter_ouderdom1"
-            android:layout_above="@+id/filter_van"
-            android:layout_toEndOf="@+id/filter_van_check"
-            android:textAlignment="textEnd"
-            android:id="@+id/filter_van_opsies"
-            android:entries="@array/filtertextoptions"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-        </Spinner>
-        <EditText
-            android:layout_below= "@+id/filter_van_check"
-            android:id="@+id/filter_van"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-        <CheckBox
-            android:layout_below="@+id/filter_van"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/filter_noemnaam_check"
-            android:text="@string/filter_noemnaam"/>
-        <Spinner
-            android:layout_below="@+id/filter_van"
-            android:layout_above="@+id/filter_noemnaam"
-            android:layout_toEndOf="@+id/filter_noemnaam_check"
-            android:layout_centerHorizontal="true"
-            android:id="@+id/filter_noemnaam_opsies"
-            android:textAlignment="textEnd"
-            android:entries="@array/filtertextoptions"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-        </Spinner>
-        <EditText
-            android:layout_below="@+id/filter_noemnaam_check"
-            android:id="@+id/filter_noemnaam"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-        <CheckBox
-            android:layout_below="@id/filter_noemnaam"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/filter_nooiensvan_check"
-            android:text="@string/filter_nooiensvan"/>
-        <Spinner
-            android:layout_below="@id/filter_noemnaam"
-            android:layout_above="@+id/filter_nooiensvan"
-            android:layout_toEndOf="@+id/filter_nooiensvan_check"
-            android:textAlignment="textEnd"
-            android:id="@+id/filter_nooiensvan_opsies"
-            android:entries="@array/filtertextoptions"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-        </Spinner>
-        <EditText
-            android:layout_below= "@+id/filter_nooiensvan_check"
-            android:id="@+id/filter_nooiensvan"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-    </RelativeLayout>
-</ScrollView>
-</LinearLayout>
+            android:layout_height="match_parent"
+            android:background="?attr/colorSurface">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="8dp">
+
+                <!-- Row 1: Selfoon (checkbox) + Geslag (checkbox + spinner) -->
+                <CheckBox
+                    android:id="@+id/filter_selfoon"
+                    android:layout_width="110dp"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:text="@string/filter_selfoon"
+                    android:textColor="?attr/colorOnSurface" />
+                <CheckBox
+                    android:layout_toEndOf="@+id/filter_selfoon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/filter_geslag_check"
+                    android:text="@string/filter_geslag"
+                    android:textColor="?attr/colorOnSurface"/>
+                <Spinner
+                    android:layout_toEndOf="@+id/filter_geslag_check"
+                    android:layout_alignParentEnd="true"
+                    android:layout_above="@+id/filter_huwelikstatus_opsies"
+                    android:id="@+id/filter_geslag_opsies"
+                    android:entries="@array/filtergeslagoptions"
+                    android:textAlignment="textEnd"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="?attr/colorOnSurface" />
+
+                <!-- Row 2: Landlyn + Huwelikstatus -->
+                <CheckBox
+                    android:id="@+id/filter_landlyn"
+                    android:layout_width="110dp"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/filter_selfoon"
+                    android:text="@string/filter_landlyn"
+                    android:textColor="?attr/colorOnSurface" />
+                <CheckBox
+                    android:layout_toEndOf="@+id/filter_landlyn"
+                    android:layout_below="@+id/filter_selfoon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/filter_huwelikstatus_check"
+                    android:text="@string/filter_huwelikstatus"
+                    android:textColor="?attr/colorOnSurface"/>
+                <Spinner
+                    android:layout_toEndOf="@+id/filter_huwelikstatus_check"
+                    android:layout_below="@+id/filter_selfoon"
+                    android:layout_above="@+id/filter_lidmaatsakp_opsies"
+                    android:id="@+id/filter_huwelikstatus_opsies"
+                    android:entries="@array/filterhuwelikstatusoptions"
+                    android:textAlignment="textEnd"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="?attr/colorOnSurface" />
+
+                <!-- Row 3: Epos + Lidmaatskap -->
+                <CheckBox
+                    android:id="@+id/filter_epos"
+                    android:layout_width="110dp"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_below="@+id/filter_landlyn"
+                    android:text="@string/filter_epos"
+                    android:textColor="?attr/colorOnSurface" />
+                <CheckBox
+                    android:layout_toEndOf="@+id/filter_epos"
+                    android:layout_below="@+id/filter_landlyn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/filter_lidmaatsakapstatus_check"
+                    android:text="@string/filter_lidmaatskap"
+                    android:textColor="?attr/colorOnSurface"/>
+                <Spinner
+                    android:layout_alignParentEnd="true"
+                    android:layout_toEndOf="@+id/filter_lidmaatsakapstatus_check"
+                    android:layout_below="@+id/filter_landlyn"
+                    android:layout_above="@+id/filter_wyk_opsies"
+                    android:id="@+id/filter_lidmaatsakp_opsies"
+                    android:entries="@array/filterlidmaatsakpstatusoptions"
+                    android:textAlignment="textEnd"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="?attr/colorOnSurface" />
+
+                <!-- Row 4: Gesinshoof + Wyk -->
+                <CheckBox
+                    android:id="@+id/filter_gesinshoof"
+                    android:layout_alignParentStart="true"
+                    android:layout_below="@+id/filter_epos"
+                    android:layout_width="110dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/filter_gesinshoof"
+                    android:textColor="?attr/colorOnSurface" />
+                <CheckBox
+                    android:layout_below="@+id/filter_epos"
+                    android:layout_toEndOf="@+id/filter_gesinshoof"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/filter_wyk_check"
+                    android:text="@string/filter_wyk"
+                    android:textColor="?attr/colorOnSurface"/>
+                <Spinner
+                    android:layout_below="@+id/filter_epos"
+                    android:layout_toEndOf="@+id/filter_wyk_check"
+                    android:layout_alignParentEnd="true"
+                    android:layout_above="@+id/filter_wyk"
+                    android:textAlignment="textEnd"
+                    android:id="@+id/filter_wyk_opsies"
+                    android:entries="@array/filtertextoptions"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="?attr/colorOnSurface" />
+                <EditText
+                    android:layout_below="@+id/filter_wyk_check"
+                    android:layout_alignParentEnd="true"
+                    android:id="@+id/filter_wyk"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_toEndOf="@+id/filter_wyk_check"
+                    android:textColor="?attr/colorOnSurface"
+                    android:backgroundTint="?attr/colorOnSurface" />
+
+                <!-- Row 5: Ouderdom -->
+                <CheckBox
+                    android:layout_alignParentStart="true"
+                    android:layout_below="@+id/filter_wyk"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/filter_ouderdom_check"
+                    android:text="@string/filter_ouderdom"
+                    android:textColor="?attr/colorOnSurface"/>
+                <Spinner
+                    android:layout_below="@+id/filter_wyk"
+                    android:layout_above="@+id/en"
+                    android:layout_toEndOf="@+id/filter_ouderdom_check"
+                    android:id="@+id/filter_ouderdom_opsies"
+                    android:textAlignment="textEnd"
+                    android:entries="@array/filterouderdomoptions"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="?attr/colorOnSurface" />
+                <EditText
+                    android:layout_below="@+id/filter_ouderdom_check"
+                    android:layout_alignParentStart="true"
+                    android:layout_toStartOf="@+id/en"
+                    android:id="@+id/filter_ouderdom1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="?attr/colorOnSurface"
+                    android:backgroundTint="?attr/colorOnSurface" />
+                <TextView
+                    android:id="@+id/en"
+                    android:layout_below="@+id/filter_ouderdom_check"
+                    android:layout_above="@+id/filter_van_opsies"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:gravity="center_vertical"
+                    android:text="@string/filter_en"
+                    android:textColor="?attr/colorOnSurface" />
+                <EditText
+                    android:layout_below="@+id/filter_ouderdom_check"
+                    android:layout_alignParentEnd="true"
+                    android:layout_toEndOf="@+id/en"
+                    android:id="@+id/filter_ouderdom2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="?attr/colorOnSurface"
+                    android:backgroundTint="?attr/colorOnSurface" />
+
+                <!-- Row 6: Van -->
+                <CheckBox
+                    android:layout_below="@id/filter_ouderdom1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/filter_van_check"
+                    android:text="@string/filter_van"
+                    android:textColor="?attr/colorOnSurface"/>
+                <Spinner
+                    android:layout_below="@id/filter_ouderdom1"
+                    android:layout_above="@+id/filter_van"
+                    android:layout_toEndOf="@+id/filter_van_check"
+                    android:textAlignment="textEnd"
+                    android:id="@+id/filter_van_opsies"
+                    android:entries="@array/filtertextoptions"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="?attr/colorOnSurface" />
+                <EditText
+                    android:layout_below= "@+id/filter_van_check"
+                    android:id="@+id/filter_van"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="?attr/colorOnSurface"
+                    android:backgroundTint="?attr/colorOnSurface" />
+
+                <!-- Row 7: Noemnaam -->
+                <CheckBox
+                    android:layout_below="@+id/filter_van"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/filter_noemnaam_check"
+                    android:text="@string/filter_noemnaam"
+                    android:textColor="?attr/colorOnSurface"/>
+                <Spinner
+                    android:layout_below="@+id/filter_van"
+                    android:layout_above="@+id/filter_noemnaam"
+                    android:layout_toEndOf="@+id/filter_noemnaam_check"
+                    android:layout_centerHorizontal="true"
+                    android:id="@+id/filter_noemnaam_opsies"
+                    android:textAlignment="textEnd"
+                    android:entries="@array/filtertextoptions"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="?attr/colorOnSurface" />
+                <EditText
+                    android:layout_below="@+id/filter_noemnaam_check"
+                    android:id="@+id/filter_noemnaam"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="?attr/colorOnSurface"
+                    android:backgroundTint="?attr/colorOnSurface" />
+
+                <!-- Row 8: Nooiensvan -->
+                <CheckBox
+                    android:layout_below="@id/filter_noemnaam"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/filter_nooiensvan_check"
+                    android:text="@string/filter_nooiensvan"
+                    android:textColor="?attr/colorOnSurface"/>
+                <Spinner
+                    android:layout_below="@id/filter_noemnaam"
+                    android:layout_above="@+id/filter_nooiensvan"
+                    android:layout_toEndOf="@+id/filter_nooiensvan_check"
+                    android:textAlignment="textEnd"
+                    android:id="@+id/filter_nooiensvan_opsies"
+                    android:entries="@array/filtertextoptions"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="?attr/colorOnSurface" />
+                <EditText
+                    android:layout_below= "@+id/filter_nooiensvan_check"
+                    android:id="@+id/filter_nooiensvan"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="?attr/colorOnSurface"
+                    android:backgroundTint="?attr/colorOnSurface" />
+
+            </RelativeLayout>
+        </ScrollView>
+    </LinearLayout>
 </RelativeLayout>

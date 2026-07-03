@@ -1,6 +1,9 @@
 package za.co.jpsoft.winkerkreader.utils
 
 import android.content.ContentValues
+import android.graphics.Typeface
+import android.text.SpannableString
+import android.text.style.StyleSpan
 import android.util.Log
 import android.view.MenuItem
 import android.widget.TextView
@@ -81,6 +84,18 @@ class MenuItemHandler(
                 navigationController.navigateToBediening()
                 true
             }
+            R.id.menu_sorteer_titel -> {
+                val spanString = SpannableString(item.title)
+                spanString.setSpan(StyleSpan(Typeface.BOLD), 0, spanString.length, 0)
+                item.title = spanString
+                true
+            }
+            R.id.menu_andmin_titel -> {
+                val spanString = SpannableString(item.title)
+                spanString.setSpan(StyleSpan(Typeface.BOLD), 0, spanString.length, 0)
+                item.title = spanString
+                true
+            }
             else -> false
         }
     }
@@ -93,63 +108,56 @@ class MenuItemHandler(
     private fun handleTagged(sortOrderView: TextView): Boolean {
         sortOrderView.background = null
         settings.defLayout = "VAN"
-        viewModel.sortOrder = "VAN"
         viewModel.soekList = false
-        (activity as MainActivity).observeDataset()
+        (activity as MainActivity).updateSortOrder("VAN")//viewModel.refresh()//(activity as MainActivity).observeDataset()
         return true
     }
 
     private fun handleSortVan(sortOrderView: TextView): Boolean {
         sortOrderView.background = null
         settings.defLayout = "VAN"
-        viewModel.sortOrder = "VAN"
         viewModel.soekList = false
-        (activity as MainActivity).observeDataset()
+        (activity as MainActivity).updateSortOrder("VAN")//viewModel.refresh()  //(activity as MainActivity).observeDataset()
         return true
     }
 
     private fun handleSortWyk(sortOrderView: TextView): Boolean {
         sortOrderView.background = null
         settings.defLayout = "WYK"
-        viewModel.sortOrder = "WYK"
         viewModel.soekList = false
-        (activity as MainActivity).observeDataset()
+        (activity as MainActivity).updateSortOrder("WYK")//viewModel.refresh()//(activity as MainActivity).observeDataset()
         return true
     }
 
     private fun handleSortOuderdom(sortOrderView: TextView): Boolean {
         sortOrderView.background = null
         settings.defLayout = "OUDERDOM"
-        viewModel.sortOrder = "OUDERDOM"
         viewModel.soekList = false
-        (activity as MainActivity).observeDataset()
+        (activity as MainActivity).updateSortOrder("OUDERDOM")//viewModel.refresh()//(activity as MainActivity).observeDataset()
         return true
     }
 
     private fun handleVerjaar(sortOrderView: TextView): Boolean {
         sortOrderView.background = null
         settings.defLayout = "VERJAAR"
-        viewModel.sortOrder = "VERJAAR"
         viewModel.soekList = false
-        (activity as MainActivity).observeDataset()
+        (activity as MainActivity).updateSortOrder("VERJAAR")//viewModel.refresh()//(activity as MainActivity).observeDataset()
         return true
     }
 
     private fun handleSortAdres(sortOrderView: TextView): Boolean {
         sortOrderView.background = null
         settings.defLayout = "ADRES"
-        viewModel.sortOrder = "ADRES"
         viewModel.soekList = false
-        (activity as MainActivity).observeDataset()
+        (activity as MainActivity).updateSortOrder("ADRES")//viewModel.refresh()//(activity as MainActivity).observeDataset()
         return true
     }
 
     private fun handleSortGesin(sortOrderView: TextView): Boolean {
         sortOrderView.background = null
         settings.defLayout = "GESINNE"
-        viewModel.sortOrder = "GESINNE"
         viewModel.soekList = false
-        (activity as MainActivity).observeDataset()
+        (activity as MainActivity).updateSortOrder("GESINNE")//viewModel.refresh()//(activity as MainActivity).observeDataset()
         return true
     }
 

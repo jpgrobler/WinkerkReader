@@ -1,42 +1,79 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_margin="0dp"
-
     android:background="@drawable/border"
-    android:orientation="horizontal">
-<LinearLayout
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:id="@+id/widget_icons">
-    <ImageView
-        android:id="@+id/widget_image"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:clickable="true"
-        android:src="@drawable/ic_launcher_round"/>
-    <ImageView
-        android:layout_gravity="center_horizontal"
-        android:id="@+id/widget_image2"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
-        android:clickable="false"
-        android:visibility="invisible"
-        android:src="@drawable/bdayw"/>
-    <ImageView
-        android:layout_gravity="center_horizontal"
-        android:id="@+id/widget_image3"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:clickable="true"
-        android:src="@drawable/updates"/>
-</LinearLayout>
+    android:padding="8dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_gravity="center">
+
+        <ImageView
+            android:id="@+id/widget_image"
+            android:layout_width="40dp"
+            android:layout_height="30dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:scaleType="fitXY"
+            android:src="@drawable/ic_launcher_roundw"
+            android:paddingEnd="10dp"
+            />
+
+        <TextView
+            android:id="@+id/widget_header"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="WinkerkReader"
+            android:textColor="#000000"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:paddingBottom="4dp"
+            android:paddingEnd="20dp"
+            android:paddingStart="20dp"/>
+
+        <ImageView
+            android:id="@+id/widget_image3"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:clickable="true"
+            android:src="@drawable/updatew"
+            />
+    </LinearLayout>
+
     <ListView
         android:id="@+id/words"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="1dp"
-        android:layout_marginLeft="1dp" />
+        android:layout_height="0dp"
+        android:layout_weight="2"
+        android:divider="@android:color/transparent"
+        android:background="#FFFFFF" />
+    <TextView
+        android:id="@+id/widget_empty"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Geen komende gebeure"
+        android:textColor="#666666"
+        android:textSize="11sp"
+        android:gravity="center"
+        android:padding="8dp"
+        android:visibility="gone" />
+    <TextView
+        android:id="@+id/widget_update_time"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/widget_last_updated"
+        android:textColor="#666666"
+        android:textSize="11sp"
+        android:gravity="center"
+        android:alpha="0.7" />
+
 </LinearLayout>

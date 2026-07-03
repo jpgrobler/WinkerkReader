@@ -5,11 +5,13 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:padding="16dp"
-    android:hint="@string/template_titel">
+    android:hint="@string/template_titel"
+    android:background="?attr/colorSurface">
 
     <com.google.android.material.textfield.TextInputEditText
         android:id="@+id/et_new_template_title"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:textColor="?attr/colorOnSurface" />
 
 </com.google.android.material.textfield.TextInputLayout>

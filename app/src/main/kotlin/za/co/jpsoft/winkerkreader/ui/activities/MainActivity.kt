@@ -6,8 +6,8 @@ import android.content.ContentUris
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.database.Cursor
-import android.database.sqlite.SQLiteDatabase
 import android.graphics.Color
+import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Bundle
@@ -16,8 +16,9 @@ import android.provider.MediaStore
 import android.provider.Settings
 import android.text.Spannable
 import android.text.SpannableString
-import android.text.style.BackgroundColorSpan
+import android.text.style.ForegroundColorSpan
 import android.text.style.RelativeSizeSpan
+import android.text.style.StyleSpan
 import android.util.Log
 import android.view.GestureDetector
 import android.view.Menu
@@ -27,7 +28,6 @@ import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.ViewCompat
@@ -80,7 +80,19 @@ import java.util.Locale
 import java.util.concurrent.Executors
 import androidx.core.view.isVisible
 import androidx.paging.LoadState
-import za.co.jpsoft.winkerkreader.utils.ReminderEventBus
+import za.co.jpsoft.winkerkreader.data.repositories.ContactRepository
+import za.co.jpsoft.winkerkreader.ui.helpers.MemberListScrollHelper
+import za.co.jpsoft.winkerkreader.ui.controllers.ActivityResultCoordinator
+import za.co.jpsoft.winkerkreader.ui.controllers.ChurchHeaderController
+import za.co.jpsoft.winkerkreader.ui.controllers.MainMenuController
+import za.co.jpsoft.winkerkreader.ui.controllers.MainSearchFilterCoordinator
+import za.co.jpsoft.winkerkreader.ui.controllers.MainStartupCoordinator
+import za.co.jpsoft.winkerkreader.ui.controllers.MainSwipeGestureController
+import za.co.jpsoft.winkerkreader.ui.controllers.MemberListInteractionController
+import za.co.jpsoft.winkerkreader.ui.controllers.PastoralReminderBadgeController
+import za.co.jpsoft.winkerkreader.ui.controllers.StartupActions
+import za.co.jpsoft.winkerkreader.ui.helpers.BirthdayScrollHelper
+import java.time.LocalDate
 
 
 class MainActivity : AppCompatActivity() {
@@ -94,7 +106,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var gestureDetector: GestureDetector
     private lateinit var backgroundExecutor: java.util.concurrent.ExecutorService
     private lateinit var workScheduler: WorkScheduler
-    private lateinit var searchFilterCoordinator: MainSearchFilterCoordinator
+    lateinit var searchFilterCoordinator: MainSearchFilterCoordinator
 
     private lateinit var permissionManager: PermissionManager
     //private lateinit var permissionDialogManager: PermissionDialogManager
@@ -105,17 +117,20 @@ class MainActivity : AppCompatActivity() {
     //private lateinit var mainDataLoader: MainDataLoader
     private lateinit var backPressHandler: BackPressHandler
     private lateinit var authGuard: AppAuthGuard
+    private lateinit var pastoralBadgeController: PastoralReminderBadgeController
+    private lateinit var churchHeaderController: ChurchHeaderController
+    private lateinit var swipeGestureController: MainSwipeGestureController
     private var workInfoObserver: Observer<WorkInfo?> = Observer { }
     private var searchList: ArrayList<SearchCheckBox> = arrayListOf()
     private var bedieningBadgeCount = 0
     private var savedListScroll: MemberListScrollHelper.ScrollState? = null
-
+    private var originalRecordStatusBeforeFilter: String = "0"
     val mainViewModel: MainViewModel by viewModels(
         factoryProducer = { SavedStateViewModelFactory(application, this, intent?.extras) }
     )
     private var currentWorkInfoLiveData: LiveData<WorkInfo?>? = null
-
-
+    private var currentSortOrder: String = ""
+    private var pendingBirthdayOffset: Int? = null
 
     companion object {
         private const val TAG = "Winkerk_MainActivity"
@@ -133,7 +148,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         settingsManager = SettingsManager.getInstance(this)
-        val prefs = getSharedPreferences("backup_prefs", MODE_PRIVATE)
+        //val prefs = getSharedPreferences("backup_prefs", MODE_PRIVATE)
         val dailyEnabled = settingsManager.dailyBackupEnabled // or use a dedicated prefs
         val exportToDownloads = settingsManager.backupExportToDownloads
         if (dailyEnabled) {
@@ -146,6 +161,43 @@ class MainActivity : AppCompatActivity() {
         permissionManager = PermissionManager(this)
         initializeViews()
 
+        churchHeaderController = ChurchHeaderController(
+            activity = this,
+            binding = binding,
+            settingsManager = settingsManager,
+            database = WinkerkDatabase.getInstance(this)
+        )
+        swipeGestureController = MainSwipeGestureController(
+            activity = this,
+            onSwipeLeft = {
+                // Same logic as original onLeftSwipe()
+                when (viewModel.sortOrder) {
+                    "HUWELIK" -> updateSortOrder("VAN")
+                    "VAN"     -> updateSortOrder("GESINNE")
+                    "GESINNE" -> updateSortOrder("WYK")
+                    "WYK"     -> updateSortOrder("OUDERDOM")
+                    "OUDERDOM"-> updateSortOrder("ADRES")
+                    "ADRES"   -> updateSortOrder("VERJAAR")
+                    "VERJAAR" -> updateSortOrder("HUWELIK")
+                    else      -> updateSortOrder("VAN")
+                }
+                viewModel.refresh()
+            },
+            onSwipeRight = {
+                // Same logic as original onRightSwipe()
+                when (viewModel.sortOrder) {
+                    "HUWELIK" -> updateSortOrder("VERJAAR")
+                    "VERJAAR" -> updateSortOrder("ADRES")
+                    "ADRES"   -> updateSortOrder("OUDERDOM")
+                    "OUDERDOM"-> updateSortOrder("WYK")
+                    "WYK"     -> updateSortOrder("GESINNE")
+                    "GESINNE" -> updateSortOrder("VAN")
+                    "VAN"     -> updateSortOrder("HUWELIK")
+                    else      -> updateSortOrder("VAN")
+                }
+                viewModel.refresh()
+            }
+        )
         //permissionDialogManager = PermissionDialogManager(this, permissionManager)
         backgroundExecutor = Executors.newSingleThreadExecutor()
         gestureDetector = GestureDetector(this, SwipeGestureDetector())
@@ -188,36 +240,47 @@ class MainActivity : AppCompatActivity() {
                         permissionManager.requestNotificationPermissions(this@MainActivity)
                     }
                 }
+
                 override fun startMonitoringServiceIfEnabled() {
                     this@MainActivity.startMonitoringServiceIfEnabled()
                 }
+
                 override fun setupViewModel() {
                     this@MainActivity.setupViewModel()
                 }
+
                 override fun setupPermissions() {
                     this@MainActivity.setupPermissions()
                 }
+
                 override fun initializeData() {
                     this@MainActivity.initializeData(null)
                 }
+
                 override fun setupEventHandlers() {
                     this@MainActivity.setupEventHandlers()
                 }
+
                 override fun setupAlarms() {
                     workScheduler.scheduleAll()
                 }
+
                 override fun loadInitialData() {
                     this@MainActivity.loadInitialData()
                 }
+
                 override fun ensureServicesAreRunning() {
                     this@MainActivity.ensureServicesAreRunning()
                 }
+
                 override fun isNotificationAccessEnabled(): Boolean {
                     return permissionManager.isNotificationListenerEnabled()
                 }
+
                 override fun openNotificationSettings() {
                     startActivity(permissionManager.getNotificationListenerIntent())
                 }
+
                 override fun showToast(message: String) {
                     Toast.makeText(this@MainActivity, message, Toast.LENGTH_SHORT).show()
                 }
@@ -246,49 +309,86 @@ class MainActivity : AppCompatActivity() {
             insets
         }
         PastoralDatabase.getInstance(this)
+        pastoralBadgeController = PastoralReminderBadgeController(
+            activity = this,
+            pastoralDb = PastoralDatabase.getInstance(this),
+            memberViewModel = viewModel,   // MemberViewModel
+            mainViewModel = mainViewModel
+        )
+        pastoralBadgeController.setup()
+
         checkForNewerBackup()
         setupViewModelObservers()
-        loadPendingReminderGuids()
-        setupReminderEventBus()
+
+
     }
     private fun setupViewModelObservers() {
-
         lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                mainViewModel.pendingReminderCount.collect { count ->
-                    bedieningBadgeCount = count
-                    invalidateOptionsMenu()
-                }
+            ContactRepository.contactsUpdateFlow.collect {
+                // Contacts updated – refresh visible rows
+                memberListAdapter.rebindVisibleItems(binding.lidmaatList)
             }
         }
+//        lifecycleScope.launch {
+//            repeatOnLifecycle(Lifecycle.State.STARTED) {
+//                mainViewModel.pendingReminderCount.collect { count ->
+//                    bedieningBadgeCount = count
+//                    invalidateOptionsMenu()
+//                }
+//            }
+//        }
     }
 
 
     // ------------------------------------------------------------
     // Filter & cancellation
     // ------------------------------------------------------------
+    fun setOriginalRecordStatusBeforeFilter(status: String) {
+        originalRecordStatusBeforeFilter = status
+    }
 
+    // MainActivity.kt
     fun cancelFilter() {
-        val savedSort = mainViewModel.savedSortOrderBeforeFilter.value
-        if (savedSort != null) {
-            mainViewModel.setSortOrder(savedSort)
-            mainViewModel.setSavedSortOrderBeforeFilter(null)
-            viewModel.sortOrder = savedSort
-            settingsManager.defLayout = savedSort
-            binding.sortorder.text = savedSort
-            binding.sortorder.tag = savedSort
+        if (BuildConfig.DEBUG) Log.d(TAG, "cancelFilter called")
+        recomputeBirthdayOffset()
+        // Get the original sort before any filter was applied
+        val restoreSort = if (searchFilterCoordinator.originalLayoutBeforeFilter.isNotEmpty()) {
+            searchFilterCoordinator.originalLayoutBeforeFilter
+        } else {
+            "VAN"
         }
+        if (BuildConfig.DEBUG) Log.d(TAG, "cancelFilter: restoreSort = $restoreSort")
+
+        // Clear filter state
         clearAppliedFilterList()
         viewModel.soekList = false
+
+        // Restore the sort order
+        updateSortOrder(restoreSort)
+        if (BuildConfig.DEBUG) Log.d(TAG, "cancelFilter: after updateSortOrder, viewModel.sortOrder = ${viewModel.sortOrder}")
+        binding.sortorder.text = restoreSort
+        binding.sortorder.tag = restoreSort
+        // Reset the coordinator's original sort tracker
+        searchFilterCoordinator.originalLayoutBeforeFilter = ""
+        mainViewModel.setSavedSortOrderBeforeFilter(null)  // optional, but keep for safety
+
+        // Show main layout
+        binding.mainMain.visibility = View.VISIBLE
         binding.mainFilter.visibility = View.GONE
         mainViewModel.setFilterVisible(false)
+
+        // Clear summary bar
+        binding.searchText.text = ""
+        binding.searchItemBlock.visibility = View.GONE
+        viewModel.clearFilterSummary()
+
+        // Hide keyboard
         currentFocus?.let {
             val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
             imm.hideSoftInputFromWindow(it.windowToken, 0)
         }
-        // ✅ Force reload with restored mode
-        val mode = searchFilterCoordinator.resolveQueryMode(settingsManager.defLayout)
-        viewModel.loadData(this, mode)
+
+        if (BuildConfig.DEBUG) Log.d(TAG, "cancelFilter finished")
     }
 
     fun setFilterRestoreState(savedSortOrder: String) {
@@ -315,7 +415,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onPause() {
-        savedListScroll = MemberListScrollHelper.saveScrollState(binding.lidmaatList)
+        savedListScroll = MemberListScrollHelper.saveScrollState(binding.lidmaatList, memberListAdapter)
         super.onPause()
     }
 
@@ -326,17 +426,25 @@ class MainActivity : AppCompatActivity() {
                 onAuthenticated = {
                     if (BuildConfig.DEBUG) Log.d(TAG, "Auth callback invoked")
                     startupCoordinator.runOnResume()
-                    mainViewModel.refreshPendingReminderCount()
-                    loadPendingReminderGuids()
-                    loadChurchInfoAndUpdateHeader()
+
+                    pastoralBadgeController.refresh()
+
+                    churchHeaderController.loadAndApply()   // was loadChurchInfoAndUpdateHeader()
+
                 }
             )
         } else {
             if (BuildConfig.DEBUG) Log.d(TAG, "authGuard not initialized, running directly")
             startupCoordinator.runOnResume()
-            mainViewModel.refreshPendingReminderCount()
-            loadPendingReminderGuids()
-            loadChurchInfoAndUpdateHeader()
+
+            pastoralBadgeController.refresh()
+
+            churchHeaderController.loadAndApply()//loadChurchInfoAndUpdateHeader()
+
+        }
+        syncSortOrderWithSettings()
+        if ((settingsManager.defLayout == "VERJAAR" || settingsManager.defLayout == "VERJAARSDAG") && pendingBirthdayOffset == null) {
+            recomputeBirthdayOffset()
         }
         binding.lidmaatList.post { restoreListScrollIfNeeded() }
         super.onResume()
@@ -426,9 +534,6 @@ class MainActivity : AppCompatActivity() {
             observeDataset = ::observeDataset
         )
 
-        viewModel.getRowCount().observe(this) { count ->
-            binding.mainCount.text = "[$count]"
-        }
         viewModel.getTextLiveData().observe(this) { searchText ->
             binding.searchText.text = searchText
             binding.searchItemBlock.visibility = if (searchText.isEmpty()) View.GONE else View.VISIBLE
@@ -452,28 +557,57 @@ class MainActivity : AppCompatActivity() {
                     }
             }
         }
-        viewModel.getRowCount().observe(this) { count ->
-            binding.mainCount.text = "[$count]"
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.totalCount.collect { count ->
+                    binding.mainCount.text = "[$count]"
+                }
+            }
         }
         lifecycleScope.launch {
             memberListAdapter.loadStateFlow.collect { loadStates ->
                 val isLoading = loadStates.refresh is LoadState.Loading
                 binding.indeterminateBar.visibility = if (isLoading) View.VISIBLE else View.GONE
-//                if (loadStates.refresh is LoadState.NotLoading) {
-//                    restoreListScrollIfNeeded()
-//                }
                 if (loadStates.refresh is LoadState.Error) {
                     // show error message
+                }
+            }
+        }
+        setupBirthdayScrollHandling()
+        setupScrollRestorationObserver()
+    }
+
+
+    private fun setupBirthdayScrollHandling() {
+        lifecycleScope.launch {
+            // Combine load states with total count so we know when all items are loaded
+            memberListAdapter.loadStateFlow.collect { loadStates ->
+                val offset = pendingBirthdayOffset ?: return@collect
+                // Only proceed when both refresh and append are not loading
+                if (loadStates.refresh is LoadState.NotLoading && loadStates.append is LoadState.NotLoading) {
+                    val itemCount = memberListAdapter.itemCount
+                    val totalCount = viewModel.totalCount.value
+                    // We can scroll if we have enough items, or if we've loaded everything
+                    if (itemCount > offset || itemCount == totalCount) {
+                        val target = if (offset < itemCount) offset else itemCount - 1
+                        binding.lidmaatList.post {
+                            (binding.lidmaatList.layoutManager as? LinearLayoutManager)
+                                ?.scrollToPositionWithOffset(target, 0)
+                        }
+                        pendingBirthdayOffset = null // clear after successful scroll
+                    }
                 }
             }
         }
     }
 
     private fun restoreListScrollIfNeeded() {
+        if (pendingBirthdayOffset != null) return   // Prevent overriding birthday scroll
         val state = savedListScroll ?: return
-        if (memberListAdapter.itemCount <= state.position) return
-        MemberListScrollHelper.restoreScrollState(binding.lidmaatList, state)
+        if (memberListAdapter.itemCount == 0) return
+        MemberListScrollHelper.restoreScrollState(binding.lidmaatList, state, memberListAdapter)
         savedListScroll = null
+        scrollRestored = true
     }
 
     private fun setupPermissions() {
@@ -494,6 +628,7 @@ class MainActivity : AppCompatActivity() {
         if (BuildConfig.DEBUG) {
             Log.d(TAG, "initializeData: defLayout = ${settingsManager.defLayout}")
         }
+        currentSortOrder = settingsManager.defLayout
         viewModel.sortOrder = settingsManager.defLayout
         binding.sortorder.text = settingsManager.defLayout
         binding.sortorder.tag = settingsManager.defLayout
@@ -586,31 +721,20 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupChurchNameClickHandler() {
         binding.mainGemeentenaam.setOnClickListener { view ->
-            if (::listInteractionController.isInitialized) {
-                listInteractionController.showGroupFunctionMenu(view)
-            }
+//            if (::listInteractionController.isInitialized) {
+//               // listInteractionController.showGroupFunctionMenu(view)
+//            }
         }
     }
 
     fun applyFilterList(filterList: ArrayList<FilterBox>) {
         searchFilterCoordinator.filterList = filterList
+
     }
 
-//    private fun loadInitialData() {
-//        currentFocus?.let {
-//            val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-//            imm.hideSoftInputFromWindow(it.windowToken, 0)
-//        }
-//        binding.searchItemBlock.visibility = View.GONE
-//        binding.mainCount.text = "[0]"
-//        mainDataLoader.load {
-//            searchFilterCoordinator.refresh()
-//            WhatsAppContactLoader.loadWhatsAppContactsAtomic(this, lifecycleScope)
-//        }
-//    }
     private fun loadInitialData() {
         if (::memberListAdapter.isInitialized && memberListAdapter.itemCount > 0) {
-            savedListScroll = MemberListScrollHelper.saveScrollState(binding.lidmaatList)
+            savedListScroll = MemberListScrollHelper.saveScrollState(binding.lidmaatList, memberListAdapter)
         }
         initializeData(null)
         currentFocus?.let {
@@ -623,11 +747,17 @@ class MainActivity : AppCompatActivity() {
         // Verfris die lys en laai WhatsApp-kontakte.
         searchFilterCoordinator.refresh()
         WhatsAppContactLoader.loadWhatsAppContactsAtomic(this, lifecycleScope)
-        loadChurchInfoAndUpdateHeader()
+
+        churchHeaderController.loadAndApply() //loadChurchInfoAndUpdateHeader()
     }
 
     fun observeDataset() {
-        searchFilterCoordinator.refresh()
+        // Update the search text display
+        binding.searchItemBlock.visibility = if (viewModel.soekList && viewModel.soek.isNotEmpty()) View.VISIBLE else View.GONE
+        binding.sortorder.text = viewModel.sortOrder
+        binding.sortorder.tag = viewModel.sortOrder
+        if (BuildConfig.DEBUG) Log.d(TAG, "observeDataset: setting sortorder text to ${viewModel.sortOrder}")
+        //        searchFilterCoordinator.refresh()
     }
 
     // ------------------------------------------------------------
@@ -643,16 +773,27 @@ class MainActivity : AppCompatActivity() {
             .handleMenuItem(item) || super.onOptionsItemSelected(item)
     }
 
+    override fun onOptionsMenuClosed(menu: Menu) {
+        super.onOptionsMenuClosed(menu)
+
+    }
+
     override fun onPrepareOptionsMenu(menu: Menu): Boolean {
         val bedieningItem = menu.findItem(R.id.action_bediening)
         if (bedieningItem != null) {
-            val title = if (bedieningBadgeCount > 0) {
-                getString(R.string.mainmenu_bediening_badge, bedieningBadgeCount)
+            val count = pastoralBadgeController.badgeCount
+            val title = if (count > 0) {
+                getString(R.string.mainmenu_bediening_badge, count)
             } else {
                 getString(R.string.mainmenu_bediening)
             }
             bedieningItem.title = title
         }
+        val sortItem = menu.findItem(R.id.menu_sorteer_titel)
+        sortItem?.title = getString(R.string.mainmenu_sorteer)
+
+        val adminItem = menu.findItem(R.id.menu_andmin_titel)
+        adminItem?.title = getString(R.string.mainmenu_admin)
         return super.onPrepareOptionsMenu(menu)
     }
 
@@ -661,11 +802,17 @@ class MainActivity : AppCompatActivity() {
     // ------------------------------------------------------------
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        return if (gestureDetector.onTouchEvent(event)) true else super.onTouchEvent(event)
+        return swipeGestureController.onTouchEvent(event) || super.onTouchEvent(event)
     }
 
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {
-        return if (gestureDetector.onTouchEvent(event)) true else super.dispatchTouchEvent(event)
+        // Give the gesture detector first chance; if it consumes, return true.
+        // Otherwise, let the superclass handle it.
+        return if (swipeGestureController.handleTouchEvent(event)) {
+            true
+        } else {
+            super.dispatchTouchEvent(event)
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -732,7 +879,7 @@ class MainActivity : AppCompatActivity() {
             else      -> updateSortOrder("VAN")
         }
         // Reload data
-        observeDataset()
+        viewModel.refresh()//observeDataset()
     }
 
     private fun onRightSwipe() {
@@ -747,137 +894,101 @@ class MainActivity : AppCompatActivity() {
             else      -> updateSortOrder("VAN")
         }
         // Reload data
-        observeDataset()
+        viewModel.refresh()//observeDataset()
     }
-//    private fun onLeftSwipe() {
-//        NavigationHandler.handleLeftSwipe(this, binding.sortorder, viewModel)
-//    }
-//
-//    private fun onRightSwipe() {
-//        NavigationHandler.handleRightSwipe(this, binding.sortorder, viewModel)
-//    }
+
 
     // ------------------------------------------------------------
     // Pending reminders helpers
     // ------------------------------------------------------------
-    private suspend fun getPendingGuids(db: PastoralDatabase): List<String> {
-        // First try the DAO
-        var guids = db.followUpReminderDao().getDistinctMemberGuidsWithPending()
-        if (BuildConfig.DEBUG) Log.d(TAG, "DAO returned ${guids.size} guids: $guids")
-        if (guids.isNotEmpty()) return guids
-
-        // Fallback: raw query
-        val dbFile = getDatabasePath("wkr_pastoral.db")
-        if (BuildConfig.DEBUG) Log.d(TAG, "Pastoral DB file exists? ${dbFile.exists()}, path: ${dbFile.absolutePath}")
-        if (!dbFile.exists()) {
-            if (BuildConfig.DEBUG) Log.e(TAG, "Pastoral DB file does not exist!")
-            return emptyList()
-        }
-
-        val sqliteDb = SQLiteDatabase.openDatabase(
-            dbFile.absolutePath,
-            null,
-            SQLiteDatabase.OPEN_READONLY
-        )
-
-        // First, check if the table exists and has rows
-        val countCursor = sqliteDb.rawQuery("SELECT COUNT(*) FROM follow_up_reminders", null)
-        countCursor.use {
-            if (it.moveToFirst()) {
-                val totalRows = it.getInt(0)
-                if (BuildConfig.DEBUG) Log.d(TAG, "Total rows in follow_up_reminders: $totalRows")
-            }
-        }
-
-        // Now query distinct memberGuid with status = 'PENDING' (case-insensitive)
-        val cursor = sqliteDb.rawQuery(
-            "SELECT DISTINCT memberGuid FROM follow_up_reminders WHERE UPPER(status) = 'PENDING' AND memberGuid IS NOT NULL AND memberGuid != ''",
-            null
-        )
-        val result = mutableListOf<String>()
-        while (cursor.moveToNext()) {
-            val guid = cursor.getString(0)
-            if (!guid.isNullOrBlank()) {
-                result.add(guid)
-                if (BuildConfig.DEBUG) Log.d(TAG, "Found pending guid: $guid")
-            }
-        }
-        cursor.close()
-        sqliteDb.close()
-        if (BuildConfig.DEBUG) Log.d(TAG, "Raw query returned ${result.size} guids: $result")
-        return result
-    }
-    private fun loadPendingReminderGuids() {
-        if (BuildConfig.DEBUG) Log.d(TAG, "loadPendingReminderGuids called")
-        lifecycleScope.launch(Dispatchers.IO) {
-            try {
-                val db = PastoralDatabase.getInstance(applicationContext)
-                val pendingReminders = db.followUpReminderDao().getAllPending()
-                if (BuildConfig.DEBUG) Log.d(TAG, "Pending reminders count: ${pendingReminders.size}")
-
-                val guids = pendingReminders.mapNotNull { reminder ->
-
-                    var guid = reminder.memberGuid?.takeIf { it.isNotBlank() }
-                    if (guid == null) {
-                        // Fallback: resolve by name from memberDisplayNameCache
-                        val name = reminder.memberDisplayNameCache
-                        if (!name.isNullOrBlank()) {
-                            guid = resolveMemberGuidByName(name)
-                            if (guid != null) {
-                                if (BuildConfig.DEBUG) Log.d(TAG, "Resolved GUID '$guid' for name '$name'")
-                            }
-                        }
-                    }
-                    guid
-                }.distinct()
-                if (BuildConfig.DEBUG) Log.d(TAG, "📌 Final pending GUIDs: $guids")
-
-                if (BuildConfig.DEBUG) Log.d(TAG, "📌 Found ${guids.size} distinct member GUIDs with pending reminders: $guids")
-                withContext(Dispatchers.Main) {
-                    viewModel.updatePendingRemindersSet(guids.toSet())
-                }
-            } catch (e: Exception) {
-                if (BuildConfig.DEBUG) Log.e(TAG, "Failed to load pending reminder guids", e)
-            }
-        }
-
-    }
+//    private suspend fun getPendingGuids(db: PastoralDatabase): List<String> {
+//        // First try the DAO
+//        var guids = db.followUpReminderDao().getDistinctMemberGuidsWithPending()
+//        if (BuildConfig.DEBUG) Log.d(TAG, "DAO returned ${guids.size} guids: $guids")
+//        if (guids.isNotEmpty()) return guids
+//
+//        // Fallback: raw query
+//        val dbFile = getDatabasePath("wkr_pastoral.db")
+//        if (BuildConfig.DEBUG) Log.d(TAG, "Pastoral DB file exists? ${dbFile.exists()}, path: ${dbFile.absolutePath}")
+//        if (!dbFile.exists()) {
+//            if (BuildConfig.DEBUG) Log.e(TAG, "Pastoral DB file does not exist!")
+//            return emptyList()
+//        }
+//
+//        val sqliteDb = SQLiteDatabase.openDatabase(
+//            dbFile.absolutePath,
+//            null,
+//            SQLiteDatabase.OPEN_READONLY
+//        )
+//
+//        // First, check if the table exists and has rows
+//        val countCursor = sqliteDb.rawQuery("SELECT COUNT(*) FROM follow_up_reminders", null)
+//        countCursor.use {
+//            if (it.moveToFirst()) {
+//                val totalRows = it.getInt(0)
+//                if (BuildConfig.DEBUG) Log.d(TAG, "Total rows in follow_up_reminders: $totalRows")
+//            }
+//        }
+//
+//        // Now query distinct memberGuid with status = 'PENDING' (case-insensitive)
+//        val cursor = sqliteDb.rawQuery(
+//            "SELECT DISTINCT memberGuid FROM follow_up_reminders WHERE UPPER(status) = 'PENDING' AND memberGuid IS NOT NULL AND memberGuid != ''",
+//            null
+//        )
+//        val result = mutableListOf<String>()
+//        while (cursor.moveToNext()) {
+//            val guid = cursor.getString(0)
+//            if (!guid.isNullOrBlank()) {
+//                result.add(guid)
+//                if (BuildConfig.DEBUG) Log.d(TAG, "Found pending guid: $guid")
+//            }
+//        }
+//        cursor.close()
+//        sqliteDb.close()
+//        if (BuildConfig.DEBUG) Log.d(TAG, "Raw query returned ${result.size} guids: $result")
+//        return result
+//    }
+//    private fun loadPendingReminderGuids() {
+//        if (BuildConfig.DEBUG) Log.d(TAG, "loadPendingReminderGuids called")
+//        lifecycleScope.launch(Dispatchers.IO) {
+//            try {
+//                val db = PastoralDatabase.getInstance(applicationContext)
+//                val pendingReminders = db.followUpReminderDao().getAllPending()
+//                if (BuildConfig.DEBUG) Log.d(TAG, "Pending reminders count: ${pendingReminders.size}")
+//
+//                val guids = pendingReminders.mapNotNull { reminder ->
+//
+//                    var guid = reminder.memberGuid?.takeIf { it.isNotBlank() }
+//                    if (guid == null) {
+//                        // Fallback: resolve by name from memberDisplayNameCache
+//                        val name = reminder.memberDisplayNameCache
+//                        if (!name.isNullOrBlank()) {
+//                            guid = resolveMemberGuidByName(name)
+//                            if (guid != null) {
+//                                if (BuildConfig.DEBUG) Log.d(TAG, "Resolved GUID '$guid' for name '$name'")
+//                            }
+//                        }
+//                    }
+//                    guid
+//                }.distinct()
+//                if (BuildConfig.DEBUG) Log.d(TAG, "📌 Final pending GUIDs: $guids")
+//
+//                if (BuildConfig.DEBUG) Log.d(TAG, "📌 Found ${guids.size} distinct member GUIDs with pending reminders: $guids")
+//                withContext(Dispatchers.Main) {
+//                    viewModel.updatePendingRemindersSet(guids.toSet())
+//                }
+//            } catch (e: Exception) {
+//                if (BuildConfig.DEBUG) Log.e(TAG, "Failed to load pending reminder guids", e)
+//            }
+//        }
+//
+//    }
 
     /**
      * Resolves a member GUID by matching the display name (assuming format "FirstName LastName").
      * Returns null if no match is found.
      */
-    private suspend fun resolveMemberGuidByName(name: String): String? = withContext(Dispatchers.IO) {
-        val parts = name.split(' ')
-        val firstName = parts.firstOrNull() ?: ""
-        val lastName = parts.drop(1).joinToString(" ")
-        if (firstName.isBlank() && lastName.isBlank()) return@withContext null
-
-        val query = """
-        SELECT MemberGUID FROM Members 
-        WHERE Noemnaam LIKE ? AND Van LIKE ?
-        LIMIT 1
-    """.trimIndent()
-        val selectionArgs = arrayOf("%$firstName%", "%$lastName%")
-
-        try {
-            val cursor = contentResolver.query(
-                winkerkEntry.CONTENT_URI,
-                arrayOf(winkerkEntry.LIDMATE_LIDMAATGUID),
-                query,
-                selectionArgs,
-                null
-            )
-            cursor?.use {
-                if (it.moveToFirst()) {
-                    return@withContext it.getString(0)
-                }
-            }
-        } catch (e: Exception) {
-            if (BuildConfig.DEBUG) Log.e(TAG, "Error resolving member GUID by name", e)
-        }
-        null
-    }
+//     setupReminderEventBus
 
         // ------------------------------------------------------------
     // Service & permissions helpers
@@ -925,102 +1036,13 @@ class MainActivity : AppCompatActivity() {
         val notificationEnabled = Settings.Secure.getString(contentResolver, "enabled_notification_listeners")
         return notificationEnabled != null && notificationEnabled.contains(packageName)
     }
-    private fun loadChurchInfoAndUpdateHeader() {
-        lifecycleScope.launch(Dispatchers.IO) {
-            val db = WinkerkDatabase.getInstance(applicationContext).openHelper.writableDatabase
-            val cursor = db.query(
-                "SELECT DISTINCT Gemeente, [Gemeente epos] FROM Members GROUP BY Gemeente, [Gemeente epos]"
-            )
-            var count = 0
-            while (cursor.moveToNext()) {
-                val name = cursor.getString(0) ?: ""
-                val email = cursor.getString(1) ?: ""
-                when (count) {
-                    0 -> {
-                        settingsManager.gemeenteNaam = name
-                        settingsManager.gemeenteEpos = email
-                    }
-                    1 -> {
-                        settingsManager.gemeente2Naam = name
-                        settingsManager.gemeente2Epos = email
-                    }
-                    2 -> {
-                        settingsManager.gemeente3Naam = name
-                        settingsManager.gemeente3Epos = email
-                    }
-                }
-                count++
-            }
-            cursor.close()
-            withContext(Dispatchers.Main) {
-                applyChurchHeader()
-            }
-        }
 
+    private fun syncSortOrderWithSettings() {
+        val currentDefLayout = settingsManager.defLayout
+        if (BuildConfig.DEBUG) Log.d(TAG, "syncSortOrderWithSettings: defLayout = $currentDefLayout")
+        updateSortOrder(currentDefLayout)  // This will only refresh if the sort actually changed
     }
 
-    private fun applyChurchHeader() {
-        val name1 = settingsManager.gemeenteNaam
-        val name2 = settingsManager.gemeente2Naam
-        val name3 = settingsManager.gemeente3Naam
-
-        val fullText = buildString {
-            append(name1)
-            if (name2.isNotEmpty()) {
-                append(" ").append(name2)
-            }
-            if (name3.isNotEmpty()) {
-                append(" ").append(name3)
-            }
-        }
-
-        val spannable = SpannableString(fullText)
-
-        var start = 0
-
-        // Gemeente 1
-        if (name1.isNotEmpty()) {
-            val end1 = name1.length
-            spannable.setSpan(RelativeSizeSpan(0.8f), 0, end1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-            spannable.setSpan(BackgroundColorSpan(settingsManager.gemeenteKleur), 0, end1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-            start = end1 + 1 // +1 for the space
-        }
-
-        // Gemeente 2
-        if (name2.isNotEmpty()) {
-            val end2 = start + name2.length
-            spannable.setSpan(RelativeSizeSpan(0.8f), start, end2, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-            spannable.setSpan(BackgroundColorSpan(settingsManager.gemeente2Kleur), start, end2, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-            start = end2 + 1
-        }
-
-        // Gemeente 3
-        if (name3.isNotEmpty()) {
-            val end3 = start + name3.length
-            spannable.setSpan(RelativeSizeSpan(0.8f), start, end3, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-            spannable.setSpan(BackgroundColorSpan(settingsManager.gemeente3Kleur), start, end3, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-        }
-
-        binding.mainGemeentenaam.text = spannable
-
-        // Set text colour based on the first gemeente’s background (for contrast)
-        val firstColor = settingsManager.gemeenteKleur
-        if (firstColor != -1) {
-            binding.mainGemeentenaam.setTextColor(if (isColorDark(firstColor)) Color.WHITE else Color.BLACK)
-        }
-    }
-
-    /**
-     * Returns true if the luminance of [color] is dark enough to require white text.
-     */
-    private fun isColorDark(color: Int): Boolean {
-        val darkness = 1 - (
-                0.299 * Color.red(color) +
-                        0.587 * Color.green(color) +
-                        0.114 * Color.blue(color)
-                ) / 255
-        return darkness >= 0.5
-    }
 
     // In MainActivity.onCreate, after the UI is ready
     private fun checkForNewerBackup() {
@@ -1119,9 +1141,32 @@ class MainActivity : AppCompatActivity() {
     }
 
 
+    private fun scrollToBirthdayIfLoaded() {
+        val offset = pendingBirthdayOffset ?: return
+        val itemCount = memberListAdapter.itemCount
+        if (itemCount > offset) {
+            binding.lidmaatList.post {
+                (binding.lidmaatList.layoutManager as? LinearLayoutManager)
+                    ?.scrollToPositionWithOffset(offset, 0)
+            }
+            pendingBirthdayOffset = null
+        }
+        // If itemCount <= offset, do nothing – the observer will handle it when more pages load
+    }
 
-
-
+    /**
+     * Recalculates the birthday offset and triggers a scroll if the list is already loaded.
+     * Called after filter/search changes while the list is sorted by VERJAAR.
+     */
+    fun recomputeBirthdayOffset() {
+        val currentSort = settingsManager.defLayout
+        if (currentSort == "VERJAAR" || currentSort == "VERJAARSDAG") {
+            lifecycleScope.launch {
+                pendingBirthdayOffset = viewModel.getBirthdayOffset(currentSort)
+                scrollToBirthdayIfLoaded()   // fallback if list is already loaded
+            }
+        }
+    }
     // ------------------------------------------------------------
     // Factory for MainViewModel
     // ------------------------------------------------------------
@@ -1130,14 +1175,26 @@ class MainActivity : AppCompatActivity() {
      * Updates SettingsManager, MemberViewModel, and MainViewModel.
      */
     fun updateSortOrder(newSort: String) {
-        if (BuildConfig.DEBUG) Log.d(TAG, "updateSortOrder: $newSort")
+        if (newSort == currentSortOrder) {
+            // Still update adapter state (in case filters changed)
+            memberListAdapter.updateState(
+                listView = settingsManager.listView,
+                soekList = viewModel.soekList,
+                soek = viewModel.soek,
+                recordStatus = viewModel.recordStatus,
+                sortOrder = newSort
+            )
+            return
+        }
+
+        // Update the current sort
+        currentSortOrder = newSort
+
         settingsManager.defLayout = newSort
-        viewModel.sortOrder = newSort
         mainViewModel.setSortOrder(newSort)
         binding.sortorder.text = newSort
         binding.sortorder.tag = newSort
 
-        // ✅ Update adapter's internal sortOrder so separator click logic works
         memberListAdapter.updateState(
             listView = settingsManager.listView,
             soekList = viewModel.soekList,
@@ -1145,14 +1202,27 @@ class MainActivity : AppCompatActivity() {
             recordStatus = viewModel.recordStatus,
             sortOrder = newSort
         )
-    }
 
-    private fun setupReminderEventBus() {
-        lifecycleScope.launch {
-            ReminderEventBus.refreshPending.collect {
-                loadPendingReminderGuids()
+        if (newSort == "VERJAAR" || newSort == "VERJAARSDAG") {
+            lifecycleScope.launch {
+                pendingBirthdayOffset = viewModel.getBirthdayOffset(newSort)
+                // Now refresh the list (this will trigger the load state flow)
+                viewModel.updateSortOrder(newSort)
             }
+        } else {
+            pendingBirthdayOffset = null
+            viewModel.updateSortOrder(newSort)
         }
     }
 
+    private var scrollRestored = false
+    private fun setupScrollRestorationObserver() {
+        lifecycleScope.launch {
+            memberListAdapter.loadStateFlow.collect { loadStates ->
+                if (loadStates.refresh is LoadState.NotLoading && savedListScroll != null) {
+                    restoreListScrollIfNeeded()
+                }
+            }
+        }
+    }
 }

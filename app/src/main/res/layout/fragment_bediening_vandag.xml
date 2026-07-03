@@ -3,9 +3,9 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="?attr/colorSurface">
 
-    <!-- Filter chips -->
     <HorizontalScrollView
         android:id="@+id/chip_scroll"
         android:layout_width="0dp"
@@ -15,6 +15,7 @@
         android:paddingTop="8dp"
         android:paddingBottom="4dp"
         android:fillViewport="true"
+        android:background="?attr/colorSurface"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
@@ -28,10 +29,11 @@
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chip_vandag"
-                style="@style/Widget.WinkerkReader.Chip.Filter"
+                style="@style/Widget.Material3.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/bediening_filter_vandag"
+                android:textColor="?attr/colorOnSurface"
                 android:checked="true" />
 
             <com.google.android.material.chip.Chip
@@ -39,6 +41,7 @@
                 style="@style/Widget.WinkerkReader.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:textColor="?attr/colorOnSurface"
                 android:text="@string/bediening_filter_agterstallig" />
 
             <com.google.android.material.chip.Chip
@@ -46,30 +49,31 @@
                 style="@style/Widget.WinkerkReader.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:textColor="?attr/colorOnSurface"
                 android:text="@string/bediening_filter_hierdie_week" />
+
             <com.google.android.material.chip.Chip
                 android:id="@+id/chip_als"
                 style="@style/Widget.WinkerkReader.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:textColor="?attr/colorOnSurface"
                 android:text="@string/bediening_filter_als" />
-        </com.google.android.material.chip.ChipGroup>
 
+        </com.google.android.material.chip.ChipGroup>
     </HorizontalScrollView>
 
-    <!-- ProgressBar (loading spinner) -->
     <ProgressBar
         android:id="@+id/progressBar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
         android:visibility="gone"
+        android:indeterminateTint="?attr/colorPrimary"
         app:layout_constraintTop_toBottomOf="@id/chip_scroll"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Empty state -->
     <LinearLayout
         android:id="@+id/layout_empty_state"
         android:layout_width="wrap_content"
@@ -87,7 +91,7 @@
             android:layout_height="64dp"
             android:src="@drawable/ic_check_circle"
             android:alpha="0.4"
-            android:contentDescription="@null" />
+            app:tint="?attr/colorOnSurfaceVariant" />
 
         <TextView
             android:id="@+id/tv_empty_state"
@@ -96,17 +100,17 @@
             android:layout_marginTop="12dp"
             android:text="@string/bediening_geen_herinnerings"
             android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:alpha="0.6" />
-
     </LinearLayout>
 
-    <!-- RecyclerView (now directly in ConstraintLayout) -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_bediening_reminders"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:clipToPadding="false"
         android:paddingBottom="80dp"
+        android:background="?attr/colorSurface"
         app:layout_constraintTop_toBottomOf="@id/chip_scroll"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"

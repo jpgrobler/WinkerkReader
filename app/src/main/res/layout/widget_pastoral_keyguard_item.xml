@@ -6,6 +6,6 @@
     android:paddingVertical="1dp"
     android:paddingHorizontal="2dp"
     android:textSize="11sp"
-    android:textColor="#FFFFFF"
+    android:textColor="@color/white"
     android:singleLine="true"
     android:ellipsize="end" />
