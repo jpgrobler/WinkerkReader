@@ -37,6 +37,7 @@ import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
 import za.co.jpsoft.winkerkreader.utils.CallerInfoResolver
 import java.lang.ref.WeakReference
+import android.view.ContextThemeWrapper
 
 class OproepDetailService : Service() {
 
@@ -191,17 +192,18 @@ class OproepDetailService : Service() {
             putString("CallerNumber", callerId)
         }
 
-//        val callerInfo = displayName?.takeIf { it.isNotBlank() }
-//            ?: CallerInfoResolver.getCallerDisplayInfo(contentResolver, callerId)
-
-        // If floating view already exists, just update it
         if (::floatingView.isInitialized && viewAdded) {
             floatingView.findViewById<TextView>(R.id.oproepnommer)?.text = callerInfo
             return
         }
 
-        // Inflate new view
-        floatingView = LayoutInflater.from(this).inflate(R.layout.oproepfloat, null)
+        // Services don't carry the app's theme the way Activities do — inflating
+        // with the raw Service context caused CardView to crash trying to resolve
+        // its style attributes (e.g. cardBackgroundColor) against a generic
+        // system fallback theme instead of Theme.WinkerkReader. Wrap the context
+        // in the app's actual theme before inflating.
+        val themedContext = android.view.ContextThemeWrapper(this, R.style.Theme_WinkerkReader)
+        floatingView = LayoutInflater.from(themedContext).inflate(R.layout.oproepfloat, null)
         val callerTextView = floatingView.findViewById<TextView>(R.id.oproepnommer)
         callerTextView.text = callerInfo
 

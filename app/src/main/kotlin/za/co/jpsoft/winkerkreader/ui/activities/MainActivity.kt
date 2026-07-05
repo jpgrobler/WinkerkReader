@@ -7,18 +7,12 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.database.Cursor
 import android.graphics.Color
-import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
 import android.provider.Settings
-import android.text.Spannable
-import android.text.SpannableString
-import android.text.style.ForegroundColorSpan
-import android.text.style.RelativeSizeSpan
-import android.text.style.StyleSpan
 import android.util.Log
 import android.view.GestureDetector
 import android.view.Menu
@@ -91,8 +85,6 @@ import za.co.jpsoft.winkerkreader.ui.controllers.MainSwipeGestureController
 import za.co.jpsoft.winkerkreader.ui.controllers.MemberListInteractionController
 import za.co.jpsoft.winkerkreader.ui.controllers.PastoralReminderBadgeController
 import za.co.jpsoft.winkerkreader.ui.controllers.StartupActions
-import za.co.jpsoft.winkerkreader.ui.helpers.BirthdayScrollHelper
-import java.time.LocalDate
 
 
 class MainActivity : AppCompatActivity() {
@@ -103,18 +95,17 @@ class MainActivity : AppCompatActivity() {
     private lateinit var navigationController: MainNavigationController
     private lateinit var viewModel: MemberViewModel
     private lateinit var settingsManager: SettingsManager
-    private lateinit var gestureDetector: GestureDetector
     private lateinit var backgroundExecutor: java.util.concurrent.ExecutorService
     private lateinit var workScheduler: WorkScheduler
     lateinit var searchFilterCoordinator: MainSearchFilterCoordinator
 
     private lateinit var permissionManager: PermissionManager
-    //private lateinit var permissionDialogManager: PermissionDialogManager
+
     private lateinit var menuController: MainMenuController
     private lateinit var startupCoordinator: MainStartupCoordinator
     private lateinit var listInteractionController: MemberListInteractionController
     private lateinit var activityResultCoordinator: ActivityResultCoordinator
-    //private lateinit var mainDataLoader: MainDataLoader
+
     private lateinit var backPressHandler: BackPressHandler
     private lateinit var authGuard: AppAuthGuard
     private lateinit var pastoralBadgeController: PastoralReminderBadgeController
@@ -122,7 +113,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var swipeGestureController: MainSwipeGestureController
     private var workInfoObserver: Observer<WorkInfo?> = Observer { }
     private var searchList: ArrayList<SearchCheckBox> = arrayListOf()
-    private var bedieningBadgeCount = 0
+
     private var savedListScroll: MemberListScrollHelper.ScrollState? = null
     private var originalRecordStatusBeforeFilter: String = "0"
     val mainViewModel: MainViewModel by viewModels(
@@ -148,7 +139,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         settingsManager = SettingsManager.getInstance(this)
-        //val prefs = getSharedPreferences("backup_prefs", MODE_PRIVATE)
+
         val dailyEnabled = settingsManager.dailyBackupEnabled // or use a dedicated prefs
         val exportToDownloads = settingsManager.backupExportToDownloads
         if (dailyEnabled) {
@@ -198,9 +189,9 @@ class MainActivity : AppCompatActivity() {
                 viewModel.refresh()
             }
         )
-        //permissionDialogManager = PermissionDialogManager(this, permissionManager)
+
         backgroundExecutor = Executors.newSingleThreadExecutor()
-        gestureDetector = GestureDetector(this, SwipeGestureDetector())
+
 
         activityResultCoordinator = ActivityResultCoordinator(
             activity = this,
@@ -329,14 +320,6 @@ class MainActivity : AppCompatActivity() {
                 memberListAdapter.rebindVisibleItems(binding.lidmaatList)
             }
         }
-//        lifecycleScope.launch {
-//            repeatOnLifecycle(Lifecycle.State.STARTED) {
-//                mainViewModel.pendingReminderCount.collect { count ->
-//                    bedieningBadgeCount = count
-//                    invalidateOptionsMenu()
-//                }
-//            }
-//        }
     }
 
 
@@ -832,165 +815,8 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-    // ------------------------------------------------------------
-    // Swipe gesture detector
-    // ------------------------------------------------------------
-
-    private inner class SwipeGestureDetector : GestureDetector.SimpleOnGestureListener() {
-        private val SWIPE_MIN_DISTANCE = 120
-        private val SWIPE_MAX_OFF_PATH = 200
-        private val SWIPE_THRESHOLD_VELOCITY = 200
-
-        override fun onFling(
-            e1: MotionEvent?,
-            e2: MotionEvent,
-            velocityX: Float,
-            velocityY: Float
-        ): Boolean {
-            try {
-                if (e1 == null) return false
-                val diffAbs = Math.abs(e1.y - e2.y)
-                val diff = e1.x - e2.x
-                if (diffAbs > SWIPE_MAX_OFF_PATH) return false
-                when {
-                    diff > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY ->
-                        onLeftSwipe()
-                    -diff > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY ->
-                        onRightSwipe()
-                }
-            } catch (e: Exception) {
-                if (BuildConfig.DEBUG) Log.e(TAG, "Error on gestures", e)
-            }
-            return false
-        }
-    }
-
-    // In MainActivity.kt, replace the onLeftSwipe/onRightSwipe methods:
-
-    private fun onLeftSwipe() {
-        when (viewModel.sortOrder) {
-            "HUWELIK" -> updateSortOrder("VAN")
-            "VAN"     -> updateSortOrder("GESINNE")
-            "GESINNE" -> updateSortOrder("WYK")
-            "WYK"     -> updateSortOrder("OUDERDOM")
-            "OUDERDOM"-> updateSortOrder("ADRES")
-            "ADRES"   -> updateSortOrder("VERJAAR")
-            "VERJAAR" -> updateSortOrder("HUWELIK")
-            else      -> updateSortOrder("VAN")
-        }
-        // Reload data
-        viewModel.refresh()//observeDataset()
-    }
-
-    private fun onRightSwipe() {
-        when (viewModel.sortOrder) {
-            "HUWELIK" -> updateSortOrder("VERJAAR")
-            "VERJAAR" -> updateSortOrder("ADRES")
-            "ADRES"   -> updateSortOrder("OUDERDOM")
-            "OUDERDOM"-> updateSortOrder("WYK")
-            "WYK"     -> updateSortOrder("GESINNE")
-            "GESINNE" -> updateSortOrder("VAN")
-            "VAN"     -> updateSortOrder("HUWELIK")
-            else      -> updateSortOrder("VAN")
-        }
-        // Reload data
-        viewModel.refresh()//observeDataset()
-    }
-
 
     // ------------------------------------------------------------
-    // Pending reminders helpers
-    // ------------------------------------------------------------
-//    private suspend fun getPendingGuids(db: PastoralDatabase): List<String> {
-//        // First try the DAO
-//        var guids = db.followUpReminderDao().getDistinctMemberGuidsWithPending()
-//        if (BuildConfig.DEBUG) Log.d(TAG, "DAO returned ${guids.size} guids: $guids")
-//        if (guids.isNotEmpty()) return guids
-//
-//        // Fallback: raw query
-//        val dbFile = getDatabasePath("wkr_pastoral.db")
-//        if (BuildConfig.DEBUG) Log.d(TAG, "Pastoral DB file exists? ${dbFile.exists()}, path: ${dbFile.absolutePath}")
-//        if (!dbFile.exists()) {
-//            if (BuildConfig.DEBUG) Log.e(TAG, "Pastoral DB file does not exist!")
-//            return emptyList()
-//        }
-//
-//        val sqliteDb = SQLiteDatabase.openDatabase(
-//            dbFile.absolutePath,
-//            null,
-//            SQLiteDatabase.OPEN_READONLY
-//        )
-//
-//        // First, check if the table exists and has rows
-//        val countCursor = sqliteDb.rawQuery("SELECT COUNT(*) FROM follow_up_reminders", null)
-//        countCursor.use {
-//            if (it.moveToFirst()) {
-//                val totalRows = it.getInt(0)
-//                if (BuildConfig.DEBUG) Log.d(TAG, "Total rows in follow_up_reminders: $totalRows")
-//            }
-//        }
-//
-//        // Now query distinct memberGuid with status = 'PENDING' (case-insensitive)
-//        val cursor = sqliteDb.rawQuery(
-//            "SELECT DISTINCT memberGuid FROM follow_up_reminders WHERE UPPER(status) = 'PENDING' AND memberGuid IS NOT NULL AND memberGuid != ''",
-//            null
-//        )
-//        val result = mutableListOf<String>()
-//        while (cursor.moveToNext()) {
-//            val guid = cursor.getString(0)
-//            if (!guid.isNullOrBlank()) {
-//                result.add(guid)
-//                if (BuildConfig.DEBUG) Log.d(TAG, "Found pending guid: $guid")
-//            }
-//        }
-//        cursor.close()
-//        sqliteDb.close()
-//        if (BuildConfig.DEBUG) Log.d(TAG, "Raw query returned ${result.size} guids: $result")
-//        return result
-//    }
-//    private fun loadPendingReminderGuids() {
-//        if (BuildConfig.DEBUG) Log.d(TAG, "loadPendingReminderGuids called")
-//        lifecycleScope.launch(Dispatchers.IO) {
-//            try {
-//                val db = PastoralDatabase.getInstance(applicationContext)
-//                val pendingReminders = db.followUpReminderDao().getAllPending()
-//                if (BuildConfig.DEBUG) Log.d(TAG, "Pending reminders count: ${pendingReminders.size}")
-//
-//                val guids = pendingReminders.mapNotNull { reminder ->
-//
-//                    var guid = reminder.memberGuid?.takeIf { it.isNotBlank() }
-//                    if (guid == null) {
-//                        // Fallback: resolve by name from memberDisplayNameCache
-//                        val name = reminder.memberDisplayNameCache
-//                        if (!name.isNullOrBlank()) {
-//                            guid = resolveMemberGuidByName(name)
-//                            if (guid != null) {
-//                                if (BuildConfig.DEBUG) Log.d(TAG, "Resolved GUID '$guid' for name '$name'")
-//                            }
-//                        }
-//                    }
-//                    guid
-//                }.distinct()
-//                if (BuildConfig.DEBUG) Log.d(TAG, "📌 Final pending GUIDs: $guids")
-//
-//                if (BuildConfig.DEBUG) Log.d(TAG, "📌 Found ${guids.size} distinct member GUIDs with pending reminders: $guids")
-//                withContext(Dispatchers.Main) {
-//                    viewModel.updatePendingRemindersSet(guids.toSet())
-//                }
-//            } catch (e: Exception) {
-//                if (BuildConfig.DEBUG) Log.e(TAG, "Failed to load pending reminder guids", e)
-//            }
-//        }
-//
-//    }
-
-    /**
-     * Resolves a member GUID by matching the display name (assuming format "FirstName LastName").
-     * Returns null if no match is found.
-     */
-//     setupReminderEventBus
-
-        // ------------------------------------------------------------
     // Service & permissions helpers
     // ------------------------------------------------------------
 
@@ -1140,20 +966,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
-    private fun scrollToBirthdayIfLoaded() {
-        val offset = pendingBirthdayOffset ?: return
-        val itemCount = memberListAdapter.itemCount
-        if (itemCount > offset) {
-            binding.lidmaatList.post {
-                (binding.lidmaatList.layoutManager as? LinearLayoutManager)
-                    ?.scrollToPositionWithOffset(offset, 0)
-            }
-            pendingBirthdayOffset = null
-        }
-        // If itemCount <= offset, do nothing – the observer will handle it when more pages load
-    }
-
     /**
      * Recalculates the birthday offset and triggers a scroll if the list is already loaded.
      * Called after filter/search changes while the list is sorted by VERJAAR.
@@ -1163,7 +975,7 @@ class MainActivity : AppCompatActivity() {
         if (currentSort == "VERJAAR" || currentSort == "VERJAARSDAG") {
             lifecycleScope.launch {
                 pendingBirthdayOffset = viewModel.getBirthdayOffset(currentSort)
-                scrollToBirthdayIfLoaded()   // fallback if list is already loaded
+                //scrollToBirthdayIfLoaded()   // fallback if list is already loaded 3-7-2026
             }
         }
     }

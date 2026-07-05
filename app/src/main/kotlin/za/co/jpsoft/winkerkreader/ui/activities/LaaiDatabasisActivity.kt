@@ -120,7 +120,6 @@ class LaaiDatabasisActivity : AppCompatActivity() {
     private lateinit var binding: LaaidatabasisBinding
     private var AutoDL = false
 
-    private val weeksdagArray = arrayOf("Sondag", "Maandag", "Dinsdag", "Woensdag", "Donderdag", "Vrydag", "Saterdag")
     private var FlagCancelledUSB = false
     private var FlagCancelledWiFi = false
 
@@ -145,19 +144,26 @@ class LaaiDatabasisActivity : AppCompatActivity() {
 
             val targetFile = File(dbPath, DB_NAME)
             try {
+                // Close Room before overwriting
+                WinkerkDatabase.closeInstance()
+
                 contentResolver.openInputStream(uri)?.use { input ->
                     FileOutputStream(targetFile).use { output ->
                         input.copyTo(output)
                     }
+                } ?: run {
+                    Toast.makeText(this, "Kon nie lêer oopmaak nie", Toast.LENGTH_LONG).show()
+                    return@registerForActivityResult
                 }
 
-                try {
-                    recieverDownloadComplete?.let { unregisterReceiver(it) }
-                } catch (_: IllegalArgumentException) {}
-                migrateDownloadedDatabase(targetFile)
+                if (!migrateDownloadedDatabase(targetFile)) {
+                    Toast.makeText(this, "Databasis omskakeling misluk", Toast.LENGTH_LONG).show()
+                    return@registerForActivityResult
+                }
+
                 reloadDatabaseAndFinish()
             } catch (e: IOException) {
-                if (BuildConfig.DEBUG) Log.e(TAG, "File copy failed", e)
+                Log.e(TAG, "File copy failed", e)
                 Toast.makeText(this, "Kon nie lêer kopieer nie: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
@@ -215,9 +221,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
             }
         }
 
-        initializeTimePickerUI()
-        initializeSpinnerUI()
-        initializeCheckboxUI()
+        binding.serverIp.setText(settings.getString("IP", ""))
         initializeButtons()
         initializeProgressBars()
         initializeDataInfo()
@@ -256,120 +260,8 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         AutoDL = settings.getBoolean("AUTO_DL", false)
     }
 
-    private fun initializeTimePickerUI() {
-        val hour = settings.getString("DL-HOUR", "12") ?: "12"
-        val minute = settings.getString("DL-MINUTE", "00") ?: "00"
-
-//        binding.tydText.inputType = InputType.TYPE_NULL
-//        binding.tydText.setText("$hour:$minute")
-//        binding.tydText.setOnClickListener { showTimePicker() }
-
-        binding.serverIp.setText(settings.getString("IP", ""))
-    }
-
-//    private fun showTimePicker() {
-//        val calendar = Calendar.getInstance()
-//        val currentHour = calendar[Calendar.HOUR_OF_DAY]
-//        val currentMinutes = calendar[Calendar.MINUTE]
-//
-//        val picker = TimePickerDialog(this, { _, selectedHour, selectedMinute ->
-//            val timeText = "$selectedHour:$selectedMinute"
-//            binding.tydText.setText(timeText)
-//            saveTimeSettings(selectedHour, selectedMinute)
-//            Toast.makeText(this, "Tyd opgedateer", Toast.LENGTH_SHORT).show()
-//        }, currentHour, currentMinutes, true)
-//        picker.show()
-//    }
-
-    private fun saveTimeSettings(hour: Int, minute: Int) {
-        settings.edit {
-            putString("DL-HOUR", hour.toString())
-            putString("DL-MINUTE", minute.toString())
-            putBoolean("DL-TIMEUPDATE", true)
-            putBoolean("AUTO_DL", true)
-        }
-    }
-
-    private fun initializeSpinnerUI() {
-//        val day = settings.getInt("DL-DAY", 6)
-//        val weeksdagStatusAdapter = za.co.jpsoft.winkerkreader.ui.adapters.SpinnerAdapter(this, null, weeksdagArray)
-//        binding.weeksdag.adapter = weeksdagStatusAdapter
-//        binding.weeksdag.setSelection(day - 1)
-//        binding.weeksdag.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-//            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-//                saveDaySelection(position + 1)
-//            }
-//            override fun onNothingSelected(parent: AdapterView<*>?) {}
-//        }
-    }
-
-    private fun saveDaySelection(day: Int) {
-        settings.edit { putInt("DL-DAY", day) }
-    }
-
-    private fun initializeCheckboxUI() {
-//        binding.alDropBox.isChecked = AutoDL
-//        binding.alDropBox.setOnClickListener {
-//            AutoDL = binding.alDropBox.isChecked
-//            settings.edit { putBoolean("AUTO_DL", AutoDL) }
-//            if (AutoDL) {
-//                setupAlarmForDownload()
-//            } else {
-//                cancelAlarmForDownload()
-//            }
-//        }
-    }
-
-    private fun setupAlarmForDownload() {
-        val hour = settings.getString("DL-HOUR", "08") ?: "08"
-        val minute = settings.getString("DL-MINUTE", "00") ?: "00"
-
-        val calendar = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, hour.toInt())
-            set(Calendar.MINUTE, minute.toInt())
-            set(Calendar.SECOND, 0)
-        }
-        val now = Calendar.getInstance()
-
-        settings.edit {
-            putBoolean("DL-TIMEUPDATE", true)
-            putBoolean("FROM_MENU", false)
-        }
-
-        val intent = Intent(this, AlarmReceiver::class.java).apply {
-            action = "DropBoxDownLoad"
-        }
-        val pendingIntent = PendingIntent.getBroadcast(
-            this, 0, intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
-        alarmManager.cancel(pendingIntent)
-
-        val triggerTime = if (calendar.timeInMillis <= now.timeInMillis) {
-            calendar.timeInMillis + AlarmManager.INTERVAL_DAY * 7
-        } else {
-            calendar.timeInMillis
-        }
-
-        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, triggerTime, AlarmManager.INTERVAL_DAY * 7, pendingIntent)
-    }
-
-    private fun cancelAlarmForDownload() {
-        val intent = Intent(this, AlarmReceiver::class.java).apply {
-            action = "DropBoxDownLoad"
-        }
-        val pendingIntent = PendingIntent.getBroadcast(
-            this, 0, intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-        val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
-        alarmManager.cancel(pendingIntent)
-    }
 
     private fun initializeButtons() {
-        //binding.button1.setOnClickListener { handleUpdateClick(it) }
         binding.dbLinkButton.setOnClickListener { handleDropboxDownload() }
         binding.laaiLaai.setOnClickListener { handleLoadDatabase() }
         binding.laaiPicker.setOnClickListener { handlePickFile() }
@@ -444,56 +336,6 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         currentWorkInfoLiveData!!.observe(this, workInfoObserver)
 
         Toast.makeText(this, "Foto-sinkronisasie begin…", Toast.LENGTH_SHORT).show()
-    }
-
-//    private fun handleUpdateClick(unused: View) {
-//        val timeStr = binding.tydText.text.toString()
-//        val parts = timeStr.split(":")
-//        var hour = if (parts.isNotEmpty()) parts[0] else "12"
-//        var minute = if (parts.size > 1) parts[1] else "00"
-//
-//        if (hour.length < 2) hour = "0$hour"
-//        if (minute.length < 2) minute = "0$minute"
-//
-//        settings.edit {
-//            putString("DL-HOUR", hour)
-//            putString("DL-MINUTE", minute)
-//            putBoolean("DL-TIMEUPDATE", true)
-//        }
-//
-//        Toast.makeText(this, "Tyd opgedateer", Toast.LENGTH_SHORT).show()
-//
-//        setupAlarmAndNavigateToMain(hour, minute)
-//    }
-
-    private fun setupAlarmAndNavigateToMain(hour: String, minute: String) {
-        val calendar = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, hour.toInt())
-            set(Calendar.MINUTE, minute.toInt())
-            set(Calendar.SECOND, 0)
-        }
-        val now = Calendar.getInstance()
-
-        val alarmIntent = Intent(this, AlarmReceiver::class.java).apply {
-            action = "DropBoxDownLoad"
-        }
-        val pendingIntent = PendingIntent.getBroadcast(
-            this, 0, alarmIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
-        alarmManager.cancel(pendingIntent)
-
-        val triggerTime = if (calendar.timeInMillis <= now.timeInMillis) {
-            calendar.timeInMillis + AlarmManager.INTERVAL_DAY * 7
-        } else {
-            calendar.timeInMillis
-        }
-
-        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, triggerTime, AlarmManager.INTERVAL_DAY * 7, pendingIntent)
-
-        navigateToMainActivity()
     }
 
     private fun navigateToMainActivity() {
@@ -668,27 +510,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         } catch (e: Exception) {
             if (BuildConfig.DEBUG) Log.e("WinkerkReader LaaiDatabasisActivity", "Error scanning files: $e")
         }
-        //backupCurrentDatabase()
     }
-
-//    private fun backupCurrentDatabase() {
-//        try {
-//            val dataDir = File(applicationInfo.dataDir, "/databases/")
-//            val currentDB = File(dataDir, INFO_DB)
-//            val backupDB = File(winkerkEntry.getWkrDir(this), INFO_DB)
-//            if (backupDB.exists()) backupDB.delete()
-//            if (currentDB.exists()) {
-//                FileInputStream(currentDB).use { fis ->
-//                    FileOutputStream(backupDB).use { fos ->
-//                        fis.channel.transferTo(0, fis.channel.size(), fos.channel)
-//                    }
-//                }
-//                MediaScannerConnection.scanFile(this, arrayOf(backupDB.absolutePath), null, null)
-//            }
-//        } catch (e: Exception) {
-//            if (BuildConfig.DEBUG) Log.e("WinkerkReader LaaiDatabasisActivity", "Error backing up database: $e")
-//        }
-//    }
 
     private fun setupFileListUI() {
         if (this.fileList.isEmpty()) {
@@ -773,12 +595,12 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         if (fileSizeMB >= 1) {
             Toast.makeText(this, "WKR - Probeer Dropbox databasis laai", Toast.LENGTH_LONG).show()
             if (LaaiNuweData(filePath)) {
-                Toast.makeText(this, "WKR - Dropbox Databasis gelaai", Toast.LENGTH_LONG).show()
                 val appDbFile = File(applicationInfo.dataDir, "databases/$DB_NAME")
-                migrateDownloadedDatabase(appDbFile)
-                reloadDatabaseAndFinish()
-            } else {
-                Toast.makeText(this, "WKR - Dropbox Databasis laai was onsuksesvol", Toast.LENGTH_LONG).show()
+                if (migrateDownloadedDatabase(appDbFile)) {
+                    reloadDatabaseAndFinish()
+                } else {
+                    Toast.makeText(this, "Databasis omskakeling misluk", Toast.LENGTH_LONG).show()
+                }
             }
         } else {
             Toast.makeText(this, "WKR - Dropbox Databasis te klein", Toast.LENGTH_LONG).show()
@@ -849,8 +671,14 @@ class LaaiDatabasisActivity : AppCompatActivity() {
     }
 
     private fun downloadFromDropBoxUrl(url: String) {
+        if (isFinishing || isDestroyed) {
+            Log.w(TAG, "Activity destroyed, ignoring download")
+            return
+        }
+
         val dbPath = applicationInfo.dataDir + "/databases/"
         val intentFilter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
+
         recieverDownloadComplete = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
                 val manager = getSystemService(DOWNLOAD_SERVICE) as? DownloadManager ?: return
@@ -859,29 +687,103 @@ class LaaiDatabasisActivity : AppCompatActivity() {
 
                 val query = DownloadManager.Query().setFilterById(reference)
                 manager.query(query).use { cursor ->
-                    if (cursor.moveToFirst()) {
-                        val statusColumnIndex = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)
-                        if (statusColumnIndex != -1) {
-                            val status = cursor.getInt(statusColumnIndex)
-                            if (status == DownloadManager.STATUS_SUCCESSFUL) {
-                                val downloadUri = manager.getUriForDownloadedFile(reference)
-                                contentResolver.openInputStream(downloadUri!!)?.use { input ->
-                                    FileOutputStream("$dbPath/$DB_NAME").use { output ->
-                                        input.copyTo(output)
-                                    }
-                                }
-                                migrateDownloadedDatabase(File("$dbPath/$DB_NAME"))
-                                reloadDatabaseAndFinish()
-                            }
-                        } else {
-                            if (BuildConfig.DEBUG) Log.e("LaaiDatabasis", "COLUMN_STATUS not found in cursor")
+                    if (!cursor.moveToFirst()) {
+                        showError("Kon nie aflaaistatus lees nie")
+                        return
+                    }
+                    val statusIdx = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)
+                    if (statusIdx < 0) {
+                        showError("Aflaaistatus onbekend")
+                        return
+                    }
+                    val status = cursor.getInt(statusIdx)
+                    if (status != DownloadManager.STATUS_SUCCESSFUL) {
+                        showError("Aflaai misluk (status $status)")
+                        return
+                    }
+
+                    val downloadUri = manager.getUriForDownloadedFile(reference)
+                    if (downloadUri == null) {
+                        showError("Aflaaileer nie gevind nie")
+                        return
+                    }
+
+                    try {
+                        // 1. Ensure databases directory exists
+                        val dbDir = File(dbPath)
+                        if (!dbDir.exists() && !dbDir.mkdirs()) {
+                            showError("Kon nie databasisgids skep nie")
+                            return
                         }
+
+                        // 2. Create a temporary file in the same directory
+                        val tempFile = File(dbDir, "WinkerkReader_temp.db")
+                        if (tempFile.exists()) tempFile.delete()
+
+                        // 3. Write the downloaded content to the temp file
+                        contentResolver.openInputStream(downloadUri)?.use { input ->
+                            FileOutputStream(tempFile).use { output ->
+                                input.copyTo(output)
+                                // Force sync to disk
+                                output.fd.sync()
+                            }
+                        } ?: run {
+                            showError("Kon nie lêer oopmaak nie")
+                            return
+                        }
+
+                        // 4. Validate temp file size
+                        if (tempFile.length() < 1024 * 1024) {
+                            showError("Aflaailêer is te klein – moontlik foutief")
+                            tempFile.delete()
+                            return
+                        }
+
+                        // 5. Close Room to release any locks on the target file
+                        WinkerkDatabase.closeInstance()
+
+                        // 6. Rename temp file to the real database file (atomic on same filesystem)
+                        val dbFile = File(dbDir, DB_NAME)
+                        if (dbFile.exists() && !dbFile.delete()) {
+                            showError("Kon bestaande databasis nie verwyder nie")
+                            tempFile.delete()
+                            return
+                        }
+                        if (!tempFile.renameTo(dbFile)) {
+                            // Fallback: copy if rename fails (should not happen on same dir)
+                            tempFile.copyTo(dbFile, overwrite = true)
+                            tempFile.delete()
+                        }
+
+                        // 7. Migrate the new database to Room schema
+                        val migrated = migrateDownloadedDatabase(dbFile)
+                        if (!migrated) {
+                            showError("Databasis omskakeling misluk – kontak ondersteuning")
+                            return
+                        }
+
+                        // 8. Reload and finish with a small delay
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            reloadDatabaseAndFinish()
+                        }, 300)
+
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Download processing failed", e)
+                        showError("Fout met verwerking: ${e.message}")
+                    } finally {
+                        try { unregisterReceiver(this) } catch (_: Exception) {}
                     }
                 }
-                try { unregisterReceiver(this) } catch (_: Exception) {}
             }
         }
-        registerReceiver(recieverDownloadComplete, intentFilter, RECEIVER_EXPORTED)
+
+        val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Context.RECEIVER_EXPORTED
+        } else {
+            0
+        }
+        registerReceiver(recieverDownloadComplete, intentFilter, flags)
+
         val request = DownloadManager.Request(Uri.parse(url)).apply {
             setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
             setTitle(WINKERK_DB)
@@ -922,18 +824,6 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         return "https://api.onedrive.com/v1.0/shares/$encodedUrl/root/content"
     }
 
-//    private fun reloadDatabaseAndFinish() {
-//        try {
-//            contentResolver.call(WinkerkContract.winkerkEntry.CONTENT_URI, "reloadDatabase", null, null)
-//            WidgetViewsFactory.invalidateCache()
-//            Handler(Looper.getMainLooper()).postDelayed({
-//                navigateBackToMain()
-//            }, 200)
-//        } catch (e: Exception) {
-//            if (BuildConfig.DEBUG) Log.e(TAG, "Error during database reload", e)
-//            navigateBackToMain()
-//        }
-//    }
     private fun reloadDatabaseAndFinish() {
         try {
             contentResolver.call(winkerkEntry.CONTENT_URI, "reloadDatabase", null, null)
@@ -1038,7 +928,10 @@ class LaaiDatabasisActivity : AppCompatActivity() {
      * Room's schema validation triggering first.
      */
     private fun migrateDownloadedDatabase(dbFile: File): Boolean {
-        if (!dbFile.exists()) return false
+        if (!dbFile.exists()) {
+            Log.e(TAG, "DB file does not exist")
+            return false
+        }
         return try {
             SQLiteDatabase.openDatabase(
                 dbFile.absolutePath,
@@ -1049,11 +942,11 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                     migrateTableVarcharToText(db, tableName)
                 }
                 db.execSQL("PRAGMA user_version = 1")
-                if (BuildConfig.DEBUG) Log.d(TAG, "VARCHAR→TEXT migration done on ${dbFile.name}, user_version set to 1")
+                Log.i(TAG, "Migration successful on ${dbFile.name}")
             }
             true
         } catch (e: Exception) {
-            if (BuildConfig.DEBUG) Log.e(TAG, "Migration failed on downloaded DB", e)
+            Log.e(TAG, "Migration failed on ${dbFile.name}", e)
             false
         }
     }

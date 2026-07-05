@@ -12,11 +12,11 @@
     app:contentPadding="5dp">
 
     <LinearLayout
+        android:background="@drawable/border"
         android:id="@+id/oproepfloaterbase"
         android:orientation="horizontal"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@drawable/border"
         android:layout_centerHorizontal="true"
         android:padding="5dp">
 
@@ -25,8 +25,7 @@
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:src="@drawable/ic_launcher_round"
-            android:layout_marginEnd="16dp"
-            app:tint="?attr/colorPrimary" />
+            android:layout_marginEnd="16dp" />
 
         <TextView
             android:clickable="true"
