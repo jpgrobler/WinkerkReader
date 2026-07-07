@@ -411,7 +411,7 @@
     <string name="count_placeholder">Gesin</string>
     <string name="close_search_description">Maak toe</string>
     <string name="main_count_symbol">#</string>
-    <string name="permissions_title">App Permissions</string>
+    <string name="permissions_title">Permissions &amp; Battery</string>
     <string name="permissions_intro">Gee asb toestemming vir die volgende permissions om al die app se funksies te kan gebruik</string>
     <string name="permissions_request_all">Toestemming vir alle permissions</string>
     <string name="uitleg_icons_title">Hooflys Icons</string>
@@ -509,10 +509,12 @@
     <string name="db_file_item_format">%1$s\n%2$d Mb%3$s</string>
 
     <!-- Battery Optimization -->
-    <string name="battery_optimization_title">🪫🔋 Battery Verstelling</string>
+    <string name="battery_optimization_title">OS Battery vertellings</string>
     <string name="battery_optimization_message">Om te verseker dat oproep-registrasie betroubaar in die agtergrond werk, moet WinkerkReader vrygestel word van battery-optimering. Dit verhoed dat Android die diens stop wanneer die skerm af is.</string>
     <string name="battery_optimization_button">Stel vry</string>
     <string name="battery_optimization_already_optimized">Battery optimering is reeds afgestel</string>
+    <string name="battery_optimization_enabled">Battery optimization active</string>
+    <string name="battery_optimization_disabled">Battery optimization disabled (exempt)</string>
 
     <!-- Call Monitoring and Export -->
     <string name="call_monitoring_channel_name">Oproepmonitering</string>
@@ -756,4 +758,10 @@
     <string name="widget_last_updated_placeholder">Laas opgedateer: %1$s</string>
     <string name="rugsteun_ook_oproeplog">Rugsteun ook oproeplog</string>
     <string name="rugsteun">Rugsteun</string>
+    <string name="vra_uitstaande_permissions_sodra_app_oopmaak">Vra uitstaande permissions sodra app oopmaak</string>
+    <!-- Reuses existing settings_app_biometric / settings_app_biometric_summary for the checkbox label -->
+    <string-array name="biometric_timeout_options">
+        <item>By herbegin</item>
+        <item>Elke keer op voorgrond (na 10 sekondes)</item>
+    </string-array>
 </resources>

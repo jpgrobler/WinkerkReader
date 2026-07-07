@@ -16,6 +16,7 @@ import android.os.Build
 import android.os.IBinder
 import android.provider.Settings
 import android.util.Log
+import android.view.ContextThemeWrapper
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -36,46 +37,32 @@ import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
 import za.co.jpsoft.winkerkreader.utils.CallerInfoResolver
+import za.co.jpsoft.winkerkreader.utils.CallerInfoResult
 import java.lang.ref.WeakReference
-import android.view.ContextThemeWrapper
 
 class OproepDetailService : Service() {
 
     companion object {
         private const val TAG = "OproepDetailService"
         const val EXTRA_CALLER_ID = "caller_id"
-        const val EXTRA_CALLER_DISPLAY = "caller_display"
         private var serviceInstance: WeakReference<OproepDetailService>? = null
 
-        // Optional: keep as a quick hint, but do not rely on it for correctness
         @Volatile
         var isOn = false
             private set
 
-        // Reliable check using ActivityManager
         fun isServiceRunning(context: Context): Boolean {
-            val manager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                // Type-safe API (requires API 23+)
-                context.getSystemService(ActivityManager::class.java)
-            } else {
-                // Legacy fallback with safe cast
-                context.getSystemService(ACTIVITY_SERVICE) as? ActivityManager
-            }
-
-            // If manager is null, the service is not available
-            if (manager == null) return false
+            val manager = context.getSystemService(ActivityManager::class.java) ?: return false
 
             val serviceName = "${context.packageName}.${OproepDetailService::class.java.simpleName}"
             return try {
                 manager.getRunningServices(Int.MAX_VALUE)
                     .any { it.service.className == serviceName }
             } catch (e: Exception) {
-                // getRunningServices may throw on some devices; fallback to false
                 false
             }
         }
 
-        // Deduplication logic (unchanged)
         private var lastProcessedNumber = ""
         private var lastProcessedTime = 0L
 
@@ -120,19 +107,18 @@ class OproepDetailService : Service() {
             return START_NOT_STICKY
         }
 
-        val displayName = intent?.getStringExtra(EXTRA_CALLER_DISPLAY)
-
         // Launch the lookup on a background thread
         serviceScope.launch {
-            val resolvedName = if (displayName.isNullOrBlank()) {
-                CallerInfoResolver.getCallerDisplayInfo(contentResolver, callerId)
-            } else {
-                displayName
+            val result = CallerInfoResolver.resolve(callerId, contentResolver)
+
+            // Only show the floating window for a known member or contact
+            val shouldShow = when (result) {
+                is CallerInfoResult.Member -> true
+                is CallerInfoResult.Contact -> true
+                CallerInfoResult.Unknown -> false
             }
 
-            // Don't show the floating window for a caller who isn't in the member
-            // database or contacts — it would just be echoing the number back.
-            if (!CallerInfoResolver.isKnownCaller(resolvedName)) {
+            if (!shouldShow) {
                 if (BuildConfig.DEBUG) Log.d(TAG, "Caller not found in database, skipping floating window")
                 withContext(Dispatchers.Main) { stopSelf() }
                 return@launch
@@ -140,7 +126,7 @@ class OproepDetailService : Service() {
 
             // Show the caller info on the main thread
             withContext(Dispatchers.Main) {
-                showCaller(callerId, resolvedName)
+                showCaller(callerId, result)
             }
         }
 
@@ -153,7 +139,6 @@ class OproepDetailService : Service() {
         isOn = false
         serviceInstance = null
 
-        // Remove floating view if it was added
         if (::floatingView.isInitialized && viewAdded) {
             try {
                 windowManager.removeView(floatingView)
@@ -163,7 +148,6 @@ class OproepDetailService : Service() {
             }
         }
 
-        // Clear shared preference
         getSharedPreferences(PREFS_USER_INFO, 0).edit { putString("CallerNumber", "XXXXXXXXXX") }
         super.onDestroy()
     }
@@ -196,25 +180,26 @@ class OproepDetailService : Service() {
         return phoneNumber.isNotEmpty() && phoneNumber != "XXXXXXXXXX" && phoneNumber != "Unknown"
     }
 
-    private fun showCaller(callerId: String, callerInfo: String) {
+    private fun showCaller(callerId: String, result: CallerInfoResult) {
         getSharedPreferences(PREFS_USER_INFO, MODE_PRIVATE).edit {
             putString("CallerNumber", callerId)
         }
 
+        val displayName = when (result) {
+            is CallerInfoResult.Member -> result.name
+            is CallerInfoResult.Contact -> result.name
+            CallerInfoResult.Unknown -> return // should never happen because we check before calling
+        }
+
         if (::floatingView.isInitialized && viewAdded) {
-            floatingView.findViewById<TextView>(R.id.oproepnommer)?.text = callerInfo
+            floatingView.findViewById<TextView>(R.id.oproepnommer)?.text = displayName
             return
         }
 
-        // Services don't carry the app's theme the way Activities do — inflating
-        // with the raw Service context caused CardView to crash trying to resolve
-        // its style attributes (e.g. cardBackgroundColor) against a generic
-        // system fallback theme instead of Theme.WinkerkReader. Wrap the context
-        // in the app's actual theme before inflating.
-        val themedContext = android.view.ContextThemeWrapper(this, R.style.Theme_WinkerkReader)
+        val themedContext = ContextThemeWrapper(this, R.style.Theme_WinkerkReader)
         floatingView = LayoutInflater.from(themedContext).inflate(R.layout.oproepfloat, null)
         val callerTextView = floatingView.findViewById<TextView>(R.id.oproepnommer)
-        callerTextView.text = callerInfo
+        callerTextView.text = displayName
 
         if (!Settings.canDrawOverlays(this)) {
             val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, "package:$packageName".toUri())

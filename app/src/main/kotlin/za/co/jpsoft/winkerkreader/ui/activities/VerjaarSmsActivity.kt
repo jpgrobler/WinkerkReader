@@ -1,5 +1,6 @@
 package za.co.jpsoft.winkerkreader.ui.activities
 
+// import to add
 import android.Manifest
 import android.app.AlarmManager
 import android.app.PendingIntent
@@ -49,6 +50,7 @@ import za.co.jpsoft.winkerkreader.ui.viewmodels.EventViewModel
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel
 import za.co.jpsoft.winkerkreader.utils.MainNavigationController
 import za.co.jpsoft.winkerkreader.utils.MemberActionHandler
+import za.co.jpsoft.winkerkreader.utils.MessageComposer
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import za.co.jpsoft.winkerkreader.utils.Utils.fixphonenumber
 import za.co.jpsoft.winkerkreader.utils.forceShowIcons
@@ -386,7 +388,7 @@ class VerjaarSmsActivity : AppCompatActivity() {
         val phone = fixphonenumber(member.cellphone)
         if (phone.isNullOrEmpty()) return@withContext false
 
-        val personalized = template.replace("<<<naam>>>", member.name)
+        val personalized = MessageComposer.personalize(template, member)
         return@withContext try {
             val parts = smsManager.divideMessage(personalized)
             smsManager.sendMultipartTextMessage(phone, null, parts, null, null)
@@ -522,7 +524,7 @@ class VerjaarSmsActivity : AppCompatActivity() {
                         Toast.makeText(this, "Geen selfoonnommer beskikbaar", Toast.LENGTH_SHORT).show()
                         return@setOnMenuItemClickListener false
                     }
-                    val msg = binding.boodskap.text.toString().replace("<<<naam>>>", member.name)
+                    val msg = MessageComposer.personalize(binding.boodskap.text.toString(), member)
                     sendWhatsApp(phone, item.itemId, msg)
                     true
                 }

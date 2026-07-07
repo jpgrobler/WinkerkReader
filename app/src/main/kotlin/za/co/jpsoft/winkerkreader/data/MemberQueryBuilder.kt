@@ -1,15 +1,10 @@
 // File: data/MemberQueryBuilder.kt
 package za.co.jpsoft.winkerkreader.data
 
-import android.content.Context
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.col
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
 import za.co.jpsoft.winkerkreader.data.models.FilterBox
 
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.debounce
 /**
  * Builds SQL queries for the member list.
  * All raw SQL strings are isolated here for easier maintenance and future migration.

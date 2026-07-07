@@ -7,13 +7,12 @@ import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.Spinner
 import android.widget.TextView
-import android.widget.Toast
+import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.models.FilterBox
 import za.co.jpsoft.winkerkreader.ui.activities.MainActivity
-import za.co.jpsoft.winkerkreader.ui.models.MainQueryMode
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel
-import za.co.jpsoft.winkerkreader.BuildConfig
+
 /**
  * Handles filter dialog operations
  */

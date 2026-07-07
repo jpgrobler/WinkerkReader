@@ -476,6 +476,7 @@ object WinkerkContract {
 
         const val KEY_LOG_VOIP = "LOG_VOIP"
 
+        
         // Legacy static fields removed — use getWkrDir(context), getFotoDir(context),
         // getCacheDir(context) instead for Scoped Storage compliance.
 
@@ -512,4 +513,6 @@ object WinkerkContract {
     const val KEY_TASKS_SCRIPT_SECRET = "pref_tasks_script_secret"
 
     const val KEY_PASTORAL_CALENDAR_ID = "pref_pastoral_calendar_id"
+
+
 }

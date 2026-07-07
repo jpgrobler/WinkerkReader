@@ -28,7 +28,7 @@ import za.co.jpsoft.winkerkreader.services.OproepDetailService
 
 class PhoneCallMonitor(
     private val context: Context,
-    callLogDao: CallLogDao,  //databaseHelper: DatabaseHelper,
+    callLogDao: CallLogDao,
     calendarManager: CalendarManager,
     calendarId: Long
 ) {
@@ -144,16 +144,25 @@ class PhoneCallMonitor(
 
         // Launch coroutine to resolve name and log
         monitorScope.launch {
-            val displayInfo = CallerInfoResolver.getCallerDisplayInfo(context.contentResolver, number)
+            val displayName = if (number.isNullOrBlank()) {
+                null
+            } else {
+                val result = CallerInfoResolver.resolve(number, context.contentResolver)
+                when (result) {
+                    is CallerInfoResult.Member -> result.name
+                    is CallerInfoResult.Contact -> result.name
+                    CallerInfoResult.Unknown -> null
+                }
+            }
             unifiedMonitor?.onCallDetected(
                 callId = callId,
-                number = number,
+                number = number ?: "Unknown Number",
                 direction = "incoming",
                 source = "Phone Call",
                 timestamp = callStartTime,
-                displayName = displayInfo
+                displayName = displayName ?: "Unknown Contact"
             )
-            startCallerIdentificationService(context)
+            startCallerIdentificationService(context, number)
         }
     }
 
@@ -173,14 +182,23 @@ class PhoneCallMonitor(
             if (BuildConfig.DEBUG) Log.d(TAG, "OUTGOING call detected: $currentOutgoingNumber")
 
             monitorScope.launch {
-                val displayInfo = CallerInfoResolver.getCallerDisplayInfo(context.contentResolver, phoneNumber)
+                val displayName = if (phoneNumber.isNullOrBlank()) {
+                    null
+                } else {
+                    val result = CallerInfoResolver.resolve(phoneNumber, context.contentResolver)
+                    when (result) {
+                        is CallerInfoResult.Member -> result.name
+                        is CallerInfoResult.Contact -> result.name
+                        CallerInfoResult.Unknown -> null
+                    }
+                }
                 unifiedMonitor?.onCallDetected(
                     callId = callId,
-                    number = phoneNumber,
+                    number = phoneNumber ?: "Unknown Number",
                     direction = "outgoing",
                     source = "Phone Call",
                     timestamp = callStartTime,
-                    displayName = displayInfo
+                    displayName = displayName ?: "Unknown Contact"
                 )
             }
         }
@@ -200,19 +218,22 @@ class PhoneCallMonitor(
                 if (currentIncomingNumber == "Unknown Number") {
                     // Try to recover missed call number asynchronously
                     monitorScope.launch {
-                        val recovered = queryLatestCallFromLog(CallLog.Calls.MISSED_TYPE)
+                        val recovered = queryLatestCallFromLog()
                         if (recovered != null) {
                             if (BuildConfig.DEBUG) Log.d(TAG, "Recovered missed call number from CallLog: ${recovered.first}")
-                            val displayInfo = CallerInfoResolver.getCallerDisplayInfo(
-                                context.contentResolver, recovered.first
-                            )
+                            val result = CallerInfoResolver.resolve(recovered.first, context.contentResolver)
+                            val displayName = when (result) {
+                                is CallerInfoResult.Member -> result.name
+                                is CallerInfoResult.Contact -> result.name
+                                CallerInfoResult.Unknown -> null
+                            }
                             unifiedMonitor?.onCallDetected(
                                 callId = callId,
                                 number = recovered.first,
                                 direction = "missed",
                                 source = "Phone Call",
                                 timestamp = recovered.second,
-                                displayName = displayInfo
+                                displayName = displayName ?: "Unknown Contact"
                             )
                         }
                         // Regardless, end the call
@@ -237,15 +258,15 @@ class PhoneCallMonitor(
      * within the last 60 seconds. Returns a pair of (number, date) or null if not found.
      * Used as a fallback when the phone number was not delivered through normal channels.
      */
-    private fun queryLatestCallFromLog(type: Int): Pair<String, Long>? {
+    private fun queryLatestCallFromLog(): Pair<String, Long>? {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CALL_LOG)
             != PackageManager.PERMISSION_GRANTED
         ) return null
 
-        val since = System.currentTimeMillis() - 60_000L // only look at the last 60 seconds
+        val since = System.currentTimeMillis() - 60_000L
         val projection = arrayOf(CallLog.Calls.NUMBER, CallLog.Calls.DATE, CallLog.Calls.TYPE)
         val selection = "${CallLog.Calls.TYPE} = ? AND ${CallLog.Calls.DATE} >= ?"
-        val selectionArgs = arrayOf(type.toString(), since.toString())
+        val selectionArgs = arrayOf(CallLog.Calls.MISSED_TYPE.toString(), since.toString())
         val sortOrder = "${CallLog.Calls.DATE} DESC"
 
         return try {
@@ -275,7 +296,6 @@ class PhoneCallMonitor(
         currentCallType = null
     }
 
-
     private fun hasRequiredPermissions(): Boolean {
         val requiredPermissions = arrayOf(
             Manifest.permission.READ_PHONE_STATE,
@@ -293,14 +313,14 @@ class PhoneCallMonitor(
         else -> "UNKNOWN"
     }
 
-    private fun startCallerIdentificationService(context: Context) {
-        val callerId = currentIncomingNumber?.takeIf { it != "Unknown Number" } ?: return
+    private fun startCallerIdentificationService(context: Context, callerId: String?) {
+        val number = callerId?.takeIf { it.isNotBlank() && it != "Unknown Number" } ?: return
 
         val serviceIntent = Intent(context, OproepDetailService::class.java)
-            .putExtra(OproepDetailService.EXTRA_CALLER_ID, callerId)
+            .putExtra(OproepDetailService.EXTRA_CALLER_ID, number)
         try {
             context.startForegroundService(serviceIntent)
-            if (BuildConfig.DEBUG) Log.d(TAG, "Caller identification service started for $callerId")
+            if (BuildConfig.DEBUG) Log.d(TAG, "Caller identification service started for $number")
         } catch (e: Exception) {
             if (BuildConfig.DEBUG) Log.e(TAG, "Failed to start caller identification service: ${e.message}")
         }

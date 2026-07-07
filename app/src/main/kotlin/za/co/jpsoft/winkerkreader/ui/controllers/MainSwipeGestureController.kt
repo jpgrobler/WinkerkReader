@@ -2,7 +2,6 @@ package za.co.jpsoft.winkerkreader.ui.controllers
 
 import android.view.GestureDetector
 import android.view.MotionEvent
-import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 
 /**

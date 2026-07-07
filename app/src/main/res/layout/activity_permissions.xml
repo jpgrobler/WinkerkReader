@@ -15,6 +15,22 @@
         android:textStyle="bold"
         android:textColor="?attr/colorOnSurface"
         android:paddingBottom="8dp" />
+    <TextView
+        android:id="@+id/tvBatteryStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="12dp"
+        android:background="?attr/selectableItemBackground"
+        android:drawableEnd="@drawable/ic_chevron_right"
+        android:clickable="true"
+        android:focusable="true"
+        android:textSize="16sp" />
+    <CheckBox
+        android:id="@+id/permission_check"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/vra_uitstaande_permissions_sodra_app_oopmaak"
+        />
 
     <TextView
         android:layout_width="match_parent"

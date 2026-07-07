@@ -1,11 +1,8 @@
 package za.co.jpsoft.winkerkreader.ui.activities
 
 import android.Manifest
-import android.app.AlarmManager
 import android.app.AlertDialog
 import android.app.DownloadManager
-import android.app.PendingIntent
-import android.app.TimePickerDialog
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -18,15 +15,12 @@ import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.Environment
 import android.os.Handler
 import android.os.Looper
-import android.text.InputType
 import android.util.Base64
 import android.util.Log
 import android.view.MenuItem
 import android.view.View
-import android.widget.AdapterView
 import android.widget.Button
 import android.widget.RadioButton
 import android.widget.RadioGroup
@@ -57,7 +51,6 @@ import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.WINKERK_DB
 import za.co.jpsoft.winkerkreader.data.pastoral.PastoralDatabase
 import za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase
 import za.co.jpsoft.winkerkreader.databinding.LaaidatabasisBinding
-import za.co.jpsoft.winkerkreader.services.receivers.AlarmReceiver
 import za.co.jpsoft.winkerkreader.utils.MainNavigationController
 import za.co.jpsoft.winkerkreader.utils.PastoralDatabaseBackup
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
@@ -70,7 +63,6 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
-import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import java.util.UUID
@@ -87,7 +79,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         private val CURRENT_PASTORAL_SCHEMA_VERSION
         get() = PastoralDatabaseBackup.CURRENT_PASTORAL_SCHEMA_VERSION
         private val RECEIVER_EXPORTED = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) Context.RECEIVER_EXPORTED else 0
-
+        private var privateDownloadFile: File? = null
         private fun writeExtractedFileToDisk(`in`: InputStream, outs: OutputStream) {
             val buffer = ByteArray(1024)
             var length: Int
@@ -683,6 +675,10 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         val dbPath = applicationInfo.dataDir + "/databases/"
         val intentFilter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
 
+        // Create a private file – no public exposure
+        privateDownloadFile = File(getExternalFilesDir(null), "WinkerkReader_temp.db")
+        privateDownloadFile?.parentFile?.mkdirs()
+
         recieverDownloadComplete = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
                 val manager = getSystemService(DOWNLOAD_SERVICE) as? DownloadManager ?: return
@@ -693,22 +689,30 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                 manager.query(query).use { cursor ->
                     if (!cursor.moveToFirst()) {
                         showError("Kon nie aflaaistatus lees nie")
+                        privateDownloadFile?.delete()
+                        privateDownloadFile = null
                         return
                     }
                     val statusIdx = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)
                     if (statusIdx < 0) {
                         showError("Aflaaistatus onbekend")
+                        privateDownloadFile?.delete()
+                        privateDownloadFile = null
                         return
                     }
                     val status = cursor.getInt(statusIdx)
                     if (status != DownloadManager.STATUS_SUCCESSFUL) {
                         showError("Aflaai misluk (status $status)")
+                        privateDownloadFile?.delete()
+                        privateDownloadFile = null
                         return
                     }
 
                     val downloadUri = manager.getUriForDownloadedFile(reference)
                     if (downloadUri == null) {
                         showError("Aflaaileer nie gevind nie")
+                        privateDownloadFile?.delete()
+                        privateDownloadFile = null
                         return
                     }
 
@@ -717,6 +721,8 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                         val dbDir = File(dbPath)
                         if (!dbDir.exists() && !dbDir.mkdirs()) {
                             showError("Kon nie databasisgids skep nie")
+                            privateDownloadFile?.delete()
+                            privateDownloadFile = null
                             return
                         }
 
@@ -728,33 +734,37 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                         contentResolver.openInputStream(downloadUri)?.use { input ->
                             FileOutputStream(tempFile).use { output ->
                                 input.copyTo(output)
-                                // Force sync to disk
                                 output.fd.sync()
                             }
                         } ?: run {
                             showError("Kon nie lêer oopmaak nie")
+                            privateDownloadFile?.delete()
+                            privateDownloadFile = null
                             return
                         }
 
-                        // 4. Validate temp file size
-                        if (tempFile.length() < 10 * 1024) {
-                            showError("Aflaailêer is te klein – moontlik foutief")
+                        // 4. Validate database file (SQLite header + minimum rows)
+                        if (!isValidDatabaseFile(tempFile, 5)) {
+                            showError("Aflaailêer is nie 'n geldige databasis nie")
                             tempFile.delete()
+                            privateDownloadFile?.delete()
+                            privateDownloadFile = null
                             return
                         }
 
                         // 5. Close Room to release any locks on the target file
                         WinkerkDatabase.closeInstance()
 
-                        // 6. Rename temp file to the real database file (atomic on same filesystem)
+                        // 6. Rename temp file to the real database file
                         val dbFile = File(dbDir, DB_NAME)
                         if (dbFile.exists() && !dbFile.delete()) {
                             showError("Kon bestaande databasis nie verwyder nie")
                             tempFile.delete()
+                            privateDownloadFile?.delete()
+                            privateDownloadFile = null
                             return
                         }
                         if (!tempFile.renameTo(dbFile)) {
-                            // Fallback: copy if rename fails (should not happen on same dir)
                             tempFile.copyTo(dbFile, overwrite = true)
                             tempFile.delete()
                         }
@@ -763,8 +773,14 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                         val migrated = migrateDownloadedDatabase(dbFile)
                         if (!migrated) {
                             showError("Databasis omskakeling misluk – kontak ondersteuning")
+                            privateDownloadFile?.delete()
+                            privateDownloadFile = null
                             return
                         }
+
+                        // ✅ Success – delete the private downloaded file
+                        privateDownloadFile?.delete()
+                        privateDownloadFile = null
 
                         // 8. Reload and finish with a small delay
                         Handler(Looper.getMainLooper()).postDelayed({
@@ -774,6 +790,8 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                     } catch (e: Exception) {
                         Log.e(TAG, "Download processing failed", e)
                         showError("Fout met verwerking: ${e.message}")
+                        privateDownloadFile?.delete()
+                        privateDownloadFile = null
                     } finally {
                         try {
                             unregisterReceiver(this)
@@ -788,7 +806,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         }
 
         val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            Context.RECEIVER_EXPORTED
+            Context.RECEIVER_NOT_EXPORTED
         } else {
             0
         }
@@ -799,7 +817,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
             setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
             setTitle(WINKERK_DB)
             setMimeType("application/vnd.sqlite3")
-            setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, DB_NAME)
+            setDestinationUri(Uri.fromFile(privateDownloadFile))  // 🔒 private
         }
         val manager = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
         myDownloadReference = manager.enqueue(request)
@@ -1060,6 +1078,63 @@ class LaaiDatabasisActivity : AppCompatActivity() {
             // Re-init Room and reload UI
             PastoralDatabase.getInstance(this) // triggers migration if needed
             finish()
+        }
+    }
+
+    /**
+     * Validates that the given file is a genuine SQLite database with the correct schema.
+     * @param file The file to validate.
+     * @param minMemberCount Minimum number of rows expected in the Members table.
+     * @return true if the file is valid, false otherwise.
+     */
+    private fun isValidDatabaseFile(file: File, minMemberCount: Int = 10): Boolean {
+        if (!file.exists() || file.length() < 512) {
+            Log.e(TAG, "File too small or missing: ${file.absolutePath}")
+            return false
+        }
+
+        // 1. Check SQLite header (first 16 bytes)
+        val header = try {
+            FileInputStream(file).use { input ->
+                val buffer = ByteArray(16)
+                input.read(buffer)
+                buffer
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to read file header", e)
+            return false
+        }
+
+        val expectedHeader = "SQLite format 3\u0000".toByteArray()
+        if (!header.contentEquals(expectedHeader)) {
+            Log.e(TAG, "Invalid SQLite header in ${file.name}")
+            return false
+        }
+
+        // 2. Optional: ensure the Members table exists and has rows
+        return try {
+            SQLiteDatabase.openDatabase(file.absolutePath, null, SQLiteDatabase.OPEN_READONLY).use { db ->
+                // Check that the Members table exists and has at least minMemberCount rows
+                val cursor = db.rawQuery(
+                    "SELECT COUNT(*) FROM Members",
+                    null
+                )
+                cursor.use {
+                    if (it.moveToFirst()) {
+                        val count = it.getInt(0)
+                        if (count < minMemberCount) {
+                            Log.e(TAG, "Members table has only $count rows (minimum $minMemberCount)")
+                            return false
+                        }
+                        true
+                    } else {
+                        false
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error querying Members table", e)
+            false
         }
     }
 }

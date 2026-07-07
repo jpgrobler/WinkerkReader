@@ -96,14 +96,6 @@
                 android:id="@+id/menu_permissions"
                 android:title="@string/mainmenu_manage_permissions"
                 app:showAsAction="never" />
-            <item
-                android:id="@+id/menu_permission_settings"
-                android:title="@string/mainmenu_permission_settings"
-                app:showAsAction="never" />
-            <item
-                android:id="@+id/menu_battery_optimization"
-                android:title="@string/battery_optimization_title"
-                app:showAsAction="never" />
         </menu>
     </item>
     <item

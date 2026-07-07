@@ -1,147 +1,195 @@
 package za.co.jpsoft.winkerkreader.utils
 
-// File: ServerFileValidator.kt
-
-
+import android.net.Uri
 import android.util.Log
-import za.co.jpsoft.winkerkreader.BuildConfig
-import java.net.HttpURLConnection
-import java.net.URL
+import za.co.jpsoft.winkerkreader.utils.ServerFileValidator.MIN_MEMBER_COUNT
+import java.io.File
+import java.io.FileInputStream
+import java.io.IOException
+import java.sql.DriverManager
 
 /**
- * Utility class for validating server file availability
- * Uses HTTP HEAD requests to check files without downloading them
+ * Validates files downloaded from a server, ensuring they are genuine SQLite databases.
+ * Provides both single and batch validation with per‑file results.
  */
 object ServerFileValidator {
+
     private const val TAG = "ServerFileValidator"
-    private const val DEFAULT_TIMEOUT = 10000 // 10 seconds
+    private const val MIN_DATABASE_SIZE_BYTES = 512L
+    private const val MIN_MEMBER_COUNT = 10
 
     /**
-     * Check if a file exists on the server
-     * @param fileUrl URL of the file to check
-     * @return ValidationResult with status and details
+     * Result of a single file check.
+     * @param fileName Name of the file checked.
+     * @param success True if the file is valid (SQLite header + row count >= [MIN_MEMBER_COUNT]).
+     * @param fileSize Size of the file in bytes, or null if the check failed or the file does not exist.
+     * @param errorMessage Optional error description if the check failed.
      */
-    @JvmStatic
-    fun checkFileAvailability(fileUrl: String): ValidationResult {
-        return checkFileAvailability(fileUrl, DEFAULT_TIMEOUT)
-    }
+    data class FileCheckResult(
+        val fileName: String,
+        val success: Boolean,
+        val fileSize: Long? = null,
+        val errorMessage: String? = null
+    )
+
+    // -------------------------------------------------------------------------
+    // Single file checks (overloaded for File, String, Uri)
+    // -------------------------------------------------------------------------
 
     /**
-     * Check if a file exists on the server with custom timeout
-     * @param fileUrl URL of the file to check
-     * @param timeoutMs Connection timeout in milliseconds
-     * @return ValidationResult with status and details
+     * Checks a [File] for validity.
      */
-    @JvmStatic
-    fun checkFileAvailability(fileUrl: String, timeoutMs: Int): ValidationResult {
-        var connection: HttpURLConnection? = null
-
-        return try {
-            // Validate URL format
-            if (fileUrl.isBlank()) {
-                return ValidationResult(false, 0, -1, "URL is null or empty")
+    fun checkSingleFile(file: File): FileCheckResult {
+        try {
+            if (!file.exists()) {
+                return FileCheckResult(
+                    fileName = file.name,
+                    success = false,
+                    errorMessage = "File does not exist"
+                )
+            }
+            if (file.length() < MIN_DATABASE_SIZE_BYTES) {
+                return FileCheckResult(
+                    fileName = file.name,
+                    success = false,
+                    fileSize = file.length(),
+                    errorMessage = "File too small (min ${MIN_DATABASE_SIZE_BYTES}B)"
+                )
             }
 
-            // Check if URL uses HTTPS (security best practice)
-            if (!fileUrl.lowercase().startsWith("https://")) {
-                if (BuildConfig.DEBUG) Log.w(TAG, "URL does not use HTTPS: $fileUrl")
+            // Validate SQLite header
+            val headerBytes = try {
+                FileInputStream(file).use { input ->
+                    val buffer = ByteArray(16)
+                    input.read(buffer)
+                    buffer
+                }
+            } catch (e: IOException) {
+                return FileCheckResult(
+                    fileName = file.name,
+                    success = false,
+                    fileSize = file.length(),
+                    errorMessage = "Failed to read header: ${e.message}"
+                )
             }
 
-            val url = URL(fileUrl)
-            connection = (url.openConnection() as HttpURLConnection).apply {
-                requestMethod = "HEAD"
-                connectTimeout = timeoutMs
-                readTimeout = timeoutMs
-                instanceFollowRedirects = true
-                setRequestProperty("User-Agent", "WinkerkReader-UpdateChecker/1.0")
+            val expectedHeader = byteArrayOf(
+                0x53, 0x51, 0x4C, 0x69, 0x74, 0x65, 0x20, 0x66,
+                0x6F, 0x72, 0x6D, 0x61, 0x74, 0x20, 0x33, 0x00
+            )
+            if (!headerBytes.contentEquals(expectedHeader)) {
+                return FileCheckResult(
+                    fileName = file.name,
+                    success = false,
+                    fileSize = file.length(),
+                    errorMessage = "Invalid SQLite header"
+                )
             }
 
-            val responseCode = connection.responseCode
-            val fileSize = connection.contentLengthLong
-            val contentType = connection.contentType
-
-            if (responseCode == HttpURLConnection.HTTP_OK) {
-                if (BuildConfig.DEBUG) Log.d(TAG, "File available: $fileUrl")
-                if (BuildConfig.DEBUG) Log.d(TAG, "Response code: $responseCode")
-                if (BuildConfig.DEBUG) Log.d(TAG, "File size: ${if (fileSize > 0) "$fileSize bytes" else "unknown"}")
-                if (BuildConfig.DEBUG) Log.d(TAG, "Content type: ${contentType ?: "unknown"}")
-
-                ValidationResult(true, fileSize, responseCode, "File available")
-            } else {
-                val message = "File not available. HTTP $responseCode"
-                if (BuildConfig.DEBUG) Log.w(TAG, "$message for $fileUrl")
-                ValidationResult(false, 0, responseCode, message)
+            // Verify the Members table has a minimum number of rows.
+            val memberCount = countMembersInDatabase(file)
+            if (memberCount < MIN_MEMBER_COUNT) {
+                return FileCheckResult(
+                    fileName = file.name,
+                    success = false,
+                    fileSize = file.length(),
+                    errorMessage = "Members table has only $memberCount rows (min $MIN_MEMBER_COUNT)"
+                )
             }
 
-        } catch (e: java.net.MalformedURLException) {
-            val message = "Invalid URL format: ${e.message}"
-            if (BuildConfig.DEBUG) Log.e(TAG, message, e)
-            ValidationResult(false, 0, -1, message)
-        } catch (e: java.net.SocketTimeoutException) {
-            val message = "Connection timeout after ${timeoutMs}ms"
-            if (BuildConfig.DEBUG) Log.e(TAG, message, e)
-            ValidationResult(false, 0, -1, message)
-        } catch (e: java.net.UnknownHostException) {
-            val message = "Unknown host: ${e.message}"
-            if (BuildConfig.DEBUG) Log.e(TAG, message, e)
-            ValidationResult(false, 0, -1, message)
-        } catch (e: javax.net.ssl.SSLException) {
-            val message = "SSL error: ${e.message}"
-            if (BuildConfig.DEBUG) Log.e(TAG, message, e)
-            ValidationResult(false, 0, -1, message)
+            return FileCheckResult(
+                fileName = file.name,
+                success = true,
+                fileSize = file.length()
+            )
         } catch (e: Exception) {
-            val message = "Error checking file: ${e.message}"
-            if (BuildConfig.DEBUG) Log.e(TAG, message, e)
-            ValidationResult(false, 0, -1, message)
-        } finally {
-            connection?.disconnect()
+            Log.e(TAG, "Unexpected error checking file ${file.name}", e)
+            return FileCheckResult(
+                fileName = file.name,
+                success = false,
+                fileSize = file.lengthOrNull(),
+                errorMessage = "Unexpected error: ${e.message}"
+            )
         }
     }
 
     /**
-     * Check if multiple files exist on the server
-     * @param fileUrls Array of URLs to check
-     * @return ValidationResult for the first failed file, or success if all pass
+     * Checks a file given its path [filePath] for validity.
      */
-    @JvmStatic
-    fun checkMultipleFiles(vararg fileUrls: String): ValidationResult {
-        if (fileUrls.isEmpty()) {
-            return ValidationResult(false, 0, -1, "No URLs provided")
-        }
-
-        for (fileUrl in fileUrls) {
-            val result = checkFileAvailability(fileUrl)
-            if (!result.available) {
-                return result
-            }
-        }
-
-        return ValidationResult(true, 0, 200, "All files available")
+    fun checkSingleFile(filePath: String): FileCheckResult {
+        return checkSingleFile(File(filePath))
     }
 
     /**
-     * Result of server file validation
+     * Checks a file given a [Uri] for validity.
+     * Only supports `file://` schemes; other schemes will return a failure result.
      */
-    data class ValidationResult(
-        val available: Boolean,
-        val fileSize: Long,
-        val httpCode: Int,
-        val message: String
-    ) {
-        val fileSizeFormatted: String
-            get() {
-                if (fileSize <= 0) return "Unknown"
-                val kb = fileSize / 1024.0
-                return if (kb < 1024) {
-                    String.format("%.2f KB", kb)
-                } else {
-                    val mb = kb / 1024.0
-                    String.format("%.2f MB", mb)
+    fun checkSingleFile(uri: Uri): FileCheckResult {
+        return if (uri.scheme == "file") {
+            uri.path?.let { checkSingleFile(File(it)) }
+                ?: FileCheckResult(
+                    fileName = uri.toString(),
+                    success = false,
+                    errorMessage = "Invalid file path in URI"
+                )
+        } else {
+            FileCheckResult(
+                fileName = uri.toString(),
+                success = false,
+                errorMessage = "Unsupported URI scheme (use file://)"
+            )
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Batch checks – using @JvmName to avoid signature clash after erasure
+    // -------------------------------------------------------------------------
+
+    /**
+     * Checks a list of [File] objects.
+     * @return A list of [FileCheckResult] in the same order as the input.
+     */
+    @JvmName("checkMultipleFilesFromFiles")
+    fun checkMultipleFiles(files: List<File>): List<FileCheckResult> {
+        return files.map { checkSingleFile(it) }
+    }
+
+    /**
+     * Checks a list of [Uri] objects.
+     * Only supports `file://` schemes; unsupported URIs will return failure results.
+     * @return A list of [FileCheckResult] in the same order as the input.
+     */
+    @JvmName("checkMultipleFilesFromUris")
+    fun checkMultipleFiles(uris: List<Uri>): List<FileCheckResult> {
+        return uris.map { checkSingleFile(it) }
+    }
+
+    // -------------------------------------------------------------------------
+    // Internal helpers
+    // -------------------------------------------------------------------------
+
+    /**
+     * Counts the number of rows in the `Members` table of an SQLite database.
+     * Returns 0 if the query fails or the table does not exist.
+     */
+    private fun countMembersInDatabase(file: File): Int {
+        return try {
+            DriverManager.getConnection("jdbc:sqlite:${file.absolutePath}").use { conn ->
+                conn.createStatement().use { stmt ->
+                    val rs = stmt.executeQuery("SELECT COUNT(*) FROM Members")
+                    if (rs.next()) {
+                        rs.getInt(1)
+                    } else 0
                 }
             }
-
-        override fun toString(): String {
-            return "ValidationResult(available=$available, fileSize=$fileSizeFormatted, httpCode=$httpCode, message='$message')"
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to count Members in ${file.name}", e)
+            0
         }
     }
+
+    /**
+     * Extension function to get file length or null if the file does not exist.
+     */
+    private fun File.lengthOrNull(): Long? = if (exists()) length() else null
 }

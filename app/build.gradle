@@ -8,8 +8,8 @@ android {
     defaultConfig {
         applicationId = "za.co.jpsoft.winkerkreader"
         minSdk = 26
-        versionCode = 114
-        versionName = "4.2 test r014"
+        versionCode = 115
+        versionName = "4.2 test r015"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         targetSdk = 35
         vectorDrawables.useSupportLibrary = true
@@ -91,8 +91,10 @@ android {
 }
 
 dependencies {
+    implementation 'androidx.lifecycle:lifecycle-process:2.11.0'
+    implementation 'androidx.lifecycle:lifecycle-process:2.11.0'
     implementation 'androidx.paging:paging-common:3.5.0'
-    implementation "androidx.paging:paging-runtime-ktx:3.3.6"
+    implementation "androidx.paging:paging-runtime-ktx:3.5.0"
     implementation("androidx.biometric:biometric:1.1.0")
     implementation "androidx.core:core-ktx:1.19.0"
     implementation 'com.google.android.libraries.places:places:5.2.0'
@@ -108,12 +110,12 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
 
     // ========== LIFECYCLE COMPONENTS ==========
-    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.10.0"
-    implementation "androidx.lifecycle:lifecycle-viewmodel-savedstate:2.10.0"
-    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.10.0'
-    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.10.0'
-    implementation 'androidx.lifecycle:lifecycle-common-java8:2.10.0'
-    implementation 'androidx.lifecycle:lifecycle-service:2.10.0'
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.11.0"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-savedstate:2.11.0"
+    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.11.0'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.11.0'
+    implementation 'androidx.lifecycle:lifecycle-common-java8:2.11.0'
+    implementation 'androidx.lifecycle:lifecycle-service:2.11.0'
 
     // ========== NAVIGATION COMPONENTS ==========
     implementation "androidx.navigation:navigation-fragment-ktx:2.9.8"
@@ -167,7 +169,7 @@ dependencies {
     androidTestImplementation 'androidx.work:work-testing:2.11.2'
     androidTestImplementation 'androidx.test:rules:1.7.0'
     androidTestImplementation 'androidx.test:runner:1.7.0'
-    androidTestImplementation 'androidx.test.uiautomator:uiautomator:2.3.0'
+    androidTestImplementation 'androidx.test.uiautomator:uiautomator:2.4.0'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0'
     // ========== DESUGARING ==========
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'

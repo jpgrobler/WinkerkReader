@@ -16,10 +16,10 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
-import za.co.jpsoft.winkerkreader.data.calllog.CallLogDao
-import za.co.jpsoft.winkerkreader.data.calllog.CallLogDatabase
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.KEY_SELECTED_CALENDAR_ID
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
+import za.co.jpsoft.winkerkreader.data.calllog.CallLogDao
+import za.co.jpsoft.winkerkreader.data.calllog.CallLogDatabase
 import za.co.jpsoft.winkerkreader.ui.activities.MainActivity
 import za.co.jpsoft.winkerkreader.utils.CalendarManager
 import za.co.jpsoft.winkerkreader.utils.PhoneCallMonitor

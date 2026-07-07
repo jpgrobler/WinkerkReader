@@ -17,10 +17,11 @@ import za.co.jpsoft.winkerkreader.services.ListViewWidgetService
 import za.co.jpsoft.winkerkreader.ui.activities.MainActivity
 import za.co.jpsoft.winkerkreader.ui.activities.VerjaarSmsActivity
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
+import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
-import java.text.SimpleDateFormat
+
 /**
  * Enhanced Widget Provider with modern Android compatibility and error handling.
  * Maintains compatibility with original layout while adding reliability improvements.

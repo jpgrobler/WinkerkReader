@@ -4,10 +4,10 @@ import android.content.Context
 import android.util.Log
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.DatabaseHelper
-import za.co.jpsoft.winkerkreader.data.models.CallType
-import za.co.jpsoft.winkerkreader.data.calllog.CallLogDatabase
 import za.co.jpsoft.winkerkreader.data.calllog.ActiveCallEntity
+import za.co.jpsoft.winkerkreader.data.calllog.CallLogDatabase
 import za.co.jpsoft.winkerkreader.data.calllog.CallLogEntity
+import za.co.jpsoft.winkerkreader.data.models.CallType
 
 
 object CallLogImporter {

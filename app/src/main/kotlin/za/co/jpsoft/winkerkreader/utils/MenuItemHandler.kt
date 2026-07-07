@@ -72,14 +72,6 @@ class MenuItemHandler(
                 navigationController.navigateToPermissions()
                 true
             }
-            R.id.menu_permission_settings -> {
-                showPermissionSettingsDialog()
-                true
-            }
-            R.id.menu_battery_optimization -> {
-                BatteryOptimizationHelper.showBatteryOptimizationDialog(activity)
-                true
-            }
             R.id.action_bediening -> {
                 navigationController.navigateToBediening()
                 true

@@ -14,7 +14,6 @@ import android.os.Environment
 import android.provider.MediaStore
 import android.provider.Settings
 import android.util.Log
-import android.view.GestureDetector
 import android.view.Menu
 import android.view.MenuItem
 import android.view.MotionEvent
@@ -26,6 +25,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
@@ -33,6 +33,7 @@ import androidx.lifecycle.SavedStateViewModelFactory
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.work.WorkInfo
@@ -46,11 +47,22 @@ import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
 import za.co.jpsoft.winkerkreader.data.models.FilterBox
 import za.co.jpsoft.winkerkreader.data.pastoral.PastoralDatabase
+import za.co.jpsoft.winkerkreader.data.repositories.ContactRepository
 import za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase
 import za.co.jpsoft.winkerkreader.databinding.ActivityMainBinding
 import za.co.jpsoft.winkerkreader.services.CallMonitoringService
 import za.co.jpsoft.winkerkreader.ui.adapters.MemberListAdapter
 import za.co.jpsoft.winkerkreader.ui.components.SearchCheckBox
+import za.co.jpsoft.winkerkreader.ui.controllers.ActivityResultCoordinator
+import za.co.jpsoft.winkerkreader.ui.controllers.ChurchHeaderController
+import za.co.jpsoft.winkerkreader.ui.controllers.MainMenuController
+import za.co.jpsoft.winkerkreader.ui.controllers.MainSearchFilterCoordinator
+import za.co.jpsoft.winkerkreader.ui.controllers.MainStartupCoordinator
+import za.co.jpsoft.winkerkreader.ui.controllers.MainSwipeGestureController
+import za.co.jpsoft.winkerkreader.ui.controllers.MemberListInteractionController
+import za.co.jpsoft.winkerkreader.ui.controllers.PastoralReminderBadgeController
+import za.co.jpsoft.winkerkreader.ui.controllers.StartupActions
+import za.co.jpsoft.winkerkreader.ui.helpers.MemberListScrollHelper
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MainViewModel
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel
 import za.co.jpsoft.winkerkreader.utils.AppAuthGuard
@@ -72,20 +84,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.concurrent.Executors
-import androidx.core.view.isVisible
-import androidx.paging.LoadState
-import za.co.jpsoft.winkerkreader.data.repositories.ContactRepository
-import za.co.jpsoft.winkerkreader.ui.helpers.MemberListScrollHelper
-import za.co.jpsoft.winkerkreader.ui.controllers.ActivityResultCoordinator
-import za.co.jpsoft.winkerkreader.ui.controllers.ChurchHeaderController
-import za.co.jpsoft.winkerkreader.ui.controllers.MainMenuController
-import za.co.jpsoft.winkerkreader.ui.controllers.MainSearchFilterCoordinator
-import za.co.jpsoft.winkerkreader.ui.controllers.MainStartupCoordinator
-import za.co.jpsoft.winkerkreader.ui.controllers.MainSwipeGestureController
-import za.co.jpsoft.winkerkreader.ui.controllers.MemberListInteractionController
-import za.co.jpsoft.winkerkreader.ui.controllers.PastoralReminderBadgeController
-import za.co.jpsoft.winkerkreader.ui.controllers.StartupActions
-
 
 class MainActivity : AppCompatActivity() {
 
@@ -122,6 +120,7 @@ class MainActivity : AppCompatActivity() {
     private var currentWorkInfoLiveData: LiveData<WorkInfo?>? = null
     private var currentSortOrder: String = ""
     private var pendingBirthdayOffset: Int? = null
+    private var isAppInitialized = false
 
     companion object {
         private const val TAG = "Winkerk_MainActivity"
@@ -131,26 +130,29 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun handleResultCancelled() {
-        searchFilterCoordinator.handleResultCancelled()
+        if (::searchFilterCoordinator.isInitialized) {
+            searchFilterCoordinator.handleResultCancelled()
+        }
     }
-
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // ---------- 1. Basic (ViewModel‑independent) setup ----------
         settingsManager = SettingsManager.getInstance(this)
 
-        val dailyEnabled = settingsManager.dailyBackupEnabled // or use a dedicated prefs
+        val dailyEnabled = settingsManager.dailyBackupEnabled
         val exportToDownloads = settingsManager.backupExportToDownloads
         if (dailyEnabled) {
             PastoralBackupWorker.schedule(this, exportToDownloads)
         } else {
             PastoralBackupWorker.cancel(this)
         }
+
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
         permissionManager = PermissionManager(this)
-        initializeViews()
 
         churchHeaderController = ChurchHeaderController(
             activity = this,
@@ -158,10 +160,88 @@ class MainActivity : AppCompatActivity() {
             settingsManager = settingsManager,
             database = WinkerkDatabase.getInstance(this)
         )
+
+        workScheduler = WorkScheduler(this, settingsManager)
+        workScheduler.scheduleAll()
+
+        navigationController = MainNavigationController(this)
+
+        backgroundExecutor = Executors.newSingleThreadExecutor()
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.lidmaatList) { view, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(0, 0, 0, systemBars.bottom)
+            insets
+        }
+
+        // ---------- 2. Create ViewModel and all controllers early ----------
+        viewModel = ViewModelProvider(
+            this,
+            SavedStateViewModelFactory(application, this, intent?.extras)
+        ).get(MemberViewModel::class.java)
+
+        // Adapter and RecyclerView
+        memberListAdapter = MemberListAdapter(
+            onItemClick = { view, item, _ ->
+                if (::listInteractionController.isInitialized) {
+                    listInteractionController.showMemberPopupMenu(view, item)
+                }
+            },
+            onItemLongClick = { item, _ ->
+                if (::listInteractionController.isInitialized) {
+                    listInteractionController.onMemberLongClick(item)
+                } else {
+                    false
+                }
+            }
+        )
+        memberListAdapter.stateRestorationPolicy = RecyclerView.Adapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY
+
+        binding.lidmaatList.apply {
+            layoutManager = LinearLayoutManager(this@MainActivity)
+            adapter = memberListAdapter
+            setHasFixedSize(true)
+            itemAnimator = null
+        }
+
+        // Controllers that depend on ViewModel (safe to create now)
+        searchFilterCoordinator = MainSearchFilterCoordinator(
+            tag = TAG,
+            context = this,
+            viewModel = viewModel,
+            settingsManager = settingsManager,
+            binding = binding,
+            memberListAdapter = memberListAdapter,
+            findSearchView = ::findSearchView,
+            hideFilterPanel = {
+                if (binding.mainFilter.isVisible) {
+                    binding.mainFilter.visibility = View.GONE
+                }
+            }
+        )
+
+        menuController = MainMenuController(
+            activity = this,
+            tag = TAG,
+            viewModel = viewModel,
+            searchFilterCoordinator = searchFilterCoordinator,
+            observeDataset = ::observeDataset,
+            navigationController = navigationController,
+            onSortChanged = ::updateSortOrder
+        )
+
+        listInteractionController = MemberListInteractionController(
+            activity = this,
+            tag = TAG,
+            settingsManager = settingsManager,
+            viewModel = viewModel,
+            memberListAdapter = memberListAdapter,
+            observeDataset = ::observeDataset
+        )
+
         swipeGestureController = MainSwipeGestureController(
             activity = this,
             onSwipeLeft = {
-                // Same logic as original onLeftSwipe()
                 when (viewModel.sortOrder) {
                     "HUWELIK" -> updateSortOrder("VAN")
                     "VAN"     -> updateSortOrder("GESINNE")
@@ -175,7 +255,6 @@ class MainActivity : AppCompatActivity() {
                 viewModel.refresh()
             },
             onSwipeRight = {
-                // Same logic as original onRightSwipe()
                 when (viewModel.sortOrder) {
                     "HUWELIK" -> updateSortOrder("VERJAAR")
                     "VERJAAR" -> updateSortOrder("ADRES")
@@ -190,9 +269,7 @@ class MainActivity : AppCompatActivity() {
             }
         )
 
-        backgroundExecutor = Executors.newSingleThreadExecutor()
-
-
+        // ActivityResultCoordinator must be created before onStart (i.e. now)
         activityResultCoordinator = ActivityResultCoordinator(
             activity = this,
             searchCheckBoxKey = SEARCH_CHECK_BOX,
@@ -207,11 +284,36 @@ class MainActivity : AppCompatActivity() {
             onCancelled = ::handleResultCancelled
         )
 
-        workScheduler = WorkScheduler(this, settingsManager)
-        workScheduler.scheduleAll()
+        // ---------- 3. Authentication guard ----------
+        authGuard = AppAuthGuard(this, settingsManager)
+        authGuard.guardIfNeeded(
+            onAuthenticated = {
+                // Everything that loads data or needs the final UI state
+                loadDataAndFinalize(savedInstanceState)
+            }
+        )
+    }
 
-        navigationController = MainNavigationController(this)
+    /**
+     * Called only after successful authentication.
+     * Loads data, sets up remaining controllers, and marks the app as initialized.
+     */
+    private fun loadDataAndFinalize(savedInstanceState: Bundle?) {
+        // ---------- Pastoral badge & observers ----------
+        pastoralBadgeController = PastoralReminderBadgeController(
+            activity = this,
+            pastoralDb = PastoralDatabase.getInstance(this),
+            memberViewModel = viewModel,
+            mainViewModel = mainViewModel
+        )
+        pastoralBadgeController.setup()
 
+        setupViewModelObservers()
+
+        // ---------- IMPORTANT: Set up data observers BEFORE loading data ----------
+        setupObservers()
+
+        // ---------- Startup coordinator (loads data, sets up permissions, etc.) ----------
         startupCoordinator = MainStartupCoordinator(
             context = this,
             lifecycleScope = lifecycleScope,
@@ -220,13 +322,10 @@ class MainActivity : AppCompatActivity() {
             binding = binding,
             actions = object : StartupActions {
                 override fun checkAndRequestPermissions() {
-                    // Use the new rationale-enabled methods for critical permission groups
                     permissionManager.requestPhonePermissions(this@MainActivity)
                     permissionManager.requestContactsPermissions(this@MainActivity)
                     permissionManager.requestSmsPermissions(this@MainActivity)
                     permissionManager.requestCalendarPermissions(this@MainActivity)
-
-                    // Notification permission is optional but nice to have on startup (Android 13+)
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         permissionManager.requestNotificationPermissions(this@MainActivity)
                     }
@@ -237,7 +336,7 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 override fun setupViewModel() {
-                    this@MainActivity.setupViewModel()
+                    // Already set up; do nothing
                 }
 
                 override fun setupPermissions() {
@@ -277,15 +376,11 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         )
-        authGuard = AppAuthGuard(this, settingsManager)
-        authGuard.guardIfNeeded(
-            onAuthenticated = {
-                startupCoordinator.runOnCreate()
-            }
-
-
-        )
-
+        // This will call loadInitialData() which triggers the first data load.
+        startupCoordinator.runOnCreate()
+        // Force a refresh to update the count
+        //viewModel.refresh()
+        // ---------- Back‑press handler ----------
         backPressHandler = BackPressHandler(
             activity = this,
             mainViewModel = mainViewModel,
@@ -294,34 +389,84 @@ class MainActivity : AppCompatActivity() {
         )
         backPressHandler.register()
 
-        ViewCompat.setOnApplyWindowInsetsListener(binding.lidmaatList) { view, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            view.setPadding(0, 0, 0, systemBars.bottom)
-            insets
-        }
-        PastoralDatabase.getInstance(this)
-        pastoralBadgeController = PastoralReminderBadgeController(
-            activity = this,
-            pastoralDb = PastoralDatabase.getInstance(this),
-            memberViewModel = viewModel,   // MemberViewModel
-            mainViewModel = mainViewModel
-        )
-        pastoralBadgeController.setup()
-
+        // ---------- Check for newer backup ----------
         checkForNewerBackup()
-        setupViewModelObservers()
 
+        // ---------- Restore instance state (if any) ----------
+        savedInstanceState?.let { restoreInstanceState(it) }
 
+        // ---------- Sync sort, scroll handling (these don't affect initial load) ----------
+        syncSortOrderWithSettings()
+        setupBirthdayScrollHandling()
+        setupScrollRestorationObserver()
+
+        // Force menu to be recreated now that the app is ready
+        invalidateOptionsMenu()
+
+        isAppInitialized = true
     }
-    private fun setupViewModelObservers() {
+
+    /**
+     * Sets up all the data observers that bind the ViewModel to the UI.
+     * This must be called after viewModel and memberListAdapter are created.
+     */
+    private fun setupObservers() {
+        // LiveData observers
+        viewModel.getTextLiveData().observe(this) { searchText ->
+            binding.searchText.text = searchText
+            binding.searchItemBlock.visibility = if (searchText.isEmpty()) View.GONE else View.VISIBLE
+        }
+
+        viewModel.getVerjaarFLag().observe(this) { showBirthday ->
+            if (BuildConfig.DEBUG) Log.d(TAG, "verjaarFlag: $showBirthday")
+        }
+
+        viewModel.memberGuidsWithPendingReminders.observe(this) { guids ->
+            if (BuildConfig.DEBUG) Log.d(TAG, "🔄 Observer received ${guids.size} GUIDs: $guids")
+            memberListAdapter.updatePendingReminderGuids(guids)
+            restoreListScrollIfNeeded()
+        }
+
+        // Paging data flow
         lifecycleScope.launch {
-            ContactRepository.contactsUpdateFlow.collect {
-                // Contacts updated – refresh visible rows
-                memberListAdapter.rebindVisibleItems(binding.lidmaatList)
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.pagingDataFlowWithRefresh
+                    .catch { e -> Log.e(TAG, "Paging flow error", e) }
+                    .collect { pagingData ->
+                        memberListAdapter.submitData(lifecycle, pagingData)
+                    }
+            }
+        }
+
+        // Total count
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.totalCount.collect { count ->
+                    Log.d(TAG, "totalCount: $count")
+                    binding.mainCount.text = "[$count]"
+                }
+            }
+        }
+
+        // Load state (progress bar)
+        lifecycleScope.launch {
+            memberListAdapter.loadStateFlow.collect { loadStates ->
+                val isLoading = loadStates.refresh is LoadState.Loading
+                binding.indeterminateBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+                if (loadStates.refresh is LoadState.Error) {
+                    // Optionally show error
+                }
             }
         }
     }
 
+    private fun setupViewModelObservers() {
+        lifecycleScope.launch {
+            ContactRepository.contactsUpdateFlow.collect {
+                memberListAdapter.rebindVisibleItems(binding.lidmaatList)
+            }
+        }
+    }
 
     // ------------------------------------------------------------
     // Filter & cancellation
@@ -330,11 +475,9 @@ class MainActivity : AppCompatActivity() {
         originalRecordStatusBeforeFilter = status
     }
 
-    // MainActivity.kt
     fun cancelFilter() {
         if (BuildConfig.DEBUG) Log.d(TAG, "cancelFilter called")
         recomputeBirthdayOffset()
-        // Get the original sort before any filter was applied
         val restoreSort = if (searchFilterCoordinator.originalLayoutBeforeFilter.isNotEmpty()) {
             searchFilterCoordinator.originalLayoutBeforeFilter
         } else {
@@ -342,30 +485,24 @@ class MainActivity : AppCompatActivity() {
         }
         if (BuildConfig.DEBUG) Log.d(TAG, "cancelFilter: restoreSort = $restoreSort")
 
-        // Clear filter state
         clearAppliedFilterList()
         viewModel.soekList = false
 
-        // Restore the sort order
         updateSortOrder(restoreSort)
         if (BuildConfig.DEBUG) Log.d(TAG, "cancelFilter: after updateSortOrder, viewModel.sortOrder = ${viewModel.sortOrder}")
         binding.sortorder.text = restoreSort
         binding.sortorder.tag = restoreSort
-        // Reset the coordinator's original sort tracker
         searchFilterCoordinator.originalLayoutBeforeFilter = ""
-        mainViewModel.setSavedSortOrderBeforeFilter(null)  // optional, but keep for safety
+        mainViewModel.setSavedSortOrderBeforeFilter(null)
 
-        // Show main layout
         binding.mainMain.visibility = View.VISIBLE
         binding.mainFilter.visibility = View.GONE
         mainViewModel.setFilterVisible(false)
 
-        // Clear summary bar
         binding.searchText.text = ""
         binding.searchItemBlock.visibility = View.GONE
         viewModel.clearFilterSummary()
 
-        // Hide keyboard
         currentFocus?.let {
             val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
             imm.hideSoftInputFromWindow(it.windowToken, 0)
@@ -398,38 +535,40 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onPause() {
-        savedListScroll = MemberListScrollHelper.saveScrollState(binding.lidmaatList, memberListAdapter)
+        if (isAppInitialized) {
+            savedListScroll = MemberListScrollHelper.saveScrollState(binding.lidmaatList, memberListAdapter)
+        }
         super.onPause()
     }
 
     override fun onResume() {
         if (BuildConfig.DEBUG) Log.d(TAG, "onResume called")
-        if (::authGuard.isInitialized) {
+
+        if (isAppInitialized && ::authGuard.isInitialized) {
             authGuard.checkOnResume(
                 onAuthenticated = {
                     if (BuildConfig.DEBUG) Log.d(TAG, "Auth callback invoked")
                     startupCoordinator.runOnResume()
-
                     pastoralBadgeController.refresh()
-
-                    churchHeaderController.loadAndApply()   // was loadChurchInfoAndUpdateHeader()
-
+                    churchHeaderController.loadAndApply()
                 }
             )
         } else {
-            if (BuildConfig.DEBUG) Log.d(TAG, "authGuard not initialized, running directly")
-            startupCoordinator.runOnResume()
-
-            pastoralBadgeController.refresh()
-
-            churchHeaderController.loadAndApply()//loadChurchInfoAndUpdateHeader()
-
+            if (isAppInitialized) {
+                startupCoordinator.runOnResume()
+                pastoralBadgeController.refresh()
+                churchHeaderController.loadAndApply()
+            }
         }
-        syncSortOrderWithSettings()
-        if ((settingsManager.defLayout == "VERJAAR" || settingsManager.defLayout == "VERJAARSDAG") && pendingBirthdayOffset == null) {
-            recomputeBirthdayOffset()
+
+        if (isAppInitialized) {
+            syncSortOrderWithSettings()
+            if ((settingsManager.defLayout == "VERJAAR" || settingsManager.defLayout == "VERJAARSDAG") && pendingBirthdayOffset == null) {
+                recomputeBirthdayOffset()
+            }
+            binding.lidmaatList.post { restoreListScrollIfNeeded() }
         }
-        binding.lidmaatList.post { restoreListScrollIfNeeded() }
+
         super.onResume()
     }
 
@@ -450,147 +589,11 @@ class MainActivity : AppCompatActivity() {
     // ------------------------------------------------------------
 
     private fun initializeViews() {
-        memberListAdapter = MemberListAdapter(
-            onItemClick = { view, item, _ ->
-                if (::listInteractionController.isInitialized) {
-                    listInteractionController.showMemberPopupMenu(view, item)
-                }
-            },
-            onItemLongClick = { item, _ ->
-                if (::listInteractionController.isInitialized) {
-                    listInteractionController.onMemberLongClick(item)
-                } else {
-                    false
-                }
-            }
-        )
-        // ✅ Preserve scroll position when returning from detail
-        memberListAdapter.stateRestorationPolicy = RecyclerView.Adapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY
-
-        binding.lidmaatList.apply {
-            layoutManager = LinearLayoutManager(this@MainActivity)
-            adapter = memberListAdapter
-            setHasFixedSize(true)
-            itemAnimator = null
-        }
+        // Already done in onCreate
     }
 
     private fun setupViewModel() {
-
-        viewModel = ViewModelProvider(
-            this,
-            SavedStateViewModelFactory(application, this, intent?.extras)
-        ).get(MemberViewModel::class.java)
-
-        //viewModel.initRepository(this)
-
-
-        searchFilterCoordinator = MainSearchFilterCoordinator(
-            tag = TAG,
-            context = this,
-            viewModel = viewModel,
-            settingsManager = settingsManager,
-            binding = binding,
-            memberListAdapter = memberListAdapter,
-            findSearchView = ::findSearchView,
-            hideFilterPanel = {
-                if (binding.mainFilter.isVisible) {
-                    binding.mainFilter.visibility = View.GONE
-                }
-            }
-        )
-        menuController = MainMenuController(
-            activity = this,
-            tag = TAG,
-            viewModel = viewModel,
-            searchFilterCoordinator = searchFilterCoordinator,
-            observeDataset = ::observeDataset,
-            navigationController = navigationController,
-            onSortChanged = ::updateSortOrder
-        )
-        listInteractionController = MemberListInteractionController(
-            activity = this,
-            tag = TAG,
-            settingsManager = settingsManager,
-            viewModel = viewModel,
-            memberListAdapter = memberListAdapter,
-            observeDataset = ::observeDataset
-        )
-
-        viewModel.getTextLiveData().observe(this) { searchText ->
-            binding.searchText.text = searchText
-            binding.searchItemBlock.visibility = if (searchText.isEmpty()) View.GONE else View.VISIBLE
-        }
-        viewModel.getVerjaarFLag().observe(this) { showBirthday ->
-            if (BuildConfig.DEBUG) Log.d(TAG, "verjaarFlag: $showBirthday")
-        }
-
-        viewModel.memberGuidsWithPendingReminders.observe(this) { guids ->
-            if (BuildConfig.DEBUG) Log.d(TAG, "🔄 Observer received ${guids.size} GUIDs: $guids")
-            memberListAdapter.updatePendingReminderGuids(guids)
-            //memberListAdapter.rebindVisibleItems(binding.lidmaatList)
-            restoreListScrollIfNeeded()
-        }
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.pagingDataFlowWithRefresh
-                    .catch { e -> Log.e(TAG, "Paging flow error", e) }
-                    .collect { pagingData ->
-                        memberListAdapter.submitData(lifecycle, pagingData)
-                    }
-            }
-        }
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.totalCount.collect { count ->
-                    binding.mainCount.text = "[$count]"
-                }
-            }
-        }
-        lifecycleScope.launch {
-            memberListAdapter.loadStateFlow.collect { loadStates ->
-                val isLoading = loadStates.refresh is LoadState.Loading
-                binding.indeterminateBar.visibility = if (isLoading) View.VISIBLE else View.GONE
-                if (loadStates.refresh is LoadState.Error) {
-                    // show error message
-                }
-            }
-        }
-        setupBirthdayScrollHandling()
-        setupScrollRestorationObserver()
-    }
-
-
-    private fun setupBirthdayScrollHandling() {
-        lifecycleScope.launch {
-            // Combine load states with total count so we know when all items are loaded
-            memberListAdapter.loadStateFlow.collect { loadStates ->
-                val offset = pendingBirthdayOffset ?: return@collect
-                // Only proceed when both refresh and append are not loading
-                if (loadStates.refresh is LoadState.NotLoading && loadStates.append is LoadState.NotLoading) {
-                    val itemCount = memberListAdapter.itemCount
-                    val totalCount = viewModel.totalCount.value
-                    // We can scroll if we have enough items, or if we've loaded everything
-                    if (itemCount > offset || itemCount == totalCount) {
-                        val target = if (offset < itemCount) offset else itemCount - 1
-                        binding.lidmaatList.post {
-                            (binding.lidmaatList.layoutManager as? LinearLayoutManager)
-                                ?.scrollToPositionWithOffset(target, 0)
-                        }
-                        pendingBirthdayOffset = null // clear after successful scroll
-                    }
-                }
-            }
-        }
-    }
-
-    private fun restoreListScrollIfNeeded() {
-        if (pendingBirthdayOffset != null) return   // Prevent overriding birthday scroll
-        val state = savedListScroll ?: return
-        if (memberListAdapter.itemCount == 0) return
-        MemberListScrollHelper.restoreScrollState(binding.lidmaatList, state, memberListAdapter)
-        savedListScroll = null
-        scrollRestored = true
+        // Already done in onCreate and setupObservers handles observers
     }
 
     private fun setupPermissions() {
@@ -704,15 +707,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupChurchNameClickHandler() {
         binding.mainGemeentenaam.setOnClickListener { view ->
-//            if (::listInteractionController.isInitialized) {
-//               // listInteractionController.showGroupFunctionMenu(view)
-//            }
+            // Optional click handling
         }
     }
 
     fun applyFilterList(filterList: ArrayList<FilterBox>) {
         searchFilterCoordinator.filterList = filterList
-
     }
 
     private fun loadInitialData() {
@@ -725,22 +725,18 @@ class MainActivity : AppCompatActivity() {
             imm.hideSoftInputFromWindow(it.windowToken, 0)
         }
         binding.searchItemBlock.visibility = View.GONE
-        binding.mainCount.text = "[0]"
-        // Die kerknaam word outomaties deur die ViewModel-observer opgedateer.
-        // Verfris die lys en laai WhatsApp-kontakte.
+        //binding.mainCount.text = "[0]"
         searchFilterCoordinator.refresh()
         WhatsAppContactLoader.loadWhatsAppContactsAtomic(this, lifecycleScope)
 
-        churchHeaderController.loadAndApply() //loadChurchInfoAndUpdateHeader()
+        churchHeaderController.loadAndApply()
     }
 
     fun observeDataset() {
-        // Update the search text display
         binding.searchItemBlock.visibility = if (viewModel.soekList && viewModel.soek.isNotEmpty()) View.VISIBLE else View.GONE
         binding.sortorder.text = viewModel.sortOrder
         binding.sortorder.tag = viewModel.sortOrder
         if (BuildConfig.DEBUG) Log.d(TAG, "observeDataset: setting sortorder text to ${viewModel.sortOrder}")
-        //        searchFilterCoordinator.refresh()
     }
 
     // ------------------------------------------------------------
@@ -748,20 +744,29 @@ class MainActivity : AppCompatActivity() {
     // ------------------------------------------------------------
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        return menuController.onCreateOptionsMenu(menu)
+        return if (isAppInitialized) {
+            menuController.onCreateOptionsMenu(menu)
+        } else {
+            false
+        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return MenuItemHandler(this, settingsManager, viewModel, navigationController)
-            .handleMenuItem(item) || super.onOptionsItemSelected(item)
+        return if (isAppInitialized) {
+            MenuItemHandler(this, settingsManager, viewModel, navigationController)
+                .handleMenuItem(item) || super.onOptionsItemSelected(item)
+        } else {
+            super.onOptionsItemSelected(item)
+        }
     }
 
     override fun onOptionsMenuClosed(menu: Menu) {
         super.onOptionsMenuClosed(menu)
-
     }
 
     override fun onPrepareOptionsMenu(menu: Menu): Boolean {
+        if (!isAppInitialized) return false
+
         val bedieningItem = menu.findItem(R.id.action_bediening)
         if (bedieningItem != null) {
             val count = pastoralBadgeController.badgeCount
@@ -785,14 +790,16 @@ class MainActivity : AppCompatActivity() {
     // ------------------------------------------------------------
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        return swipeGestureController.onTouchEvent(event) || super.onTouchEvent(event)
+        return if (isAppInitialized) {
+            swipeGestureController.onTouchEvent(event) || super.onTouchEvent(event)
+        } else {
+            super.onTouchEvent(event)
+        }
     }
 
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {
-        // Give the gesture detector first chance; if it consumes, return true.
-        // Otherwise, let the superclass handle it.
-        return if (swipeGestureController.handleTouchEvent(event)) {
-            true
+        return if (isAppInitialized) {
+            if (swipeGestureController.handleTouchEvent(event)) true else super.dispatchTouchEvent(event)
         } else {
             super.dispatchTouchEvent(event)
         }
@@ -866,11 +873,9 @@ class MainActivity : AppCompatActivity() {
     private fun syncSortOrderWithSettings() {
         val currentDefLayout = settingsManager.defLayout
         if (BuildConfig.DEBUG) Log.d(TAG, "syncSortOrderWithSettings: defLayout = $currentDefLayout")
-        updateSortOrder(currentDefLayout)  // This will only refresh if the sort actually changed
+        updateSortOrder(currentDefLayout)
     }
 
-
-    // In MainActivity.onCreate, after the UI is ready
     private fun checkForNewerBackup() {
         lifecycleScope.launch(Dispatchers.IO) {
             val candidate = PastoralDatabaseBackup.findBackupFile(this@MainActivity)
@@ -880,7 +885,6 @@ class MainActivity : AppCompatActivity() {
             val liveModified = getDatabasePath(winkerkEntry.PASTORAL_DB).lastModified()
             val backupModified = candidate.lastModified()
             if (backupModified <= liveModified) {
-                // Clean up temp file if it's from MediaStore
                 if (candidate.absolutePath.startsWith(cacheDir.absolutePath)) {
                     candidate.delete()
                 }
@@ -904,7 +908,6 @@ class MainActivity : AppCompatActivity() {
                     startActivity(Intent(this@MainActivity, LaaiDatabasisActivity::class.java)
                         .putExtra(LaaiDatabasisActivity.EXTRA_PROMPT_RESTORE, true))
                 }.show()
-                // Clean up temp file after showing (or keep for later)
                 if (candidate.absolutePath.startsWith(cacheDir.absolutePath)) {
                     candidate.delete()
                 }
@@ -912,7 +915,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    /** Scans Downloads/WinkerkReader for any wkr_pastoral_*.db file, newest first. */
     private fun findDownloadsBackup(): File? {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             val projection = arrayOf(
@@ -940,7 +942,6 @@ class MainActivity : AppCompatActivity() {
                     val id = cursor.getLong(idIdx)
                     val uri = ContentUris.withAppendedId(MediaStore.Downloads.EXTERNAL_CONTENT_URI, id)
 
-                    // Copy to cache to get a File object with lastModified
                     val tempFile = File(cacheDir, "temp_backup_check.db")
                     contentResolver.openInputStream(uri)?.use { input ->
                         tempFile.outputStream().use { output ->
@@ -966,29 +967,21 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * Recalculates the birthday offset and triggers a scroll if the list is already loaded.
-     * Called after filter/search changes while the list is sorted by VERJAAR.
-     */
     fun recomputeBirthdayOffset() {
         val currentSort = settingsManager.defLayout
         if (currentSort == "VERJAAR" || currentSort == "VERJAARSDAG") {
             lifecycleScope.launch {
                 pendingBirthdayOffset = viewModel.getBirthdayOffset(currentSort)
-                //scrollToBirthdayIfLoaded()   // fallback if list is already loaded 3-7-2026
             }
         }
     }
+
     // ------------------------------------------------------------
-    // Factory for MainViewModel
+    // Sort order management
     // ------------------------------------------------------------
-    /**
-     * Single point of truth for changing the sort order.
-     * Updates SettingsManager, MemberViewModel, and MainViewModel.
-     */
+
     fun updateSortOrder(newSort: String) {
         if (newSort == currentSortOrder) {
-            // Still update adapter state (in case filters changed)
             memberListAdapter.updateState(
                 listView = settingsManager.listView,
                 soekList = viewModel.soekList,
@@ -999,7 +992,6 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        // Update the current sort
         currentSortOrder = newSort
 
         settingsManager.defLayout = newSort
@@ -1018,7 +1010,6 @@ class MainActivity : AppCompatActivity() {
         if (newSort == "VERJAAR" || newSort == "VERJAARSDAG") {
             lifecycleScope.launch {
                 pendingBirthdayOffset = viewModel.getBirthdayOffset(newSort)
-                // Now refresh the list (this will trigger the load state flow)
                 viewModel.updateSortOrder(newSort)
             }
         } else {
@@ -1028,6 +1019,36 @@ class MainActivity : AppCompatActivity() {
     }
 
     private var scrollRestored = false
+
+    private fun setupBirthdayScrollHandling() {
+        lifecycleScope.launch {
+            memberListAdapter.loadStateFlow.collect { loadStates ->
+                val offset = pendingBirthdayOffset ?: return@collect
+                if (loadStates.refresh is LoadState.NotLoading && loadStates.append is LoadState.NotLoading) {
+                    val itemCount = memberListAdapter.itemCount
+                    val totalCount = viewModel.totalCount.value
+                    if (itemCount > offset || itemCount == totalCount) {
+                        val target = if (offset < itemCount) offset else itemCount - 1
+                        binding.lidmaatList.post {
+                            (binding.lidmaatList.layoutManager as? LinearLayoutManager)
+                                ?.scrollToPositionWithOffset(target, 0)
+                        }
+                        pendingBirthdayOffset = null
+                    }
+                }
+            }
+        }
+    }
+
+    private fun restoreListScrollIfNeeded() {
+        if (pendingBirthdayOffset != null) return
+        val state = savedListScroll ?: return
+        if (memberListAdapter.itemCount == 0) return
+        MemberListScrollHelper.restoreScrollState(binding.lidmaatList, state, memberListAdapter)
+        savedListScroll = null
+        scrollRestored = true
+    }
+
     private fun setupScrollRestorationObserver() {
         lifecycleScope.launch {
             memberListAdapter.loadStateFlow.collect { loadStates ->

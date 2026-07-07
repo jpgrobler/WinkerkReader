@@ -22,13 +22,13 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.MemberPagingSource
 import za.co.jpsoft.winkerkreader.data.MemberRepository
 import za.co.jpsoft.winkerkreader.data.models.FilterBox
 import za.co.jpsoft.winkerkreader.data.models.MemberItem
 import za.co.jpsoft.winkerkreader.ui.components.SearchCheckBox
 import za.co.jpsoft.winkerkreader.ui.models.MainQueryMode
-import za.co.jpsoft.winkerkreader.BuildConfig
 
 /**
  * Standardized on [AndroidViewModel] so the application [Context][android.content.Context]
@@ -183,6 +183,7 @@ class MemberViewModel(
     fun updatePendingRemindersSet(guids: Set<String>) {
         _memberGuidsWithPendingReminders.value = guids
     }
+
     private val _totalCount = MutableStateFlow(0)
     val totalCount: StateFlow<Int> = _totalCount.asStateFlow()
 
@@ -432,6 +433,7 @@ class MemberViewModel(
         // ✅ Set the search term in the summary
         textLiveData.value = searchTerm
     }
+
     fun clearFilterSummary() {
         textLiveData.value = ""
     }
@@ -456,8 +458,11 @@ class MemberViewModel(
         sortOrder = sort
         //refresh()
     }
+
     fun getEventType(): String = _eventType.value
+
     fun getFilterListSize(): Int = _filterList.value?.size ?: 0
+
     override fun onCleared() {
         clearCache()
         super.onCleared()

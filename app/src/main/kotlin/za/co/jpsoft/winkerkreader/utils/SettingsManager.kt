@@ -4,12 +4,12 @@ package za.co.jpsoft.winkerkreader.utils
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
-import androidx.core.content.ContextCompat
 import za.co.jpsoft.winkerkreader.BuildConfig
+import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.WinkerkContract
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.KEY_INACTIVE_BG_COLOR
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.KEY_PASTORAL_SYNC_CALENDAR
-import za.co.jpsoft.winkerkreader.R
+
 /**
  * Central manager for all app preferences.
  * All preference keys are defined in [WinkerkContract].
@@ -316,10 +316,17 @@ class SettingsManager(private val context: Context) {
     fun isTasksScriptConfigured(): Boolean =
         !tasksScriptUrl.isNullOrBlank() && !tasksScriptSecret.isNullOrBlank()
 
-
     var appBiometricEnabled: Boolean
         get() = prefs.getBoolean("app_biometric_enabled", false)
         set(value) = prefs.edit().putBoolean("app_biometric_enabled", value).apply()
+
+    // NEW: how long the app can sit in the background before re-locking.
+    // Long.MAX_VALUE = "By herbegin" (only prompt on cold start — today's only
+    // implemented behavior). 0L = "Elke keer op voorgrond" (re-lock the instant
+    // the app is backgrounded, checked via AppAuthState.checkTimeout() in onResume).
+    var appBiometricTimeoutMs: Long
+        get() = prefs.getLong("app_biometric_timeout_ms", Long.MAX_VALUE)
+        set(value) = prefs.edit().putLong("app_biometric_timeout_ms", value).apply()
 
     var databaseSchemaVersion: Int
         get() = prefs.getInt("database_schema_version", 0)

@@ -17,6 +17,7 @@ import android.view.Gravity
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.ViewOutlineProvider
 import android.view.inputmethod.InputMethodManager
 import android.widget.FrameLayout
 import android.widget.ImageView
@@ -46,11 +47,9 @@ import za.co.jpsoft.winkerkreader.ui.viewmodels.LidmaatDetailPastoralViewModel
 import za.co.jpsoft.winkerkreader.ui.viewmodels.LidmaatDetailPastoralViewModelFactory
 import za.co.jpsoft.winkerkreader.ui.viewmodels.LidmaatDetailViewModel
 import za.co.jpsoft.winkerkreader.utils.MainNavigationController
-import za.co.jpsoft.winkerkreader.utils.SettingsManager
-import za.co.jpsoft.winkerkreader.utils.Utils.fixphonenumber
-import java.io.File
-import android.view.ViewOutlineProvider
 import za.co.jpsoft.winkerkreader.utils.MemberUtils
+import za.co.jpsoft.winkerkreader.utils.SettingsManager
+import java.io.File
 
 class LidmaatDetailActivity : AppCompatActivity() {
 

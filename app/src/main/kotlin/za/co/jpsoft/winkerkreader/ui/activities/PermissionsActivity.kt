@@ -20,6 +20,8 @@ import androidx.recyclerview.widget.RecyclerView
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.databinding.ActivityPermissionsBinding
 import za.co.jpsoft.winkerkreader.databinding.ItemPermissionBinding
+import za.co.jpsoft.winkerkreader.utils.BatteryOptimizationHelper
+import za.co.jpsoft.winkerkreader.utils.BatteryOptimizationHelper.showBatteryOptimizationDialog
 import za.co.jpsoft.winkerkreader.utils.PermissionManager
 import za.co.jpsoft.winkerkreader.utils.PermissionRationaleHelper
 
@@ -63,7 +65,38 @@ class PermissionsActivity : AppCompatActivity() {
         binding.btnRequestAllPermissions.setOnClickListener {
             requestAllPermissions()
         }
+
+        // Setup "Check on start" checkbox
+        binding.permissionCheck.apply {
+            // Set initial state from PermissionManager
+            isChecked = permissionManager.isCheckOnStartEnabled()
+
+            setOnClickListener {
+                permissionManager.setCheckOnStart(isChecked)
+                // Optional: show a toast to confirm
+                Toast.makeText(
+                    this@PermissionsActivity,
+                    if (isChecked) "Check on start enabled" else "Check on start disabled",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+        updateBatteryStatus()
+        binding.tvBatteryStatus.setOnClickListener {
+            showBatteryOptimizationDialog(this)
+        }
+
     }
+
+        fun updateBatteryStatus() {
+            val isIgnoring = BatteryOptimizationHelper.isIgnoringBatteryOptimizations(this)
+            binding.tvBatteryStatus.text = if (isIgnoring) {
+                "🔋 ${getString(R.string.battery_optimization_disabled)}"
+            } else {
+                "🪫 ${getString(R.string.battery_optimization_enabled)}"
+            }
+        }
+
 
     private fun initializePermissionsList() {
         permissionsList = buildList {
@@ -271,6 +304,7 @@ class PermissionsActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         refreshPermissions()
+        updateBatteryStatus()
     }
 
     private fun refreshPermissions() {

@@ -11,6 +11,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
+import za.co.jpsoft.winkerkreader.data.calllog.CallLogDatabaseBackup.DEBOUNCE_MS
+import za.co.jpsoft.winkerkreader.data.calllog.CallLogDatabaseBackup.backupDebounced
+import za.co.jpsoft.winkerkreader.data.calllog.CallLogDatabaseBackup.backupNow
 import za.co.jpsoft.winkerkreader.utils.DatabaseBackupHelper
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import java.io.File
@@ -88,3 +91,4 @@ object CallLogDatabaseBackup {
         return if (file.exists() && file.length() > 0) file else null
     }
 }
+

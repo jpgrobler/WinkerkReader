@@ -8,7 +8,6 @@ import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
 import za.co.jpsoft.winkerkreader.data.pastoral.PastoralDatabase
-import za.co.jpsoft.winkerkreader.data.pastoral.entities.FollowUpReminderEntity
 import za.co.jpsoft.winkerkreader.ui.activities.MainActivity
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MainViewModel
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel

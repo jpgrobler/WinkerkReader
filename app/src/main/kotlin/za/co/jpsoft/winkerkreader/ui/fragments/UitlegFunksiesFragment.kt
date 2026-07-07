@@ -35,6 +35,8 @@ class UitlegFunksiesFragment : Fragment() {
 
     private var isInitializing = true
     private var isDirty = false
+    private var initialBiometricLock = false
+    private var initialBiometricTimeoutMs = Long.MAX_VALUE
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -93,6 +95,14 @@ class UitlegFunksiesFragment : Fragment() {
         initialAutoStart = settingsManager.autoStartEnabled
         binding.autoStartSwitch.isChecked = initialAutoStart
 
+        // in loadPreferences(), after initialAutoStart block
+        initialBiometricLock = settingsManager.appBiometricEnabled
+        binding.uitlegBiometricLock.isChecked = initialBiometricLock
+
+        initialBiometricTimeoutMs = settingsManager.appBiometricTimeoutMs
+        binding.biometricTimeoutSpinner.setSelection(if (initialBiometricTimeoutMs == Long.MAX_VALUE) 0 else 1)
+        binding.biometricTimeoutSpinner.isEnabled = initialBiometricLock
+
         initialCalendarId = settingsManager.selectedCalendarId
     }
 
@@ -105,10 +115,25 @@ class UitlegFunksiesFragment : Fragment() {
             binding.uitlegW1,
             binding.uitlegW2,
             binding.uitlegW3,
-            binding.autoStartSwitch
+            binding.autoStartSwitch,
+            binding.uitlegBiometricLock
         )
         checkboxes.forEach { cb ->
             cb.setOnCheckedChangeListener { _, _ -> onUserChanged() }
+        }
+        // NEW: spinner only makes sense while the lock is on
+        binding.uitlegBiometricLock.setOnCheckedChangeListener { _, isChecked ->
+            binding.biometricTimeoutSpinner.isEnabled = isChecked
+            onUserChanged()
+        }
+
+        // NEW: spinner change tracking, mirroring calendarSpinner's guard against
+        // firing during initial load
+        binding.biometricTimeoutSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                onUserChanged()
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
 
         binding.funksoieStoor.setOnClickListener { saveFunctionSettings() }
@@ -167,7 +192,9 @@ class UitlegFunksiesFragment : Fragment() {
         if (binding.uitlegW2.isChecked != initialW2) return true
         if (binding.uitlegW3.isChecked != initialW3) return true
         if (binding.autoStartSwitch.isChecked != initialAutoStart) return true
-
+        if (binding.uitlegBiometricLock.isChecked != initialBiometricLock) return true
+        val selectedTimeoutMs = if (binding.biometricTimeoutSpinner.selectedItemPosition == 0) Long.MAX_VALUE else 10_000L
+        if (selectedTimeoutMs != initialBiometricTimeoutMs) return true
         if (binding.calendarSpinner.adapter != null && binding.calendarSpinner.adapter.count > 0) {
             val firstItem = binding.calendarSpinner.adapter.getItem(0)?.toString()
             if (firstItem != "Laai kalenders…" && firstItem != "Geen kalenders gevind") {
@@ -190,6 +217,9 @@ class UitlegFunksiesFragment : Fragment() {
         settingsManager.whatsapp3 = binding.uitlegW3.isChecked
         settingsManager.eposHtml = binding.uitlegHtml.isChecked
         settingsManager.autoStartEnabled = binding.autoStartSwitch.isChecked
+        settingsManager.appBiometricEnabled = binding.uitlegBiometricLock.isChecked
+        settingsManager.appBiometricTimeoutMs =
+            if (binding.biometricTimeoutSpinner.selectedItemPosition == 0) Long.MAX_VALUE else 10_000L
 
         (activity as? UitlegActivity)?.saveCallCalendarId()
 
@@ -205,6 +235,8 @@ class UitlegFunksiesFragment : Fragment() {
         initialCalendarId = (activity as? UitlegActivity)?.getCalendarIdAtPosition(
             binding.calendarSpinner.selectedItemPosition
         ) ?: -1L
+        initialBiometricLock = binding.uitlegBiometricLock.isChecked
+        initialBiometricTimeoutMs = settingsManager.appBiometricTimeoutMs
 
         isDirty = false
         updateSaveButtonState()

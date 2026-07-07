@@ -2,7 +2,6 @@ package za.co.jpsoft.winkerkreader.ui.controllers
 
 import android.content.ContentUris
 import android.content.ContentValues
-import android.content.res.Resources
 import android.graphics.BitmapFactory
 import android.media.ThumbnailUtils
 import android.net.Uri

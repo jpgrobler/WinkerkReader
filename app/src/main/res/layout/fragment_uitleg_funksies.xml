@@ -94,60 +94,105 @@
                     android:minHeight="48dp"
                     android:backgroundTint="?attr/colorPrimary" />
 
-                <!-- WhatsApp Methods -->
-                <com.google.android.material.card.MaterialCardView
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+        <!-- NEW: app lock -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="4dp"
+            app:cardCornerRadius="4dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="?attr/colorSurfaceVariant">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="4dp">
+                <!-- NEW: app lock -->
+                <CheckBox
+                    android:id="@+id/uitleg_biometric_lock"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
+                    android:text="@string/settings_app_biometric"
+                    android:textColor="?attr/colorOnSurface" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="32dp"
+                    android:layout_marginBottom="4dp"
+                    android:text="@string/settings_app_biometric_summary"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textSize="12sp" />
+
+                <Spinner
+                    android:id="@+id/biometric_timeout_spinner"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="32dp"
                     android:layout_marginBottom="8dp"
-                    app:cardCornerRadius="4dp"
-                    app:cardElevation="0dp"
-                    app:cardBackgroundColor="?attr/colorSurfaceVariant">
+                    android:minHeight="48dp"
+                    android:backgroundTint="?attr/colorPrimary"
+                    android:entries="@array/biometric_timeout_options" />
+                </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+        <!-- WhatsApp Methods -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            app:cardCornerRadius="4dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="?attr/colorSurfaceVariant">
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="4dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="8dp"
+                    android:text="@string/uitleg_whatsapp_label"
+                    android:textSize="16sp"
+                    android:textColor="?attr/colorOnSurface" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="4dp">
+                    <CheckBox
+                        android:id="@+id/uitleg_w1"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="8dp">
+                        android:text="@string/uitleg_whatsapp_method_1"
+                        android:textColor="?attr/colorOnSurface" />
 
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:paddingTop="8dp"
-                            android:text="@string/uitleg_whatsapp_label"
-                            android:textSize="16sp"
-                            android:textColor="?attr/colorOnSurface" />
-                    <LinearLayout
-                        android:layout_width="match_parent"
+                    <CheckBox
+                        android:id="@+id/uitleg_w2"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:padding="8dp">
-                        <CheckBox
-                            android:id="@+id/uitleg_w1"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/uitleg_whatsapp_method_1"
-                            android:textColor="?attr/colorOnSurface" />
+                        android:text="@string/uitleg_whatsapp_method_2"
+                        android:textColor="?attr/colorOnSurface" />
 
-                        <CheckBox
-                            android:id="@+id/uitleg_w2"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/uitleg_whatsapp_method_2"
-                            android:textColor="?attr/colorOnSurface" />
-
-                        <CheckBox
-                            android:id="@+id/uitleg_w3"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/uitleg_whatsapp_method_3"
-                            android:textColor="?attr/colorOnSurface" />
-                    </LinearLayout>
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-
-                <!-- Email -->
-                <com.google.android.material.card.MaterialCardView
+                    <CheckBox
+                        android:id="@+id/uitleg_w3"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/uitleg_whatsapp_method_3"
+                        android:textColor="?attr/colorOnSurface" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+        <!-- Email -->
+        <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
@@ -177,9 +222,5 @@
                             android:textColor="?attr/colorOnSurface" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
-
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
     </LinearLayout>
 </ScrollView>

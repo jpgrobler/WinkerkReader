@@ -1,8 +1,5 @@
 package za.co.jpsoft.winkerkreader.utils
 
-import android.graphics.Typeface
-import android.text.SpannableString
-import android.text.style.StyleSpan
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity

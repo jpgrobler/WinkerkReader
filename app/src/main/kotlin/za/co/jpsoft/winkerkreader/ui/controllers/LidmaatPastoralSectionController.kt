@@ -1,6 +1,5 @@
 package za.co.jpsoft.winkerkreader.ui.controllers
 
-import android.util.Log
 import android.view.View
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
@@ -8,16 +7,13 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.pastoral.entities.FollowUpReminderEntity
 import za.co.jpsoft.winkerkreader.data.pastoral.entities.PastoralNoteEntity
 import za.co.jpsoft.winkerkreader.data.pastoral.model.TemplateContext
 import za.co.jpsoft.winkerkreader.data.pastoral.repository.PastoralNoteRepository
-import za.co.jpsoft.winkerkreader.data.pastoral.repository.PastoralReminderRepository
 import za.co.jpsoft.winkerkreader.databinding.LidmaatDetailBinding
 import za.co.jpsoft.winkerkreader.ui.adapters.PastoralNoteAdapter
 import za.co.jpsoft.winkerkreader.ui.adapters.PendingReminderMiniAdapter
