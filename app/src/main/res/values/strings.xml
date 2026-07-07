@@ -424,17 +424,17 @@
     <string name="uitleg_doopdatum">Doopdatum</string>
     <string name="uitleg_belydenisdatum">Belydenisdatum</string>
     <string name="uitleg_sterfdatum">Sterfdatum</string>
-    <string name="uitleg_funksies_title">Hoofskerm</string>
-    <string name="uitleg_autostart_monitor">Begin outomaties\n\tmonitor &amp; log</string>
-    <string name="uitleg_monitor_oproepe">Monitor Oproepe</string>
+    <string name="uitleg_funksies_title">Oproepe &amp; Epos</string>
+    <string name="uitleg_autostart_monitor">Monitor Telefoon &amp; Voip Oproepe</string>
+    <string name="uitleg_monitor_oproepe">Wys Oproepe Inligting</string>
     <string name="uitleg_log_tel_oproepe">Log Tel Oproepe</string>
     <string name="uitleg_log_voip_oproepe">Log VOIP Oproepe</string>
     <string name="uitleg_calendar_picker">Log 📞 kalender📅:</string>
     <string name="uitleg_default_layout">Standaard Hoofskerm:</string>
     <string name="uitleg_whatsapp_label">Whatsapp:</string>
-    <string name="uitleg_whatsapp_method_1">Whatsapp Metode 1</string>
-    <string name="uitleg_whatsapp_method_2">Whatsapp Metode 2</string>
-    <string name="uitleg_whatsapp_method_3">Whatsapp Metode 3</string>
+    <string name="uitleg_whatsapp_method_1">Metode 1</string>
+    <string name="uitleg_whatsapp_method_2">Metode 2</string>
+    <string name="uitleg_whatsapp_method_3">Metode 3</string>
     <string name="uitleg_epos_label">Epos:</string>
     <string name="uitleg_html_epos">HTML Epos</string>
     <string name="uitleg_stoor_kleur">Stoor Kleur</string>
@@ -754,4 +754,6 @@
     <string name="rationale_deny">Weier</string>
     <string name="nuwe_databasis_reeds_op_foon">Nuwe databasis is reeds op foon</string>
     <string name="widget_last_updated_placeholder">Laas opgedateer: %1$s</string>
+    <string name="rugsteun_ook_oproeplog">Rugsteun ook oproeplog</string>
+    <string name="rugsteun">Rugsteun</string>
 </resources>

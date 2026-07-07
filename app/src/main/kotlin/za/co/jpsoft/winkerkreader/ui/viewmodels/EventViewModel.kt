@@ -1,11 +1,11 @@
 package za.co.jpsoft.winkerkreader.ui.viewmodels
 
-import android.content.Context
+import android.app.Application
 import android.database.Cursor
 import android.util.Log
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -16,7 +16,7 @@ import za.co.jpsoft.winkerkreader.data.WinkerkContract.col
 import za.co.jpsoft.winkerkreader.data.models.MemberItem
 import java.time.LocalDate
 
-class EventViewModel : ViewModel() {
+class EventViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _eventList = MutableLiveData<List<MemberItem>>(emptyList())
     val eventList: LiveData<List<MemberItem>> = _eventList
@@ -28,12 +28,12 @@ class EventViewModel : ViewModel() {
      * Load members whose event (birthday, baptism, wedding, confession) falls on today's date.
      * The cursor is opened, converted to [MemberItem]s, and closed immediately.
      */
-    fun loadEventData(context: Context, eventType: String) {
+    fun loadEventData(eventType: String) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
                 val members = withContext(Dispatchers.IO) {
-                    queryMembersForEvent(context, eventType)
+                    queryMembersForEvent(eventType)
                 }
                 _eventList.value = members
             } catch (e: Exception) {
@@ -45,7 +45,7 @@ class EventViewModel : ViewModel() {
         }
     }
 
-    private fun queryMembersForEvent(context: Context, eventType: String): List<MemberItem> {
+    private fun queryMembersForEvent(eventType: String): List<MemberItem> {
         val today = LocalDate.now()
         val currentMonth = "%02d".format(today.monthValue)
         val currentDay = "%02d".format(today.dayOfMonth)
@@ -61,7 +61,7 @@ class EventViewModel : ViewModel() {
             }
         }
 
-        val members = queryDatabase(context, selection)?.use { cursor ->
+        val members = queryDatabase(selection)?.use { cursor ->
             buildList {
                 while (cursor.moveToNext()) {
                     try {
@@ -128,9 +128,9 @@ class EventViewModel : ViewModel() {
                  ${col(WinkerkContract.winkerkEntry.LIDMATE_NOEMNAAM)} ASC
     """.trimIndent()
 
-    private fun queryDatabase(context: Context, query: String): Cursor? {
+    private fun queryDatabase(query: String): Cursor? {
         return try {
-            context.contentResolver.query(
+            getApplication<Application>().contentResolver.query(
                 WinkerkContract.winkerkEntry.CONTENT_URI,
                 null,
                 query,

@@ -119,6 +119,19 @@ class UitlegVertoonFragment : Fragment() {
         updateTextViewBackground(binding.gem2, initialColors[1])
         updateTextViewBackground(binding.gem3, initialColors[2])
         updateTextViewBackground(binding.inactiveColorPreview, initialColors[3])
+
+        // Once the actual gemeente name has been loaded, show it instead of the
+// generic "Gemeente 1/2/3" label — falls back to the string-resource
+// default (already set by the layout) when a name hasn't loaded yet.
+        if (settingsManager.gemeenteNaam.isNotBlank()) {
+            binding.gem1.text = settingsManager.gemeenteNaam
+        }
+        if (settingsManager.gemeente2Naam.isNotBlank()) {
+            binding.gem2.text = settingsManager.gemeente2Naam
+        }
+        if (settingsManager.gemeente3Naam.isNotBlank()) {
+            binding.gem3.text = settingsManager.gemeente3Naam
+        }
     }
 
     private fun setupListeners() {

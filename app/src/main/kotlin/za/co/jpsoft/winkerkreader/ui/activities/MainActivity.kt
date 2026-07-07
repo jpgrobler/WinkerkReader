@@ -482,7 +482,7 @@ class MainActivity : AppCompatActivity() {
             SavedStateViewModelFactory(application, this, intent?.extras)
         ).get(MemberViewModel::class.java)
 
-        viewModel.initRepository(this)
+        //viewModel.initRepository(this)
 
 
         searchFilterCoordinator = MainSearchFilterCoordinator(
@@ -821,7 +821,7 @@ class MainActivity : AppCompatActivity() {
     // ------------------------------------------------------------
 
     private fun startMonitoringServiceIfEnabled() {
-        if (settingsManager.callMonitorEnabled && !CallMonitoringService.isServiceRunning(this)) {
+        if (settingsManager.autoStartEnabled && !CallMonitoringService.isServiceRunning(this)) {
             try {
                 val serviceIntent = Intent(this, CallMonitoringService::class.java)
                 startForegroundService(serviceIntent)
@@ -847,7 +847,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun ensureServicesAreRunning() {
-        if (settingsManager.callMonitorEnabled && !CallMonitoringService.isServiceRunning(this)) {
+        if (settingsManager.autoStartEnabled && !CallMonitoringService.isServiceRunning(this)) {
             if (BuildConfig.DEBUG) Log.d(TAG, "CallMonitoring service was killed, restarting…")
             startMonitoringServiceIfEnabled()
         }

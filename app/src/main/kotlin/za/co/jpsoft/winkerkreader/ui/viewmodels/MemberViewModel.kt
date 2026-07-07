@@ -1,11 +1,11 @@
 package za.co.jpsoft.winkerkreader.ui.viewmodels
 
-import android.content.Context
+import android.app.Application
 import android.util.Log
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
@@ -28,13 +28,22 @@ import za.co.jpsoft.winkerkreader.data.models.FilterBox
 import za.co.jpsoft.winkerkreader.data.models.MemberItem
 import za.co.jpsoft.winkerkreader.ui.components.SearchCheckBox
 import za.co.jpsoft.winkerkreader.ui.models.MainQueryMode
-import kotlinx.coroutines.flow.debounce
 import za.co.jpsoft.winkerkreader.BuildConfig
 
+/**
+ * Standardized on [AndroidViewModel] so the application [Context][android.content.Context]
+ * is always available the moment this ViewModel is constructed — no manual
+ * `initRepository(context)` call required (and none possible to forget).
+ *
+ * Instantiate via `SavedStateViewModelFactory` (or the default factory an
+ * Activity/Fragment already provides), which supplies both [Application] and
+ * [SavedStateHandle] automatically.
+ */
 @OptIn(ExperimentalCoroutinesApi::class)
 class MemberViewModel(
+    application: Application,
     private val savedStateHandle: SavedStateHandle
-) : ViewModel() {
+) : AndroidViewModel(application) {
 
     companion object {
         private const val TAG = "MemberViewModel"
@@ -96,52 +105,57 @@ class MemberViewModel(
     // Dependencies
     // -------------------------------------------------------------------------
 
-    private lateinit var repository: MemberRepository
-    private lateinit var context: Context
+    // Built eagerly from the Application context — no lateinit, no manual
+    // init call, and therefore no path to an UninitializedPropertyAccessException.
+    private val repository: MemberRepository by lazy {
+        MemberRepository(getApplication())
+    }
 
-    /** Call once with application context. */
-//    fun initRepository(context: Context) {
-//        if (!::repository.isInitialized) {
-//            repository = MemberRepository(context.applicationContext)
-//        }
-//        this.context = context.applicationContext
-//        syncPagingStateFlows()
-//    }
-    fun initRepository(context: Context) {
-        if (!::repository.isInitialized) {
-            repository = MemberRepository(context.applicationContext)
-            viewModelScope.launch {
-                // Collect paging parameters and update total count
-                combine(
-                    _sortOrder,
-                    _soek,
-                    _recordStatus,
-                    _filterList,
-                    _eventType
-                ) { args ->
-                    PagingParams(
-                        sort = args[0] as String,
-                        search = args[1] as String,
-                        status = args[2] as String,
-                        filters = args[3] as ArrayList<FilterBox>?,
-                        eventType = args[4] as String
-                    )
-                }.debounce(300) // avoid frequent DB queries
-                    .collect { params ->
-                        val count = withContext(Dispatchers.IO) {
-                            repository.countMembers(
-                                eventType = params.eventType,
-                                recordStatus = params.status,
-                                soek = params.search,
-                                filterList = params.filters,
-                                sortOrder = params.sort
-                            )
-                        }
-                        _totalCount.value = count
+    // State flows that trigger Pager recreation when query parameters change.
+    // These MUST be declared before init{} below — Kotlin runs property
+    // initializers and init blocks in textual/declaration order, and init{}
+    // uses combine() on these flows immediately. Previously these were
+    // declared further down the class body (in the Paging 3 section), so at
+    // the moment init{} ran they were still null, causing a
+    // NullPointerException in Flow.collect the instant MemberViewModel was
+    // constructed.
+    private val _sortOrder = MutableStateFlow("VAN")
+    private val _soek = MutableStateFlow("")
+    private val _recordStatus = MutableStateFlow("0")
+    private val _filterList = MutableStateFlow<ArrayList<FilterBox>?>(null)
+    private val _eventType = MutableStateFlow("LIDMAAT_DATA")
+
+    init {
+        viewModelScope.launch {
+            // Collect paging parameters and update total count
+            combine(
+                _sortOrder,
+                _soek,
+                _recordStatus,
+                _filterList,
+                _eventType
+            ) { args ->
+                PagingParams(
+                    sort = args[0] as String,
+                    search = args[1] as String,
+                    status = args[2] as String,
+                    filters = args[3] as ArrayList<FilterBox>?,
+                    eventType = args[4] as String
+                )
+            }.debounce(300) // avoid frequent DB queries
+                .collect { params ->
+                    val count = withContext(Dispatchers.IO) {
+                        repository.countMembers(
+                            eventType = params.eventType,
+                            recordStatus = params.status,
+                            soek = params.search,
+                            filterList = params.filters,
+                            sortOrder = params.sort
+                        )
                     }
-            }
+                    _totalCount.value = count
+                }
         }
-        this.context = context.applicationContext
         syncPagingStateFlows()
     }
 
@@ -173,8 +187,7 @@ class MemberViewModel(
     val totalCount: StateFlow<Int> = _totalCount.asStateFlow()
 
     @Deprecated("Use pagingDataFlow for the main list; kept for compatibility")
-    fun loadData(context: Context, mode: MainQueryMode) {
-        initRepository(context)
+    fun loadData(mode: MainQueryMode) {
         val request = mode.toQueryRequest()
 
         if (request.eventType == "FILTER_DATA") {
@@ -188,10 +201,10 @@ class MemberViewModel(
         val nextSortOrder = sortOrder
 
         val paramsChanged = _eventType.value != nextEventType
-            || _soek.value != nextSoek
-            || _recordStatus.value != nextRecordStatus
-            || _filterList.value != nextFilterList
-            || _sortOrder.value != nextSortOrder
+                || _soek.value != nextSoek
+                || _recordStatus.value != nextRecordStatus
+                || _filterList.value != nextFilterList
+                || _sortOrder.value != nextSortOrder
 
         _eventType.value = nextEventType
         _soek.value = nextSoek
@@ -208,7 +221,7 @@ class MemberViewModel(
         }
 
         viewModelScope.launch(Dispatchers.IO) {
-            fetchData(context, request.eventType)
+            fetchData(request.eventType)
         }
     }
 
@@ -216,7 +229,7 @@ class MemberViewModel(
      * Fetches data from the repository on a background thread and updates LiveData.
      * This is a suspend function that runs the database query on Dispatchers.IO.
      */
-    private suspend fun fetchData(context: Context, eventType: String) {
+    private suspend fun fetchData(eventType: String) {
         withContext(Dispatchers.IO) {
             val items = repository.loadMembers(
                 eventType = eventType,
@@ -242,9 +255,7 @@ class MemberViewModel(
     }
 
     fun clearCache() {
-        if (::repository.isInitialized) {
-            repository.clearCache()
-        }
+        repository.clearCache()
     }
 
     private fun buildFilterText(): String {
@@ -312,13 +323,6 @@ class MemberViewModel(
         enablePlaceholders = false
     )
 
-    // State flows that trigger Pager recreation when query parameters change
-    private val _sortOrder = MutableStateFlow("VAN")
-    private val _soek = MutableStateFlow("")
-    private val _recordStatus = MutableStateFlow("0")
-    private val _filterList = MutableStateFlow<ArrayList<FilterBox>?>(null)
-    private val _eventType = MutableStateFlow("LIDMAAT_DATA")
-
     @Volatile
     private var currentPagingSource: MemberPagingSource? = null
 
@@ -363,7 +367,7 @@ class MemberViewModel(
         }.flatMapLatest { params ->
             Pager(pagingConfig) {
                 MemberPagingSource(
-                    contentResolver = context.contentResolver,
+                    contentResolver = getApplication<Application>().contentResolver,
                     eventType = params.eventType,
                     recordStatus = params.status,
                     soek = params.search,
@@ -460,7 +464,6 @@ class MemberViewModel(
     }
 
     suspend fun getBirthdayOffset(sortOrder: String): Int {
-        if (!::repository.isInitialized) return 0
         val today = java.time.LocalDate.now()
         val month = "%02d".format(today.monthValue)
         val day = "%02d".format(today.dayOfMonth)

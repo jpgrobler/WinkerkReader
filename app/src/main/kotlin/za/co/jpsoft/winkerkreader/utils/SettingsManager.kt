@@ -373,4 +373,20 @@ class SettingsManager(private val context: Context) {
             inactiveBackgroundColor = androidx.core.content.ContextCompat.getColor(context, R.color.inactive_background)
         }
     }
+
+    var lastPastoralBackupTimestamp: Long
+        get() = prefs.getLong("pref_last_pastoral_backup_ts", 0L)
+        set(value) = prefs.edit().putLong("pref_last_pastoral_backup_ts", value).apply()
+
+    var lastCallLogBackupTimestamp: Long
+        get() = prefs.getLong("pref_last_calllog_backup_ts", 0L)
+        set(value) = prefs.edit().putLong("pref_last_calllog_backup_ts", value).apply()
+
+    var callLogBackupEnabled: Boolean
+        get() = prefs.getBoolean("pref_calllog_backup_enabled", false)   // opt-in — call logs are more sensitive
+        set(value) = prefs.edit().putBoolean("pref_calllog_backup_enabled", value).apply()
+
+    var backupRetentionDays: Int
+        get() = prefs.getInt("pref_backup_retention_days", 7)
+        set(value) = prefs.edit().putInt("pref_backup_retention_days", value).apply()
 }

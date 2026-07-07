@@ -234,28 +234,28 @@ class VerjaarSmsActivity : AppCompatActivity() {
                 setMessageForEventType(prefs, "VerjaarBoodskap",
                     "<<<naam>>>\nBaie geluk met jou verjaarsdag!\nMag die Here se genade jou daagliks vervul!\nGroete Ds ")
                 binding.verjaarSms.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.bdaysms, null))
-                eventViewModel.loadEventData(this, "Verjaar")
+                eventViewModel.loadEventData( "Verjaar")
             }
             R.id.Keuse_Doop -> {
                 keuse = "Doop"
                 setMessageForEventType(prefs, "DoopBoodskap",
                     "<<<naam>>>\nBaie geluk met jou doopherdenking!\nMag die Here se genade jou daagliks vervul!\nGroete Ds ")
                 binding.verjaarSms.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.doopsms, null))
-                eventViewModel.loadEventData(this, "Doop")
+                eventViewModel.loadEventData("Doop")
             }
             R.id.Keuse_Huwelik -> {
                 keuse = "Huwelik"
                 setMessageForEventType(prefs, "HuwelikBoodskap",
                     "<<<naam>>>\nBaie geluk met jou huweliksherdenking!\nMag die Here se genade jou daagliks vervul!\nGroete Ds ")
                 binding.verjaarSms.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.huweliksms, null))
-                eventViewModel.loadEventData(this, "Huwelik")
+                eventViewModel.loadEventData("Huwelik")
             }
             R.id.Keuse_Belydenis -> {
                 keuse = "Bely"
                 setMessageForEventType(prefs, "BelyBoodskap",
                     "<<<naam>>>\nBaie geluk met jou herdenking van jou belydenis van geloof!\nMag die Here se genade jou daagliks vervul!\nGroete Ds ")
                 binding.verjaarSms.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.bely, null))
-                eventViewModel.loadEventData(this, "Bely")
+                eventViewModel.loadEventData( "Bely")
             }
         }
     }
@@ -473,7 +473,7 @@ class VerjaarSmsActivity : AppCompatActivity() {
             selectionArgs
         )
         // Reload data to refresh the list
-        eventViewModel.loadEventData(this, keuse)
+        eventViewModel.loadEventData(keuse)
     }
 
     private fun showPopupMenuForMember(member: MemberItem) {

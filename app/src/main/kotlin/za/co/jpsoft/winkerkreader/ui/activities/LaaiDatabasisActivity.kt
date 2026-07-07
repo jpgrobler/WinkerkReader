@@ -109,7 +109,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
             return m.matches()
         }
     }
-
+    private var isDownloadReceiverRegistered = false
     private lateinit var settings: SharedPreferences
     private lateinit var settingsManager: SettingsManager
     private val navigationController by lazy { MainNavigationController(this) }
@@ -249,10 +249,14 @@ class LaaiDatabasisActivity : AppCompatActivity() {
             fileDownloadWorkId = null
         }
         currentWorkInfoLiveData?.removeObserver(workInfoObserver)
-        try {
-            recieverDownloadComplete?.let { unregisterReceiver(it) }
-        } catch (e: Exception) {
-            if (BuildConfig.DEBUG) Log.e(TAG, "Error unregistering download receiver", e)
+        if (isDownloadReceiverRegistered) {
+            try {
+                recieverDownloadComplete?.let { unregisterReceiver(it) }
+                isDownloadReceiverRegistered = false
+                recieverDownloadComplete = null
+            } catch (e: Exception) {
+                if (BuildConfig.DEBUG) Log.e(TAG, "Error unregistering download receiver", e)
+            }
         }
     }
 
@@ -733,7 +737,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                         }
 
                         // 4. Validate temp file size
-                        if (tempFile.length() < 1024 * 1024) {
+                        if (tempFile.length() < 10 * 1024) {
                             showError("Aflaailêer is te klein – moontlik foutief")
                             tempFile.delete()
                             return
@@ -771,7 +775,13 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                         Log.e(TAG, "Download processing failed", e)
                         showError("Fout met verwerking: ${e.message}")
                     } finally {
-                        try { unregisterReceiver(this) } catch (_: Exception) {}
+                        try {
+                            unregisterReceiver(this)
+                            isDownloadReceiverRegistered = false
+                            recieverDownloadComplete = null
+                        } catch (_: Exception) {
+                            // ignore
+                        }
                     }
                 }
             }
@@ -783,6 +793,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
             0
         }
         registerReceiver(recieverDownloadComplete, intentFilter, flags)
+        isDownloadReceiverRegistered = true
 
         val request = DownloadManager.Request(Uri.parse(url)).apply {
             setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)

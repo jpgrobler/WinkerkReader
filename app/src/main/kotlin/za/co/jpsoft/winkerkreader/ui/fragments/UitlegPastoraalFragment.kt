@@ -106,6 +106,7 @@ class UitlegPastoraalFragment : Fragment() {
         }
         binding.appsScriptLink.addTextChangedListener(textWatcher)
         binding.appsScriptKey.addTextChangedListener(textWatcher)
+        setupBackupStatusSection()
     }
 
     private fun loadInitialState() {
@@ -357,5 +358,53 @@ class UitlegPastoraalFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    private fun setupBackupStatusSection() {
+        binding.backupLocationText.text =
+            "Ligging: ${za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.getWkrDir(requireContext())}"
+
+        binding.backupStatusPastoralText.text =
+            "Herinneringe & notas: ${formatBackupTimestamp(settingsManager.lastPastoralBackupTimestamp)}"
+
+        binding.backupStatusCallLogText.text =
+            "Oproeplog: ${formatBackupTimestamp(settingsManager.lastCallLogBackupTimestamp)}"
+
+        binding.callLogBackupSwitch.isChecked = settingsManager.callLogBackupEnabled
+        binding.callLogBackupSwitch.setOnCheckedChangeListener { _, isChecked ->
+            settingsManager.callLogBackupEnabled = isChecked
+            if (isChecked) {
+                // Back up immediately on enabling, rather than waiting for the
+                // next call/mutation, so the status line updates right away.
+                viewLifecycleOwner.lifecycleScope.launch {
+                    withContext(Dispatchers.IO) {
+                        za.co.jpsoft.winkerkreader.data.calllog.CallLogDatabaseBackup.backupNow(requireContext())
+                    }
+                    binding.backupStatusCallLogText.text =
+                        "Oproeplog: ${formatBackupTimestamp(settingsManager.lastCallLogBackupTimestamp)}"
+                }
+            }
+        }
+    }
+
+    private fun formatBackupTimestamp(timestamp: Long): String {
+        if (timestamp == 0L) return "Nog nie rugsteun gemaak nie"
+
+        val now = System.currentTimeMillis()
+        val diffMs = now - timestamp
+        val diffMinutes = diffMs / (60 * 1000)
+        val diffHours = diffMs / (60 * 60 * 1000)
+        val diffDays = diffMs / (24 * 60 * 60 * 1000)
+
+        return when {
+            diffMinutes < 1 -> "Nou-nou"
+            diffMinutes < 60 -> "$diffMinutes minute gelede"
+            diffHours < 24 -> "$diffHours ure gelede"
+            diffDays == 1L -> "Gister"
+            else -> {
+                val formatter = java.text.SimpleDateFormat("d MMM yyyy, HH:mm", java.util.Locale("af"))
+                formatter.format(java.util.Date(timestamp))
+            }
+        }
     }
 }

@@ -76,7 +76,7 @@ object AppInitializer {
             // 2. Start monitoring service if enabled (after DB init)
             withContext(Dispatchers.Main) {
                 val settings = SettingsManager.getInstance(appContext)
-                if (settings.callMonitorEnabled || settings.autoStartEnabled) {
+                if (settings.autoStartEnabled) {
                     try {
                         val intent = android.content.Intent(appContext, CallMonitoringService::class.java)
                         appContext.startForegroundService(intent)

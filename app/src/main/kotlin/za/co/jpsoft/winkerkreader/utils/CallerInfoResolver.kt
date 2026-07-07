@@ -12,6 +12,15 @@ import za.co.jpsoft.winkerkreader.data.WinkerkContract
 object CallerInfoResolver {
 
     /**
+     * True if [displayInfo] (as returned by [getCallerDisplayInfo]) actually matched a
+     * member or contact record, rather than falling back to the bare number or "Unknown Number".
+     * Used to decide whether the floating caller-info popup is worth showing at all —
+     * there's no point popping up an overlay that just repeats the number back.
+     */
+    fun isKnownCaller(displayInfo: String): Boolean =
+        displayInfo.contains(" (Lidmaat)") || displayInfo.contains(" (Kontak)")
+
+    /**
      * Returns a display string for the given phone number.
      * Format: "Name (source) - number" if name found, otherwise just the number.
      * Source can be "Lidmaat", "Kontak", or none.

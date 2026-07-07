@@ -212,6 +212,7 @@ class UnifiedCallMonitor private constructor(
             if (BuildConfig.DEBUG) Log.d(TAG, "Call logged to DB: $contactInfo, type=$callType, source=$source")
 
             _callLogUpdates.tryEmit(Unit)
+            za.co.jpsoft.winkerkreader.data.calllog.CallLogDatabaseBackup.backupDebounced(context)
 
             if (calendarId != -1L) {
                 val calendarSuccess = calendarManager.addCallEventToCalendar(

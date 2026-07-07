@@ -154,9 +154,26 @@ class WhatsAppNotificationService : NotificationListenerService() {
 
         when (callState) {
             CallState.INCOMING, CallState.SCREENING -> {
+                // Reserve the slot synchronously, before any async resolution starts.
+                // WhatsApp (and other VoIP apps) repost the same ongoing-call notification
+                // repeatedly — once a second or more — while it's ringing/connecting. Each
+                // repost used to generate a brand-new callId and get logged as if it were a
+                // separate call. putIfAbsent is atomic, so only the *first* post for this
+                // notificationKey proceeds; every repost of the same still-active call is a
+                // no-op from here on.
+                val reservation = TrackedVoipCall(callId, callStartTime)
+                if (activeVoipCalls.putIfAbsent(notificationKey, reservation) != null) {
+                    if (BuildConfig.DEBUG) Log.d(TAG, "Ignoring repost of already-tracked call: $notificationKey")
+                    return
+                }
                 handleIncomingOrScreeningCall(notificationKey, callId, appName, extras, callStartTime)
             }
             CallState.OUTGOING -> {
+                val reservation = TrackedVoipCall(callId, callStartTime)
+                if (activeVoipCalls.putIfAbsent(notificationKey, reservation) != null) {
+                    if (BuildConfig.DEBUG) Log.d(TAG, "Ignoring repost of already-tracked outgoing call: $notificationKey")
+                    return
+                }
                 serviceScope.launch {
                     try {
                         val number = extractPhoneNumberFromExtras(extras)
@@ -175,6 +192,7 @@ class WhatsAppNotificationService : NotificationListenerService() {
 
                         if (finalNumber.isBlank() && (resolvedName.isBlank() || resolvedName == "Unknown Contact")) {
                             if (BuildConfig.DEBUG) Log.d(TAG, "Skipping outgoing call: no usable number/name")
+                            activeVoipCalls.remove(notificationKey, reservation)
                             return@launch
                         }
 
@@ -186,11 +204,10 @@ class WhatsAppNotificationService : NotificationListenerService() {
                             timestamp = System.currentTimeMillis(),
                             displayName = resolvedName
                         )
-                        // Only commit to the map once registration with UnifiedMonitor succeeded.
-                        activeVoipCalls[notificationKey] = TrackedVoipCall(callId, callStartTime)
                     } catch (e: Exception) {
                         if (BuildConfig.DEBUG) Log.e(TAG, "Failed to process outgoing VoIP call", e)
-                        // Nothing was registered, so nothing needs cleanup.
+                        // Registration failed — free the slot so a later repost can retry.
+                        activeVoipCalls.remove(notificationKey, reservation)
                     }
                 }
             }
@@ -268,6 +285,7 @@ class WhatsAppNotificationService : NotificationListenerService() {
 
                 if (finalNumber.isBlank() && (resolvedName.isBlank() || resolvedName == "Unknown Contact")) {
                     if (BuildConfig.DEBUG) Log.d(TAG, "Skipping incoming/screening call: no usable number/name")
+                    activeVoipCalls.remove(notificationKey)
                     return@launch
                 }
 
@@ -281,11 +299,12 @@ class WhatsAppNotificationService : NotificationListenerService() {
                     timestamp = callStartTime,
                     displayName = resolvedName
                 )
-                // Only commit to the map once registration with UnifiedMonitor succeeded.
-                activeVoipCalls[notificationKey] = TrackedVoipCall(callId, callStartTime)
+                // The reservation was already made synchronously in processVoIPNotification,
+                // before this coroutine was launched, so no re-insertion is needed here.
                 triggerVoipCallerPopup(resolvedName, displayNumber)
             } catch (e: Exception) {
                 if (BuildConfig.DEBUG) Log.e(TAG, "Failed to process incoming/screening VoIP call", e)
+                activeVoipCalls.remove(notificationKey)
             }
         }
     }
@@ -722,6 +741,10 @@ class WhatsAppNotificationService : NotificationListenerService() {
                 else -> return
             }
             if (callerForOverlay == "Unknown Contact") return
+
+            // Don't pop up the floating caller-info window for someone who isn't in the
+            // member database or contacts — it would just be echoing the raw number back.
+            if (!CallerInfoResolver.isKnownCaller(callerInfo)) return
 
             val displayName = if (extractedNumber.isNotBlank()) callerInfo.takeIf { it.isNotBlank() } else callerInfo
             val serviceIntent = Intent(this, OproepDetailService::class.java)

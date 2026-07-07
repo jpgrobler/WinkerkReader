@@ -129,6 +129,15 @@ class OproepDetailService : Service() {
             } else {
                 displayName
             }
+
+            // Don't show the floating window for a caller who isn't in the member
+            // database or contacts — it would just be echoing the number back.
+            if (!CallerInfoResolver.isKnownCaller(resolvedName)) {
+                if (BuildConfig.DEBUG) Log.d(TAG, "Caller not found in database, skipping floating window")
+                withContext(Dispatchers.Main) { stopSelf() }
+                return@launch
+            }
+
             // Show the caller info on the main thread
             withContext(Dispatchers.Main) {
                 showCaller(callerId, resolvedName)

@@ -117,27 +117,32 @@
                             android:text="@string/uitleg_whatsapp_label"
                             android:textSize="16sp"
                             android:textColor="?attr/colorOnSurface" />
-
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:padding="8dp">
                         <CheckBox
                             android:id="@+id/uitleg_w1"
-                            android:layout_width="match_parent"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/uitleg_whatsapp_method_1"
                             android:textColor="?attr/colorOnSurface" />
 
                         <CheckBox
                             android:id="@+id/uitleg_w2"
-                            android:layout_width="match_parent"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/uitleg_whatsapp_method_2"
                             android:textColor="?attr/colorOnSurface" />
 
                         <CheckBox
                             android:id="@+id/uitleg_w3"
-                            android:layout_width="match_parent"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/uitleg_whatsapp_method_3"
                             android:textColor="?attr/colorOnSurface" />
+                    </LinearLayout>
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 

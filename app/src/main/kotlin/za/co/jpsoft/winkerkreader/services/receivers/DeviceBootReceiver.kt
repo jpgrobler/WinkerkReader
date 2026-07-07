@@ -71,9 +71,8 @@ class DeviceBootReceiver : BroadcastReceiver() {
 
     private fun startMonitoringServiceIfEnabled(context: Context, settings: SettingsManager) {
         val autoStartEnabled = settings.autoStartEnabled
-        val callMonitorEnabled = settings.callMonitorEnabled
 
-        if (autoStartEnabled || callMonitorEnabled) {
+        if (autoStartEnabled) {
             // Start CallMonitoringService
             try {
                 val intent = Intent(context, CallMonitoringService::class.java)

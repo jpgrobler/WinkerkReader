@@ -57,20 +57,13 @@
             android:textColor="?attr/colorOnSurfaceVariant"
             android:layout_marginBottom="8dp" />
 
-        <HorizontalScrollView
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chipGroupCategory"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:scrollbars="none"
-            android:layout_marginBottom="16dp">
-
-            <com.google.android.material.chip.ChipGroup
-                android:id="@+id/chipGroupCategory"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:singleSelection="false"
-                app:selectionRequired="true" />
-
-        </HorizontalScrollView>
+            android:layout_marginBottom="16dp"
+            app:singleSelection="false"
+            app:selectionRequired="true" />
 
         <!-- Note date -->
         <TextView
