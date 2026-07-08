@@ -157,8 +157,7 @@ class MainActivity : AppCompatActivity() {
         churchHeaderController = ChurchHeaderController(
             activity = this,
             binding = binding,
-            settingsManager = settingsManager,
-            database = WinkerkDatabase.getInstance(this)
+            settingsManager = settingsManager
         )
 
         workScheduler = WorkScheduler(this, settingsManager)

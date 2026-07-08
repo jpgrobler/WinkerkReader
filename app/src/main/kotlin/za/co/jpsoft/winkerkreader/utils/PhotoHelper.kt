@@ -21,6 +21,13 @@ object PhotoHelper {
         return if (syncedFile.exists()) syncedFile.absolutePath else null
     }
 
+    // PhotoHelper.kt
+    // PhotoHelper.kt
+    fun getSyncedPhotoFile(context: Context, guid: String?): File? {
+        if (guid.isNullOrEmpty()) return null
+        val fotoDir = WinkerkContract.winkerkEntry.getFotoDir(context)
+        return File(fotoDir, "$guid.jpg")
+    }
     /**
      * Sets a default gender‑based image (male/female) on an ImageView.
      * Also resizes the view to the given DP size (default 48dp).

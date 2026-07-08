@@ -11,6 +11,7 @@ import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.DatabaseInitializer
 import za.co.jpsoft.winkerkreader.data.calllog.CallLogDatabase
+import za.co.jpsoft.winkerkreader.data.repositories.ChurchInfoRepository
 import za.co.jpsoft.winkerkreader.services.CallMonitoringService
 import za.co.jpsoft.winkerkreader.widget.PastoralWidgetProvider
 
@@ -92,6 +93,7 @@ object AppInitializer {
                 WorkScheduler(appContext, SettingsManager.getInstance(appContext)).scheduleAll()
                 PastoralWidgetProvider.refreshWidgets(appContext)
             }
+            ChurchInfoRepository.loadChurchInfo(appContext)
         }
     }
 

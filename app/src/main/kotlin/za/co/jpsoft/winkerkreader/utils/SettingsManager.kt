@@ -306,27 +306,35 @@ class SettingsManager(private val context: Context) {
     }
 
     var tasksScriptUrl: String?
-        get() = prefs.getString(WinkerkContract.KEY_TASKS_SCRIPT_URL, null)
-        set(value) = prefs.edit().putString(WinkerkContract.KEY_TASKS_SCRIPT_URL, value?.trim()).apply()
+        get() {
+            migrateToSecure(WinkerkContract.KEY_TASKS_SCRIPT_URL)
+            return securePrefs.getString(WinkerkContract.KEY_TASKS_SCRIPT_URL, null)
+        }
+        set(value) = securePrefs.edit().putString(WinkerkContract.KEY_TASKS_SCRIPT_URL, value?.trim()).apply()
 
     var tasksScriptSecret: String?
-        get() = prefs.getString(WinkerkContract.KEY_TASKS_SCRIPT_SECRET, null)
-        set(value) = prefs.edit().putString(WinkerkContract.KEY_TASKS_SCRIPT_SECRET, value?.trim()).apply()
+        get() {
+            migrateToSecure(WinkerkContract.KEY_TASKS_SCRIPT_SECRET)
+            return securePrefs.getString(WinkerkContract.KEY_TASKS_SCRIPT_SECRET, null)
+        }
+        set(value) = securePrefs.edit().putString(WinkerkContract.KEY_TASKS_SCRIPT_SECRET, value?.trim()).apply()
 
     fun isTasksScriptConfigured(): Boolean =
         !tasksScriptUrl.isNullOrBlank() && !tasksScriptSecret.isNullOrBlank()
 
     var appBiometricEnabled: Boolean
-        get() = prefs.getBoolean("app_biometric_enabled", false)
-        set(value) = prefs.edit().putBoolean("app_biometric_enabled", value).apply()
+        get() {
+            migrateBooleanToSecure("app_biometric_enabled")
+            return securePrefs.getBoolean("app_biometric_enabled", false)
+        }
+        set(value) = securePrefs.edit().putBoolean("app_biometric_enabled", value).apply()
 
-    // NEW: how long the app can sit in the background before re-locking.
-    // Long.MAX_VALUE = "By herbegin" (only prompt on cold start — today's only
-    // implemented behavior). 0L = "Elke keer op voorgrond" (re-lock the instant
-    // the app is backgrounded, checked via AppAuthState.checkTimeout() in onResume).
     var appBiometricTimeoutMs: Long
-        get() = prefs.getLong("app_biometric_timeout_ms", Long.MAX_VALUE)
-        set(value) = prefs.edit().putLong("app_biometric_timeout_ms", value).apply()
+        get() {
+            migrateLongToSecure("app_biometric_timeout_ms")
+            return securePrefs.getLong("app_biometric_timeout_ms", Long.MAX_VALUE)
+        }
+        set(value) = securePrefs.edit().putLong("app_biometric_timeout_ms", value).apply()
 
     var databaseSchemaVersion: Int
         get() = prefs.getInt("database_schema_version", 0)
@@ -396,4 +404,36 @@ class SettingsManager(private val context: Context) {
     var backupRetentionDays: Int
         get() = prefs.getInt("pref_backup_retention_days", 7)
         set(value) = prefs.edit().putInt("pref_backup_retention_days", value).apply()
+
+    private val securePrefs by lazy {
+        EncryptedPrefsManager.getSecurePrefs(context)
+    }
+
+    // Helper to migrate a key from regular to secure prefs once
+    private fun migrateToSecure(key: String) {
+        if (prefs.contains(key) && !securePrefs.contains(key)) {
+            val value = prefs.getString(key, null)
+            if (value != null) {
+                securePrefs.edit().putString(key, value).apply()
+                prefs.edit().remove(key).apply()
+            }
+        }
+    }
+
+    // For Boolean keys
+    private fun migrateBooleanToSecure(key: String) {
+        if (prefs.contains(key) && !securePrefs.contains(key)) {
+            val value = prefs.getBoolean(key, false)
+            securePrefs.edit().putBoolean(key, value).apply()
+            prefs.edit().remove(key).apply()
+        }
+    }
+
+    private fun migrateLongToSecure(key: String) {
+        if (prefs.contains(key) && !securePrefs.contains(key)) {
+            val value = prefs.getLong(key, Long.MAX_VALUE)
+            securePrefs.edit().putLong(key, value).apply()
+            prefs.edit().remove(key).apply()
+        }
+    }
 }

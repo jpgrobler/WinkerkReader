@@ -26,8 +26,7 @@ import za.co.jpsoft.winkerkreader.utils.SettingsManager
 class ChurchHeaderController(
     private val activity: MainActivity,
     private val binding: ActivityMainBinding,
-    private val settingsManager: SettingsManager,
-    private val database: WinkerkDatabase
+    private val settingsManager: SettingsManager
 ) {
 
     /**
@@ -35,38 +34,8 @@ class ChurchHeaderController(
      * Safe to call from any thread – it launches a coroutine internally.
      */
     fun loadAndApply() {
-        activity.lifecycleScope.launch(Dispatchers.IO) {
-            // Query distinct congregations
-            val cursor = database.openHelper.writableDatabase.query(
-                "SELECT DISTINCT Gemeente, [Gemeente epos] FROM Members GROUP BY Gemeente, [Gemeente epos]"
-            )
-            var count = 0
-            while (cursor.moveToNext()) {
-                val name = cursor.getString(0) ?: ""
-                val email = cursor.getString(1) ?: ""
-                when (count) {
-                    0 -> {
-                        settingsManager.gemeenteNaam = name
-                        settingsManager.gemeenteEpos = email
-                    }
-                    1 -> {
-                        settingsManager.gemeente2Naam = name
-                        settingsManager.gemeente2Epos = email
-                    }
-                    2 -> {
-                        settingsManager.gemeente3Naam = name
-                        settingsManager.gemeente3Epos = email
-                    }
-                }
-                count++
-            }
-            cursor.close()
-
-            // Apply on main thread
-            withContext(Dispatchers.Main) {
-                applyChurchHeader()
-            }
-        }
+        // Simply apply the header – data is already loaded by AppInitializer
+        applyChurchHeader()
     }
 
     /**

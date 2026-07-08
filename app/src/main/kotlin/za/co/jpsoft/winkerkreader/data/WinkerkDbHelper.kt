@@ -129,34 +129,5 @@ class WinkerkDbHelper private constructor(context: Context, dbName: String) :
                 if (BuildConfig.DEBUG) Log.e("WinkerkDbHelper", "Error setting database date", e)
             }
         }
-
-        fun setChurchInfo(context: Context) {
-            val db = getInstance(context, WinkerkContract.winkerkEntry.WINKERK_DB).readableDatabase
-            val settingsManager = SettingsManager.getInstance(context)
-            try {
-                // Table name is usually GemeenteNaam based on PATH_GEMEENTE_NAAM
-                db.rawQuery("SELECT DISTINCT Members._rowid_ as _id, Gemeente, [Gemeente epos] FROM Members GROUP BY Gemeente, [Gemeente epos]"
-                    , null).use { cursor ->
-                    if (cursor.moveToFirst()) {
-                        val nameIdx = cursor.getColumnIndex("Gemeente")
-                        val emailIdx = cursor.getColumnIndex("Gemeente epos")
-                        if (nameIdx != -1 && emailIdx != -1) {
-                            settingsManager.gemeenteNaam = cursor.getString(nameIdx) ?: ""
-                            settingsManager.gemeenteEpos = cursor.getString(emailIdx) ?: ""
-                            if (cursor.moveToNext()) {
-                                settingsManager.gemeente2Naam = cursor.getString(nameIdx) ?: ""
-                                settingsManager.gemeente2Epos = cursor.getString(emailIdx) ?: ""
-                                if (cursor.moveToNext()) {
-                                    settingsManager.gemeente3Naam = cursor.getString(nameIdx) ?: ""
-                                    settingsManager.gemeente3Epos = cursor.getString(emailIdx) ?: ""
-                                }
-                            }
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                if (BuildConfig.DEBUG) Log.e("WinkerkDbHelper", "Error setting church info", e)
-            }
-        }
     }
 }
