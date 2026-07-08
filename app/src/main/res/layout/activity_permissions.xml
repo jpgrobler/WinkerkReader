@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
@@ -15,22 +16,6 @@
         android:textStyle="bold"
         android:textColor="?attr/colorOnSurface"
         android:paddingBottom="8dp" />
-    <TextView
-        android:id="@+id/tvBatteryStatus"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="12dp"
-        android:background="?attr/selectableItemBackground"
-        android:drawableEnd="@drawable/ic_chevron_right"
-        android:clickable="true"
-        android:focusable="true"
-        android:textSize="16sp" />
-    <CheckBox
-        android:id="@+id/permission_check"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/vra_uitstaande_permissions_sodra_app_oopmaak"
-        />
 
     <TextView
         android:layout_width="match_parent"
@@ -39,6 +24,23 @@
         android:textSize="14sp"
         android:textColor="?attr/colorOnSurfaceVariant"
         android:paddingBottom="16dp" />
+
+    <TextView
+        android:id="@+id/tvBatteryStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="12dp"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:textSize="16sp"
+        app:drawableEndCompat="@drawable/ic_chevron_right" />
+    <CheckBox
+        android:id="@+id/permission_check"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/vra_uitstaande_permissions_sodra_app_oopmaak"
+        />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewPermissions"

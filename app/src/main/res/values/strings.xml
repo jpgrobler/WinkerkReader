@@ -513,8 +513,8 @@
     <string name="battery_optimization_message">Om te verseker dat oproep-registrasie betroubaar in die agtergrond werk, moet WinkerkReader vrygestel word van battery-optimering. Dit verhoed dat Android die diens stop wanneer die skerm af is.</string>
     <string name="battery_optimization_button">Stel vry</string>
     <string name="battery_optimization_already_optimized">Battery optimering is reeds afgestel</string>
-    <string name="battery_optimization_enabled">Battery optimization active</string>
-    <string name="battery_optimization_disabled">Battery optimization disabled (exempt)</string>
+    <string name="battery_optimization_enabled">Battery-optimering aktief</string>
+    <string name="battery_optimization_disabled">Battery-optimering afgeskakel (vrygestel)</string>
 
     <!-- Call Monitoring and Export -->
     <string name="call_monitoring_channel_name">Oproepmonitering</string>

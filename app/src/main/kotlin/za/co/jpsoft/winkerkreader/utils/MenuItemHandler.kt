@@ -8,7 +8,6 @@ import android.util.Log
 import android.view.MenuItem
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
@@ -23,11 +22,7 @@ class MenuItemHandler(
     private val viewModel: MemberViewModel,
     private val navigationController: MainNavigationController
 ) {
-    private lateinit var permissionManager: PermissionManager
-
     fun handleMenuItem(item: MenuItem): Boolean {
-        permissionManager = PermissionManager(activity)
-
         val sortOrderView = activity.findViewById<TextView>(R.id.sortorder)
 
         return when (item.itemId) {
@@ -171,26 +166,5 @@ class MenuItemHandler(
         }
         activity.contentResolver.update(WinkerkContract.winkerkEntry.CONTENT_URI, values, null, null)
         return true
-    }
-
-    private fun showPermissionSettingsDialog() {
-        val currentSetting = permissionManager.isCheckOnStartEnabled()
-
-        AlertDialog.Builder(activity)
-            .setTitle("Permission Check Settings")
-            .setMessage("Check permissions on app start: ${if (currentSetting) "Enabled" else "Disabled"}")
-            .setPositiveButton(if (currentSetting) "Disable" else "Enable") { _, _ ->
-                permissionManager.setCheckOnStart(!currentSetting)
-                Toast.makeText(
-                    activity,
-                    "Permission check ${if (!currentSetting) "enabled" else "disabled"}",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-            .setNeutralButton("Manage Permissions") { _, _ ->
-                navigationController.navigateToPermissions()
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
     }
 }
