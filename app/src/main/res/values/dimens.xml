@@ -38,4 +38,5 @@
     <dimen name="elevation_dialog">8dp</dimen>
     <dimen name="elevation_modal">16dp</dimen>
 
+    <dimen name="bottom_sheet_max_height">800dp</dimen>
 </resources>

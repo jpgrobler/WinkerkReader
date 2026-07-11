@@ -257,7 +257,7 @@
     <string name="detail_wysig">Wysig</string>
     <string name="action_search">Soek Lidmaat</string>
     <string name="detail_groepe">Groepe</string>
-
+    <string name="detail_kontak_info">Kontak</string>
 
     <string name="main_soek">Soek</string>
     <string name="main_gemeentenaam">Gemeente: Onbekend</string>
@@ -315,7 +315,7 @@
     <string name="mainmenu_sorteer">🔀 Sorteer</string>
     <string name="mainmenu_sort_wyk">⇵🏘️ Wyk</string>
     <string name="mainmenu_sort_van">⇵🔤 Van</string>
-    <string name="mainmenu_sort_ouderdom">⇵🎂 Ouderdom</string>
+    <string name="mainmenu_sort_ouderdom">⇵📅 Ouderdom</string>
     <string name="mainmenu_sort_adres">⇵📍 Adres</string>
     <string name="mainmenu_sort_verjaar">⇵🥳 Verjaarsdag</string>
     <string name="mainmenu_sort_gesin">⇵👨‍👩‍👧‍👦 Gesin</string>
@@ -520,7 +520,7 @@
     <string name="call_monitoring_channel_name">Oproepmonitering</string>
     <string name="call_monitoring_channel_description">Monitor inkomende oproepe in die agtergrond</string>
     <string name="call_logger_active">Oproeplogger Aktief</string>
-    <string name="monitoring_calls">Moniteer Foon- en Voip-oproepe</string>
+    <string name="monitoring_calls">Monitor Foon- en Voip-oproepe</string>
 
     <string name="export_successful">Suksesvol Uitgevoer</string>
     <string name="export_success_msg">Oproeplog is suksesvol uitgevoer.\n\nWil jy die lêer deel?</string>
@@ -709,10 +709,10 @@
     <string name="nuut">+ Nuut</string>
     <string name="wys_meer">Wys meer…</string>
     <string name="geen_aktiewe_herinneringe_nie">Geen aktiewe herinneringe nie</string>
-    <string name="bedieningsnotas">📝 Bedieningsnotas</string>
+    <string name="bedieningsnotas">📝 Notas</string>
     <string name="uitvou">Uitvou</string>
     <string name="wys_ouer_notas">Wys ouer notas…</string>
-    <string name="geen_bedieningsnotas_nie">Geen bedieningsnotas nie</string>
+    <string name="geen_bedieningsnotas_nie">Geen notas nie</string>
     <string name="wys_meer_herinneringe">Wys meer herinneringe…</string>
     <string name="nota">+ Nota</string>
     <string name="opdateer_info">Opdateer info</string>
@@ -759,9 +759,74 @@
     <string name="rugsteun_ook_oproeplog">Rugsteun ook oproeplog</string>
     <string name="rugsteun">Rugsteun</string>
     <string name="vra_uitstaande_permissions_sodra_app_oopmaak">Vra uitstaande permissions sodra app oopmaak</string>
+    <string name="geslag_filter_aktief">Geslag</string>
+    <string name="huwelikstatus_filter_aktief">Huwelikstatus</string>
+    <string name="getroud">Getroud</string>
+    <string name="lidmaatskap_filter_aktief">Lidmaatskap</string>
+    <string name="kies_lidmaatskap">Kies lidmaatskap</string>
+    <string name="belydend">Belydend</string>
+    <string name="van_filter_aktief">Van</string>
+    <string name="gelyk_aan">gelyk aan</string>
+    <string name="noemnaam_filter_aktief">Noemnaam</string>
+    <string name="kies_operator">Kies operator</string>
+    <string name="voer_noemnaam_in">Voer noemnaam in</string>
+    <string name="nooiensvan_filter_aktief">Nooiensvan</string>
+    <string name="voer_nooiensvan_in">Voer nooiensvan in</string>
+    <string name="wyk_filter_aktief">Wyk</string>
+    <string name="voer_wyk_in">Voer wyk in</string>
+    <string name="ouderdom_filter_aktief">Ouderdom</string>
+    <string name="kies_vergelyking">Kies vergelyking</string>
+    <string name="tot">Tot</string>
+    <string name="herstel">Herstel</string>
+    <string name="pas_filter_toe">Pas Filter Toe</string>
+    <string name="discard_changes">Ignoreer veraderinge</string>
+    <string name="discard">Ignoreer</string>
+    <string name="info_saved">Inligting gestoor</string>
+    <string name="required_fields_missing">Veld sonder data</string>
+    <string name="invalid_email">Foutiewe epos</string>
+    <string name="invalid_phone">Fouriewe foon nommer</string>
+    <string name="verjaar_message_hint">Tik verjaarsdag boodskap in</string>
+    <string name="verjaar_send_sms">Klik om SMS te stuur</string>
     <!-- Reuses existing settings_app_biometric / settings_app_biometric_summary for the checkbox label -->
     <string-array name="biometric_timeout_options">
         <item>By herbegin</item>
         <item>Elke keer op voorgrond (na 10 sekondes)</item>
     </string-array>
+
+    <!-- Verjaar SMS Activity -->
+
+    <string name="verjaar_char_count">%d karakters oor</string>
+
+    <string name="verjaar_send_birthday">Stuur verjaarsdag SMS</string>
+    <string name="verjaar_send_baptism">Stuur doopherdenking SMS</string>
+    <string name="verjaar_send_wedding">Stuur huweliksherdenking SMS</string>
+    <string name="verjaar_send_confession">Stuur belydenis herdenking SMS</string>
+    <string name="verjaar_message_updated">Boodskap opgedateer</string>
+    <string name="verjaar_time_updated">Tyd opgedateer</string>
+    <string name="verjaar_sms_manager_unavailable">SMS manager nie beskikbaar nie</string>
+    <string name="verjaar_no_members">Geen lede gevind nie</string>
+    <string name="verjaar_sending_sms">Besig om SMS\'e te stuur…</string>
+    <string name="verjaar_sms_sent">%d SMS\'e is gestuur!</string>
+    <string name="verjaar_member_selected">%s gekies vir SMS</string>
+    <string name="verjaar_member_deselected">%s verwyder van SMS lys</string>
+    <string name="verjaar_detail">Detail van %s %s</string>
+    <string name="verjaar_call">Skakel %s</string>
+    <string name="verjaar_text">Teks %s</string>
+    <string name="verjaar_call_phone">Skakel %s</string>
+    <string name="verjaar_sms_phone">SMS na %s</string>
+    <string name="verjaar_call_landline">Skakel %s</string>
+    <string name="verjaar_no_phone">Geen selfoonnommer beskikbaar</string>
+    <string name="verjaar_whatsapp_not_installed">WhatsApp nie geïnstalleer nie</string>
+    <string name="verjaar_confirm_exit_title">Bevestig Uittrede</string>
+    <string name="verjaar_confirm_exit_message">Daar is nog lede wat vir SMS gekies is. Wil u regtig uitgaan?</string>
+    <string name="verjaar_confirm_exit_yes">Ja, gaan uit</string>
+    <string name="verjaar_confirm_exit_no">Nee, bly</string>
+    <string name="verjaar_select_time">Kies Tyd</string>
+
+    <!-- Quick Action Bar -->
+    <string name="quick_action_herinnering">Stel Herinnering</string>
+    <string name="quick_action_notas">Bedieningsnotas</string>
+    <string name="dropbox_title">Laai databsis van internet\n(bv. Dropbox / Google Drive / One drive / ...</string>
+    <string name="server_connection_title">Laai Databasis via plaaslike Wifi\nWinkerkReader APP op PC is nodig</string>
+    <string name="photo_sync_title">Laai fotos van PC af, via Wifi\nWinkerkReader App op PC is nodig</string>
 </resources>

@@ -168,7 +168,7 @@ object MemberUtils {
         }
     }
 
-    fun sendWhatsApp(context: Context, phoneNumber: String?, method: Int = 1) {
+    fun sendWhatsApp(context: Context, phoneNumber: String?, method: Int = 2) {
         if (phoneNumber.isNullOrEmpty()) return
         val phone = Utils.fixphonenumber(phoneNumber)
         try {

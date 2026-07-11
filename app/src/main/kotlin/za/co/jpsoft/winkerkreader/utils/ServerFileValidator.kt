@@ -2,6 +2,7 @@ package za.co.jpsoft.winkerkreader.utils
 
 import android.net.Uri
 import android.util.Log
+import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.utils.ServerFileValidator.MIN_MEMBER_COUNT
 import java.io.File
 import java.io.FileInputStream
@@ -103,7 +104,7 @@ object ServerFileValidator {
                 fileSize = file.length()
             )
         } catch (e: Exception) {
-            Log.e(TAG, "Unexpected error checking file ${file.name}", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Unexpected error checking file ${file.name}", e)
             return FileCheckResult(
                 fileName = file.name,
                 success = false,
@@ -183,7 +184,7 @@ object ServerFileValidator {
                 }
             }
         } catch (e: Exception) {
-            Log.w(TAG, "Failed to count Members in ${file.name}", e)
+            if (BuildConfig.DEBUG) Log.w(TAG, "Failed to count Members in ${file.name}", e)
             0
         }
     }

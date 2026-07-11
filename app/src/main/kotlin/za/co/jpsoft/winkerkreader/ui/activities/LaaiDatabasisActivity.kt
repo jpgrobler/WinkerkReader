@@ -155,7 +155,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
 
                 reloadDatabaseAndFinish()
             } catch (e: IOException) {
-                Log.e(TAG, "File copy failed", e)
+                if (BuildConfig.DEBUG) Log.e(TAG, "File copy failed", e)
                 Toast.makeText(this, "Kon nie lêer kopieer nie: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
@@ -668,7 +668,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
 
     private fun downloadFromDropBoxUrl(url: String) {
         if (isFinishing || isDestroyed) {
-            Log.w(TAG, "Activity destroyed, ignoring download")
+            if (BuildConfig.DEBUG) Log.w(TAG, "Activity destroyed, ignoring download")
             return
         }
 
@@ -788,7 +788,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                         }, 300)
 
                     } catch (e: Exception) {
-                        Log.e(TAG, "Download processing failed", e)
+                        if (BuildConfig.DEBUG) Log.e(TAG, "Download processing failed", e)
                         showError("Fout met verwerking: ${e.message}")
                         privateDownloadFile?.delete()
                         privateDownloadFile = null
@@ -958,7 +958,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
      */
     private fun migrateDownloadedDatabase(dbFile: File): Boolean {
         if (!dbFile.exists()) {
-            Log.e(TAG, "DB file does not exist")
+            if (BuildConfig.DEBUG) Log.e(TAG, "DB file does not exist")
             return false
         }
         return try {
@@ -971,11 +971,11 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                     migrateTableVarcharToText(db, tableName)
                 }
                 db.execSQL("PRAGMA user_version = 1")
-                Log.i(TAG, "Migration successful on ${dbFile.name}")
+                if (BuildConfig.DEBUG) Log.i(TAG, "Migration successful on ${dbFile.name}")
             }
             true
         } catch (e: Exception) {
-            Log.e(TAG, "Migration failed on ${dbFile.name}", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Migration failed on ${dbFile.name}", e)
             false
         }
     }
@@ -1089,7 +1089,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
      */
     private fun isValidDatabaseFile(file: File, minMemberCount: Int = 10): Boolean {
         if (!file.exists() || file.length() < 512) {
-            Log.e(TAG, "File too small or missing: ${file.absolutePath}")
+            if (BuildConfig.DEBUG) Log.e(TAG, "File too small or missing: ${file.absolutePath}")
             return false
         }
 
@@ -1101,13 +1101,13 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                 buffer
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to read file header", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Failed to read file header", e)
             return false
         }
 
         val expectedHeader = "SQLite format 3\u0000".toByteArray()
         if (!header.contentEquals(expectedHeader)) {
-            Log.e(TAG, "Invalid SQLite header in ${file.name}")
+            if (BuildConfig.DEBUG) Log.e(TAG, "Invalid SQLite header in ${file.name}")
             return false
         }
 
@@ -1123,7 +1123,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                     if (it.moveToFirst()) {
                         val count = it.getInt(0)
                         if (count < minMemberCount) {
-                            Log.e(TAG, "Members table has only $count rows (minimum $minMemberCount)")
+                            if (BuildConfig.DEBUG) Log.e(TAG, "Members table has only $count rows (minimum $minMemberCount)")
                             return false
                         }
                         true
@@ -1133,7 +1133,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error querying Members table", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error querying Members table", e)
             false
         }
     }

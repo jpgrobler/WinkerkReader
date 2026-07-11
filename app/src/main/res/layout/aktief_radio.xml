@@ -10,7 +10,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/filter_aktief_text"
-        android:textColor="?attr/colorOnPrimary"
+
         android:paddingTop="2dp"
         android:paddingBottom="2dp"
         android:paddingStart="4dp"
@@ -24,7 +24,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/filter_onaktief_text"
-        android:textColor="?attr/colorOnPrimary"
+
         android:paddingTop="2dp"
         android:paddingBottom="2dp"
         android:paddingStart="4dp"

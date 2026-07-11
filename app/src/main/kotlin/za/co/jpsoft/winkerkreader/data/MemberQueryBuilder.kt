@@ -1,40 +1,24 @@
-// File: data/MemberQueryBuilder.kt
 package za.co.jpsoft.winkerkreader.data
 
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.col
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
 import za.co.jpsoft.winkerkreader.data.models.FilterBox
 
-/**
- * Builds SQL queries for the member list.
- * All raw SQL strings are isolated here for easier maintenance and future migration.
- */
 object MemberQueryBuilder {
 
-    /**
-     * Represents a SQL statement with its arguments.
-     */
     data class SqlRequest(val sql: String, val args: Array<String>)
 
-    /**
-     * Build a query based on event type and current filter/sort state.
-     * @param eventType   e.g. "LIDMAAT_DATA", "SOEK_DATA", "FILTER_DATA"
-     * @param recordStatus "0", "2", or "*" for all
-     * @param soek         search term (for SOEK_DATA)
-     * @param filterList   list of active filters (for FILTER_DATA)
-     * @param sortOrder    current sort order (e.g. "VAN", "GESINNE")
-     * @return SqlRequest or null if eventType is invalid
-     */
     fun buildQuery(
         eventType: String,
         recordStatus: String,
         soek: String,
         filterList: ArrayList<FilterBox>?,
-        sortOrder: String
+        sortOrder: String,
+        congregations: List<String>? = null   // ✅ changed
     ): SqlRequest? = when (eventType) {
         "GESINNE_DATA", "FILTER_DATA", "LIDMAAT_DATA", "LIDMAAT_DATA_WYK",
         "SOEK_DATA", "LIDMAAT_DATA_VERJAAR", "OUDERDOM_DATA", "LIDMAAT_DATA_ADRES",
-        "HUWELIK_DATA" -> buildMemberQuery(eventType, recordStatus, soek, filterList, sortOrder)
+        "HUWELIK_DATA" -> buildMemberQuery(eventType, recordStatus, soek, filterList, sortOrder, congregations)
         else -> null
     }
 
@@ -43,14 +27,15 @@ object MemberQueryBuilder {
         recordStatus: String,
         soek: String,
         filterList: ArrayList<FilterBox>?,
-        sortOrder: String
+        sortOrder: String,
+        congregations: List<String>?   // ✅ changed
     ): SqlRequest {
         val selectionBase = winkerkEntry.SELECTION_LIDMAAT_INFO
         val where = StringBuilder()
         val argsList = mutableListOf<String>()
         val sortOrderBuilder = StringBuilder()
 
-        // Always filter by record status
+        // Record status
         if (recordStatus != "*") {
             where.append(" (").append(winkerkEntry.LIDMATE_TABLE_NAME).append(".")
                 .append(col(winkerkEntry.LIDMATE_REKORDSTATUS)).append(" = '")
@@ -62,13 +47,24 @@ object MemberQueryBuilder {
                 .append(col(winkerkEntry.LIDMATE_REKORDSTATUS)).append(" = '2' ))")
         }
 
-        // Append WHERE clauses (search, filter)
-        appendWhereClause(eventType, where, argsList, soek, filterList)
+        // ✅ Congregation IN clause
+        if (!congregations.isNullOrEmpty()) {
+            where.append(" AND ")
+                .append(winkerkEntry.LIDMATE_TABLE_NAME)
+                .append(".")
+                .append(col(winkerkEntry.LIDMATE_GEMEENTE))
+                .append(" IN (")
+            congregations.forEachIndexed { index, name ->
+                if (index > 0) where.append(",")
+                where.append("?")
+                argsList.add(name)
+            }
+            where.append(")")
+        }
 
-        // Append ORDER BY
+        appendWhereClause(eventType, where, argsList, soek, filterList)
         appendOrderByClause(eventType, sortOrderBuilder, sortOrder)
 
-        // Determine FROM clause
         val finalFrom = if (eventType == "GESINNE_DATA" || eventType == "LIDMAAT_DATA_WYK" || eventType == "LIDMAAT_DATA_ADRES") {
             winkerkEntry.SELECTION_LIDMAAT_FROM_GESINSHOOF
         } else {
@@ -291,24 +287,23 @@ object MemberQueryBuilder {
             }
         }
     }
-    // File: data/MemberQueryBuilder.kt
 
-    /**
-     * Build a COUNT query for the current filters (no ORDER BY).
-     * Returns the SQL string and arguments, similar to SqlRequest but just the SQL.
-     * We'll return a pair (sql, args) for simplicity.
-     */
+    // ========================================================================
+    // COUNT QUERIES
+    // ========================================================================
+    // COUNT queries with congregations list
     fun buildCountQuery(
         eventType: String,
         recordStatus: String,
         soek: String,
         filterList: ArrayList<FilterBox>?,
-        sortOrder: String
+        sortOrder: String,
+        congregations: List<String>? = null   // ✅ changed
     ): Pair<String, Array<String>> {
         val where = StringBuilder()
         val argsList = mutableListOf<String>()
 
-        // Record status filter (same as in buildMemberQuery)
+        // Record status
         if (recordStatus != "*") {
             where.append(" (").append(winkerkEntry.LIDMATE_TABLE_NAME).append(".")
                 .append(col(winkerkEntry.LIDMATE_REKORDSTATUS)).append(" = '")
@@ -320,10 +315,23 @@ object MemberQueryBuilder {
                 .append(col(winkerkEntry.LIDMATE_REKORDSTATUS)).append(" = '2' ))")
         }
 
-        // Append search/filter WHERE clauses (same as buildMemberQuery)
+        // ✅ Congregation IN clause
+        if (!congregations.isNullOrEmpty()) {
+            where.append(" AND ")
+                .append(winkerkEntry.LIDMATE_TABLE_NAME)
+                .append(".")
+                .append(col(winkerkEntry.LIDMATE_GEMEENTE))
+                .append(" IN (")
+            congregations.forEachIndexed { index, name ->
+                if (index > 0) where.append(",")
+                where.append("?")
+                argsList.add(name)
+            }
+            where.append(")")
+        }
+
         appendWhereClause(eventType, where, argsList, soek, filterList)
 
-        // Determine FROM clause (same as buildMemberQuery)
         val fromClause = if (eventType == "GESINNE_DATA" || eventType == "LIDMAAT_DATA_WYK" || eventType == "LIDMAAT_DATA_ADRES") {
             winkerkEntry.SELECTION_LIDMAAT_FROM_GESINSHOOF
         } else {
@@ -338,23 +346,7 @@ object MemberQueryBuilder {
 
         return sql to argsList.toTypedArray()
     }
-    /**
-     * Builds a COUNT query with an additional condition that the birthday month/day
-     * is strictly before the given [todayMonth] and [todayDay].
-     */
-    /**
-     * Builds a COUNT query with an additional condition that the birthday month/day
-     * is strictly before the given [todayMonth] and [todayDay].
-     */
-    /**
-     * Builds a COUNT query that counts members whose birthday month/day is before today.
-     * The WHERE clause includes all existing filters from the event type, and adds the birthday condition.
-     */
-    /**
-     * Builds a COUNT query that counts members whose birthday (month/day) is strictly
-     * before today's month/day. This gives the offset (number of items before the
-     * first birthday >= today) in the filtered result set.
-     */
+
     fun buildCountBeforeBirthdayQuery(
         eventType: String,
         recordStatus: String,
@@ -364,18 +356,46 @@ object MemberQueryBuilder {
         todayMonth: String,
         todayDay: String
     ): Pair<String, Array<String>> {
-        // Reuse the existing count query to get the base SQL and arguments
         val (baseSql, baseArgs) = buildCountQuery(eventType, recordStatus, soek, filterList, sortOrder)
-
-        // Build the birthday-before condition
-        val birthdayCondition = "((CAST(SUBSTR(Geboortedatum, 4, 2) AS INTEGER) < ?) OR (CAST(SUBSTR(Geboortedatum, 4, 2) AS INTEGER) = ? AND CAST(SUBSTR(Geboortedatum, 1, 2) AS INTEGER) < ?))"
-
-        // Insert the condition into the WHERE clause
-        val sql = insertBirthdayCondition(baseSql, birthdayCondition)
-
-        // Append the three extra parameters (todayMonth, todayMonth, todayDay)
+        // Parse the SQL to insert the birthday condition
+        val sql = insertBirthdayCondition(baseSql, todayMonth, todayDay)
+        // Append the extra parameters (3 values for the condition)
         val args = baseArgs + arrayOf(todayMonth, todayMonth, todayDay)
         return sql to args
+    }
+
+    private fun insertBirthdayCondition(sql: String, month: String, day: String): String {
+        // Find the WHERE clause (if any)
+        val whereIndex = sql.indexOf(" WHERE ", ignoreCase = true)
+        val cond = "((CAST(SUBSTR(Geboortedatum, 4, 2) AS INTEGER) < ?) OR (CAST(SUBSTR(Geboortedatum, 4, 2) AS INTEGER) = ? AND CAST(SUBSTR(Geboortedatum, 1, 2) AS INTEGER) < ?))"
+        return if (whereIndex == -1) {
+            // No WHERE – add it before ORDER BY
+            val orderIndex = sql.indexOf(" ORDER BY ", ignoreCase = true)
+            if (orderIndex == -1) {
+                // No ORDER BY – append WHERE
+                val fromIndex = sql.indexOf(" FROM ", ignoreCase = true)
+                val beforeFrom = sql.substring(0, fromIndex + " FROM ".length)
+                val rest = sql.substring(fromIndex + " FROM ".length)
+                "$beforeFrom$rest WHERE $cond"
+            } else {
+                val beforeOrder = sql.substring(0, orderIndex)
+                val afterOrder = sql.substring(orderIndex)
+                "$beforeOrder WHERE $cond $afterOrder"
+            }
+        } else {
+            // Insert before the ORDER BY (if any) or at the end
+            val orderIndex = sql.indexOf(" ORDER BY ", ignoreCase = true)
+            if (orderIndex == -1) {
+                // No ORDER BY – append after WHERE
+                val beforeWhere = sql.substring(0, whereIndex + " WHERE ".length)
+                val afterWhere = sql.substring(whereIndex + " WHERE ".length)
+                "$beforeWhere$cond AND $afterWhere"
+            } else {
+                val beforeOrder = sql.substring(0, orderIndex)
+                val afterOrder = sql.substring(orderIndex)
+                "$beforeOrder AND $cond $afterOrder"
+            }
+        }
     }
 
     /**

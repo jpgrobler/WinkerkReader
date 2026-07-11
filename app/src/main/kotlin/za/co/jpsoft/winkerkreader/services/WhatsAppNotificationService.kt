@@ -1,8 +1,11 @@
 package za.co.jpsoft.winkerkreader.services
 
 import android.app.Notification
+import android.content.BroadcastReceiver
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
@@ -50,9 +53,20 @@ class WhatsAppNotificationService : NotificationListenerService() {
     override fun onCreate() {
         super.onCreate()
         initialize()
+        pruneHandler.post(pruneRunnable)  // ✅ Start pruning
         if (BuildConfig.DEBUG) Log.d(TAG, "WhatsAppNotificationService created")
     }
 
+    override fun onDestroy() {
+        // ✅ Clean up all resources
+        pruneHandler.removeCallbacksAndMessages(null)
+        serviceScope.cancel()
+        activeVoipCalls.clear()
+        loggedUnclassifiedKeys.clear()
+
+        if (BuildConfig.DEBUG) Log.d(TAG, "WhatsAppNotificationService destroyed")
+        super.onDestroy()
+    }
     private fun initialize() {
         val appContext = applicationContext
         settingsManager = SettingsManager.getInstance(appContext)
@@ -96,14 +110,7 @@ class WhatsAppNotificationService : NotificationListenerService() {
                 isPossibleOutgoingCall(title, text, bigText, subText)
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        pruneHandler.removeCallbacksAndMessages(null)
-        serviceScope.cancel()
-        activeVoipCalls.clear()
-        loggedUnclassifiedKeys.clear()
-        if (BuildConfig.DEBUG) Log.d(TAG, "WhatsAppNotificationService destroyed")
-    }
+
 
     // -------------------------------------------------------------------------
     // Main VoIP notification processing

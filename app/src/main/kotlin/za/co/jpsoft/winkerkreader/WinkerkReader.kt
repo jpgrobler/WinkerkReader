@@ -1,10 +1,12 @@
 package za.co.jpsoft.winkerkreader
 
 import android.app.Application
+import android.os.Build
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ProcessLifecycleOwner
+import com.google.android.material.color.DynamicColors
 import za.co.jpsoft.winkerkreader.utils.AppAuthState
 import za.co.jpsoft.winkerkreader.utils.AppInitializer
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
@@ -13,6 +15,9 @@ class WinkerkReader : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            DynamicColors.applyToActivitiesIfAvailable(this)
+        }
 
         // Theme setup
         val settingsManager = SettingsManager.getInstance(this)

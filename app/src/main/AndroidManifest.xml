@@ -77,6 +77,7 @@
 
         <!-- Activities -->
         <activity android:name="za.co.jpsoft.winkerkreader.ui.activities.MainActivity"
+            android:theme="@style/Theme.WinkerkReader"
             android:launchMode="singleInstance"
             android:icon="@drawable/ic_launcher_round"
             android:label="WinkerkReader"
@@ -96,25 +97,23 @@
         </activity>
 
         <activity android:name="za.co.jpsoft.winkerkreader.ui.activities.LidmaatDetailActivity"
+            android:theme="@style/Theme.WinkerkReader.NoActionBar"
             android:exported="false"
-            android:icon="@drawable/family_roof"
             android:windowSoftInputMode="adjustPan|adjustResize"
             android:label="Lidmaat Detail"
             android:parentActivityName="za.co.jpsoft.winkerkreader.ui.activities.MainActivity"
-            android:theme="@style/Theme.WinkerkReader">
+            >
         </activity>
 
         <activity
             android:name="za.co.jpsoft.winkerkreader.ui.activities.PermissionsActivity"
             android:exported="false"
-            android:icon="@drawable/family_roof"
             android:label="App Permissions"
             android:parentActivityName="za.co.jpsoft.winkerkreader.ui.activities.MainActivity">
         </activity>
 
         <activity android:name="za.co.jpsoft.winkerkreader.ui.activities.ArgiefListActivity"
             android:exported="false"
-            android:icon="@drawable/family_roof"
             android:windowSoftInputMode="adjustPan|adjustResize"
             android:label="Argief"
             android:parentActivityName="za.co.jpsoft.winkerkreader.ui.activities.MainActivity">
@@ -122,7 +121,6 @@
 
         <activity android:name="za.co.jpsoft.winkerkreader.ui.activities.RegistreerActivity"
             android:exported="false"
-            android:icon="@drawable/family_roof"
             android:label="Gebruiker Inligting"
             android:windowSoftInputMode="adjustPan|adjustResize"
             android:parentActivityName="za.co.jpsoft.winkerkreader.ui.activities.MainActivity">
@@ -130,7 +128,6 @@
 
         <activity android:name="za.co.jpsoft.winkerkreader.ui.activities.LaaiDatabasisActivity"
             android:exported="false"
-            android:icon="@drawable/family_roof"
             android:label="Laai nuwe data">
         </activity>
 
@@ -143,7 +140,6 @@
 
         <activity android:name="za.co.jpsoft.winkerkreader.ui.activities.VerjaarSmsActivity"
             android:exported="false"
-            android:icon="@drawable/family_roof"
             android:windowSoftInputMode="adjustPan|adjustResize"
             android:label="Stuur Verjaarsdasg SMS"
             android:parentActivityName="za.co.jpsoft.winkerkreader.ui.activities.MainActivity">

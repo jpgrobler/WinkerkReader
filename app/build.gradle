@@ -8,8 +8,8 @@ android {
     defaultConfig {
         applicationId = "za.co.jpsoft.winkerkreader"
         minSdk = 26
-        versionCode = 115
-        versionName = "4.2 test r015"
+        versionCode = 116
+        versionName = "4.2 test r016"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         targetSdk = 35
         vectorDrawables.useSupportLibrary = true
@@ -98,6 +98,7 @@ dependencies {
     implementation "androidx.paging:paging-runtime-ktx:3.5.0"
     implementation("androidx.biometric:biometric:1.1.0")
     implementation "androidx.core:core-ktx:1.19.0"
+    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.2.0'
     implementation 'com.google.android.libraries.places:places:5.2.0'
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0"
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0'

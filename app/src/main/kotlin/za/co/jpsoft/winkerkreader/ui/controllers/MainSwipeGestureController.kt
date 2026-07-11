@@ -17,9 +17,9 @@ class MainSwipeGestureController(
     private val gestureDetector = GestureDetector(
         activity,
         object : GestureDetector.SimpleOnGestureListener() {
-            private val SWIPE_MIN_DISTANCE = 120
-            private val SWIPE_MAX_OFF_PATH = 200
-            private val SWIPE_THRESHOLD_VELOCITY = 200
+            private val SWIPE_MIN_DISTANCE = 80      // Reduced from 120 (easier to trigger)
+            private val SWIPE_MAX_OFF_PATH = 150     // Reduced from 200 (more precise)
+            private val SWIPE_THRESHOLD_VELOCITY = 150  // Reduced from 200 (easier to trigger)
 
             override fun onFling(
                 e1: MotionEvent?,

@@ -1,4 +1,3 @@
-// File: data/MemberRepository.kt
 package za.co.jpsoft.winkerkreader.data
 
 import android.content.ContentResolver
@@ -31,6 +30,7 @@ class MemberRepository(private val context: Context) {
     private var lastRecordStatus = "0"
     private var lastSearchTerm = ""
     private var lastFilterListSnapshot: ArrayList<FilterBox>? = null
+    private var lastCongregations: List<String>? = null  // ✅ Added
 
     /**
      * Load members based on the provided parameters.
@@ -42,12 +42,13 @@ class MemberRepository(private val context: Context) {
         recordStatus: String,
         soek: String,
         filterList: ArrayList<FilterBox>?,
-        sortOrder: String
+        sortOrder: String,
+        congregations: List<String>? = null  // ✅ Added
     ): List<MemberItem> {
-        val cacheKey = buildCacheKey(eventType, recordStatus, soek, filterList, sortOrder)
+        val cacheKey = buildCacheKey(eventType, recordStatus, soek, filterList, sortOrder, congregations)
         val cachedQuery = queryCache[cacheKey]
 
-        val sqlRequest = if (cachedQuery != null && !needsQueryRebuild(eventType, recordStatus, soek, filterList)) {
+        val sqlRequest = if (cachedQuery != null && !needsQueryRebuild(eventType, recordStatus, soek, filterList, congregations)) {
             cachedQuery
         } else {
             MemberQueryBuilder.buildQuery(
@@ -55,10 +56,11 @@ class MemberRepository(private val context: Context) {
                 recordStatus = recordStatus,
                 soek = soek,
                 filterList = filterList,
-                sortOrder = sortOrder
+                sortOrder = sortOrder,
+                congregations = congregations  // ✅ Pass congregations
             )?.also {
                 queryCache[cacheKey] = it
-                updateLastState(eventType, recordStatus, soek, filterList)
+                updateLastState(eventType, recordStatus, soek, filterList, congregations)
             } ?: run {
                 if (BuildConfig.DEBUG) Log.e("MemberRepository", "Failed to build query for: $eventType")
                 return emptyList()
@@ -84,6 +86,7 @@ class MemberRepository(private val context: Context) {
         lastRecordStatus = "0"
         lastSearchTerm = ""
         lastFilterListSnapshot = null
+        lastCongregations = null
         if (BuildConfig.DEBUG) Log.d("MemberRepository", "Cache cleared")
     }
 
@@ -96,10 +99,14 @@ class MemberRepository(private val context: Context) {
         recordStatus: String,
         soek: String,
         filterList: ArrayList<FilterBox>?,
-        sortOrder: String
+        sortOrder: String,
+        congregations: List<String>?  // ✅ Added
     ): String = buildString {
         append(eventType)
         append("_status_").append(recordStatus)
+        if (!congregations.isNullOrEmpty()) {
+            append("_cong_").append(congregations.sorted().joinToString("|"))
+        }
         when (eventType) {
             "SOEK_DATA" -> {
                 append("_soek_").append(soek)
@@ -117,10 +124,12 @@ class MemberRepository(private val context: Context) {
         eventType: String,
         recordStatus: String,
         soek: String,
-        filterList: ArrayList<FilterBox>?
+        filterList: ArrayList<FilterBox>?,
+        congregations: List<String>?  // ✅ Added
     ): Boolean = when {
         eventType != lastEventType -> true
         recordStatus != lastRecordStatus -> true
+        congregations != lastCongregations -> true  // ✅ Added
         eventType == "SOEK_DATA" && soek != lastSearchTerm -> true
         eventType == "FILTER_DATA" && !filterListsEqual(filterList, lastFilterListSnapshot) -> true
         else -> false
@@ -139,10 +148,12 @@ class MemberRepository(private val context: Context) {
         eventType: String,
         recordStatus: String,
         soek: String,
-        filterList: ArrayList<FilterBox>?
+        filterList: ArrayList<FilterBox>?,
+        congregations: List<String>?  // ✅ Added
     ) {
         lastEventType = eventType
         lastRecordStatus = recordStatus
+        lastCongregations = congregations
         if (eventType == "SOEK_DATA") lastSearchTerm = soek
         if (eventType == "FILTER_DATA") lastFilterListSnapshot = filterList?.let { ArrayList(it) }
     }
@@ -342,22 +353,26 @@ class MemberRepository(private val context: Context) {
         else null
     } catch (_: Exception) { null }
 
+    // -------------------------------------------------------------------------
+    // Count methods - UPDATED with congregations parameter
+    // -------------------------------------------------------------------------
+
     fun countMembers(
         eventType: String,
         recordStatus: String,
         soek: String,
         filterList: ArrayList<FilterBox>?,
-        sortOrder: String
+        sortOrder: String,
+        congregations: List<String>? = null  // ✅ Added
     ): Int {
-        // Build the COUNT query – returns (sql, args)
         val (sql, args) = MemberQueryBuilder.buildCountQuery(
-            eventType, recordStatus, soek, filterList, sortOrder
+            eventType, recordStatus, soek, filterList, sortOrder, congregations
         )
         val cursor = contentResolver.query(
             WinkerkContract.winkerkEntry.CONTENT_URI,
             null,
-            sql,       // ✅ the SQL string
-            args,      // ✅ the arguments array
+            sql,
+            args,
             null
         )
         cursor?.use {
@@ -366,6 +381,11 @@ class MemberRepository(private val context: Context) {
         return 0
     }
 
+    /**
+     * Returns the number of members in the filtered list whose birthday month/day
+     * is strictly before today's month/day. This gives the offset for the first
+     * member with birthday >= today.
+     */
     suspend fun countMembersBeforeBirthday(
         eventType: String,
         recordStatus: String,

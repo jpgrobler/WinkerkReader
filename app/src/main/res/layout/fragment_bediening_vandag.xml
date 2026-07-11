@@ -29,7 +29,7 @@
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chip_vandag"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.WinkerkReader.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/bediening_filter_vandag"

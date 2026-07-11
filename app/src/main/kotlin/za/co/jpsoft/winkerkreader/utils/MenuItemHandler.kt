@@ -6,7 +6,6 @@ import android.text.SpannableString
 import android.text.style.StyleSpan
 import android.util.Log
 import android.view.MenuItem
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import za.co.jpsoft.winkerkreader.BuildConfig
@@ -23,17 +22,15 @@ class MenuItemHandler(
     private val navigationController: MainNavigationController
 ) {
     fun handleMenuItem(item: MenuItem): Boolean {
-        val sortOrderView = activity.findViewById<TextView>(R.id.sortorder)
-
         return when (item.itemId) {
             R.id.aktief_radio_group -> handleAktiefRadioGroup()
-            R.id.tagged -> handleTagged(sortOrderView)
-            R.id.sort_van -> handleSortVan(sortOrderView)
-            R.id.sort_wyk -> handleSortWyk(sortOrderView)
-            R.id.sort_ouderdom -> handleSortOuderdom(sortOrderView)
-            R.id.verjaar -> handleVerjaar(sortOrderView)
-            R.id.sort_adres -> handleSortAdres(sortOrderView)
-            R.id.sort_gesin -> handleSortGesin(sortOrderView)
+            R.id.tagged -> handleTagged()
+            R.id.sort_van -> handleSortVan()
+            R.id.sort_wyk -> handleSortWyk()
+            R.id.sort_ouderdom -> handleSortOuderdom()
+            R.id.verjaar -> handleVerjaar()
+            R.id.sort_adres -> handleSortAdres()
+            R.id.sort_gesin -> handleSortGesin()
             R.id.RegistreerActivity -> {
                 navigationController.navigateToRegistreer()
                 true
@@ -49,7 +46,7 @@ class MenuItemHandler(
                 navigationController.navigateToSmsVerjaar()
                 true
             }
-            R.id.filter_options -> handleFilterOptions()
+            //R.id.filter_options -> handleFilterOptions()
             R.id.deselect -> handleDeselect()
             R.id.uitleg -> {
                 navigationController.navigateToUitleg()
@@ -91,74 +88,70 @@ class MenuItemHandler(
         return true
     }
 
-    // Die volgende metodes bly onveranderd, want hulle gebruik nie `startActivity` nie.
-    private fun handleTagged(sortOrderView: TextView): Boolean {
-        sortOrderView.background = null
+    private fun handleTagged(): Boolean {
         settings.defLayout = "VAN"
         viewModel.soekList = false
-        (activity as MainActivity).updateSortOrder("VAN")//viewModel.refresh()//(activity as MainActivity).observeDataset()
+        (activity as MainActivity).updateSortOrder("VAN")
         return true
     }
 
-    private fun handleSortVan(sortOrderView: TextView): Boolean {
-        sortOrderView.background = null
+    private fun handleSortVan(): Boolean {
         settings.defLayout = "VAN"
         viewModel.soekList = false
-        (activity as MainActivity).updateSortOrder("VAN")//viewModel.refresh()  //(activity as MainActivity).observeDataset()
+        (activity as MainActivity).updateSortOrder("VAN")
         return true
     }
 
-    private fun handleSortWyk(sortOrderView: TextView): Boolean {
-        sortOrderView.background = null
+    private fun handleSortWyk(): Boolean {
         settings.defLayout = "WYK"
         viewModel.soekList = false
-        (activity as MainActivity).updateSortOrder("WYK")//viewModel.refresh()//(activity as MainActivity).observeDataset()
+        (activity as MainActivity).updateSortOrder("WYK")
         return true
     }
 
-    private fun handleSortOuderdom(sortOrderView: TextView): Boolean {
-        sortOrderView.background = null
+    private fun handleSortOuderdom(): Boolean {
         settings.defLayout = "OUDERDOM"
         viewModel.soekList = false
-        (activity as MainActivity).updateSortOrder("OUDERDOM")//viewModel.refresh()//(activity as MainActivity).observeDataset()
+        (activity as MainActivity).updateSortOrder("OUDERDOM")
         return true
     }
 
-    private fun handleVerjaar(sortOrderView: TextView): Boolean {
-        sortOrderView.background = null
+    private fun handleVerjaar(): Boolean {
         settings.defLayout = "VERJAAR"
         viewModel.soekList = false
-        (activity as MainActivity).updateSortOrder("VERJAAR")//viewModel.refresh()//(activity as MainActivity).observeDataset()
+        val activity = activity as? MainActivity
+        if (activity != null) {
+            activity.updateSortOrder("VERJAAR")
+            // The scroll will happen automatically in updateSortOrder
+        }
         return true
     }
 
-    private fun handleSortAdres(sortOrderView: TextView): Boolean {
-        sortOrderView.background = null
+    private fun handleSortAdres(): Boolean {
         settings.defLayout = "ADRES"
         viewModel.soekList = false
-        (activity as MainActivity).updateSortOrder("ADRES")//viewModel.refresh()//(activity as MainActivity).observeDataset()
+        (activity as MainActivity).updateSortOrder("ADRES")
         return true
     }
 
-    private fun handleSortGesin(sortOrderView: TextView): Boolean {
-        sortOrderView.background = null
+    private fun handleSortGesin(): Boolean {
         settings.defLayout = "GESINNE"
         viewModel.soekList = false
-        (activity as MainActivity).updateSortOrder("GESINNE")//viewModel.refresh()//(activity as MainActivity).observeDataset()
+        (activity as MainActivity).updateSortOrder("GESINNE")
         return true
     }
 
-    private fun handleFilterOptions(): Boolean {
-        return try {
-            val filterHandler = FilterHandler(activity as MainActivity, viewModel)
-            filterHandler.showFilterDialog()
-            true
-        } catch (e: Exception) {
-            if (BuildConfig.DEBUG) Log.e("MenuItemHandler", "Filter error", e)
-            Toast.makeText(activity, "Error opening filter options", Toast.LENGTH_SHORT).show()
-            false
-        }
-    }
+//    private fun handleFilterOptions(): Boolean {
+//        return try {
+//            val filterHandler = FilterHandler(activity as MainActivity, viewModel)
+//            filterHandler.showFilterDialog()
+//            true
+//        } catch (e: Exception) {
+//            if (BuildConfig.DEBUG) Log.e("MenuItemHandler", "Filter error", e)
+//            Toast.makeText(activity, "Error opening filter options", Toast.LENGTH_SHORT).show()
+//            false
+//        }
+//    }
 
     private fun handleDeselect(): Boolean {
         val values = ContentValues().apply {

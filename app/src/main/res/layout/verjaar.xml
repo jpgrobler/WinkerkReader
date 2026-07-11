@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -8,91 +9,158 @@
     android:focusableInTouchMode="true"
     android:background="?attr/colorSurface">
 
-    <RelativeLayout
+    <!-- Message Input Card -->
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/colorSurfaceVariant"
-        android:padding="4dp">
-        <EditText
-            android:id="@+id/boodskap"
+        android:layout_margin="8dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="1dp"
+        app:cardBackgroundColor="?attr/colorSurfaceVariant">
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:maxLength="160"
-            android:layout_toStartOf="@+id/verjaarview"
-            android:inputType="textMultiLine"
-            android:textColor="?attr/colorOnSurface"
-            android:backgroundTint="?attr/colorPrimary"
-            android:hint=""/>
-        <LinearLayout
-            android:layout_alignParentEnd="true"
-            android:id="@+id/verjaarview"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:orientation="vertical">
-            <ImageView
-                android:layout_marginTop="3dp"
-                android:layout_marginEnd="3dp"
-                android:id="@+id/verjaar_sms"
-                android:layout_width="80dp"
-                android:layout_height="80dp"
-                android:scaleType="fitXY"
-                android:src="@drawable/bdaysms" />
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <!-- Message Input with larger text area -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <TextView
-                    android:layout_weight="1"
-                    android:textAlignment="center"
-                    android:id="@+id/char_count"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="@string/verjaar_letters"
-                    android:textColor="?attr/colorOnSurfaceVariant" />
-            </LinearLayout>
-        </LinearLayout>
-    </RelativeLayout>
+                    android:layout_weight="1"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    app:boxStrokeColor="?attr/colorPrimary"
+                    app:hintTextColor="?attr/colorPrimary"
+                    app:counterEnabled="true"
+                    app:counterMaxLength="160"
+                    app:counterTextColor="?attr/colorOnSurfaceVariant">
 
-    <RadioGroup
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/boodskap"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textMultiLine"
+                        android:minLines="4"
+                        android:maxLines="6"
+                        android:textSize="16sp"
+                        android:textColor="?attr/colorOnSurface"
+                        android:hint="@string/verjaar_message_hint" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <ImageView
+                    android:id="@+id/verjaar_sms"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:layout_marginStart="8dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/bdaysms"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/verjaar_send_sms"
+                    android:padding="4dp" />
+            </LinearLayout>
+
+            <!-- Character Count -->
+            <TextView
+                android:id="@+id/char_count"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAlignment="textEnd"
+                android:text="@string/verjaar_letters"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textSize="12sp"
+                android:layout_marginTop="4dp" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Event Type Selection - Material 3 Chips with improved visibility -->
+    <com.google.android.material.chip.ChipGroup
         android:id="@+id/keuse"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:padding="8dp"
+        app:singleSelection="true"
+        app:selectionRequired="true"
+        app:chipSpacing="4dp"
         android:orientation="horizontal"
-        android:background="?attr/colorSurface"
-        android:padding="4dp">
-        <RadioButton
+        android:gravity="center_horizontal"
+        android:layout_gravity="center_horizontal"
+         >
+
+        <com.google.android.material.chip.Chip
             android:id="@+id/Keuse_Verjaar"
+            style="@style/Widget.WinkerkReader.Chip.Filter"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:text="@string/verjaar_option_verjaar"
             android:textColor="?attr/colorOnSurface"
-            android:layout_weight="1" />
-        <RadioButton
-            android:layout_gravity="center_horizontal"
+            android:textSize="14sp"
+            app:chipIcon="@drawable/bday"
+            app:chipIconTint="?attr/colorPrimary"
+            app:checkedIconVisible="true"
+            app:chipBackgroundColor="?attr/colorSurfaceVariant"
+            app:chipStrokeColor="?attr/colorOutline"
+            app:chipStrokeWidth="1dp"/>
+
+        <com.google.android.material.chip.Chip
             android:id="@+id/Keuse_Doop"
+            style="@style/Widget.WinkerkReader.Chip.Filter"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:text="@string/verjaar_option_doop"
             android:textColor="?attr/colorOnSurface"
-            android:layout_weight="1" />
-        <RadioButton
+            android:textSize="14sp"
+            app:chipIcon="@drawable/doop"
+            app:chipIconTint="?attr/colorPrimary"
+            app:checkedIconVisible="true"
+            app:chipBackgroundColor="?attr/colorSurfaceVariant"
+            app:chipStrokeColor="?attr/colorOutline"
+            app:chipStrokeWidth="1dp" />
+
+        <com.google.android.material.chip.Chip
             android:id="@+id/Keuse_Huwelik"
+            style="@style/Widget.WinkerkReader.Chip.Filter"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:text="@string/verjaar_option_huwelik"
             android:textColor="?attr/colorOnSurface"
-            android:layout_weight="1" />
-        <RadioButton
+            android:textSize="14sp"
+            app:chipIcon="@drawable/married"
+            app:chipIconTint="?attr/colorPrimary"
+            app:checkedIconVisible="true"
+            app:chipBackgroundColor="?attr/colorSurfaceVariant"
+            app:chipStrokeColor="?attr/colorOutline"
+            app:chipStrokeWidth="1dp" />
+
+        <com.google.android.material.chip.Chip
             android:id="@+id/Keuse_Belydenis"
+            style="@style/Widget.WinkerkReader.Chip.Filter"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:text="@string/verjaar_option_belydenis"
             android:textColor="?attr/colorOnSurface"
-            android:layout_weight="1" />
-    </RadioGroup>
+            android:textSize="14sp"
+            app:chipIcon="@drawable/bely"
+            app:chipIconTint="?attr/colorPrimary"
+            app:checkedIconVisible="true"
+            app:chipBackgroundColor="?attr/colorSurfaceVariant"
+            app:chipStrokeColor="?attr/colorOutline"
+            app:chipStrokeWidth="1dp" />
+    </com.google.android.material.chip.ChipGroup>
 
+    <!-- Info Text -->
     <TextView
         android:id="@+id/main"
         android:layout_width="match_parent"
@@ -100,8 +168,10 @@
         android:textAlignment="center"
         android:text="@string/verjaar_info"
         android:textColor="?attr/colorOnSurfaceVariant"
+        android:textSize="12sp"
         android:padding="4dp" />
 
+    <!-- Member List -->
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -110,8 +180,9 @@
 
         <ProgressBar
             android:id="@+id/verjaar_progress"
+            style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="4dp"
             android:progressTint="?attr/colorPrimary"
             android:visibility="gone" />
 
@@ -125,83 +196,95 @@
             android:fastScrollEnabled="true"
             android:background="?attr/colorSurface" />
 
-        <LinearLayout
-            android:layout_alignParentBottom="true"
+        <!-- Bottom Controls Card -->
+        <com.google.android.material.card.MaterialCardView
             android:id="@+id/update_time_block"
-            android:layout_centerHorizontal="true"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:background="?attr/colorSurface"
-            android:padding="4dp">
+            android:layout_alignParentBottom="true"
+            app:cardCornerRadius="0dp"
+            app:cardElevation="8dp"
+            app:cardBackgroundColor="?attr/colorSurfaceVariant"
+            android:padding="8dp">
 
-            <EditText
-                android:id="@+id/time_hour"
-                android:layout_width="30dp"
-                android:maxLength="2"
-                android:layout_height="wrap_content"
-                android:selectAllOnFocus="true"
-                android:inputType="number"
-                android:textColor="?attr/colorOnSurface"
-                android:backgroundTint="?attr/colorPrimary" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/time_separator"
-                android:textColor="?attr/colorOnSurface" />
-            <EditText
-                android:id="@+id/time_minute"
-                android:maxLength="2"
-                android:layout_width="30dp"
-                android:layout_height="wrap_content"
-                android:selectAllOnFocus="true"
-                android:inputType="number"
-                android:textColor="?attr/colorOnSurface"
-                android:backgroundTint="?attr/colorPrimary" />
-            <Button
-                android:focusedByDefault="true"
-                android:focusable="true"
-                android:layout_gravity="center_vertical"
-                android:id="@+id/set_time"
-                android:text="@string/verjaar_steltyd"
-                android:padding="4dp"
-                style="@style/Widget.WinkerkReader.Button.Primary"
-                android:layout_marginStart="5dp"
-                android:textSize="12sp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
             <LinearLayout
-                android:layout_marginStart="5dp"
-                android:orientation="vertical"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
-                <CheckBox
-                    android:id="@+id/herinner_radio"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/verjaar_herinner"
-                    android:textColor="?attr/colorOnSurface"
-                    android:scaleX="1"
-                    android:scaleY="1" />
-                <CheckBox
-                    android:id="@+id/autosms_radio"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:text="@string/verjaar_autosms"
-                    android:textColor="?attr/colorOnSurface"
-                    android:scaleX=".90"
-                    android:scaleY=".90" />
-            </LinearLayout>
-            <Button
-                android:id="@+id/opdateerBoodskap"
-                android:layout_marginStart="5dp"
-                android:layout_marginEnd="5dp"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                style="@style/Widget.WinkerkReader.Button.Primary"
-                android:textSize="12sp"
-                android:text="@string/verjaar_opdateer_sms" />
-        </LinearLayout>
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="4dp"
+                android:paddingVertical="8dp">
+
+                <!-- Time Display - Larger and more prominent -->
+                <TextView
+                    android:id="@+id/time_display"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="08:00"
+                    android:textColor="?attr/colorPrimary"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:layout_marginEnd="8dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:padding="4dp" />
+
+                <!-- Time Picker Button -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/time_picker_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/verjaar_steltyd"
+                    android:textSize="12sp"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    app:icon="@drawable/ic_time"
+                    app:iconGravity="textStart"
+                    app:iconTint="?attr/colorPrimary"
+                    android:textColor="?attr/colorPrimary" />
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="32dp"
+                    android:layout_marginHorizontal="8dp"
+                    android:background="?attr/colorOutlineVariant" />
+
+                <!-- Checkboxes -->
+                <LinearLayout
+                    android:orientation="vertical"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp">
+
+                    <com.google.android.material.checkbox.MaterialCheckBox
+                        android:id="@+id/herinner_radio"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/verjaar_herinner"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="12sp" />
+
+                    <com.google.android.material.checkbox.MaterialCheckBox
+                        android:id="@+id/autosms_radio"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/verjaar_autosms"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/opdateerBoodskap"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:text="@string/verjaar_opdateer_sms"
+                    android:textSize="12sp"
+                    app:icon="@drawable/update"
+                    app:iconGravity="textStart"
+                    app:iconTint="?attr/colorPrimary"
+                    android:textColor="?attr/colorPrimary" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
     </RelativeLayout>
 </LinearLayout>

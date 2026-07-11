@@ -50,6 +50,10 @@ import za.co.jpsoft.winkerkreader.utils.MainNavigationController
 import za.co.jpsoft.winkerkreader.utils.MemberUtils
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import java.io.File
+import android.provider.CalendarContract
+import androidx.core.content.ContextCompat
+import za.co.jpsoft.winkerkreader.ui.bottomsheets.VoegNotaByBottomSheet
+
 
 class LidmaatDetailActivity : AppCompatActivity() {
 
@@ -79,7 +83,7 @@ class LidmaatDetailActivity : AppCompatActivity() {
     private var mGeslagB = ""
     private var mHuwelikstatus = "Ongetroud"
     private lateinit var mCurrentLidmaatUri: Uri
-        private lateinit var photoController: MemberPhotoController
+    private lateinit var photoController: MemberPhotoController
     private lateinit var pastoralSectionController: LidmaatPastoralSectionController
 
     private val pastoralViewModel: LidmaatDetailPastoralViewModel by viewModels {
@@ -107,7 +111,7 @@ class LidmaatDetailActivity : AppCompatActivity() {
         )
 
         savedInstanceState?.getString(STATE_IMAGE_URI)?.let { uriString ->
-            photoController.pendingImageUri = uriString.toUri()   // was: mImageUri = uriString.toUri()
+            photoController.pendingImageUri = uriString.toUri()
         }
 
         binding.detailIndeterminateBar.visibility = View.GONE
@@ -180,9 +184,6 @@ class LidmaatDetailActivity : AppCompatActivity() {
                 displayFamily(members)
             }
         }
-
-        binding.detailGemeentenaam.text = settingsManager.gemeenteNaam
-        binding.detailGemeentenaam.isSelected = true
 
         initializeViews()
         setupListeners()
@@ -261,6 +262,9 @@ class LidmaatDetailActivity : AppCompatActivity() {
         binding.geslag.isEnabled = false
 
         binding.detailGesinBlock.visibility = View.GONE
+
+        // Initially hide the mylpale content (will be shown when data exists)
+        binding.detailMylpaleBlock.visibility = View.GONE
     }
 
     private fun setupListeners() {
@@ -274,7 +278,72 @@ class LidmaatDetailActivity : AppCompatActivity() {
 
         binding.detailStraatadresBlock.setOnClickListener { openMapForAddress() }
 
-        // ─── Replaced with MemberUtils calls ──────────────────────────────────
+        // ─── Quick action row (new) ──────────────────────────────────────────
+        binding.quickActionBel.setOnClickListener {
+            MemberUtils.callPhone(this, binding.detailSelfoon.text.toString())
+        }
+        binding.quickActionWhatsapp.setOnClickListener {
+            MemberUtils.sendWhatsApp(this, binding.detailSelfoon.text.toString(), 1)
+        }
+        binding.quickActionSms.setOnClickListener {
+            MemberUtils.sendSms(this, binding.detailSelfoon.text.toString())
+        }
+        binding.quickActionEpos.setOnClickListener {
+            MemberUtils.sendEmail(this, binding.detailEpos.text.toString())
+        }
+        binding.quickActionKalender.setOnClickListener {
+            viewModel.memberDetail.value?.let { member ->
+                try {
+                    val intent = Intent(Intent.ACTION_INSERT).apply {
+                        data = CalendarContract.Events.CONTENT_URI
+                        putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, System.currentTimeMillis())
+                        putExtra(CalendarContract.EXTRA_EVENT_END_TIME, System.currentTimeMillis() + 60 * 60 * 1000)
+                        putExtra(CalendarContract.Events.TITLE, "${member.name} ${member.surname}".trim())
+                        putExtra(CalendarContract.Events.DESCRIPTION, buildString {
+                            member.birthday?.takeIf { it.isNotEmpty() }?.let { append("Geboortedatum: $it\n") }
+                            member.cellphone?.takeIf { it.isNotEmpty() }?.let { append("Selfoon: $it\n") }
+                            member.email?.takeIf { it.isNotEmpty() }?.let { append("Epos: $it\n") }
+                            member.streetAddress?.takeIf { it.isNotEmpty() }?.let { append("Adres: $it\n") }
+                        }.trimEnd())
+                    }
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    Toast.makeText(this, "Kon nie kalender oopmaak nie", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+// ✅ Pastoral Reminder quick action
+        binding.quickActionHerinnering.setOnClickListener {
+            mLidmaatGUID?.let { guid ->
+                StelHerinneringBottomSheet.newInstance(guid)
+                    .show(supportFragmentManager, StelHerinneringBottomSheet.TAG)
+            } ?: run {
+                Toast.makeText(this, "Geen lidmaat GUID beskikbaar", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // ✅ Notes quick action
+        binding.quickActionNotas.setOnClickListener {
+            mLidmaatGUID?.let { guid ->
+                // Expand the notes section if collapsed
+                expandNotasSection()
+
+                // Focus on the notes section
+                binding.layoutDetailNotasHeader.performClick()
+
+                // Open new note dialog
+                VoegNotaByBottomSheet.newInstance(guid)
+                    .show(supportFragmentManager, VoegNotaByBottomSheet.TAG)
+            } ?: run {
+                Toast.makeText(this, "Geen lidmaat GUID beskikbaar", Toast.LENGTH_SHORT).show()
+            }
+        }
+        // ─── Collapsible Mylpale section ─────────────────────────────────────
+        binding.cardMylpaleHeader.setOnClickListener {
+            toggleMylpaleSection()
+        }
+
+        // ─── Old icon listeners (kept for compatibility) ─────────────────────
         binding.detailSelfoonIcon.setOnClickListener {
             MemberUtils.callPhone(this, binding.detailSelfoon.text.toString())
         }
@@ -292,6 +361,28 @@ class LidmaatDetailActivity : AppCompatActivity() {
         }
 
         setupCopyOnLongClick()
+    }
+// ─── Helper to expand notes section ────────────────────────────────────
+
+    private fun expandNotasSection() {
+        val content = binding.layoutDetailNotasInhoud
+        val chevron = binding.ivDetailNotasChevron
+
+        if (content.visibility != View.VISIBLE) {
+            content.visibility = View.VISIBLE
+            chevron.animate().rotation(180f).duration = 200
+        }
+    }
+    private fun toggleMylpaleSection() {
+        val content = binding.detailMylpaleBlock
+        val chevron = binding.cardMylpaleChevron
+        if (content.visibility == View.VISIBLE) {
+            content.visibility = View.GONE
+            chevron.animate().rotation(0f).duration = 200
+        } else {
+            content.visibility = View.VISIBLE
+            chevron.animate().rotation(180f).duration = 200
+        }
     }
 
     private fun setupCopyOnLongClick() {
@@ -333,6 +424,26 @@ class LidmaatDetailActivity : AppCompatActivity() {
 
         photoController.loadMemberPhoto(item.guid)
 
+        // ─── Header ──────────────────────────────────────────
+        binding.detailHeaderNaam.text = "${item.name} ${item.surname}".trim()
+        binding.chipOuderdom.text = if (item.age < 0) "?" else "${item.age} jaar"
+        binding.chipWyk.text = item.ward
+        binding.chipWyk.visibility = if (item.ward.isNotEmpty()) View.VISIBLE else View.GONE
+        binding.chipLidmaatstatus.text = item.memberStatus
+
+        // Gemeente – use member's own gemeente, fallback to user's
+        binding.detailGemeentenaam.text = item.gemeente?.takeIf { it.isNotEmpty() }
+            ?: settingsManager.gemeenteNaam
+
+        // ─── Quick actions enable ──────────────────────────
+        binding.quickActionBel.isEnabled = item.cellphone.isNotEmpty()
+        binding.quickActionWhatsapp.isEnabled = item.cellphone.isNotEmpty()
+        binding.quickActionSms.isEnabled = item.cellphone.isNotEmpty()
+        binding.quickActionEpos.isEnabled = item.email.isNotEmpty()
+        // ✅ Pastoral actions - always enabled since they open dialogs
+        binding.quickActionHerinnering.isEnabled = true
+        binding.quickActionNotas.isEnabled = true
+        // ─── Fill fields ──────────────────────────────────
         binding.detailNoemnaam.setText(item.name)
         binding.detailVan.setText(item.surname)
         binding.detailVollename.setText(item.fullNames)
@@ -347,16 +458,48 @@ class LidmaatDetailActivity : AppCompatActivity() {
         binding.detailEpos.setText(item.email)
         binding.detailBeroep.setText(item.profession)
         binding.detailWerkgewer.setText(item.employer)
-        binding.detailLidmaatstatus.setText(item.memberStatus)
-
-        binding.detailLidmaatstatus.setBackgroundColor(
-            when (item.certificateStatus) {
-                "Ontvang" -> Color.WHITE
-                "Aangevra" -> Color.GREEN
-                "Nie Aangevra" -> Color.CYAN
-                else -> Color.WHITE
+//        binding.detailLidmaatstatus.setText(item.memberStatus)
+//
+//        binding.detailLidmaatstatus.setBackgroundColor(
+//            when (item.certificateStatus) {
+//                "Ontvang" -> Color.WHITE
+//                "Aangevra" -> Color.GREEN
+//                "Nie Aangevra" -> Color.CYAN
+//                else -> Color.WHITE
+//            }
+//        )
+// In displayMemberData()
+        when (item.certificateStatus) {
+            "Ontvang" -> {
+                binding.detailLidmaatstatus.setText("✓ " +item.memberStatus)
+                binding.detailLidmaatstatus.setTextColor(ContextCompat.getColor(this, R.color.md_theme_primary))
+//                binding.detailLidmaatstatus.setCompoundDrawablesWithIntrinsicBounds(
+//                    R.drawable.ic_check_circle, 0, 0, 0
+//                )
             }
-        )
+            "Aangevra" -> {
+                binding.detailLidmaatstatus.setText("⏳ " +item.memberStatus)
+                binding.detailLidmaatstatus.setTextColor(ContextCompat.getColor(this, R.color.md_theme_secondary))
+//                binding.detailLidmaatstatus.setCompoundDrawablesWithIntrinsicBounds(
+//                    R.drawable.ic_pending, 0, 0, 0
+//                )
+            }
+            "Nie Aangevra" -> {
+                binding.detailLidmaatstatus.setText("✕ " +item.memberStatus)
+                binding.detailLidmaatstatus.setTextColor(ContextCompat.getColor(this, R.color.md_theme_error))
+//                binding.detailLidmaatstatus.setCompoundDrawablesWithIntrinsicBounds(
+//                    R.drawable.ic_error, 0, 0, 0
+//                )
+            }
+            else -> {
+                binding.detailLidmaatstatus.setText("? " + item.memberStatus)
+                binding.detailLidmaatstatus.setTextColor(ContextCompat.getColor(this, R.color.md_theme_onSurface))
+//                binding.detailLidmaatstatus.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0)
+            }
+        }
+        // ─── Block visibility (with address duplication fix) ──
+        val street = item.streetAddress ?: ""
+        val postal = item.postalAddress ?: ""
 
         binding.detailSelfoonBlock.visibility = if (item.cellphone.isNotEmpty()) View.VISIBLE else View.GONE
         binding.detailTelefoonBlock.visibility = if (item.landline.isNotEmpty()) View.VISIBLE else View.GONE
@@ -364,9 +507,26 @@ class LidmaatDetailActivity : AppCompatActivity() {
         binding.detailNooiensvanBlock.visibility = if (item.maidenName.isNotEmpty()) View.VISIBLE else View.GONE
         binding.detailBeroepBlock.visibility = if (item.profession.isNotEmpty()) View.VISIBLE else View.GONE
         binding.detailWerkgewerBlock.visibility = if (item.employer.isNotEmpty()) View.VISIBLE else View.GONE
-        binding.detailStraatadresBlock.visibility = if (item.streetAddress.isNotEmpty()) View.VISIBLE else View.GONE
-        binding.detailPosadresBlock.visibility = if (item.postalAddress.isNotEmpty()) View.VISIBLE else View.GONE
+        binding.detailStraatadresBlock.visibility = if (street.isNotEmpty()) View.VISIBLE else View.GONE
+        // Show postal only if it exists and is different from street
+        binding.detailPosadresBlock.visibility = if (postal.isNotEmpty() && postal != street) View.VISIBLE else View.GONE
 
+        // ─── Manage dividers between visible contact blocks ──
+        val blockDividerPairs = listOf(
+            binding.detailSelfoonBlock to binding.dividerSelfoon,
+            binding.detailTelefoonBlock to binding.dividerTelefoon,
+            binding.detailEposBlock to binding.dividerEpos,
+            binding.detailStraatadresBlock to binding.dividerStraatadres
+        )
+        blockDividerPairs.forEach { (_, divider) -> divider.visibility = View.GONE }
+        val visibleBlocks = blockDividerPairs.map { it.first }.filter { it.visibility == View.VISIBLE }
+        for (i in 0 until visibleBlocks.size - 1) {
+            val block = visibleBlocks[i]
+            val divider = blockDividerPairs.find { it.first == block }?.second
+            divider?.visibility = View.VISIBLE
+        }
+
+        // ─── Spinners ──────────────────────────────────────
         val geslagAdapter = SpinnerAdapter(applicationContext, geslagPrente, null)
         binding.geslag.adapter = geslagAdapter
         binding.geslag.setSelection(if (item.gender == "Manlik") 1 else 0)
@@ -378,12 +538,18 @@ class LidmaatDetailActivity : AppCompatActivity() {
         if (huwPos >= 0) binding.huwelikstatus.setSelection(huwPos)
         mHuwelikstatus = item.marriageStatus
 
+        // ─── Milestones ────────────────────────────────────
         loadMilestones(item)
     }
 
     private fun displayFamily(members: List<FamilyMemberItem>) {
-        binding.detailGesinBlock.visibility = View.VISIBLE
-        binding.detailGesinBlock.removeAllViews()
+        val container = binding.detailGesinContent
+
+        // Remove all views except the header (which is at index 0)
+        val childCount = container.childCount
+        if (childCount > 1) {
+            container.removeViews(1, childCount - 1)
+        }
 
         for (member in members) {
             if (member.id == current_id) continue
@@ -391,7 +557,7 @@ class LidmaatDetailActivity : AppCompatActivity() {
             val ageText = if (member.age < 0) "(?)" else "(${member.age})"
             val gesinString = "\n${member.name}\t ${member.surname}\t ${member.birthday} $ageText"
 
-            val innerLayout = LinearLayout(this).apply {
+            val rowLayout = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
             }
@@ -417,7 +583,7 @@ class LidmaatDetailActivity : AppCompatActivity() {
                     setImageResource(R.drawable.clipboard)
                 }
             }
-            // Circular crop (optional)
+            // Circular crop
             imageView.outlineProvider = object : ViewOutlineProvider() {
                 override fun getOutline(view: View, outline: Outline) {
                     outline.setOval(0, 0, view.width, view.height)
@@ -430,29 +596,38 @@ class LidmaatDetailActivity : AppCompatActivity() {
                 text = gesinString
                 setPadding(32, 0, 0, 0)
                 TextViewCompat.setTextAppearance(this, android.R.style.TextAppearance_Medium)
-                tag = member.id
+                tag = member.id // member.id is Int
                 setOnClickListener {
-                    val gId = tag as Long?
+                    // Safely retrieve as Int, convert to Long
+                    val gId = (tag as? Int)?.toLong()
                     val guid = member.guid
                     navigationController.navigateToLidmaatDetail(guid, recordStatus, gId)
                     finish()
                 }
             }
 
-            innerLayout.addView(fotoFrame)
-            innerLayout.addView(textView)
-            binding.detailGesinBlock.addView(innerLayout)
+            rowLayout.addView(fotoFrame)
+            rowLayout.addView(textView)
+            container.addView(rowLayout)
         }
+
+        // Show the card only if there are other family members (excluding self)
+        binding.detailGesinBlock.visibility = if (members.size > 1) View.VISIBLE else View.GONE
     }
 
     private fun loadMilestones(item: MemberDetailItem) {
-        val mylpaleBlock = findViewById<LinearLayout>(R.id.detail_mylpaleBlock)
-        val mylpaleBlock2 = findViewById<LinearLayout>(R.id.detail_mylpaleBlock2)
+        // Use binding fields instead of findViewById
+        val mylpaleBlock = binding.detailMylpaleBlock          // LinearLayout
+        val mylpaleBlock2 = binding.detailMylpaleBlock2        // MaterialCardView
+
         mylpaleBlock.removeAllViews()
         mylpaleBlock2.visibility = View.GONE
+        mylpaleBlock.visibility = View.GONE   // hide content initially
+
+        var hasMilestones = false
 
         if (item.baptismDate.isNotEmpty()) {
-            mylpaleBlock2.visibility = View.VISIBLE
+            hasMilestones = true
             val doopText = "Doop\t\t\t\t\t(${item.baptismDate})"
             val doopTv = TextView(this).apply {
                 text = doopText
@@ -469,7 +644,7 @@ class LidmaatDetailActivity : AppCompatActivity() {
         }
 
         if (item.confessionDate.isNotEmpty()) {
-            mylpaleBlock2.visibility = View.VISIBLE
+            hasMilestones = true
             val belyText = "Belydenis van geloof\t\t(${item.confessionDate})"
             val belyTv = TextView(this).apply {
                 text = belyText
@@ -486,7 +661,7 @@ class LidmaatDetailActivity : AppCompatActivity() {
         }
 
         if (item.marriageDate.isNotEmpty()) {
-            mylpaleBlock2.visibility = View.VISIBLE
+            hasMilestones = true
             var huwelikText = "Huwelik\t\t(${item.marriageDate})"
             if (item.marriageYears >= 0) {
                 huwelikText = "$huwelikText : ${item.marriageYears} jaar)"
@@ -496,6 +671,14 @@ class LidmaatDetailActivity : AppCompatActivity() {
                 TextViewCompat.setTextAppearance(this, android.R.style.TextAppearance_Medium)
             }
             mylpaleBlock.addView(huwelikTv)
+        }
+
+        if (hasMilestones) {
+            mylpaleBlock2.visibility = View.VISIBLE
+            mylpaleBlock.visibility = View.VISIBLE   // show content
+            binding.cardMylpaleChevron.rotation = 180f
+        } else {
+            mylpaleBlock2.visibility = View.GONE
         }
     }
 
@@ -695,5 +878,13 @@ class LidmaatDetailActivity : AppCompatActivity() {
         view.requestFocus()
         val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         imm.showSoftInput(view, 0)
+    }
+    private fun buildEventDescription(member: MemberDetailItem): String {
+        return buildString {
+            member.birthday?.takeIf { it.isNotEmpty() }?.let { append("Geboortedatum: $it\n") }
+            member.cellphone?.takeIf { it.isNotEmpty() }?.let { append("Selfoon: $it\n") }
+            member.email?.takeIf { it.isNotEmpty() }?.let { append("Epos: $it\n") }
+            member.streetAddress?.takeIf { it.isNotEmpty() }?.let { append("Adres: $it\n") }
+        }.trimEnd()
     }
 }
