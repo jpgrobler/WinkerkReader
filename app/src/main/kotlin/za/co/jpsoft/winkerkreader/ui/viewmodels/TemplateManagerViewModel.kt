@@ -31,6 +31,7 @@ class TemplateManagerViewModel(
     val error: SharedFlow<String> = _error.asSharedFlow()
 
     private val _templateCreated = MutableSharedFlow<String>(extraBufferCapacity = 1)
+
     /** Emits the new templateId so the Activity can immediately open the editor. */
     val templateCreated: SharedFlow<String> = _templateCreated.asSharedFlow()
     private val _isLoading = MutableStateFlow(true)

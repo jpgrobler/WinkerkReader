@@ -75,8 +75,14 @@ class TemplateEditorActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
-        android.R.id.home -> { finish(); true }
-        R.id.action_reset_default -> { confirmResetToDefault(); true }
+        android.R.id.home -> {
+            finish(); true
+        }
+
+        R.id.action_reset_default -> {
+            confirmResetToDefault(); true
+        }
+
         else -> super.onOptionsItemSelected(item)
     }
 
@@ -102,8 +108,17 @@ class TemplateEditorActivity : AppCompatActivity() {
                 stepAdapter.moveItem(source.bindingAdapterPosition, target.bindingAdapterPosition)
                 return true
             }
-            override fun onSwiped(vh: androidx.recyclerview.widget.RecyclerView.ViewHolder, direction: Int) {}
-            override fun clearView(rv: androidx.recyclerview.widget.RecyclerView, vh: androidx.recyclerview.widget.RecyclerView.ViewHolder) {
+
+            override fun onSwiped(
+                vh: androidx.recyclerview.widget.RecyclerView.ViewHolder,
+                direction: Int
+            ) {
+            }
+
+            override fun clearView(
+                rv: androidx.recyclerview.widget.RecyclerView,
+                vh: androidx.recyclerview.widget.RecyclerView.ViewHolder
+            ) {
                 super.clearView(rv, vh)
                 lifecycleScope.launch {
                     repository.reorderSteps(stepAdapter.currentSteps())
@@ -139,7 +154,8 @@ class TemplateEditorActivity : AppCompatActivity() {
                 binding.etTemplateDescription.text?.toString(),
                 symbol
             )
-            Snackbar.make(binding.root, getString(R.string.template_gestoor), Snackbar.LENGTH_SHORT).show()
+            Snackbar.make(binding.root, getString(R.string.template_gestoor), Snackbar.LENGTH_SHORT)
+                .show()
         }
     }
 
@@ -149,13 +165,13 @@ class TemplateEditorActivity : AppCompatActivity() {
                 lifecycleScope.launch {
                     repository.updateStep(
                         step.copy(
-                            offsetDays     = offsetDays,
-                            offsetMonths   = offsetMonths,
+                            offsetDays = offsetDays,
+                            offsetMonths = offsetMonths,
                             defaultTitleAf = title,
-                            defaultNoteAf  = note,
-                            scheduleType   = scheduleType.name,
-                            defaultHour    = hour,
-                            defaultMinute  = minute
+                            defaultNoteAf = note,
+                            scheduleType = scheduleType.name,
+                            defaultHour = hour,
+                            defaultMinute = minute
                         )
                     )
                     loadTemplate()
@@ -186,7 +202,11 @@ class TemplateEditorActivity : AppCompatActivity() {
                 lifecycleScope.launch {
                     repository.resetTemplateToDefault(templateId)
                     loadTemplate()
-                    Snackbar.make(binding.root, getString(R.string.template_herstel_sukses), Snackbar.LENGTH_SHORT).show()
+                    Snackbar.make(
+                        binding.root,
+                        getString(R.string.template_herstel_sukses),
+                        Snackbar.LENGTH_SHORT
+                    ).show()
                 }
             }
             .setNegativeButton(R.string.pastoral_import_nee, null)

@@ -13,8 +13,8 @@ class LidmaatDetailPastoralViewModelFactory(
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(LidmaatDetailPastoralViewModel::class.java)) {
             return LidmaatDetailPastoralViewModel(
-                repository  = PastoralReminderRepository.create(context.applicationContext),
-                memberGuid  = memberGuid
+                repository = PastoralReminderRepository.create(context.applicationContext),
+                memberGuid = memberGuid
             ) as T
         }
         throw IllegalArgumentException("Unknown ViewModel: ${modelClass.name}")

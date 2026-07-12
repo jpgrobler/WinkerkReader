@@ -36,7 +36,8 @@ object CallLogExporter {
             // Create file in Downloads directory (sticky for Android 10+)
             val file = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 // For Android 10 and above, use Downloads folder
-                val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                val downloadsDir =
+                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
                 File(downloadsDir, fileName)
             } else {
                 // For older Android versions
@@ -72,30 +73,34 @@ object CallLogExporter {
                 writer.write("\uFEFF")  // Write BOM as String
 
                 // Write headers
-                writer.write(buildCSVRow(
-                    "ID",
-                    "Caller Info",
-                    "Timestamp",
-                    "Date/Time",
-                    "Call Type",
-                    "Source",
-                    "Duration (seconds)",
-                    "Duration Formatted"
-                ))
+                writer.write(
+                    buildCSVRow(
+                        "ID",
+                        "Caller Info",
+                        "Timestamp",
+                        "Date/Time",
+                        "Call Type",
+                        "Source",
+                        "Duration (seconds)",
+                        "Duration Formatted"
+                    )
+                )
                 writer.write(CSV_NEWLINE)
 
                 // Write data rows
                 callLogs.forEach { callLog ->
-                    writer.write(buildCSVRow(
-                        callLog.id.toString(),
-                        escapeCSVString(callLog.callerInfo),
-                        callLog.timestamp.toString(),
-                        callLog.formattedDateTime,
-                        callLog.callType,
-                        callLog.source,
-                        callLog.duration.toString(),
-                        formatDuration(callLog.duration)
-                    ))
+                    writer.write(
+                        buildCSVRow(
+                            callLog.id.toString(),
+                            escapeCSVString(callLog.callerInfo),
+                            callLog.timestamp.toString(),
+                            callLog.formattedDateTime,
+                            callLog.callType,
+                            callLog.source,
+                            callLog.duration.toString(),
+                            formatDuration(callLog.duration)
+                        )
+                    )
                     writer.write(CSV_NEWLINE)
                 }
 
@@ -159,7 +164,12 @@ object CallLogExporter {
                 type = "text/csv"
                 addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
-            context.startActivity(android.content.Intent.createChooser(shareIntent, "Export Call Log"))
+            context.startActivity(
+                android.content.Intent.createChooser(
+                    shareIntent,
+                    "Export Call Log"
+                )
+            )
             true
         } catch (e: Exception) {
             if (BuildConfig.DEBUG) Log.e(TAG, "Error sharing CSV: ${e.message}", e)

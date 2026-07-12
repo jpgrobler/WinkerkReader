@@ -45,10 +45,18 @@ class MemberRepository(private val context: Context) {
         sortOrder: String,
         congregations: List<String>? = null  // ✅ Added
     ): List<MemberItem> {
-        val cacheKey = buildCacheKey(eventType, recordStatus, soek, filterList, sortOrder, congregations)
+        val cacheKey =
+            buildCacheKey(eventType, recordStatus, soek, filterList, sortOrder, congregations)
         val cachedQuery = queryCache[cacheKey]
 
-        val sqlRequest = if (cachedQuery != null && !needsQueryRebuild(eventType, recordStatus, soek, filterList, congregations)) {
+        val sqlRequest = if (cachedQuery != null && !needsQueryRebuild(
+                eventType,
+                recordStatus,
+                soek,
+                filterList,
+                congregations
+            )
+        ) {
             cachedQuery
         } else {
             MemberQueryBuilder.buildQuery(
@@ -62,7 +70,10 @@ class MemberRepository(private val context: Context) {
                 queryCache[cacheKey] = it
                 updateLastState(eventType, recordStatus, soek, filterList, congregations)
             } ?: run {
-                if (BuildConfig.DEBUG) Log.e("MemberRepository", "Failed to build query for: $eventType")
+                if (BuildConfig.DEBUG) Log.e(
+                    "MemberRepository",
+                    "Failed to build query for: $eventType"
+                )
                 return emptyList()
             }
         }
@@ -70,7 +81,10 @@ class MemberRepository(private val context: Context) {
         // Validate SQL
         val validation = SQLiteStatementValidator.validateAndFixSQLiteStatement(sqlRequest.sql)
         if (!validation.isValid) {
-            if (BuildConfig.DEBUG) Log.e("MemberRepository", "SQL validation failed: ${validation.errorMessage}")
+            if (BuildConfig.DEBUG) Log.e(
+                "MemberRepository",
+                "SQL validation failed: ${validation.errorMessage}"
+            )
             return emptyList()
         }
         val finalSql = validation.fixedSql ?: sqlRequest.sql
@@ -112,9 +126,11 @@ class MemberRepository(private val context: Context) {
                 append("_soek_").append(soek)
                 append("_").append(sortOrder)
             }
+
             "FILTER_DATA" -> {
                 filterList?.filter { it.checked }?.forEach { f ->
-                    append("_").append(f.title).append("_").append(f.text1).append("_").append(f.text3)
+                    append("_").append(f.title).append("_").append(f.text1).append("_")
+                        .append(f.text3)
                 }
             }
         }
@@ -221,7 +237,8 @@ class MemberRepository(private val context: Context) {
                     val y = ChronoUnit.YEARS.between(it, LocalDate.now())
                     if (y >= 0) age = y.toString()
                 }
-            } catch (_: Exception) {}
+            } catch (_: Exception) {
+            }
         }
         if (weddingDate.length >= 10) {
             try {
@@ -229,7 +246,8 @@ class MemberRepository(private val context: Context) {
                     val y = ChronoUnit.YEARS.between(it, LocalDate.now())
                     if (y >= 0) weddingYears = y.toString()
                 }
-            } catch (_: Exception) {}
+            } catch (_: Exception) {
+            }
         }
 
         val idIdx = cursor.getColumnIndex("_id")
@@ -246,7 +264,8 @@ class MemberRepository(private val context: Context) {
             landline = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_LANDLYN),
             email = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_EPOS),
             ward = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_WYK),
-            address = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_STRAATADRES).takeIf { it.isNotEmpty() } ?: "GEEN",
+            address = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_STRAATADRES)
+                .takeIf { it.isNotEmpty() } ?: "GEEN",
             birthday = birthday,
             weddingDate = weddingDate,
             picturePath = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_PICTUREPATH),
@@ -276,24 +295,33 @@ class MemberRepository(private val context: Context) {
                 if (prev.familyHead != item.familyHead)
                     showSep2 = true
             }
+
             "GESINNE" -> {
                 if (prev.familyHead != item.familyHead) showSep = true
             }
+
             "VAN" -> {
                 if (prev.surname.isNotEmpty() && item.surname.isNotEmpty() &&
-                    prev.surname[0] != item.surname[0]) showSep = true
+                    prev.surname[0] != item.surname[0]
+                ) showSep = true
             }
+
             "ADRES" -> {
                 if (prev.address != item.address) showSep = true
             }
+
             "VERJAAR" -> {
                 if (prev.birthday.length >= 5 && item.birthday.length >= 5 &&
-                    prev.birthday.substring(3, 5) != item.birthday.substring(3, 5)) showSep = true
+                    prev.birthday.substring(3, 5) != item.birthday.substring(3, 5)
+                ) showSep = true
             }
+
             "HUWELIK" -> {
                 if (prev.weddingDate.length >= 5 && item.weddingDate.length >= 5 &&
-                    prev.weddingDate.substring(3, 5) != item.weddingDate.substring(3, 5)) showSep = true
+                    prev.weddingDate.substring(3, 5) != item.weddingDate.substring(3, 5)
+                ) showSep = true
             }
+
             "OUDERDOM" -> {
                 if (prev.age != item.age) showSep = true
             }
@@ -315,20 +343,34 @@ class MemberRepository(private val context: Context) {
                 val label = if (showSep) "${item.ward}\n$addr" else addr
                 Pair(label, "Wyk: ${item.ward}")
             }
+
             "VAN" -> Pair(
                 if (item.surname.isNotEmpty()) item.surname.substring(0, 1) else "",
                 ""
             )
+
             "GESINNE" -> Pair(cleanAddress(item.address), "Wyk: ${item.ward}")
             "ADRES" -> Pair(cleanAddress(item.address), "Wyk: ${item.ward}")
             "VERJAAR" -> Pair(
-                if (item.birthday.length >= 5) getMonthFullName(item.birthday.substring(3, 5)) else "",
+                if (item.birthday.length >= 5) getMonthFullName(
+                    item.birthday.substring(
+                        3,
+                        5
+                    )
+                ) else "",
                 ""
             )
+
             "HUWELIK" -> Pair(
-                if (item.weddingDate.length >= 5) getMonthFullName(item.weddingDate.substring(3, 5)) else "",
+                if (item.weddingDate.length >= 5) getMonthFullName(
+                    item.weddingDate.substring(
+                        3,
+                        5
+                    )
+                ) else "",
                 ""
             )
+
             "OUDERDOM" -> Pair("${item.age} jaar", "")
             else -> Pair("", "")
         }
@@ -351,7 +393,9 @@ class MemberRepository(private val context: Context) {
         val parts = dateStr.split("-", "/")
         if (parts.size == 3) LocalDate.of(parts[2].toInt(), parts[1].toInt(), parts[0].toInt())
         else null
-    } catch (_: Exception) { null }
+    } catch (_: Exception) {
+        null
+    }
 
     // -------------------------------------------------------------------------
     // Count methods - UPDATED with congregations parameter

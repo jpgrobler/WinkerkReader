@@ -32,6 +32,7 @@ class UnifiedCallMonitor private constructor(
 
     companion object {
         private const val TAG = "UnifiedCallMonitor"
+
         @Volatile
         @SuppressLint("StaticFieldLeak")
         private var instance: UnifiedCallMonitor? = null
@@ -62,7 +63,8 @@ class UnifiedCallMonitor private constructor(
 
             val dao = CallLogDatabase.getInstance(context).callLogDao()
             val calManager = CalendarManager(context)
-            val prefs = context.getSharedPreferences(WinkerkContract.PREFS_USER_INFO, Context.MODE_PRIVATE)
+            val prefs =
+                context.getSharedPreferences(WinkerkContract.PREFS_USER_INFO, Context.MODE_PRIVATE)
             val calId = prefs.getLong(WinkerkContract.KEY_SELECTED_CALENDAR_ID, -1L)
 
             return getInstance(context, dao, calManager, calId)
@@ -110,7 +112,10 @@ class UnifiedCallMonitor private constructor(
         callLogDao.removeActiveCall(callId)
 
         if (activeCall.isMissed) {
-            if (BuildConfig.DEBUG) Log.d(TAG, "Call $callId already logged as missed, skipping onCallEnded")
+            if (BuildConfig.DEBUG) Log.d(
+                TAG,
+                "Call $callId already logged as missed, skipping onCallEnded"
+            )
             return
         }
 
@@ -122,7 +127,10 @@ class UnifiedCallMonitor private constructor(
             duration = durationSeconds,
             source = activeCall.source
         )
-        if (BuildConfig.DEBUG) Log.d(TAG, "Call ended: $callId, duration=${durationSeconds}s, type=${activeCall.type}")
+        if (BuildConfig.DEBUG) Log.d(
+            TAG,
+            "Call ended: $callId, duration=${durationSeconds}s, type=${activeCall.type}"
+        )
     }
 
     /**
@@ -137,7 +145,8 @@ class UnifiedCallMonitor private constructor(
         displayName: String? = null
     ) {
         pruneStaleActiveCalls()
-        val sanitizedNumber = number?.takeIf { it.isNotBlank() && it != "Unknown" } ?: "Unknown Number"
+        val sanitizedNumber =
+            number?.takeIf { it.isNotBlank() && it != "Unknown" } ?: "Unknown Number"
         val contactName = displayName ?: sanitizedNumber
         val callType = determineCallType(source, direction)
 
@@ -176,19 +185,31 @@ class UnifiedCallMonitor private constructor(
         }
     }
 
-    private suspend fun logCall(contactInfo: String, callType: CallType, timestamp: Long, duration: Long, source: String) {
+    private suspend fun logCall(
+        contactInfo: String,
+        callType: CallType,
+        timestamp: Long,
+        duration: Long,
+        source: String
+    ) {
         val settingsManager = SettingsManager.getInstance(context)
         if (!settingsManager.callLogEnabled) {
             if (BuildConfig.DEBUG) Log.d(TAG, "Call logging disabled, skipping")
             return
         }
         if (callType == CallType.UNKNOWN) {
-            if (BuildConfig.DEBUG) Log.d(TAG, "Skipping UNKNOWN call type: $contactInfo from $source")
+            if (BuildConfig.DEBUG) Log.d(
+                TAG,
+                "Skipping UNKNOWN call type: $contactInfo from $source"
+            )
             return
         }
 
         if (callLogDao.countDuplicates(contactInfo, timestamp, source) > 0) {
-            if (BuildConfig.DEBUG) Log.d(TAG, "Duplicate call detected, skipping insert: $contactInfo")
+            if (BuildConfig.DEBUG) Log.d(
+                TAG,
+                "Duplicate call detected, skipping insert: $contactInfo"
+            )
             return
         }
 
@@ -209,7 +230,10 @@ class UnifiedCallMonitor private constructor(
         )
         val success = result != -1L
         if (success) {
-            if (BuildConfig.DEBUG) Log.d(TAG, "Call logged to DB: $contactInfo, type=$callType, source=$source")
+            if (BuildConfig.DEBUG) Log.d(
+                TAG,
+                "Call logged to DB: $contactInfo, type=$callType, source=$source"
+            )
 
             _callLogUpdates.tryEmit(Unit)
             za.co.jpsoft.winkerkreader.data.calllog.CallLogDatabaseBackup.backupDebounced(context)
@@ -250,7 +274,10 @@ class UnifiedCallMonitor private constructor(
             .map { it.id }
 
         staleVoipCallIds.forEach { callId ->
-            if (BuildConfig.DEBUG) Log.w(TAG, "Closing VoIP call orphaned by listener rebind: $callId")
+            if (BuildConfig.DEBUG) Log.w(
+                TAG,
+                "Closing VoIP call orphaned by listener rebind: $callId"
+            )
             onCallEnded(callId, System.currentTimeMillis())
         }
         return staleVoipCallIds.size

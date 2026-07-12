@@ -40,7 +40,10 @@ object CallerInfoResolver {
      * Query the congregation database for a member with this phone number.
      * Searches in the Selfoon, Landlyn, and Werk tel columns.
      */
-    private fun resolveMember(phoneNumber: String, contentResolver: ContentResolver): CallerInfoResult.Member? {
+    private fun resolveMember(
+        phoneNumber: String,
+        contentResolver: ContentResolver
+    ): CallerInfoResult.Member? {
         // Normalize the phone number for matching (strip spaces, dashes, etc.)
         val normalized = normalizePhoneNumber(phoneNumber)
 
@@ -74,11 +77,16 @@ object CallerInfoResolver {
                 null
             )
             if (cursor != null && cursor.moveToFirst()) {
-                val surname = cursor.getString(cursor.getColumnIndexOrThrow(winkerkEntry.LIDMATE_VAN))
-                val noemnaam = cursor.getString(cursor.getColumnIndexOrThrow(winkerkEntry.LIDMATE_NOEMNAAM))
-                val voorname = cursor.getString(cursor.getColumnIndexOrThrow(winkerkEntry.LIDMATE_VOORNAME))
-                val guid = cursor.getString(cursor.getColumnIndexOrThrow(winkerkEntry.LIDMATE_LIDMAATGUID))
-                val phone = cursor.getString(cursor.getColumnIndexOrThrow(winkerkEntry.LIDMATE_SELFOON))
+                val surname =
+                    cursor.getString(cursor.getColumnIndexOrThrow(winkerkEntry.LIDMATE_VAN))
+                val noemnaam =
+                    cursor.getString(cursor.getColumnIndexOrThrow(winkerkEntry.LIDMATE_NOEMNAAM))
+                val voorname =
+                    cursor.getString(cursor.getColumnIndexOrThrow(winkerkEntry.LIDMATE_VOORNAME))
+                val guid =
+                    cursor.getString(cursor.getColumnIndexOrThrow(winkerkEntry.LIDMATE_LIDMAATGUID))
+                val phone =
+                    cursor.getString(cursor.getColumnIndexOrThrow(winkerkEntry.LIDMATE_SELFOON))
 
                 // Build a display name (e.g., "Jan Botha" or "Botha, Jan")
                 val displayName = buildMemberDisplayName(surname, voorname, noemnaam)
@@ -106,7 +114,10 @@ object CallerInfoResolver {
      * Query the device contacts for a contact with this phone number.
      * Requires READ_CONTACTS permission.
      */
-    private fun resolveContact(phoneNumber: String, contentResolver: ContentResolver): CallerInfoResult.Contact? {
+    private fun resolveContact(
+        phoneNumber: String,
+        contentResolver: ContentResolver
+    ): CallerInfoResult.Contact? {
         // Check if we have permission? The caller should ensure permission.
         // For simplicity, assume we have permission or the query will return nothing.
 
@@ -126,8 +137,10 @@ object CallerInfoResolver {
         return try {
             cursor = contentResolver.query(uri, projection, null, null, null)
             if (cursor != null && cursor.moveToFirst()) {
-                val name = cursor.getString(cursor.getColumnIndexOrThrow(ContactsContract.PhoneLookup.DISPLAY_NAME))
-                val number = cursor.getString(cursor.getColumnIndexOrThrow(ContactsContract.PhoneLookup.NUMBER))
+                val name =
+                    cursor.getString(cursor.getColumnIndexOrThrow(ContactsContract.PhoneLookup.DISPLAY_NAME))
+                val number =
+                    cursor.getString(cursor.getColumnIndexOrThrow(ContactsContract.PhoneLookup.NUMBER))
                 CallerInfoResult.Contact(name = name, phoneNumber = number)
             } else {
                 null
@@ -155,7 +168,11 @@ object CallerInfoResolver {
     /**
      * Build a display name from surname, first name, and nickname.
      */
-    private fun buildMemberDisplayName(surname: String?, voorname: String?, noemnaam: String?): String {
+    private fun buildMemberDisplayName(
+        surname: String?,
+        voorname: String?,
+        noemnaam: String?
+    ): String {
         return when {
             !surname.isNullOrEmpty() && !voorname.isNullOrEmpty() -> "$voorname $surname"
             !surname.isNullOrEmpty() -> surname

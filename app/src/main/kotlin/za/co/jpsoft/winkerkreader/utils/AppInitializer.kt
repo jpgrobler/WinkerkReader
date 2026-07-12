@@ -39,7 +39,8 @@ object AppInitializer {
         onComplete: ((success: Boolean) -> Unit)? = null,
         onReady: (() -> Unit)? = null   // <-- NEW: called after DB is ready (or already)
     ) {
-        val scope = lifecycleScope ?: kotlinx.coroutines.CoroutineScope(Dispatchers.IO + SupervisorJob())
+        val scope =
+            lifecycleScope ?: kotlinx.coroutines.CoroutineScope(Dispatchers.IO + SupervisorJob())
         scope.launch {
             withContext(Dispatchers.IO) {
                 val callLogDb = CallLogDatabase.getInstance(appContext)
@@ -55,12 +56,16 @@ object AppInitializer {
                             override fun onProgressUpdate(progress: Int) {
                                 onProgress?.invoke(progress)
                             }
+
                             override fun onInitializationComplete(success: Boolean) {
                                 if (success) {
                                     settings.setDatabaseInitialized(true)
                                     if (BuildConfig.DEBUG) Log.d(TAG, "Database initialised")
                                 } else {
-                                    if (BuildConfig.DEBUG) Log.e(TAG, "Database initialisation failed")
+                                    if (BuildConfig.DEBUG) Log.e(
+                                        TAG,
+                                        "Database initialisation failed"
+                                    )
                                 }
                                 onComplete?.invoke(success)
                                 // <-- NEW: notify that DB is ready
@@ -79,11 +84,16 @@ object AppInitializer {
                 val settings = SettingsManager.getInstance(appContext)
                 if (settings.autoStartEnabled) {
                     try {
-                        val intent = android.content.Intent(appContext, CallMonitoringService::class.java)
+                        val intent =
+                            android.content.Intent(appContext, CallMonitoringService::class.java)
                         appContext.startForegroundService(intent)
                         if (BuildConfig.DEBUG) Log.d(TAG, "CallMonitoringService started")
                     } catch (e: Exception) {
-                        if (BuildConfig.DEBUG) Log.e(TAG, "Failed to start CallMonitoringService", e)
+                        if (BuildConfig.DEBUG) Log.e(
+                            TAG,
+                            "Failed to start CallMonitoringService",
+                            e
+                        )
                     }
                 }
             }

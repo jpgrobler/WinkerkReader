@@ -34,7 +34,8 @@ class MainViewModel(
     val sortOrder: StateFlow<String> = _sortOrder
 
     // Saved sort order before filter – persisted
-    private val _savedSortOrderBeforeFilter = savedStateHandle.getStateFlow<String?>("savedSortOrderBeforeFilter", null)
+    private val _savedSortOrderBeforeFilter =
+        savedStateHandle.getStateFlow<String?>("savedSortOrderBeforeFilter", null)
     val savedSortOrderBeforeFilter: StateFlow<String?> = _savedSortOrderBeforeFilter
 
     // Church name – from SettingsManager
@@ -72,8 +73,10 @@ class MainViewModel(
                 val db = PastoralDatabase.getInstance(getApplication())
                 val zoneId = ZoneId.systemDefault()
                 val now = System.currentTimeMillis()
-                val startOfToday = LocalDate.now(zoneId).atStartOfDay(zoneId).toInstant().toEpochMilli()
-                val endOfDay = LocalDate.now(zoneId).plusDays(1).atStartOfDay(zoneId).toInstant().toEpochMilli() - 1
+                val startOfToday =
+                    LocalDate.now(zoneId).atStartOfDay(zoneId).toInstant().toEpochMilli()
+                val endOfDay = LocalDate.now(zoneId).plusDays(1).atStartOfDay(zoneId).toInstant()
+                    .toEpochMilli() - 1
 
                 val total = db.followUpReminderDao().countOverdue(startOfToday) +
                         db.followUpReminderDao().countDueToday(endOfDay, now)
@@ -82,7 +85,11 @@ class MainViewModel(
                     _pendingReminderCount.value = total
                 }
             } catch (e: Exception) {
-                if (BuildConfig.DEBUG) Log.e("MainViewModel", "Failed to load pending reminder count", e)
+                if (BuildConfig.DEBUG) Log.e(
+                    "MainViewModel",
+                    "Failed to load pending reminder count",
+                    e
+                )
             }
         }
     }

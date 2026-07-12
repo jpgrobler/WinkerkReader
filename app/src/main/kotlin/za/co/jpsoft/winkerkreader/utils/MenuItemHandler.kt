@@ -4,11 +4,8 @@ import android.content.ContentValues
 import android.graphics.Typeface
 import android.text.SpannableString
 import android.text.style.StyleSpan
-import android.util.Log
 import android.view.MenuItem
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.WinkerkContract
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.LIDMATE_TAG
@@ -35,12 +32,14 @@ class MenuItemHandler(
                 navigationController.navigateToRegistreer()
                 true
             }
+
             R.id.laai -> {
                 settings.fromMenu = true
                 navigationController.navigateToLaaiDatabasis()
                 activity.finish()
                 true
             }
+
             R.id.sms_verjaar -> {
                 settings.fromMenu = true
                 navigationController.navigateToSmsVerjaar()
@@ -52,34 +51,41 @@ class MenuItemHandler(
                 navigationController.navigateToUitleg()
                 true
             }
+
             R.id.argief -> {
                 navigationController.navigateToArgief()
                 true
             }
+
             R.id.action_view_call_log -> {
                 navigationController.navigateToCallLog()
                 true
             }
+
             R.id.menu_permissions -> {
                 navigationController.navigateToPermissions()
                 true
             }
+
             R.id.action_bediening -> {
                 navigationController.navigateToBediening()
                 true
             }
+
             R.id.menu_sorteer_titel -> {
                 val spanString = SpannableString(item.title)
                 spanString.setSpan(StyleSpan(Typeface.BOLD), 0, spanString.length, 0)
                 item.title = spanString
                 true
             }
+
             R.id.menu_andmin_titel -> {
                 val spanString = SpannableString(item.title)
                 spanString.setSpan(StyleSpan(Typeface.BOLD), 0, spanString.length, 0)
                 item.title = spanString
                 true
             }
+
             else -> false
         }
     }
@@ -157,7 +163,12 @@ class MenuItemHandler(
         val values = ContentValues().apply {
             put(LIDMATE_TAG, 0)
         }
-        activity.contentResolver.update(WinkerkContract.winkerkEntry.CONTENT_URI, values, null, null)
+        activity.contentResolver.update(
+            WinkerkContract.winkerkEntry.CONTENT_URI,
+            values,
+            null,
+            null
+        )
         return true
     }
 }

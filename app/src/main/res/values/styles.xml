@@ -1,4 +1,4 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
     <!-- Splash theme (used by the launcher activity) -->
     <style name="SplashTheme" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="android:windowBackground">@drawable/splash</item>
@@ -7,7 +7,7 @@
 
     <!-- ========== WIDGET STYLES ========== -->
 
-    <style name="Widget.WinkerkReader" parent=""/>
+    <style name="Widget.WinkerkReader" parent="" />
 
     <!-- App Widget Container Style -->
     <style name="Widget.WinkerkReader.AppWidget">
@@ -216,7 +216,9 @@
     </style>
 
     <style name="Widget.WinkerkReader.BottomSheet" parent="Widget.Material3.BottomSheet">
-        <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.WinkerkReader.BottomSheet</item>
+        <item name="shapeAppearanceOverlay">
+            @style/ShapeAppearanceOverlay.WinkerkReader.BottomSheet
+        </item>
         <item name="backgroundTint">?attr/colorSurface</item>
     </style>
 
@@ -330,6 +332,7 @@
         <item name="android:textColorPrimary">?attr/colorOnSurface</item>
         <item name="android:background">?attr/colorSurface</item>
     </style>
+
     <style name="TextAppearance.WinkerkReader.Subtitle" parent="TextAppearance.Material3.TitleMedium">
         <item name="android:textSize">@dimen/text_size_large</item>
         <item name="android:textColor">?attr/colorOnSurface</item>

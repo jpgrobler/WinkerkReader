@@ -17,7 +17,11 @@ data class TemplateContext(
     fun getString(key: String): String? = values[key]?.ifBlank { null }
 
     fun getDate(key: String): LocalDate? = values[key]?.let {
-        try { LocalDate.parse(it, ISO) } catch (e: Exception) { null }
+        try {
+            LocalDate.parse(it, ISO)
+        } catch (e: Exception) {
+            null
+        }
     }
 
     /** Returns a single-line display string for the reminder card. */
@@ -29,13 +33,15 @@ data class TemplateContext(
             try {
                 val date = LocalDate.parse(dob, ISO)
                 parts += date.format(DISPLAY)
-            } catch (_: Exception) {}
+            } catch (_: Exception) {
+            }
         }
         values["deceasedDate"]?.let { dd ->
             try {
                 val date = LocalDate.parse(dd, ISO)
                 parts += "† ${date.format(DISPLAY)}"
-            } catch (_: Exception) {}
+            } catch (_: Exception) {
+            }
         }
         values["hospital"]?.ifBlank { null }?.let { parts += "🏥 $it" }
         values["illness"]?.ifBlank { null }?.let { parts += "💊 $it" }
@@ -44,7 +50,8 @@ data class TemplateContext(
             try {
                 val date = LocalDate.parse(td, ISO)
                 parts += "⚠️ ${date.format(DISPLAY)}"
-            } catch (_: Exception) {}
+            } catch (_: Exception) {
+            }
         }
 
         return if (parts.isEmpty()) null else parts.joinToString(" · ")
@@ -53,7 +60,7 @@ data class TemplateContext(
     fun toJson(): String = JSONObject(values).toString()
 
     companion object {
-        private val ISO     = DateTimeFormatter.ISO_LOCAL_DATE
+        private val ISO = DateTimeFormatter.ISO_LOCAL_DATE
         private val DISPLAY = DateTimeFormatter.ofPattern("d MMM yyyy")
 
         fun from(json: String?): TemplateContext {

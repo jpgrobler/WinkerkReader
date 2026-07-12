@@ -28,7 +28,8 @@ class PastoralWidgetKeyguardRemoteViewsService : RemoteViewsService() {
         private val zoneId = ZoneId.systemDefault()
         private val dateFormatter = DateTimeFormatter.ofPattern("dd/MM", Locale.getDefault())
 
-        override fun onCreate() { /* no-op */ }
+        override fun onCreate() { /* no-op */
+        }
 
         override fun onDataSetChanged() {
             if (BuildConfig.DEBUG) Log.d(TAG, "onDataSetChanged called")
@@ -42,7 +43,9 @@ class PastoralWidgetKeyguardRemoteViewsService : RemoteViewsService() {
             }
         }
 
-        override fun onDestroy() { reminders = emptyList() }
+        override fun onDestroy() {
+            reminders = emptyList()
+        }
 
         override fun getCount(): Int = reminders.size
 
@@ -50,11 +53,15 @@ class PastoralWidgetKeyguardRemoteViewsService : RemoteViewsService() {
             val reminder = reminders[position]
             val views = RemoteViews(context.packageName, R.layout.widget_pastoral_keyguard_item)
 
-            val displayName = reminder.memberDisplayNameCache?.takeIf { it.isNotBlank() } ?: "Lidmaat"
+            val displayName =
+                reminder.memberDisplayNameCache?.takeIf { it.isNotBlank() } ?: "Lidmaat"
             val dueDate = reminder.dueDateUtc.toLocalDateSafe() ?: LocalDate.now()
             val today = LocalDate.now(zoneId)
             val isToday = dueDate == today
-            val dateStr = if (isToday) context.getString(R.string.datum_vandag) else dateFormatter.format(dueDate)
+            val dateStr =
+                if (isToday) context.getString(R.string.datum_vandag) else dateFormatter.format(
+                    dueDate
+                )
 
             // Build the combined string
             val symbol = reminder.symbol?.takeIf { it.isNotBlank() } ?: ""
@@ -69,7 +76,9 @@ class PastoralWidgetKeyguardRemoteViewsService : RemoteViewsService() {
 
         override fun getLoadingView(): RemoteViews? = null
         override fun getViewTypeCount(): Int = 1
-        override fun getItemId(position: Int): Long = reminders[position].reminderId.hashCode().toLong()
+        override fun getItemId(position: Int): Long =
+            reminders[position].reminderId.hashCode().toLong()
+
         override fun hasStableIds(): Boolean = false
     }
 }

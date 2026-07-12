@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/argief_itemmain"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:id="@+id/argief_itemmain"
+    android:background="?attr/colorSurface"
     android:fitsSystemWindows="true"
     android:orientation="vertical"
-    android:padding="4dp"
-    android:background="?attr/colorSurface">
+    android:padding="4dp">
 
     <!-- Separator -->
     <TextView
@@ -24,39 +24,39 @@
 
     <!-- Content -->
     <RelativeLayout
+        android:id="@+id/argief_main"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/argief_main"
         android:paddingTop="4dp"
         android:paddingBottom="4dp">
 
         <!-- Top row: Surname + Date of Birth -->
         <RelativeLayout
             android:id="@+id/topRow"
-            android:layout_alignParentTop="true"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
             android:orientation="horizontal">
 
             <TextView
                 android:id="@+id/argief_van"
-                tools:text="@string/argief_van"
-                android:ellipsize="none"
-                android:singleLine="false"
-                android:scrollHorizontally="false"
-                android:layout_centerVertical="true"
-                android:paddingEnd="8dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:ellipsize="none"
                 android:fontFamily="sans-serif-medium"
+                android:paddingEnd="8dp"
+                android:scrollHorizontally="false"
+                android:singleLine="false"
                 android:textAppearance="?android:textAppearanceMedium"
-                android:textColor="?attr/colorOnSurface" />
+                android:textColor="?attr/colorOnSurface"
+                tools:text="@string/argief_van" />
 
             <TextView
-                android:layout_alignParentEnd="true"
                 android:id="@+id/argief_geboortedatum"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
                 android:layout_gravity="bottom|end"
                 android:fontFamily="sans-serif-medium"
                 android:paddingEnd="8dp"
@@ -67,10 +67,10 @@
 
         <!-- Middle row: Name -->
         <RelativeLayout
+            android:id="@+id/middleRow"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/topRow"
-            android:id="@+id/middleRow">
+            android:layout_below="@+id/topRow">
 
             <TextView
                 android:id="@+id/argief_name"
@@ -87,41 +87,41 @@
         <!-- Bottom row: Reason + Departure date + Destination -->
         <RelativeLayout
             android:id="@+id/bottomRow"
-            android:layout_below="@+id/middleRow"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/middleRow">
 
             <TextView
                 android:id="@+id/argief_rede"
-                tools:text="@string/argief_rede"
-                android:paddingEnd="4dp"
-                android:paddingStart="4dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:fontFamily="sans-serif"
-                android:textAppearance="?android:textAppearanceSmall"
-                android:layout_gravity="center_vertical"
                 android:layout_alignParentStart="true"
-                android:textColor="?attr/colorPrimary" />
+                android:layout_gravity="center_vertical"
+                android:fontFamily="sans-serif"
+                android:paddingStart="4dp"
+                android:paddingEnd="4dp"
+                android:textAppearance="?android:textAppearanceSmall"
+                android:textColor="?attr/colorPrimary"
+                tools:text="@string/argief_rede" />
 
             <TextView
                 android:id="@+id/argief_vertrekdatum"
-                tools:text="@string/argief_vertrek"
-                android:layout_gravity="center_vertical"
-                android:paddingStart="8dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:fontFamily="sans-serif"
+                android:layout_gravity="center_vertical"
                 android:layout_toEndOf="@+id/argief_rede"
+                android:fontFamily="sans-serif"
+                android:paddingStart="8dp"
                 android:textAppearance="?android:textAppearanceSmall"
-                android:textColor="?attr/colorOnSurface" />
+                android:textColor="?attr/colorOnSurface"
+                tools:text="@string/argief_vertrek" />
 
             <TextView
-                android:layout_alignParentEnd="true"
-                android:layout_gravity="bottom|end"
                 android:id="@+id/argief_bestemming"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_gravity="bottom|end"
                 android:fontFamily="sans-serif"
                 android:paddingStart="4dp"
                 android:textAppearance="?android:textAppearanceSmall"

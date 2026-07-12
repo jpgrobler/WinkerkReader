@@ -63,14 +63,17 @@ class CallLogActivity : AppCompatActivity() {
                 finish()
                 true
             }
+
             R.id.action_export_csv -> {
                 exportToCSV()
                 true
             }
+
             R.id.action_share_csv -> {
                 shareCSV()
                 true
             }
+
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -92,11 +95,16 @@ class CallLogActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 if (BuildConfig.DEBUG) Log.e("CallLogActivity", "Error loading call logs", e)
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@CallLogActivity, R.string.all_logs_cleared, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this@CallLogActivity,
+                        R.string.all_logs_cleared,
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
         }
     }
+
     private fun za.co.jpsoft.winkerkreader.data.calllog.CallLogEntity.toDisplayModel() = CallLog(
         id = id,
         callerInfo = callerInfo,
@@ -106,6 +114,7 @@ class CallLogActivity : AppCompatActivity() {
         source = source,
         duration = duration
     )
+
     private fun exportToCSV() {
         if (currentCallLogs.isEmpty()) {
             Toast.makeText(this, R.string.no_logs_to_export, Toast.LENGTH_SHORT).show()
@@ -216,13 +225,22 @@ class CallLogActivity : AppCompatActivity() {
             .setMessage("Is jy seker jy wil al die oproepinligting uitvee?\n Dit kan nie omgekeer word nie!")
             .setPositiveButton("Wis uit") { _, _ ->
                 lifecycleScope.launch(Dispatchers.IO) {
-                    val success = callLogDao.clearAll() >= 0   // was: databaseHelper.clearAllCallLogs()
+                    val success =
+                        callLogDao.clearAll() >= 0   // was: databaseHelper.clearAllCallLogs()
                     withContext(Dispatchers.Main) {
                         if (success) {
-                            Toast.makeText(this@CallLogActivity, R.string.all_logs_cleared, Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                this@CallLogActivity,
+                                R.string.all_logs_cleared,
+                                Toast.LENGTH_SHORT
+                            ).show()
                             loadCallLogs()
                         } else {
-                            Toast.makeText(this@CallLogActivity, R.string.failed_to_clear_logs, Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                this@CallLogActivity,
+                                R.string.failed_to_clear_logs,
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                     }
                 }
@@ -233,7 +251,8 @@ class CallLogActivity : AppCompatActivity() {
     }
 
     private fun showProgress(show: Boolean) {
-        binding.progressBar.visibility = if (show) android.view.View.VISIBLE else android.view.View.GONE
+        binding.progressBar.visibility =
+            if (show) android.view.View.VISIBLE else android.view.View.GONE
     }
 
     private fun observeCallLogUpdates() {

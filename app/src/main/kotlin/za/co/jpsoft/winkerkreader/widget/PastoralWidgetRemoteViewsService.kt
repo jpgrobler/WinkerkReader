@@ -70,13 +70,17 @@ class PastoralWidgetRemoteViewsService : RemoteViewsService() {
             val reminder = reminders[position]
             val views = RemoteViews(context.packageName, R.layout.widget_pastoral_item)
 
-            val displayName = reminder.memberDisplayNameCache?.takeIf { it.isNotBlank() } ?: "Lidmaat"
+            val displayName =
+                reminder.memberDisplayNameCache?.takeIf { it.isNotBlank() } ?: "Lidmaat"
             val dueDate = reminder.dueDateUtc.toLocalDateSafe() ?: LocalDate.now()
             val today = LocalDate.now(zoneId)
             val isToday = dueDate == today
             val isOverdue = dueDate.isBefore(today)
 
-            val dateStr = if (isToday) context.getString(R.string.datum_vandag) else dateFormatter.format(dueDate)
+            val dateStr =
+                if (isToday) context.getString(R.string.datum_vandag) else dateFormatter.format(
+                    dueDate
+                )
             val symbol = getReminderSymbol(reminder)
 
             // Build the full text: "dd/MM Name: Title"
@@ -137,8 +141,8 @@ class PastoralWidgetRemoteViewsService : RemoteViewsService() {
                 } else {
                     spannable.setSpan(
                         ForegroundColorSpan(darkGrey),
-                    nameStart, nameEnd,
-                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                        nameStart, nameEnd,
+                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                     )
                 }
             }
@@ -152,10 +156,10 @@ class PastoralWidgetRemoteViewsService : RemoteViewsService() {
                     symbolStart, symbolEnd,
                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                 )
-                    spannable.setSpan(
+                spannable.setSpan(
                     StyleSpan(Typeface.BOLD),
-                        symbolStart, symbolEnd,
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                    symbolStart, symbolEnd,
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                 )
             }
 
@@ -176,7 +180,10 @@ class PastoralWidgetRemoteViewsService : RemoteViewsService() {
             views.setTextViewText(R.id.widget_pastoral_item_text, spannable)
 
             // Overdue badge
-            views.setViewVisibility(R.id.widget_pastoral_item_overdue, if (isOverdue) View.VISIBLE else View.GONE)
+            views.setViewVisibility(
+                R.id.widget_pastoral_item_overdue,
+                if (isOverdue) View.VISIBLE else View.GONE
+            )
 
             return views
         }
@@ -189,7 +196,8 @@ class PastoralWidgetRemoteViewsService : RemoteViewsService() {
 
         override fun getViewTypeCount(): Int = 1
 
-        override fun getItemId(position: Int): Long = reminders[position].reminderId.hashCode().toLong()
+        override fun getItemId(position: Int): Long =
+            reminders[position].reminderId.hashCode().toLong()
 
         override fun hasStableIds(): Boolean = false
     }

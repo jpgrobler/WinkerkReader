@@ -29,13 +29,16 @@ class WidgetRefreshWorker(
 
     private fun refreshBirthdayWidget() {
         val appWidgetManager = AppWidgetManager.getInstance(applicationContext)
-        val componentName = ComponentName(applicationContext, WinkerkReaderWidgetProvider::class.java)
+        val componentName =
+            ComponentName(applicationContext, WinkerkReaderWidgetProvider::class.java)
         val ids = appWidgetManager.getAppWidgetIds(componentName)
 
-        val intent = android.content.Intent(applicationContext, WinkerkReaderWidgetProvider::class.java).apply {
-            action = "android.appwidget.action.APPWIDGET_UPDATE"
-            putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
-        }
+        val intent =
+            android.content.Intent(applicationContext, WinkerkReaderWidgetProvider::class.java)
+                .apply {
+                    action = "android.appwidget.action.APPWIDGET_UPDATE"
+                    putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+                }
         applicationContext.sendBroadcast(intent)
     }
 

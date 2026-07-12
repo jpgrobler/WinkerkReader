@@ -12,7 +12,6 @@ import android.content.Intent
 import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
 import android.graphics.Color
 import android.graphics.PixelFormat
-import android.os.Build
 import android.os.IBinder
 import android.provider.Settings
 import android.util.Log
@@ -119,7 +118,10 @@ class OproepDetailService : Service() {
             }
 
             if (!shouldShow) {
-                if (BuildConfig.DEBUG) Log.d(TAG, "Caller not found in database, skipping floating window")
+                if (BuildConfig.DEBUG) Log.d(
+                    TAG,
+                    "Caller not found in database, skipping floating window"
+                )
                 withContext(Dispatchers.Main) { stopSelf() }
                 return@launch
             }
@@ -155,11 +157,12 @@ class OproepDetailService : Service() {
     private fun createForegroundNotification() {
         val channelId = "WinkerkReader"
         val channelName = "Oproep Service"
-        val channel = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_LOW).apply {
-            lightColor = Color.BLUE
-            lockscreenVisibility = Notification.VISIBILITY_PRIVATE
-            setShowBadge(false)
-        }
+        val channel =
+            NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_LOW).apply {
+                lightColor = Color.BLUE
+                lockscreenVisibility = Notification.VISIBILITY_PRIVATE
+                setShowBadge(false)
+            }
         val manager = getSystemService(NotificationManager::class.java)
         manager?.createNotificationChannel(channel)
 
@@ -202,7 +205,8 @@ class OproepDetailService : Service() {
         callerTextView.text = displayName
 
         if (!Settings.canDrawOverlays(this)) {
-            val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, "package:$packageName".toUri())
+            val intent =
+                Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, "package:$packageName".toUri())
             startActivity(intent)
             stopSelf()
             return
@@ -275,6 +279,7 @@ class OproepDetailService : Service() {
                     initialTouchY = event.rawY
                     return true
                 }
+
                 MotionEvent.ACTION_MOVE -> {
                     params.x = initialX + (event.rawX - initialTouchX).toInt()
                     params.y = initialY + (event.rawY - initialTouchY).toInt()

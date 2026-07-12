@@ -77,7 +77,13 @@ object SQLiteStatementValidator {
                 wasFixed = wasFixed
             )
         } catch (e: Exception) {
-            return ValidationResult(false, "Error during validation: ${e.message}", 0, originalSql, false)
+            return ValidationResult(
+                false,
+                "Error during validation: ${e.message}",
+                0,
+                originalSql,
+                false
+            )
         }
     }
 
@@ -141,16 +147,19 @@ object SQLiteStatementValidator {
                             result.append(' ')
                             continue
                         }
+
                         c == '\'' -> {
                             inSingleQuote = true
                             result.append(' ')
                             continue
                         }
+
                         c == '"' -> {
                             inDoubleQuote = true
                             result.append(' ')
                             continue
                         }
+
                         c == '[' -> {
                             inBracket = true
                             result.append(' ')
@@ -167,11 +176,13 @@ object SQLiteStatementValidator {
                     result.append(' ')
                     continue
                 }
+
                 inDoubleQuote && c == '"' -> {
                     inDoubleQuote = false
                     result.append(' ')
                     continue
                 }
+
                 inBracket && c == ']' -> {
                     inBracket = false
                     result.append(' ')
@@ -205,8 +216,18 @@ object SQLiteStatementValidator {
                 }
                 if (nextNonSpaceIndex < upperCleanedSql.length) {
                     val nextChar = upperCleanedSql[nextNonSpaceIndex]
-                    if (isIllegalCharacterAfterKeyword(keyword, nextChar, originalSql, nextNonSpaceIndex)) {
-                        return ValidationResult(false, "Illegal character '$nextChar' found after keyword '$keyword'", nextNonSpaceIndex)
+                    if (isIllegalCharacterAfterKeyword(
+                            keyword,
+                            nextChar,
+                            originalSql,
+                            nextNonSpaceIndex
+                        )
+                    ) {
+                        return ValidationResult(
+                            false,
+                            "Illegal character '$nextChar' found after keyword '$keyword'",
+                            nextNonSpaceIndex
+                        )
                     }
                 }
             }
@@ -214,7 +235,12 @@ object SQLiteStatementValidator {
         return ValidationResult(true)
     }
 
-    private fun isIllegalCharacterAfterKeyword(keyword: String, nextChar: Char, originalSql: String, position: Int): Boolean {
+    private fun isIllegalCharacterAfterKeyword(
+        keyword: String,
+        nextChar: Char,
+        originalSql: String,
+        position: Int
+    ): Boolean {
         if (nextChar == '(' && (KEYWORDS_ALLOWING_PARENTHESES.contains(keyword) || keyword == "SELECT")) {
             return false
         }
@@ -232,6 +258,7 @@ object SQLiteStatementValidator {
             "NOT" -> !nextChar.isLetter() && nextChar != '(' && nextChar != '='
             "AS", "BY", "FROM", "WHERE", "HAVING", "AND", "OR", "ON", "SET", "INTO" ->
                 !nextChar.isLetterOrDigit() && nextChar != '\'' && nextChar != '"' && nextChar != '[' && nextChar != '(' && nextChar != '_'
+
             else -> ILLEGAL_CHARS_AFTER_KEYWORDS.contains(nextChar.lowercaseChar())
         }
     }
@@ -251,12 +278,23 @@ object SQLiteStatementValidator {
         }
         if (parenCount > 0) return ValidationResult(false, "Unmatched opening parenthesis", -1)
         if (bracketCount > 0) return ValidationResult(false, "Unmatched opening bracket", -1)
-        if (sql.contains(",,")) return ValidationResult(false, "Consecutive commas found", sql.indexOf(",,"))
+        if (sql.contains(",,")) return ValidationResult(
+            false,
+            "Consecutive commas found",
+            sql.indexOf(",,")
+        )
 
-        val trailingCommaPattern = Pattern.compile(",\\s+(FROM|WHERE|GROUP|ORDER|HAVING|LIMIT)\\b", Pattern.CASE_INSENSITIVE)
+        val trailingCommaPattern = Pattern.compile(
+            ",\\s+(FROM|WHERE|GROUP|ORDER|HAVING|LIMIT)\\b",
+            Pattern.CASE_INSENSITIVE
+        )
         val trailingMatcher = trailingCommaPattern.matcher(sql)
         if (trailingMatcher.find()) {
-            return ValidationResult(false, "Trailing comma before ${trailingMatcher.group(1)}", trailingMatcher.start())
+            return ValidationResult(
+                false,
+                "Trailing comma before ${trailingMatcher.group(1)}",
+                trailingMatcher.start()
+            )
         }
 
         // --- NEW: validate semicolons ---
@@ -270,7 +308,11 @@ object SQLiteStatementValidator {
         if (semicolonPositions.size == 1) {
             val lastNonWhitespace = sql.trimEnd().lastIndex
             if (semicolonPositions[0] != lastNonWhitespace) {
-                return ValidationResult(false, "Semicolon not at the end of statement", semicolonPositions[0])
+                return ValidationResult(
+                    false,
+                    "Semicolon not at the end of statement",
+                    semicolonPositions[0]
+                )
             }
         }
         // --- end of new validation ---
@@ -294,7 +336,13 @@ object SQLiteStatementValidator {
                     }
                     if (nextCharIndex < chars.size) {
                         val nextChar = chars[nextCharIndex].uppercaseChar()
-                        if (shouldRemoveCharacterAfterKeyword(keyword, nextChar, sql, nextCharIndex)) {
+                        if (shouldRemoveCharacterAfterKeyword(
+                                keyword,
+                                nextChar,
+                                sql,
+                                nextCharIndex
+                            )
+                        ) {
                             toRemove[nextCharIndex] = true
                         }
                     }
@@ -309,7 +357,12 @@ object SQLiteStatementValidator {
         }
     }
 
-    private fun shouldRemoveCharacterAfterKeyword(keyword: String, nextChar: Char, sql: String, position: Int): Boolean {
+    private fun shouldRemoveCharacterAfterKeyword(
+        keyword: String,
+        nextChar: Char,
+        sql: String,
+        position: Int
+    ): Boolean {
         if (isInsideStringLiteral(sql, position)) return false
         if (nextChar == '=' || nextChar == '<' || nextChar == '>' || nextChar == '!') return false
         if (nextChar == '(' && (KEYWORDS_ALLOWING_PARENTHESES.contains(keyword) || keyword == "SELECT")) return false
@@ -323,6 +376,7 @@ object SQLiteStatementValidator {
             "NOT" -> !nextChar.isLetter() && nextChar != '('
             "AS", "BY", "FROM", "WHERE", "HAVING", "AND", "OR", "ON", "SET", "INTO" ->
                 !nextChar.isLetterOrDigit() && nextChar != '\'' && nextChar != '"' && nextChar != '[' && nextChar != '(' && nextChar != '_'
+
             else -> ILLEGAL_CHARS_AFTER_KEYWORDS.contains(nextChar.lowercaseChar())
         }
     }
@@ -344,7 +398,8 @@ object SQLiteStatementValidator {
     }
 
     private fun fixTrailingCommas(sql: String): String {
-        val problematicKeywords = listOf("FROM", "WHERE", "GROUP", "ORDER", "HAVING", "LIMIT", "UNION", "JOIN")
+        val problematicKeywords =
+            listOf("FROM", "WHERE", "GROUP", "ORDER", "HAVING", "LIMIT", "UNION", "JOIN")
         var result = sql
         for (keyword in problematicKeywords) {
             val pattern = Pattern.compile(",\\s+($keyword)\\b", Pattern.CASE_INSENSITIVE)
@@ -383,24 +438,28 @@ object SQLiteStatementValidator {
                             i += 2
                             continue
                         }
+
                         c == '\'' -> {
                             inSingleQuote = true
                             result.append(c)
                             i++
                             continue
                         }
+
                         c == '"' -> {
                             inDoubleQuote = true
                             result.append(c)
                             i++
                             continue
                         }
+
                         c == '[' -> {
                             inBracket = true
                             result.append(c)
                             i++
                             continue
                         }
+
                         c == ';' -> {
                             // skip this semicolon entirely (it's extraneous)
                             i++

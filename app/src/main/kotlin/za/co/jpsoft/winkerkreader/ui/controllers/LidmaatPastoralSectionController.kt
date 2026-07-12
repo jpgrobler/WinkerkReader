@@ -54,7 +54,7 @@ class LidmaatPastoralSectionController(
     // ─── Adapters ────────────────────────────────────────────────────────────
     private val miniAdapter = PendingReminderMiniAdapter(
         onComplete = { reminderId -> pastoralViewModel.completeReminder(reminderId) },
-        onClick    = { reminder  -> showReminderDetailsDialog(reminder) }
+        onClick = { reminder -> showReminderDetailsDialog(reminder) }
     )
 
     private val notaAdapter = PastoralNoteAdapter(
@@ -164,11 +164,11 @@ class LidmaatPastoralSectionController(
         // ── Nuwe nota ────────────────────────────────────────────────────────
         binding.btnDetailNuweNota.setOnClickListener {
             VoegNotaByBottomSheet.newInstance(
-                memberGuid        = memberGuid,
-                familyHeadGuid    = familyHeadGuid,
+                memberGuid = memberGuid,
+                familyHeadGuid = familyHeadGuid,
                 memberDisplayName = memberDisplayName,
-                memberSurname     = memberSurname,
-                memberGivenName   = memberGivenName
+                memberSurname = memberSurname,
+                memberGivenName = memberGivenName
             ).show(activity.supportFragmentManager, VoegNotaByBottomSheet.TAG)
         }
 

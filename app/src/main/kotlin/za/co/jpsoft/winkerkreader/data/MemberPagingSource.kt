@@ -23,7 +23,10 @@ class MemberPagingSource(
     private val TAG = "MemberPagingSource"
 
     init {
-        if (BuildConfig.DEBUG) Log.d(TAG, "MemberPagingSource created with eventType=$eventType, filterList size=${filterList?.size ?: 0}, congregations=${congregations?.size ?: 0}")
+        if (BuildConfig.DEBUG) Log.d(
+            TAG,
+            "MemberPagingSource created with eventType=$eventType, filterList size=${filterList?.size ?: 0}, congregations=${congregations?.size ?: 0}"
+        )
     }
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, MemberItem> {
@@ -55,7 +58,8 @@ class MemberPagingSource(
                     finalSql,
                     sqlRequest.args,
                     null
-                ) ?: return@withContext LoadResult.Error(IllegalStateException("Query returned null cursor"))
+                )
+                    ?: return@withContext LoadResult.Error(IllegalStateException("Query returned null cursor"))
 
                 val items = mutableListOf<MemberItem>()
                 cursor.use {
@@ -70,7 +74,8 @@ class MemberPagingSource(
                 if (BuildConfig.DEBUG) Log.d(TAG, "Loaded ${itemsWithSeparators.size} items")
 
                 // Determine next key based on whether we received fewer items than requested
-                val nextKey = if (itemsWithSeparators.size < limit) null else position + itemsWithSeparators.size
+                val nextKey =
+                    if (itemsWithSeparators.size < limit) null else position + itemsWithSeparators.size
                 LoadResult.Page(
                     data = itemsWithSeparators,
                     prevKey = if (position == 0) null else (position - limit).coerceAtLeast(0),

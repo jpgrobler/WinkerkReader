@@ -1,425 +1,515 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:ns1="http://schemas.android.com/apk/res-auto"
+    xmlns:ns2="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
-    android:orientation="vertical"
-    android:background="?attr/colorSurface">
+    android:fitsSystemWindows="true">
 
-    <ScrollView
+
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:clipToPadding="false"
-        android:paddingBottom="16dp">
+        android:background="?attr/colorSurface"
+        android:orientation="vertical">
 
-        <LinearLayout
+
+        <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp">
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingBottom="16dp">
 
-            <!-- Database Info Card -->
-            <com.google.android.material.card.MaterialCardView
+
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="2dp"
-                app:cardBackgroundColor="?attr/colorSurfaceVariant">
+                android:orientation="vertical"
+                android:padding="16dp">
 
-                <LinearLayout
+
+                <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                    android:layout_marginBottom="16dp"
+                    ns1:cardBackgroundColor="?attr/colorSurfaceContainerLow"
+                    ns1:cardCornerRadius="12dp"
+                    ns1:cardElevation="0dp">
 
-                    <TextView
-                        android:id="@+id/datadate"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/laai_datum"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        android:textColor="?attr/colorOnSurfaceVariant" />
-
-                    <com.google.android.material.progressindicator.LinearProgressIndicator
-                        android:id="@+id/laai_indeterminateBar"
-                        android:layout_width="match_parent"
-                        android:layout_height="4dp"
-                        android:layout_marginTop="8dp"
-                        app:indicatorColor="?attr/colorPrimary"
-                        app:trackCornerRadius="2dp"
-                        android:visibility="gone" />
-
-                    <com.google.android.material.progressindicator.LinearProgressIndicator
-                        android:id="@+id/laai_indeterminateBar2"
-                        android:layout_width="match_parent"
-                        android:layout_height="4dp"
-                        android:layout_marginTop="4dp"
-                        app:indicatorColor="?attr/colorPrimary"
-                        app:trackCornerRadius="2dp"
-                        android:visibility="gone" />
-
-                    <com.google.android.material.progressindicator.LinearProgressIndicator
-                        android:id="@+id/laai_indeterminateBar3"
-                        android:layout_width="match_parent"
-                        android:layout_height="4dp"
-                        android:layout_marginTop="4dp"
-                        app:indicatorColor="?attr/colorPrimary"
-                        app:trackCornerRadius="2dp"
-                        android:visibility="gone" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Local File Selection Section -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/laai_local"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="2dp"
-                app:cardBackgroundColor="?attr/colorSurfaceVariant">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/nuwe_databasis_reeds_op_foon"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="?attr/colorOnSurfaceVariant"
-                        android:layout_marginBottom="12dp" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginBottom="12dp">
+                        android:orientation="vertical"
+                        android:padding="16dp">
 
-                        <Button
-                            android:id="@+id/laai_laai"
-                            style="@style/Widget.Material3.Button"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginEnd="8dp"
-                            android:text="@string/laai_button"
-                            tools:visibility="gone" />
 
-                        <Button
-                            android:id="@+id/laai_picker"
-                            style="@style/Widget.Material3.Button"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/laai_kies_self" />
-                    </LinearLayout>
-
-                    <com.google.android.material.checkbox.MaterialCheckBox
-                        android:id="@+id/laai_wisuit"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/laai_radio"
-                        android:textColor="?attr/colorOnSurfaceVariant"
-                        android:layout_marginBottom="12dp" />
-
-                    <com.google.android.material.progressindicator.LinearProgressIndicator
-                        android:id="@+id/laai_indeterminateBar5"
-                        android:layout_width="match_parent"
-                        android:layout_height="4dp"
-                        app:indicatorColor="?attr/colorPrimary"
-                        app:trackCornerRadius="2dp"
-                        android:visibility="visible" />
-
-                    <ScrollView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:maxHeight="200dp"
-                        android:layout_marginTop="8dp">
-
-                        <RadioGroup
-                            android:id="@+id/laai_filelist"
+                        <TextView
+                            android:id="@+id/datadate"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:orientation="vertical" />
+                            android:text="@string/laai_datum"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
 
-                    </ScrollView>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
 
-            <!-- Dropbox Section -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="2dp"
-                app:cardBackgroundColor="?attr/colorSurfaceVariant">
+                        <com.google.android.material.progressindicator.LinearProgressIndicator
+                            android:id="@+id/laai_indeterminateBar"
+                            android:layout_width="match_parent"
+                            android:layout_height="4dp"
+                            android:layout_marginTop="8dp"
+                            android:visibility="gone"
+                            ns1:indicatorColor="?attr/colorPrimary"
+                            ns1:trackCornerRadius="2dp" />
 
-                <LinearLayout
+
+                        <com.google.android.material.progressindicator.LinearProgressIndicator
+                            android:id="@+id/laai_indeterminateBar2"
+                            android:layout_width="match_parent"
+                            android:layout_height="4dp"
+                            android:layout_marginTop="4dp"
+                            android:visibility="gone"
+                            ns1:indicatorColor="?attr/colorPrimary"
+                            ns1:trackCornerRadius="2dp" />
+
+
+                        <com.google.android.material.progressindicator.LinearProgressIndicator
+                            android:id="@+id/laai_indeterminateBar3"
+                            android:layout_width="match_parent"
+                            android:layout_height="4dp"
+                            android:layout_marginTop="4dp"
+                            android:visibility="gone"
+                            ns1:indicatorColor="?attr/colorPrimary"
+                            ns1:trackCornerRadius="2dp" />
+
+
+                    </LinearLayout>
+
+
+                </com.google.android.material.card.MaterialCardView>
+
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/laai_local"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                    android:layout_marginBottom="16dp"
+                    ns1:cardBackgroundColor="?attr/colorSurfaceContainerLow"
+                    ns1:cardCornerRadius="12dp"
+                    ns1:cardElevation="0dp">
 
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/dropbox_title"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        android:textColor="?attr/colorOnSurfaceVariant"
-                        android:layout_marginBottom="8dp" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
+                        android:orientation="vertical"
+                        android:padding="16dp">
 
-                        <!-- EditText with flexible width - wraps content -->
-                        <EditText
-                            android:id="@+id/db_link"
-                            android:layout_width="0dp"
+
+                        <TextView
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginEnd="8dp"
-                            android:minHeight="48dp"
-                            android:selectAllOnFocus="true"
-                            android:text="@string/dbLink"
+                            android:layout_marginBottom="12dp"
+                            android:text="@string/nuwe_databasis_reeds_op_foon"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="12dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+
+                            <Button
+                                android:id="@+id/laai_laai"
+                                style="@style/Widget.Material3.Button"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="8dp"
+                                android:layout_weight="1"
+                                android:text="@string/laai_button"
+                                ns2:visibility="gone" />
+
+
+                            <Button
+                                android:id="@+id/laai_picker"
+                                style="@style/Widget.Material3.Button"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/laai_kies_self" />
+
+
+                        </LinearLayout>
+
+
+                        <com.google.android.material.checkbox.MaterialCheckBox
+                            android:id="@+id/laai_wisuit"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="12dp"
+                            android:text="@string/laai_radio"
+                            android:textColor="?attr/colorOnSurfaceVariant" />
+
+
+                        <com.google.android.material.progressindicator.LinearProgressIndicator
+                            android:id="@+id/laai_indeterminateBar5"
+                            android:layout_width="match_parent"
+                            android:layout_height="4dp"
+                            android:visibility="visible"
+                            ns1:indicatorColor="?attr/colorPrimary"
+                            ns1:trackCornerRadius="2dp" />
+
+
+                        <ScrollView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:maxHeight="200dp">
+
+
+                            <RadioGroup
+                                android:id="@+id/laai_filelist"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical" />
+
+
+                        </ScrollView>
+
+
+                    </LinearLayout>
+
+
+                </com.google.android.material.card.MaterialCardView>
+
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    ns1:cardBackgroundColor="?attr/colorSurfaceContainerLow"
+                    ns1:cardCornerRadius="12dp"
+                    ns1:cardElevation="0dp">
+
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="8dp"
+                            android:text="@string/dropbox_title"
+                            android:textColor="?attr/colorOnSurfaceVariant"
                             android:textSize="14sp"
-                            android:textColor="?attr/colorOnSurface"
-                            android:background="@drawable/material_outlined_edittext"
-                            android:paddingStart="16dp"
-                            android:paddingEnd="16dp"
-                            android:inputType="textUri"
-                            android:importantForAutofill="no"
-                            android:gravity="start|center_vertical" />
+                            android:textStyle="bold" />
+
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+
+                            <EditText
+                                android:id="@+id/db_link"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="8dp"
+                                android:layout_weight="1"
+                                android:autofillHints="Edit Db Link"
+                                android:background="@drawable/material_outlined_edittext"
+                                android:gravity="start|center_vertical"
+                                android:importantForAutofill="no"
+                                android:inputType="textUri"
+                                android:minHeight="48dp"
+                                android:paddingStart="16dp"
+                                android:paddingEnd="16dp"
+                                android:selectAllOnFocus="true"
+                                android:text="@string/dbLink"
+                                android:textColor="?attr/colorOnSurface"
+                                android:textSize="14sp" />
+
+
+                            <Button
+                                android:id="@+id/dbLinkButton"
+                                style="@style/Widget.Material3.Button"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/dbLinkButtonText" />
+
+
+                        </LinearLayout>
+
+
+                        <com.google.android.material.progressindicator.LinearProgressIndicator
+                            android:id="@+id/laai_indeterminateBar4"
+                            android:layout_width="match_parent"
+                            android:layout_height="4dp"
+                            android:layout_marginTop="8dp"
+                            android:visibility="visible"
+                            ns1:indicatorColor="?attr/colorPrimary"
+                            ns1:trackCornerRadius="2dp" />
+
+
+                    </LinearLayout>
+
+
+                </com.google.android.material.card.MaterialCardView>
+
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    ns1:cardBackgroundColor="?attr/colorSurfaceContainerLow"
+                    ns1:cardCornerRadius="12dp"
+                    ns1:cardElevation="0dp">
+
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="8dp"
+                            android:text="@string/server_connection_title"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:baselineAligned="false"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+
+                                <TextView
+                                    android:id="@+id/ip_text"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/laai_ip_van_pc"
+                                    android:textColor="?attr/colorOnSurfaceVariant"
+                                    android:textSize="14sp" />
+
+
+                                <EditText
+                                    android:id="@+id/server_ip"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginEnd="8dp"
+                                    android:autofillHints="Edit Server Ip"
+                                    android:background="@drawable/material_outlined_edittext"
+                                    android:gravity="start|center_vertical"
+                                    android:importantForAutofill="no"
+                                    android:inputType="phone"
+                                    android:minHeight="48dp"
+                                    android:paddingStart="16dp"
+                                    android:paddingEnd="16dp"
+                                    android:selectAllOnFocus="true"
+                                    android:text="@string/IP"
+                                    android:textColor="?attr/colorOnSurface"
+                                    android:textSize="18sp" />
+
+
+                            </LinearLayout>
+
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical">
+
+
+                                <Button
+                                    android:id="@+id/laai_socket"
+                                    style="@style/Widget.Material3.Button"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginBottom="4dp"
+                                    android:text="@string/laai_wifi" />
+
+
+                                <Button
+                                    android:id="@+id/laai_USB"
+                                    style="@style/Widget.Material3.Button"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/laai_usb" />
+
+
+                            </LinearLayout>
+
+
+                        </LinearLayout>
+
+
+                        <com.google.android.material.progressindicator.LinearProgressIndicator
+                            android:id="@+id/laai_indeterminateBar10"
+                            android:layout_width="match_parent"
+                            android:layout_height="4dp"
+                            android:layout_marginTop="8dp"
+                            android:visibility="visible"
+                            ns1:indicatorColor="?attr/colorPrimary"
+                            ns1:trackCornerRadius="2dp" />
+
+
+                    </LinearLayout>
+
+
+                </com.google.android.material.card.MaterialCardView>
+
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    ns1:cardBackgroundColor="?attr/colorSurfaceContainerLow"
+                    ns1:cardCornerRadius="12dp"
+                    ns1:cardElevation="0dp">
+
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="8dp"
+                            android:text="@string/photo_sync_title"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+
+                        <com.google.android.material.checkbox.MaterialCheckBox
+                            android:id="@+id/force_sync_check"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/laai_force_sync_all_photos"
+                            android:textColor="?attr/colorOnSurfaceVariant" />
+
+
+                        <com.google.android.material.checkbox.MaterialCheckBox
+                            android:id="@+id/sync_photos"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="12dp"
+                            android:text="@string/laai_sync_photos_after_database"
+                            android:textColor="?attr/colorOnSurfaceVariant" />
+
 
                         <Button
-                            android:id="@+id/dbLinkButton"
+                            android:id="@+id/start_photo_sync"
                             style="@style/Widget.Material3.Button"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/dbLinkButtonText" />
+                            android:text="@string/laai_sync_photos_now"
+                            android:visibility="visible" />
+
+
                     </LinearLayout>
 
-                    <com.google.android.material.progressindicator.LinearProgressIndicator
-                        android:id="@+id/laai_indeterminateBar4"
-                        android:layout_width="match_parent"
-                        android:layout_height="4dp"
-                        android:layout_marginTop="8dp"
-                        app:indicatorColor="?attr/colorPrimary"
-                        app:trackCornerRadius="2dp"
-                        android:visibility="visible" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
 
-            <!-- Server Connection Section -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="2dp"
-                app:cardBackgroundColor="?attr/colorSurfaceVariant">
+                </com.google.android.material.card.MaterialCardView>
 
-                <LinearLayout
+
+                <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                    ns1:cardBackgroundColor="?attr/colorSurfaceContainerLow"
+                    ns1:cardCornerRadius="12dp"
+                    ns1:cardElevation="0dp">
 
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/server_connection_title"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        android:textColor="?attr/colorOnSurfaceVariant"
-                        android:layout_marginBottom="8dp" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
+                        android:orientation="vertical"
+                        android:padding="16dp">
 
-                        <LinearLayout
-                            android:layout_width="0dp"
+
+                        <com.google.android.material.progressindicator.LinearProgressIndicator
+                            android:id="@+id/laai_status"
+                            android:layout_width="match_parent"
+                            android:layout_height="4dp"
+                            android:visibility="visible"
+                            ns1:indicatorColor="?attr/colorPrimary"
+                            ns1:trackCornerRadius="2dp" />
+
+
+                        <TextView
+                            android:id="@+id/laai_boodskap"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
+                            android:layout_marginTop="8dp"
+                            android:textAlignment="center"
+                            android:textColor="?attr/colorSecondary"
+                            android:textSize="18sp" />
 
-                            <TextView
-                                android:id="@+id/ip_text"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/laai_ip_van_pc"
-                                android:textSize="14sp"
-                                android:textColor="?attr/colorOnSurfaceVariant" />
 
-                            <!-- IP EditText with flexible width -->
-                            <EditText
-                                android:id="@+id/server_ip"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginEnd="8dp"
-                                android:minHeight="48dp"
-                                android:selectAllOnFocus="true"
-                                android:text="@string/IP"
-                                android:textSize="18sp"
-                                android:textColor="?attr/colorOnSurface"
-                                android:background="@drawable/material_outlined_edittext"
-                                android:paddingStart="16dp"
-                                android:paddingEnd="16dp"
-                                android:inputType="phone"
-                                android:importantForAutofill="no"
-                                android:gravity="start|center_vertical" />
-                        </LinearLayout>
+                        <com.google.android.material.progressindicator.LinearProgressIndicator
+                            android:id="@+id/photo_sync_progress"
+                            android:layout_width="match_parent"
+                            android:layout_height="4dp"
+                            android:layout_marginTop="8dp"
+                            android:visibility="gone"
+                            ns1:indicatorColor="?attr/colorPrimary"
+                            ns1:trackCornerRadius="2dp" />
 
-                        <LinearLayout
-                            android:layout_width="wrap_content"
+
+                        <TextView
+                            android:id="@+id/photo_sync_status"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:orientation="vertical">
+                            android:layout_marginTop="4dp"
+                            android:text="@string/laai_syncing_photos"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="14sp"
+                            android:visibility="gone" />
 
-                            <Button
-                                android:id="@+id/laai_socket"
-                                style="@style/Widget.Material3.Button"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginBottom="4dp"
-                                android:text="@string/laai_wifi" />
 
-                            <Button
-                                android:id="@+id/laai_USB"
-                                style="@style/Widget.Material3.Button"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/laai_usb" />
-                        </LinearLayout>
                     </LinearLayout>
 
-                    <com.google.android.material.progressindicator.LinearProgressIndicator
-                        android:id="@+id/laai_indeterminateBar10"
-                        android:layout_width="match_parent"
-                        android:layout_height="4dp"
-                        android:layout_marginTop="8dp"
-                        app:indicatorColor="?attr/colorPrimary"
-                        app:trackCornerRadius="2dp"
-                        android:visibility="visible" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
 
-            <!-- Photo Sync Section -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="2dp"
-                app:cardBackgroundColor="?attr/colorSurfaceVariant">
+                </com.google.android.material.card.MaterialCardView>
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
 
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/photo_sync_title"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        android:textColor="?attr/colorOnSurfaceVariant"
-                        android:layout_marginBottom="8dp" />
+            </LinearLayout>
 
-                    <com.google.android.material.checkbox.MaterialCheckBox
-                        android:id="@+id/force_sync_check"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/laai_force_sync_all_photos"
-                        android:textColor="?attr/colorOnSurfaceVariant" />
 
-                    <com.google.android.material.checkbox.MaterialCheckBox
-                        android:id="@+id/sync_photos"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/laai_sync_photos_after_database"
-                        android:textColor="?attr/colorOnSurfaceVariant"
-                        android:layout_marginBottom="12dp" />
+        </ScrollView>
 
-                    <Button
-                        android:id="@+id/start_photo_sync"
-                        style="@style/Widget.Material3.Button"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/laai_sync_photos_now"
-                        android:visibility="visible" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
 
-            <!-- Status Section -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="2dp"
-                app:cardBackgroundColor="?attr/colorSurfaceVariant">
+    </LinearLayout>
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
 
-                    <com.google.android.material.progressindicator.LinearProgressIndicator
-                        android:id="@+id/laai_status"
-                        android:layout_width="match_parent"
-                        android:layout_height="4dp"
-                        app:indicatorColor="?attr/colorPrimary"
-                        app:trackCornerRadius="2dp"
-                        android:visibility="visible" />
-
-                    <TextView
-                        android:id="@+id/laai_boodskap"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:textAlignment="center"
-                        android:textColor="?attr/colorSecondary"
-                        android:textSize="18sp" />
-
-                    <com.google.android.material.progressindicator.LinearProgressIndicator
-                        android:id="@+id/photo_sync_progress"
-                        android:layout_width="match_parent"
-                        android:layout_height="4dp"
-                        android:layout_marginTop="8dp"
-                        app:indicatorColor="?attr/colorPrimary"
-                        app:trackCornerRadius="2dp"
-                        android:visibility="gone" />
-
-                    <TextView
-                        android:id="@+id/photo_sync_status"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:visibility="gone"
-                        android:text="@string/laai_syncing_photos"
-                        android:textColor="?attr/colorOnSurfaceVariant"
-                        android:textSize="14sp" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-        </LinearLayout>
-    </ScrollView>
-</LinearLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

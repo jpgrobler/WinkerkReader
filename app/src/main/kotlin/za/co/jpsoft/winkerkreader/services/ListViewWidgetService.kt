@@ -80,7 +80,11 @@ class WidgetViewsFactory(
         return createViewForRow(rows[position], position, rows)
     }
 
-    private fun createViewForRow(row: WidgetRow, position: Int, allRows: List<WidgetRow>): RemoteViews {
+    private fun createViewForRow(
+        row: WidgetRow,
+        position: Int,
+        allRows: List<WidgetRow>
+    ): RemoteViews {
         val remoteViews = RemoteViews(context.packageName, R.layout.row)
 
         val today = LocalDate.now()
@@ -110,9 +114,19 @@ class WidgetViewsFactory(
 
         // Gray out repeated dates
         if (position > 0 && day == allRows[position - 1].day) {
-            spannable.setSpan(ForegroundColorSpan(Color.LTGRAY), 0, 5, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+            spannable.setSpan(
+                ForegroundColorSpan(Color.LTGRAY),
+                0,
+                5,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
         } else {
-            spannable.setSpan(ForegroundColorSpan(Color.BLACK), 0, 5, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+            spannable.setSpan(
+                ForegroundColorSpan(Color.BLACK),
+                0,
+                5,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
         }
 
         // Main text color (dark gray)
@@ -125,7 +139,12 @@ class WidgetViewsFactory(
         // Highlight today's date
         val todayDay = today.toString().substring(8, 10)
         if (day == todayDay) {
-            spannable.setSpan(ForegroundColorSpan(Color.BLUE), 0, 5, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+            spannable.setSpan(
+                ForegroundColorSpan(Color.BLUE),
+                0,
+                5,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
             spannable.setSpan(
                 ForegroundColorSpan(Color.argb(255, 0, 0, 220)),
                 6, textLength,

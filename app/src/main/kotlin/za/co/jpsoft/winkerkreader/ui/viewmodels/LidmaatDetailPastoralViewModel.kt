@@ -47,6 +47,7 @@ class LidmaatDetailPastoralViewModel(
     // -------------------------------------------------------------------------
 
     private val _created = MutableSharedFlow<Int>(extraBufferCapacity = 1)
+
     /** Emits the count of reminders just created — used for Toast confirmation. */
     val created: SharedFlow<Int> = _created.asSharedFlow()
 
@@ -57,15 +58,29 @@ class LidmaatDetailPastoralViewModel(
     // Actions
     // -------------------------------------------------------------------------
 
-    fun createFromTemplate(templateId: String, anchorDate: LocalDate,
-                           contextJson: String? = null) {
+    fun createFromTemplate(
+        templateId: String,
+        anchorDate: LocalDate,
+        selectedItems: List<PreviewItem>,
+        contextJson: String? = null
+    ) {
+        val selectedDates = selectedItems
+            .filter { it.isSelected }
+            .associate { it.stepId to it.dueDate }
+
+        if (selectedDates.isEmpty()) {
+            _error.tryEmit("Geen stappe gekies nie")
+            return
+        }
+
         viewModelScope.launch {
             try {
                 val ids = repository.createFromTemplate(
-                    memberGuid  = memberGuid,
-                    templateId  = templateId,
-                    anchorDate  = anchorDate,
-                    contextJson = contextJson
+                    memberGuid = memberGuid,
+                    templateId = templateId,
+                    anchorDate = anchorDate,
+                    contextJson = contextJson,
+                    stepOverrides = selectedDates
                 )
                 _created.tryEmit(ids.size)
             } catch (e: Exception) {
@@ -84,12 +99,12 @@ class LidmaatDetailPastoralViewModel(
         viewModelScope.launch {
             try {
                 repository.createAdHocReminder(
-                    memberGuid   = memberGuid,
-                    title        = title,
-                    note         = note,
-                    dueDate      = dueDate,
+                    memberGuid = memberGuid,
+                    title = title,
+                    note = note,
+                    dueDate = dueDate,
                     scheduleType = scheduleType,
-                    dueTime      = dueTime
+                    dueTime = dueTime
                 )
                 _created.tryEmit(1)
             } catch (e: Exception) {
@@ -102,7 +117,7 @@ class LidmaatDetailPastoralViewModel(
         viewModelScope.launch {
             try {
                 repository.completeReminder(reminderId)
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 _error.tryEmit("Kon nie herinnering voltooi nie")
             }
         }
@@ -121,17 +136,25 @@ class LidmaatDetailPastoralViewModel(
                 val date = anchorDate
                     .plusMonths(step.offsetMonths.toLong())
                     .plusDays(step.offsetDays.toLong())
+                val past = date.isBefore(LocalDate.now())
                 PreviewItem(
+                    stepId = step.stepId,
                     stepTitle = step.defaultTitleAf,
-                    dueDate   = date,
-                    isInPast  = date.isBefore(LocalDate.now())
+                    dueDate = date,
+                    isInPast = past,
+                    // Reminders that would already be overdue by the time they're created
+                    // (e.g. a "day before" step when the anchor event was reported late)
+                    // start deselected — the user opts back in if they still want it.
+                    isSelected = !past
                 )
             }
     }
 
     data class PreviewItem(
+        val stepId: String,
         val stepTitle: String,
         val dueDate: LocalDate,
-        val isInPast: Boolean
+        val isInPast: Boolean,
+        val isSelected: Boolean
     )
 }

@@ -29,7 +29,9 @@ object CallLogImporter {
                         callerInfo = log.callerInfo,
                         timestamp = log.timestamp,
                         dateTime = log.formattedDateTime,
-                        callType = runCatching { CallType.valueOf(log.callType) }.getOrDefault(CallType.OTHER),
+                        callType = runCatching { CallType.valueOf(log.callType) }.getOrDefault(
+                            CallType.OTHER
+                        ),
                         source = log.source,
                         duration = log.duration
                     )
@@ -44,7 +46,9 @@ object CallLogImporter {
                         callId = active.callId,
                         number = active.number,
                         contactName = active.contactName,
-                        callType = runCatching { CallType.valueOf(active.callType) }.getOrDefault(CallType.OTHER),
+                        callType = runCatching { CallType.valueOf(active.callType) }.getOrDefault(
+                            CallType.OTHER
+                        ),
                         source = active.source,
                         startTime = active.startTime
                     )
@@ -52,7 +56,10 @@ object CallLogImporter {
             }
 
             settings.callLogImportedToRoom = true
-            if (BuildConfig.DEBUG) Log.d(TAG, "Imported ${legacyLogs.size} call log(s) and ${legacyActive.size} active call(s) into Room")
+            if (BuildConfig.DEBUG) Log.d(
+                TAG,
+                "Imported ${legacyLogs.size} call log(s) and ${legacyActive.size} active call(s) into Room"
+            )
 
             // Legacy DB file is left in place deliberately (not deleted) as a
             // safety net for one release cycle, in case the import needs to

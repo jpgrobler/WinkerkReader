@@ -140,40 +140,78 @@ class DeviceBootReceiver : BroadcastReceiver() {
             // Schedule the alarm based on Android version
             scheduleAlarm(alarmManager, triggerTime, pendingIntent)
 
-            if (BuildConfig.DEBUG) Log.d(TAG, "Birthday reminder alarm scheduled for ${alarmTime.time}")
+            if (BuildConfig.DEBUG) Log.d(
+                TAG,
+                "Birthday reminder alarm scheduled for ${alarmTime.time}"
+            )
         } catch (e: Exception) {
             if (BuildConfig.DEBUG) Log.e(TAG, "Failed to setup birthday alarm", e)
         }
     }
 
-    private fun scheduleAlarm(alarmManager: AlarmManager, triggerTime: Long, pendingIntent: PendingIntent) {
+    private fun scheduleAlarm(
+        alarmManager: AlarmManager,
+        triggerTime: Long,
+        pendingIntent: PendingIntent
+    ) {
         try {
             when {
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
                     // Android 12+ - Check if we can schedule exact alarms
                     if (alarmManager.canScheduleExactAlarms()) {
-                        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
+                        alarmManager.setExactAndAllowWhileIdle(
+                            AlarmManager.RTC_WAKEUP,
+                            triggerTime,
+                            pendingIntent
+                        )
                         if (BuildConfig.DEBUG) Log.d(TAG, "Exact alarm scheduled for Android 12+")
                     } else {
                         // Fallback to inexact alarm
-                        alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
-                        if (BuildConfig.DEBUG) Log.w(TAG, "Using inexact alarm - exact alarm permission not granted")
+                        alarmManager.setAndAllowWhileIdle(
+                            AlarmManager.RTC_WAKEUP,
+                            triggerTime,
+                            pendingIntent
+                        )
+                        if (BuildConfig.DEBUG) Log.w(
+                            TAG,
+                            "Using inexact alarm - exact alarm permission not granted"
+                        )
                     }
                 }
+
                 else -> {
                     // Android 6+ (but since minSdk is 26, this is always true)
-                    alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
+                    alarmManager.setExactAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        triggerTime,
+                        pendingIntent
+                    )
                     if (BuildConfig.DEBUG) Log.d(TAG, "Exact alarm scheduled")
                 }
             }
         } catch (e: SecurityException) {
-            if (BuildConfig.DEBUG) Log.e(TAG, "SecurityException scheduling alarm - permission may be missing", e)
+            if (BuildConfig.DEBUG) Log.e(
+                TAG,
+                "SecurityException scheduling alarm - permission may be missing",
+                e
+            )
             // Try inexact alarm as fallback
             try {
-                alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
-                if (BuildConfig.DEBUG) Log.w(TAG, "Fallback to inexact alarm due to security exception")
+                alarmManager.setAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerTime,
+                    pendingIntent
+                )
+                if (BuildConfig.DEBUG) Log.w(
+                    TAG,
+                    "Fallback to inexact alarm due to security exception"
+                )
             } catch (fallbackException: Exception) {
-                if (BuildConfig.DEBUG) Log.e(TAG, "Failed to schedule fallback alarm", fallbackException)
+                if (BuildConfig.DEBUG) Log.e(
+                    TAG,
+                    "Failed to schedule fallback alarm",
+                    fallbackException
+                )
             }
         }
     }

@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright (C) 2016 The Android Open Source Project
+<?xml version="1.0" encoding="utf-8"?><!-- Copyright (C) 2016 The Android Open Source Project
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
      You may obtain a copy of the License at
@@ -177,7 +176,6 @@
     <string name="argief_vertrek">Vertrek datum</string>
     <string name="argief_rede">Rede</string>
     <string name="argief_bestemming">Bestemming</string>
-
 
 
     <string name="gallery">🖼️ Foto van gallery</string>
@@ -588,6 +586,7 @@
     <string name="herinnering_enkel">Enkel herinnering</string>
     <string name="herinnering_verwysingsdatum">Verwysingsdatum</string>
     <string name="herinnering_voorskou">Voorskou</string>
+    <string name="herinnering_voorskou_hint">Tik op die kolletjie om \'n herinnering uit te sluit • Tik op die datum om dit te wysig</string>
     <string name="herinnering_bevestig">Stoor</string>
     <string name="herinnering_titel">Titel</string>
     <string name="herinnering_nota">Nota (opsioneel)</string>
@@ -826,7 +825,9 @@
     <!-- Quick Action Bar -->
     <string name="quick_action_herinnering">Stel Herinnering</string>
     <string name="quick_action_notas">Bedieningsnotas</string>
-    <string name="dropbox_title">Laai databsis van internet\n(bv. Dropbox / Google Drive / One drive / ...</string>
+    <string name="dropbox_title">Laai databsis van internet\n(bv. Dropbox / Google Drive / One drive / …</string>
     <string name="server_connection_title">Laai Databasis via plaaslike Wifi\nWinkerkReader APP op PC is nodig</string>
     <string name="photo_sync_title">Laai fotos van PC af, via Wifi\nWinkerkReader App op PC is nodig</string>
+    <string name="_0">(0)</string>
+    <string name="sortorder_prefix">⇵</string>
 </resources>

@@ -46,9 +46,9 @@ class PastoralBackupWorker(
     }
 
     companion object {
-        private const val TAG              = "PastoralBackupWorker"
-        private const val WORK_NAME        = "pastoral_daily_backup"
-        const val KEY_EXPORT_TO_DOWNLOADS  = "export_to_downloads"
+        private const val TAG = "PastoralBackupWorker"
+        private const val WORK_NAME = "pastoral_daily_backup"
+        const val KEY_EXPORT_TO_DOWNLOADS = "export_to_downloads"
 
         /** Enqueue a daily backup. Call once from Application.onCreate or a settings toggle. */
         fun schedule(context: Context, exportToDownloads: Boolean = false) {
@@ -90,7 +90,7 @@ class PastoralBackupWorker(
 
             val dateStr = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
             val fileName = "wkr_pastoral_$dateStr.db"
-            val subDir  = "WinkerkReader"
+            val subDir = "WinkerkReader"
 
             return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 // Remove any existing same-day file first (MediaStore won't overwrite)
@@ -103,8 +103,10 @@ class PastoralBackupWorker(
                 val values = ContentValues().apply {
                     put(MediaStore.Downloads.DISPLAY_NAME, fileName)
                     put(MediaStore.Downloads.MIME_TYPE, "application/octet-stream")
-                    put(MediaStore.Downloads.RELATIVE_PATH,
-                        "${Environment.DIRECTORY_DOWNLOADS}/$subDir")
+                    put(
+                        MediaStore.Downloads.RELATIVE_PATH,
+                        "${Environment.DIRECTORY_DOWNLOADS}/$subDir"
+                    )
                 }
                 val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
                     ?: return false

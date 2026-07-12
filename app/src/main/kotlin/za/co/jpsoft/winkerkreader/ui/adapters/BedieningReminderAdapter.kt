@@ -30,13 +30,13 @@ import java.util.Locale
 
 
 class BedieningReminderAdapter(
-    private val onVoltooi:      (reminderId: String) -> Unit,
-    private val onSnooze:       (reminderId: String) -> Unit,
-    private val onAddCalendar:  (reminderId: String) -> Unit,
-    private val onOpenMember:   (memberGuid: String) -> Unit,
+    private val onVoltooi: (reminderId: String) -> Unit,
+    private val onSnooze: (reminderId: String) -> Unit,
+    private val onAddCalendar: (reminderId: String) -> Unit,
+    private val onOpenMember: (memberGuid: String) -> Unit,
     private val onAddGoogleTask: (reminderId: String) -> Unit,
     private val onDelete: (reminderId: String) -> Unit,
-    private val onDeleteSeries:   (reminderId: String) -> Unit
+    private val onDeleteSeries: (reminderId: String) -> Unit
 ) : ListAdapter<ReminderWithMember, BedieningReminderAdapter.ViewHolder>(DIFF) {
 
     inner class ViewHolder(
@@ -106,8 +106,10 @@ class BedieningReminderAdapter(
             binding.btnWhatsapp.setOnClickListener {
                 item.cellphone?.let { phone ->
                     val wa = formatWhatsAppNumber(phone)
-                    val intent = Intent(Intent.ACTION_VIEW,
-                        Uri.parse("https://wa.me/$wa"))
+                    val intent = Intent(
+                        Intent.ACTION_VIEW,
+                        Uri.parse("https://wa.me/$wa")
+                    )
                     it.context.startActivity(intent)
                 }
             }
@@ -140,11 +142,26 @@ class BedieningReminderAdapter(
 
             menu.setOnMenuItemClickListener { menuItem ->
                 when (menuItem.itemId) {
-                    R.id.action_uitstel           -> { onSnooze(item.reminder.reminderId); true }
-                    R.id.action_voeg_by_kalender  -> { onAddCalendar(item.reminder.reminderId); true }
-                    R.id.action_voeg_by_google_tasks -> { onAddGoogleTask(item.reminder.reminderId); true }
-                    R.id.action_verwyder          -> { onDelete(item.reminder.reminderId); true }
-                    R.id.action_verwyder_reeks    -> { onDeleteSeries(item.reminder.reminderId); true }
+                    R.id.action_uitstel -> {
+                        onSnooze(item.reminder.reminderId); true
+                    }
+
+                    R.id.action_voeg_by_kalender -> {
+                        onAddCalendar(item.reminder.reminderId); true
+                    }
+
+                    R.id.action_voeg_by_google_tasks -> {
+                        onAddGoogleTask(item.reminder.reminderId); true
+                    }
+
+                    R.id.action_verwyder -> {
+                        onDelete(item.reminder.reminderId); true
+                    }
+
+                    R.id.action_verwyder_reeks -> {
+                        onDeleteSeries(item.reminder.reminderId); true
+                    }
+
                     else -> false
                 }
             }
@@ -168,8 +185,10 @@ class BedieningReminderAdapter(
             val dateStr = when {
                 dueDate == today ->
                     binding.root.context.getString(R.string.datum_vandag)
+
                 dueDate == today.minusDays(1) ->
                     binding.root.context.getString(R.string.datum_gister)
+
                 else -> {
                     val formatter = DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault())
                     dueDate.format(formatter)
@@ -212,6 +231,7 @@ class BedieningReminderAdapter(
     fun positionOf(reminderId: String): Int {
         return currentList.indexOfFirst { it.reminder.reminderId == reminderId }
     }
+
     companion object {
         private val DIFF = object : DiffUtil.ItemCallback<ReminderWithMember>() {
             override fun areItemsTheSame(a: ReminderWithMember, b: ReminderWithMember) =
@@ -223,7 +243,10 @@ class BedieningReminderAdapter(
     }
 
     override fun submitList(list: List<ReminderWithMember>?) {
-        if (BuildConfig.DEBUG) Log.d("BedieningAdapter", "submitList called with ${list?.size ?: 0} items")
+        if (BuildConfig.DEBUG) Log.d(
+            "BedieningAdapter",
+            "submitList called with ${list?.size ?: 0} items"
+        )
         super.submitList(list)
     }
 

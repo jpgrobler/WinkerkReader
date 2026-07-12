@@ -62,21 +62,38 @@ class FileDownloadWorker(
                 ackSocket = Socket(serverIp, serverPort + 1).apply { soTimeout = 30000 }
                 checksumSocket = Socket(serverIp, serverPort + 2).apply { soTimeout = 30000 }
                 connected = true
-                if (BuildConfig.DEBUG) Log.d("FileDownloadWorker", "Connected to server $serverIp:$serverPort")
+                if (BuildConfig.DEBUG) Log.d(
+                    "FileDownloadWorker",
+                    "Connected to server $serverIp:$serverPort"
+                )
             } catch (e: Exception) {
                 val remaining = retryAttempts.decrementAndGet()
-                if (BuildConfig.DEBUG) Log.w("FileDownloadWorker", "Connection attempt failed, remaining: $remaining", e)
+                if (BuildConfig.DEBUG) Log.w(
+                    "FileDownloadWorker",
+                    "Connection attempt failed, remaining: $remaining",
+                    e
+                )
                 if (remaining > 0 && !isStopped) {
                     delay(retryInterval)
                 } else {
                     val error = "Failed to connect to $serverIp after retries"
-                    return@withContext Result.failure(workDataOf(KEY_SUCCESS to false, KEY_ERROR to error))
+                    return@withContext Result.failure(
+                        workDataOf(
+                            KEY_SUCCESS to false,
+                            KEY_ERROR to error
+                        )
+                    )
                 }
             }
         }
 
         if (!connected || isStopped) {
-            return@withContext Result.failure(workDataOf(KEY_SUCCESS to false, KEY_ERROR to "Connection cancelled or stopped"))
+            return@withContext Result.failure(
+                workDataOf(
+                    KEY_SUCCESS to false,
+                    KEY_ERROR to "Connection cancelled or stopped"
+                )
+            )
         }
 
         // Safe non‑null assertions now that we know they are connected
@@ -86,7 +103,10 @@ class FileDownloadWorker(
         checksumSocket?.close()
 
         if (result.first) {
-            if (BuildConfig.DEBUG) Log.d("FileDownloadWorker", "Download successful, file saved to ${result.second}")
+            if (BuildConfig.DEBUG) Log.d(
+                "FileDownloadWorker",
+                "Download successful, file saved to ${result.second}"
+            )
             // Force close any open database helpers to release the file
             WinkerkDatabase.closeInstance()
             // Keep info_db close if needed
@@ -121,13 +141,23 @@ class FileDownloadWorker(
 
         try {
             // Exchange file metadata
-            val fileSizeStr = reader.readLine() ?: return@withContext Triple(false, "", "No file size received")
-            val fileSize = fileSizeStr.toLongOrNull() ?: return@withContext Triple(false, "", "Invalid file size: $fileSizeStr")
+            val fileSizeStr =
+                reader.readLine() ?: return@withContext Triple(false, "", "No file size received")
+            val fileSize = fileSizeStr.toLongOrNull() ?: return@withContext Triple(
+                false,
+                "",
+                "Invalid file size: $fileSizeStr"
+            )
             ackWriter.write("ACK\n")
             ackWriter.flush()
 
-            val bufferSizeStr = reader.readLine() ?: return@withContext Triple(false, "", "No buffer size received")
-            val bufferSize = bufferSizeStr.toIntOrNull() ?: return@withContext Triple(false, "", "Invalid buffer size: $bufferSizeStr")
+            val bufferSizeStr =
+                reader.readLine() ?: return@withContext Triple(false, "", "No buffer size received")
+            val bufferSize = bufferSizeStr.toIntOrNull() ?: return@withContext Triple(
+                false,
+                "",
+                "Invalid buffer size: $bufferSizeStr"
+            )
             ackWriter.write("ACK\n")
             ackWriter.flush()
 
@@ -143,7 +173,10 @@ class FileDownloadWorker(
             val destFile = File(dbPath, WINKERK_DB)
             // Delete existing file to ensure clean write
             if (destFile.exists() && !destFile.delete()) {
-                if (BuildConfig.DEBUG) Log.w("FileDownloadWorker", "Could not delete existing database file")
+                if (BuildConfig.DEBUG) Log.w(
+                    "FileDownloadWorker",
+                    "Could not delete existing database file"
+                )
             }
             outputStream = BufferedOutputStream(FileOutputStream(destFile))
 
@@ -153,7 +186,8 @@ class FileDownloadWorker(
                 val chunkSize = buffer.size
 
                 while (totalBytesRead < chunkSize) {
-                    val bytesRead = inputStream.read(buffer, totalBytesRead, chunkSize - totalBytesRead)
+                    val bytesRead =
+                        inputStream.read(buffer, totalBytesRead, chunkSize - totalBytesRead)
                     if (bytesRead == -1) throw Exception("Connection closed prematurely")
                     totalBytesRead += bytesRead
                     if (totalBytesReceived + totalBytesRead.toLong() == fileSize) break
@@ -162,7 +196,8 @@ class FileDownloadWorker(
                 ackWriter.write("ACK\n")
                 ackWriter.flush()
 
-                val serverChecksum = checksumReader.readLine() ?: throw Exception("No checksum received")
+                val serverChecksum =
+                    checksumReader.readLine() ?: throw Exception("No checksum received")
                 ackWriter.write("ACK\n")
                 ackWriter.flush()
 
@@ -184,7 +219,10 @@ class FileDownloadWorker(
 
             outputStream.flush()
             outputStream.close()
-            if (BuildConfig.DEBUG) Log.d("FileDownloadWorker", "File saved to ${destFile.absolutePath}")
+            if (BuildConfig.DEBUG) Log.d(
+                "FileDownloadWorker",
+                "File saved to ${destFile.absolutePath}"
+            )
             Triple(true, destFile.absolutePath, null)
         } catch (e: SocketTimeoutException) {
             if (BuildConfig.DEBUG) Log.e("FileDownloadWorker", "Socket timeout during download", e)
@@ -200,7 +238,8 @@ class FileDownloadWorker(
                 ackReader.close()
                 checksumReader.close()
                 reader.close()
-            } catch (_: Exception) {}
+            } catch (_: Exception) {
+            }
         }
     }
 

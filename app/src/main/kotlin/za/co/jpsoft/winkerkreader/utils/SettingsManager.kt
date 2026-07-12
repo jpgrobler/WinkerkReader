@@ -58,13 +58,15 @@ class SettingsManager(private val context: Context) {
         val id = prefs.getLong(WinkerkContract.KEY_SELECTED_CALENDAR_ID, -1L)
         return if (id == -1L) null else id
     }
+
     var pastoralCalendarSyncEnabled: Boolean
         get() = prefs.getBoolean(KEY_PASTORAL_SYNC_CALENDAR, false)
         set(value) = prefs.edit().putBoolean(KEY_PASTORAL_SYNC_CALENDAR, value).apply()
 
     var voipLogEnabled: Boolean
         get() = prefs.getBoolean(WinkerkContract.winkerkEntry.KEY_LOG_VOIP, false)
-        set(value) = prefs.edit().putBoolean(WinkerkContract.winkerkEntry.KEY_LOG_VOIP, value).apply()
+        set(value) = prefs.edit().putBoolean(WinkerkContract.winkerkEntry.KEY_LOG_VOIP, value)
+            .apply()
 
     private val prefs: SharedPreferences = context.getSharedPreferences(
         WinkerkContract.PREFS_USER_INFO, Context.MODE_PRIVATE
@@ -176,15 +178,24 @@ class SettingsManager(private val context: Context) {
         set(value) = prefs.edit().putInt(WinkerkContract.KEY_GEMEENTE_KLEUR, value).apply()
 
     var gemeente2Kleur: Int
-        get() = prefs.getInt(WinkerkContract.KEY_GEMEENTE2_KLEUR, Int.MIN_VALUE)  // changed from -3355444
+        get() = prefs.getInt(
+            WinkerkContract.KEY_GEMEENTE2_KLEUR,
+            Int.MIN_VALUE
+        )  // changed from -3355444
         set(value) = prefs.edit().putInt(WinkerkContract.KEY_GEMEENTE2_KLEUR, value).apply()
 
     var gemeente3Kleur: Int
-        get() = prefs.getInt(WinkerkContract.KEY_GEMEENTE3_KLEUR, Int.MIN_VALUE)  // changed from -256
+        get() = prefs.getInt(
+            WinkerkContract.KEY_GEMEENTE3_KLEUR,
+            Int.MIN_VALUE
+        )  // changed from -256
         set(value) = prefs.edit().putInt(WinkerkContract.KEY_GEMEENTE3_KLEUR, value).apply()
 
     var inactiveBackgroundColor: Int
-        get() = prefs.getInt(KEY_INACTIVE_BG_COLOR, Int.MIN_VALUE)  // changed from ContextCompat.getColor(...)
+        get() = prefs.getInt(
+            KEY_INACTIVE_BG_COLOR,
+            Int.MIN_VALUE
+        )  // changed from ContextCompat.getColor(...)
         set(value) = prefs.edit().putInt(KEY_INACTIVE_BG_COLOR, value).apply()
 
     var gemeenteNaam: String
@@ -275,9 +286,9 @@ class SettingsManager(private val context: Context) {
     fun googleTasksMode(): GoogleTasksMode {
         val stored = prefs.getString(WinkerkContract.KEY_GOOGLE_TASKS_MODE, "off")
         return when (stored) {
-            "api"   -> GoogleTasksMode.API
+            "api" -> GoogleTasksMode.API
             "share" -> GoogleTasksMode.SHARE
-            else    -> GoogleTasksMode.OFF
+            else -> GoogleTasksMode.OFF
         }
     }
 
@@ -310,14 +321,16 @@ class SettingsManager(private val context: Context) {
             migrateToSecure(WinkerkContract.KEY_TASKS_SCRIPT_URL)
             return securePrefs.getString(WinkerkContract.KEY_TASKS_SCRIPT_URL, null)
         }
-        set(value) = securePrefs.edit().putString(WinkerkContract.KEY_TASKS_SCRIPT_URL, value?.trim()).apply()
+        set(value) = securePrefs.edit()
+            .putString(WinkerkContract.KEY_TASKS_SCRIPT_URL, value?.trim()).apply()
 
     var tasksScriptSecret: String?
         get() {
             migrateToSecure(WinkerkContract.KEY_TASKS_SCRIPT_SECRET)
             return securePrefs.getString(WinkerkContract.KEY_TASKS_SCRIPT_SECRET, null)
         }
-        set(value) = securePrefs.edit().putString(WinkerkContract.KEY_TASKS_SCRIPT_SECRET, value?.trim()).apply()
+        set(value) = securePrefs.edit()
+            .putString(WinkerkContract.KEY_TASKS_SCRIPT_SECRET, value?.trim()).apply()
 
     fun isTasksScriptConfigured(): Boolean =
         !tasksScriptUrl.isNullOrBlank() && !tasksScriptSecret.isNullOrBlank()
@@ -376,16 +389,20 @@ class SettingsManager(private val context: Context) {
 
     fun ensureDefaultColors() {
         if (gemeenteKleur == Int.MIN_VALUE) {
-            gemeenteKleur = androidx.core.content.ContextCompat.getColor(context, R.color.default_gemeente_1)
+            gemeenteKleur =
+                androidx.core.content.ContextCompat.getColor(context, R.color.default_gemeente_1)
         }
         if (gemeente2Kleur == Int.MIN_VALUE) {
-            gemeente2Kleur = androidx.core.content.ContextCompat.getColor(context, R.color.default_gemeente_2)
+            gemeente2Kleur =
+                androidx.core.content.ContextCompat.getColor(context, R.color.default_gemeente_2)
         }
         if (gemeente3Kleur == Int.MIN_VALUE) {
-            gemeente3Kleur = androidx.core.content.ContextCompat.getColor(context, R.color.default_gemeente_3)
+            gemeente3Kleur =
+                androidx.core.content.ContextCompat.getColor(context, R.color.default_gemeente_3)
         }
         if (inactiveBackgroundColor == Int.MIN_VALUE) {
-            inactiveBackgroundColor = androidx.core.content.ContextCompat.getColor(context, R.color.inactive_background)
+            inactiveBackgroundColor =
+                androidx.core.content.ContextCompat.getColor(context, R.color.inactive_background)
         }
     }
 
@@ -398,7 +415,10 @@ class SettingsManager(private val context: Context) {
         set(value) = prefs.edit().putLong("pref_last_calllog_backup_ts", value).apply()
 
     var callLogBackupEnabled: Boolean
-        get() = prefs.getBoolean("pref_calllog_backup_enabled", false)   // opt-in — call logs are more sensitive
+        get() = prefs.getBoolean(
+            "pref_calllog_backup_enabled",
+            false
+        )   // opt-in — call logs are more sensitive
         set(value) = prefs.edit().putBoolean("pref_calllog_backup_enabled", value).apply()
 
     var backupRetentionDays: Int

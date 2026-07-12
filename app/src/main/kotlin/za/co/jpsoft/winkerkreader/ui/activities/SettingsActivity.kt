@@ -63,7 +63,8 @@ class SettingsActivity : AppCompatActivity() {
                             )
                         )
                     } else {
-                        val fallback = defaultMap.values.find { it.columnName == savedItem.columnName }
+                        val fallback =
+                            defaultMap.values.find { it.columnName == savedItem.columnName }
                         if (fallback != null) {
                             repairedList.add(
                                 SearchCheckBox(

@@ -1,16 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.core.widget.NestedScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/contentContainer"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="?attr/colorSurface"
+    android:fillViewport="true"
     android:paddingHorizontal="16dp"
     android:paddingTop="8dp"
-    android:paddingBottom="24dp"
-    android:fillViewport="true"
-    android:background="?attr/colorSurface">
+    android:paddingBottom="24dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -24,55 +23,55 @@
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="4dp"
             android:layout_marginBottom="6dp"
-            android:background="?attr/colorPrimary"
-            android:alpha="0.3" />
+            android:alpha="0.3"
+            android:background="?attr/colorPrimary" />
 
         <!-- Title -->
         <TextView
             android:id="@+id/tvNotaSheetTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp"
             android:text="@string/nota_titel"
             android:textAppearance="?attr/textAppearanceTitleMedium"
-            android:textColor="?attr/colorOnSurface"
-            android:layout_marginBottom="4dp" />
+            android:textColor="?attr/colorOnSurface" />
 
         <!-- Member name -->
         <TextView
             android:id="@+id/tvNotaMemberName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textAppearance="?attr/textAppearanceBodyLarge"
-            android:textStyle="bold"
-            android:textColor="?attr/colorOnSurface"
             android:layout_marginBottom="16dp"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
+            android:textColor="?attr/colorOnSurface"
+            android:textStyle="bold"
             tools:text="Jan van der Berg" />
 
         <!-- Category chips -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
             android:text="@string/nota_kategorie"
             android:textAppearance="?attr/textAppearanceLabelMedium"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            android:layout_marginBottom="8dp" />
+            android:textColor="?attr/colorOnSurfaceVariant" />
 
         <com.google.android.material.chip.ChipGroup
             android:id="@+id/chipGroupCategory"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            app:singleSelection="false"
-            app:selectionRequired="true" />
+            app:selectionRequired="true"
+            app:singleSelection="false" />
 
         <!-- Note date -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
             android:text="@string/nota_datum"
             android:textAppearance="?attr/textAppearanceLabelMedium"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            android:layout_marginBottom="8dp" />
+            android:textColor="?attr/colorOnSurfaceVariant" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnNotaDatum"
@@ -87,20 +86,20 @@
 
         <!-- Note text -->
         <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/nota_teks_wenk"
-            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-            android:layout_marginBottom="16dp">
+            android:layout_marginBottom="16dp"
+            android:hint="@string/nota_teks_wenk">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etNotaTeks"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="textMultiLine|textCapSentences"
-                android:minLines="4"
-                android:maxLines="8"
                 android:gravity="top|start"
+                android:inputType="textMultiLine|textCapSentences"
+                android:maxLines="8"
+                android:minLines="4"
                 android:textColor="?attr/colorOnSurface" />
 
         </com.google.android.material.textfield.TextInputLayout>
@@ -110,35 +109,35 @@
             android:id="@+id/switchVertroulik"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
             android:text="@string/nota_vertroulik"
-            android:textColor="?attr/colorOnSurface"
-            android:layout_marginBottom="12dp" />
+            android:textColor="?attr/colorOnSurface" />
 
         <!-- Also set reminder -->
         <com.google.android.material.checkbox.MaterialCheckBox
             android:id="@+id/checkStelHerinnering"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
             android:text="@string/nota_stel_ook_herinnering"
-            android:textColor="?attr/colorOnSurface"
-            android:layout_marginBottom="20dp" />
+            android:textColor="?attr/colorOnSurface" />
 
         <!-- Action buttons -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
+            android:layout_marginTop="4dp"
             android:gravity="end"
-            android:layout_marginTop="4dp">
+            android:orientation="horizontal">
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnKanselleer"
                 style="@style/Widget.Material3.Button.TextButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
                 android:text="@string/kanselleer"
-                android:textColor="?attr/colorPrimary"
-                android:layout_marginEnd="8dp" />
+                android:textColor="?attr/colorPrimary" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnStoorNota"

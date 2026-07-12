@@ -185,14 +185,15 @@ abstract class WinkerkDatabase : RoomDatabase() {
         // ─── Helper functions ──────────────────────────────────────────────────────
 
         private fun dropAllIndexes(db: SupportSQLiteDatabase, tableName: String) {
-            db.query("SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='$tableName'").use { cursor ->
-                while (cursor.moveToNext()) {
-                    val indexName = cursor.getString(0)
-                    if (indexName != null && !indexName.startsWith("sqlite_")) {
-                        db.execSQL("DROP INDEX IF EXISTS $indexName")
+            db.query("SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='$tableName'")
+                .use { cursor ->
+                    while (cursor.moveToNext()) {
+                        val indexName = cursor.getString(0)
+                        if (indexName != null && !indexName.startsWith("sqlite_")) {
+                            db.execSQL("DROP INDEX IF EXISTS $indexName")
+                        }
                     }
                 }
-            }
         }
 
         private fun recreateTable(

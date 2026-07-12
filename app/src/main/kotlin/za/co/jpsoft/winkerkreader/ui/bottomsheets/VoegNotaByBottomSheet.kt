@@ -68,8 +68,14 @@ class VoegNotaByBottomSheet : BottomSheetDialogFragment() {
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.contentContainer) { v, insets ->
             val navBarHeight = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
-            val originalPadding = resources.getDimensionPixelSize(R.dimen.bottom_sheet_bottom_padding)
-            v.setPadding(v.paddingLeft, v.paddingTop, v.paddingRight, navBarHeight + originalPadding)
+            val originalPadding =
+                resources.getDimensionPixelSize(R.dimen.bottom_sheet_bottom_padding)
+            v.setPadding(
+                v.paddingLeft,
+                v.paddingTop,
+                v.paddingRight,
+                navBarHeight + originalPadding
+            )
             insets
         }
         ViewCompat.requestApplyInsets(binding.contentContainer)
@@ -199,11 +205,11 @@ class VoegNotaByBottomSheet : BottomSheetDialogFragment() {
     }
 
     private fun saveNew(noteText: String) {
-        val memberGuid     = requireArguments().getString(ARG_MEMBER_GUID) ?: return
+        val memberGuid = requireArguments().getString(ARG_MEMBER_GUID) ?: return
         val familyHeadGuid = requireArguments().getString(ARG_FAMILY_HEAD_GUID)
-        val surname        = requireArguments().getString(ARG_SURNAME)
-        val givenName      = requireArguments().getString(ARG_GIVEN_NAME)
-        val displayName    = requireArguments().getString(ARG_DISPLAY_NAME) ?: ""
+        val surname = requireArguments().getString(ARG_SURNAME)
+        val givenName = requireArguments().getString(ARG_GIVEN_NAME)
+        val displayName = requireArguments().getString(ARG_DISPLAY_NAME) ?: ""
         val isConfidential = binding.switchVertroulik.isChecked
         isSaving = true
         binding.saveProgress.visibility = View.VISIBLE
@@ -213,15 +219,15 @@ class VoegNotaByBottomSheet : BottomSheetDialogFragment() {
                 val repo = PastoralNoteRepository(requireContext())
                 val savedNote = withContext(Dispatchers.IO) {
                     repo.save(
-                        memberGuid        = memberGuid,
-                        familyHeadGuid    = familyHeadGuid,
-                        memberSurname     = surname,
-                        memberGivenName   = givenName,
+                        memberGuid = memberGuid,
+                        familyHeadGuid = familyHeadGuid,
+                        memberSurname = surname,
+                        memberGivenName = givenName,
                         memberDisplayName = displayName,
-                        noteDate          = noteDate,
-                        category          = selectedCategory,
-                        noteText          = noteText,
-                        isConfidential    = isConfidential
+                        noteDate = noteDate,
+                        category = selectedCategory,
+                        noteText = noteText,
+                        isConfidential = isConfidential
                     )
                 }
 
@@ -232,12 +238,20 @@ class VoegNotaByBottomSheet : BottomSheetDialogFragment() {
                         .show(parentFragmentManager, StelHerinneringBottomSheet.TAG)
                     if (BuildConfig.DEBUG) Log.d(TAG, "Note saved: ${savedNote.noteId}")
                 } else {
-                    Toast.makeText(requireContext(), getString(R.string.nota_gestoor), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        requireContext(),
+                        getString(R.string.nota_gestoor),
+                        Toast.LENGTH_SHORT
+                    ).show()
                     dismiss()
                 }
             } catch (e: Exception) {
                 if (BuildConfig.DEBUG) Log.e(TAG, "Failed to save note", e)
-                Toast.makeText(requireContext(), getString(R.string.nota_stoor_fout), Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.nota_stoor_fout),
+                    Toast.LENGTH_SHORT
+                ).show()
             } finally {
                 isSaving = false
                 binding.saveProgress.visibility = View.GONE
@@ -259,19 +273,27 @@ class VoegNotaByBottomSheet : BottomSheetDialogFragment() {
                 withContext(Dispatchers.IO) {
                     repo.update(
                         existing.copy(
-                            noteDateUtc    = noteDateUtc,
-                            category       = selectedCategory.name,
-                            noteText       = noteText,
+                            noteDateUtc = noteDateUtc,
+                            category = selectedCategory.name,
+                            noteText = noteText,
                             isConfidential = isConfidential,
-                            updatedAt      = System.currentTimeMillis()
+                            updatedAt = System.currentTimeMillis()
                         )
                     )
                 }
-                Toast.makeText(requireContext(), getString(R.string.nota_gewysig), Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.nota_gewysig),
+                    Toast.LENGTH_SHORT
+                ).show()
                 dismiss()
             } catch (e: Exception) {
                 if (BuildConfig.DEBUG) Log.e(TAG, "Failed to update note", e)
-                Toast.makeText(requireContext(), getString(R.string.nota_stoor_fout), Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.nota_stoor_fout),
+                    Toast.LENGTH_SHORT
+                ).show()
 
             } finally {
                 isSaving = false
@@ -290,27 +312,27 @@ class VoegNotaByBottomSheet : BottomSheetDialogFragment() {
     companion object {
         const val TAG = "VoegNotaByBottomSheet"
 
-        private const val ARG_MEMBER_GUID       = "arg_member_guid"
-        private const val ARG_FAMILY_HEAD_GUID  = "arg_family_head_guid"
-        private const val ARG_DISPLAY_NAME      = "arg_display_name"
-        private const val ARG_SURNAME           = "arg_surname"
-        private const val ARG_GIVEN_NAME        = "arg_given_name"
-        private const val ARG_EXISTING_NOTE_ID  = "arg_existing_note_id"
+        private const val ARG_MEMBER_GUID = "arg_member_guid"
+        private const val ARG_FAMILY_HEAD_GUID = "arg_family_head_guid"
+        private const val ARG_DISPLAY_NAME = "arg_display_name"
+        private const val ARG_SURNAME = "arg_surname"
+        private const val ARG_GIVEN_NAME = "arg_given_name"
+        private const val ARG_EXISTING_NOTE_ID = "arg_existing_note_id"
 
         /** Open in create mode. */
         fun newInstance(
             memberGuid: String,
-            familyHeadGuid: String?  = null,
+            familyHeadGuid: String? = null,
             memberDisplayName: String = "",
-            memberSurname: String?   = null,
+            memberSurname: String? = null,
             memberGivenName: String? = null
         ) = VoegNotaByBottomSheet().apply {
             arguments = Bundle().apply {
-                putString(ARG_MEMBER_GUID,      memberGuid)
+                putString(ARG_MEMBER_GUID, memberGuid)
                 putString(ARG_FAMILY_HEAD_GUID, familyHeadGuid)
-                putString(ARG_DISPLAY_NAME,     memberDisplayName)
-                putString(ARG_SURNAME,          memberSurname)
-                putString(ARG_GIVEN_NAME,       memberGivenName)
+                putString(ARG_DISPLAY_NAME, memberDisplayName)
+                putString(ARG_SURNAME, memberSurname)
+                putString(ARG_GIVEN_NAME, memberGivenName)
             }
         }
 
@@ -321,7 +343,7 @@ class VoegNotaByBottomSheet : BottomSheetDialogFragment() {
         ) = VoegNotaByBottomSheet().apply {
             arguments = Bundle().apply {
                 putString(ARG_EXISTING_NOTE_ID, existingNoteId)
-                putString(ARG_DISPLAY_NAME,     memberDisplayName)
+                putString(ARG_DISPLAY_NAME, memberDisplayName)
             }
         }
     }

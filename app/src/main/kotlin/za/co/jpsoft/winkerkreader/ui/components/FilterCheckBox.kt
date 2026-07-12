@@ -29,29 +29,43 @@ class FilterCheckBox @JvmOverloads constructor(
 
     var title: String
         get() = _title.ifEmpty { DEFAULT_DESCRIPTION }
-        set(value) { _title = value }
+        set(value) {
+            _title = value
+        }
 
     var list: List<String>?
         get() = _list
-        set(value) { _list = value }
+        set(value) {
+            _list = value
+        }
 
     var text1: String
         get() = _text1.ifEmpty { DEFAULT_DESCRIPTION }
-        set(value) { _text1 = value }
+        set(value) {
+            _text1 = value
+        }
 
     var text2: String
         get() = _text2.ifEmpty { DEFAULT_DESCRIPTION }
-        set(value) { _text2 = value }
+        set(value) {
+            _text2 = value
+        }
 
     var text3: String
         get() = _text3.ifEmpty { DEFAULT_DESCRIPTION }
-        set(value) { _text3 = value }
+        set(value) {
+            _text3 = value
+        }
 
     var count: Int
         get() = _count
-        set(value) { _count = value }
+        set(value) {
+            _count = value
+        }
 
     var checked: Boolean
         get() = _checked
-        set(value) { _checked = value }
+        set(value) {
+            _checked = value
+        }
 }

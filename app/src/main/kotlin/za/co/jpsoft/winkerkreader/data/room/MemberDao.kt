@@ -15,12 +15,14 @@ interface MemberDao {
     @RawQuery(observedEntities = [MemberEntity::class])
     fun queryRaw(query: SupportSQLiteQuery): Cursor
 
-    @Query("""
+    @Query(
+        """
         SELECT * FROM Members
         WHERE FamilyHeadGUID = :familyHeadGuid
           AND Rekordstatus = :recordStatus
         ORDER BY Gesinsrol ASC
-    """)
+    """
+    )
     fun getFamilyMembers(familyHeadGuid: String, recordStatus: String): Cursor
 
     @Query("SELECT * FROM Members WHERE _id = :id")

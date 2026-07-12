@@ -54,32 +54,32 @@ class BedieningSeksieController(
     }
 
     // ── Repositories ───────────────────────────────────────────────────────
-    private val noteRepo      by lazy { PastoralNoteRepository(activity) }
-    private val reminderRepo  by lazy { PastoralReminderRepository.create(activity) }
+    private val noteRepo by lazy { PastoralNoteRepository(activity) }
+    private val reminderRepo by lazy { PastoralReminderRepository.create(activity) }
 
     // ── Adapters ───────────────────────────────────────────────────────────
     private val noteAdapter = PastoralNoteAdapter(onDelete = ::confirmDeleteNote)
 
     // ── State ──────────────────────────────────────────────────────────────
-    private var notasExpanded   = false
-    private var allNotes        = emptyList<PastoralNoteEntity>()
-    private var allReminders    = emptyList<FollowUpReminderEntity>()
+    private var notasExpanded = false
+    private var allNotes = emptyList<PastoralNoteEntity>()
+    private var allReminders = emptyList<FollowUpReminderEntity>()
 
     // ── View refs ──────────────────────────────────────────────────────────
-    private val rvHerinneringe    get() = rootView.findViewById<RecyclerView>(R.id.rvHerinneringe)
+    private val rvHerinneringe get() = rootView.findViewById<RecyclerView>(R.id.rvHerinneringe)
     private val btnNuweHerinnering get() = rootView.findViewById<MaterialButton>(R.id.btnNuweHerinnering)
     private val btnWysAlHerinneringe get() = rootView.findViewById<MaterialButton>(R.id.btnWysAlHerinneringe)
     private val tvGeenHerinneringe get() = rootView.findViewById<TextView>(R.id.tvGeenHerinneringe)
 
-    private val layoutNotasHeader  get() = rootView.findViewById<LinearLayout>(R.id.layoutNotasHeader)
-    private val layoutNotasInhoud  get() = rootView.findViewById<LinearLayout>(R.id.layoutNotasInhoud)
+    private val layoutNotasHeader get() = rootView.findViewById<LinearLayout>(R.id.layoutNotasHeader)
+    private val layoutNotasInhoud get() = rootView.findViewById<LinearLayout>(R.id.layoutNotasInhoud)
     private val tvNotaSeksieHeader get() = rootView.findViewById<TextView>(R.id.tvNotaSeksieHeader)
-    private val tvNotaCount        get() = rootView.findViewById<TextView>(R.id.tvNotaCount)
-    private val btnNuweNota        get() = rootView.findViewById<MaterialButton>(R.id.btnNuweNota)
-    private val ivNotasChevron     get() = rootView.findViewById<ImageView>(R.id.ivNotasChevron)
-    private val rvNotas            get() = rootView.findViewById<RecyclerView>(R.id.rvNotas)
-    private val btnWysAlNotas      get() = rootView.findViewById<MaterialButton>(R.id.btnWysAlNotas)
-    private val tvGeenNotas        get() = rootView.findViewById<TextView>(R.id.tvGeenNotas)
+    private val tvNotaCount get() = rootView.findViewById<TextView>(R.id.tvNotaCount)
+    private val btnNuweNota get() = rootView.findViewById<MaterialButton>(R.id.btnNuweNota)
+    private val ivNotasChevron get() = rootView.findViewById<ImageView>(R.id.ivNotasChevron)
+    private val rvNotas get() = rootView.findViewById<RecyclerView>(R.id.rvNotas)
+    private val btnWysAlNotas get() = rootView.findViewById<MaterialButton>(R.id.btnWysAlNotas)
+    private val tvGeenNotas get() = rootView.findViewById<TextView>(R.id.tvGeenNotas)
 
     // ── Entry point ────────────────────────────────────────────────────────
 
@@ -120,11 +120,11 @@ class BedieningSeksieController(
         // Nuwe nota
         btnNuweNota.setOnClickListener {
             VoegNotaByBottomSheet.newInstance(
-                memberGuid        = memberGuid,
-                familyHeadGuid    = familyHeadGuid,
+                memberGuid = memberGuid,
+                familyHeadGuid = familyHeadGuid,
                 memberDisplayName = displayName,
-                memberSurname     = memberSurname,
-                memberGivenName   = memberGivenName
+                memberSurname = memberSurname,
+                memberGivenName = memberGivenName
             ).show(activity.supportFragmentManager, VoegNotaByBottomSheet.TAG)
         }
 
@@ -175,14 +175,14 @@ class BedieningSeksieController(
         showAll: Boolean
     ) {
         if (reminders.isEmpty()) {
-            rvHerinneringe.visibility      = View.GONE
+            rvHerinneringe.visibility = View.GONE
             btnWysAlHerinneringe.visibility = View.GONE
-            tvGeenHerinneringe.visibility  = View.VISIBLE
+            tvGeenHerinneringe.visibility = View.VISIBLE
             return
         }
 
         tvGeenHerinneringe.visibility = View.GONE
-        rvHerinneringe.visibility     = View.VISIBLE
+        rvHerinneringe.visibility = View.VISIBLE
 
         val visible = if (showAll) reminders else reminders.take(MAX_VISIBLE)
         btnWysAlHerinneringe.visibility =
@@ -198,14 +198,14 @@ class BedieningSeksieController(
 
     private fun renderNotes(notes: List<PastoralNoteEntity>, showAll: Boolean) {
         if (notes.isEmpty()) {
-            rvNotas.visibility       = View.GONE
+            rvNotas.visibility = View.GONE
             btnWysAlNotas.visibility = View.GONE
-            tvGeenNotas.visibility   = View.VISIBLE
+            tvGeenNotas.visibility = View.VISIBLE
             return
         }
 
         tvGeenNotas.visibility = View.GONE
-        rvNotas.visibility     = View.VISIBLE
+        rvNotas.visibility = View.VISIBLE
 
         val visible = if (showAll) notes else notes.take(MAX_VISIBLE)
         noteAdapter.submitNotes(visible)  // ← gebruik submitNotes

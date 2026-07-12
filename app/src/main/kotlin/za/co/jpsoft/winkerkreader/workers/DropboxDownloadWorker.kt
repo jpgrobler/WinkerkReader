@@ -22,7 +22,10 @@ class DropboxDownloadWorker(
             // Your existing Dropbox download logic here
             // This should call the same functionality that AlarmReceiver used for "DropBoxDownLoad"
             PastoralDatabaseBackup.backupNow(applicationContext)
-            if (BuildConfig.DEBUG) Log.d(WORK_NAME, "Pastoral DB backed up before congregation reload")
+            if (BuildConfig.DEBUG) Log.d(
+                WORK_NAME,
+                "Pastoral DB backed up before congregation reload"
+            )
             performDropboxDownload()
             Result.success()
         } catch (e: Exception) {

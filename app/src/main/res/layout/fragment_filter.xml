@@ -3,10 +3,10 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
     android:background="?attr/colorSurface"
-    android:padding="16dp"
-    android:maxHeight="800dp">
+    android:maxHeight="800dp"
+    android:orientation="vertical"
+    android:padding="16dp">
 
     <!-- Drag Handle -->
     <View
@@ -14,16 +14,16 @@
         android:layout_height="4dp"
         android:layout_gravity="center_horizontal"
         android:layout_marginBottom="16dp"
-        android:background="?attr/colorPrimary"
-        android:alpha="0.3" />
+        android:alpha="0.3"
+        android:background="?attr/colorPrimary" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
         android:text="Filter Lidmate"
         android:textAppearance="?attr/textAppearanceTitleLarge"
-        android:textColor="?attr/colorOnSurface"
-        android:layout_marginBottom="16dp" />
+        android:textColor="?attr/colorOnSurface" />
 
     <ScrollView
         android:layout_width="match_parent"
@@ -43,26 +43,26 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
                 android:text="Status"
                 android:textAppearance="?attr/textAppearanceLabelLarge"
-                android:textColor="?attr/colorOnSurface"
-                android:layout_marginBottom="8dp" />
+                android:textColor="?attr/colorOnSurface" />
 
             <com.google.android.material.chip.ChipGroup
                 android:id="@+id/filter_status_chip_group"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                app:singleSelection="true"
-                app:selectionRequired="true">
+                app:selectionRequired="true"
+                app:singleSelection="true">
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/filter_status_aktief"
                     style="@style/Widget.WinkerkReader.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Aktief"
-                    android:checked="true" />
+                    android:checked="true"
+                    android:text="Aktief" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/filter_status_onaktief"
@@ -93,57 +93,57 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="8dp"
                 android:text="Kenmerke"
                 android:textAppearance="?attr/textAppearanceLabelLarge"
-                android:textColor="?attr/colorOnSurface"
-                android:layout_marginTop="12dp"
-                android:layout_marginBottom="8dp" />
+                android:textColor="?attr/colorOnSurface" />
 
             <GridLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:columnCount="2"
-                android:layout_marginBottom="8dp">
+                android:layout_marginBottom="8dp"
+                android:columnCount="2">
 
                 <com.google.android.material.materialswitch.MaterialSwitch
                     android:id="@+id/filter_selfoon"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Selfoon"
-                    android:textColor="?attr/colorOnSurface"
                     android:minHeight="48dp"
                     android:paddingStart="8dp"
-                    android:paddingEnd="8dp" />
+                    android:paddingEnd="8dp"
+                    android:text="Selfoon"
+                    android:textColor="?attr/colorOnSurface" />
 
                 <com.google.android.material.materialswitch.MaterialSwitch
                     android:id="@+id/filter_landlyn"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Landlyn"
-                    android:textColor="?attr/colorOnSurface"
                     android:minHeight="48dp"
                     android:paddingStart="8dp"
-                    android:paddingEnd="8dp" />
+                    android:paddingEnd="8dp"
+                    android:text="Landlyn"
+                    android:textColor="?attr/colorOnSurface" />
 
                 <com.google.android.material.materialswitch.MaterialSwitch
                     android:id="@+id/filter_epos"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="E-pos"
-                    android:textColor="?attr/colorOnSurface"
                     android:minHeight="48dp"
                     android:paddingStart="8dp"
-                    android:paddingEnd="8dp" />
+                    android:paddingEnd="8dp"
+                    android:text="E-pos"
+                    android:textColor="?attr/colorOnSurface" />
 
                 <com.google.android.material.materialswitch.MaterialSwitch
                     android:id="@+id/filter_gesinshoof"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Gesinshoof"
-                    android:textColor="?attr/colorOnSurface"
                     android:minHeight="48dp"
                     android:paddingStart="8dp"
-                    android:paddingEnd="8dp" />
+                    android:paddingEnd="8dp"
+                    android:text="Gesinshoof"
+                    android:textColor="?attr/colorOnSurface" />
 
             </GridLayout>
 
@@ -162,19 +162,19 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
+                android:layout_marginHorizontal="4dp"
                 android:layout_marginTop="8dp"
                 android:background="?attr/colorSurfaceVariant"
-                android:padding="8dp"
-                android:layout_marginHorizontal="4dp">
+                android:orientation="vertical"
+                android:padding="8dp">
 
                 <com.google.android.material.materialswitch.MaterialSwitch
                     android:id="@+id/filter_geslag_check"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:minHeight="48dp"
                     android:text="@string/geslag_filter_aktief"
-                    android:textColor="?attr/colorOnSurface"
-                    android:minHeight="48dp" />
+                    android:textColor="?attr/colorOnSurface" />
 
                 <com.google.android.material.textfield.TextInputLayout
                     style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -193,8 +193,8 @@
                         android:layout_height="wrap_content"
                         android:enabled="false"
                         android:inputType="none"
-                        android:text="manlik"
                         android:paddingStart="8dp"
+                        android:text="manlik"
                         android:textColor="?attr/colorOnSurface" />
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -204,19 +204,19 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
+                android:layout_marginHorizontal="4dp"
                 android:layout_marginTop="8dp"
                 android:background="?attr/colorSurfaceVariant"
-                android:padding="8dp"
-                android:layout_marginHorizontal="4dp">
+                android:orientation="vertical"
+                android:padding="8dp">
 
                 <com.google.android.material.materialswitch.MaterialSwitch
                     android:id="@+id/filter_huwelikstatus_check"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:minHeight="48dp"
                     android:text="@string/huwelikstatus_filter_aktief"
-                    android:textColor="?attr/colorOnSurface"
-                    android:minHeight="48dp" />
+                    android:textColor="?attr/colorOnSurface" />
 
                 <com.google.android.material.textfield.TextInputLayout
                     style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -235,8 +235,8 @@
                         android:layout_height="wrap_content"
                         android:enabled="false"
                         android:inputType="none"
-                        android:text="@string/getroud"
                         android:paddingStart="8dp"
+                        android:text="@string/getroud"
                         android:textColor="?attr/colorOnSurface" />
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -246,19 +246,19 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
+                android:layout_marginHorizontal="4dp"
                 android:layout_marginTop="8dp"
                 android:background="?attr/colorSurfaceVariant"
-                android:padding="8dp"
-                android:layout_marginHorizontal="4dp">
+                android:orientation="vertical"
+                android:padding="8dp">
 
                 <com.google.android.material.materialswitch.MaterialSwitch
                     android:id="@+id/filter_lidmaatskap_check"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:minHeight="48dp"
                     android:text="@string/lidmaatskap_filter_aktief"
-                    android:textColor="?attr/colorOnSurface"
-                    android:minHeight="48dp" />
+                    android:textColor="?attr/colorOnSurface" />
 
                 <com.google.android.material.textfield.TextInputLayout
                     style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -277,8 +277,8 @@
                         android:layout_height="wrap_content"
                         android:enabled="false"
                         android:inputType="none"
-                        android:text="@string/belydend"
                         android:paddingStart="8dp"
+                        android:text="@string/belydend"
                         android:textColor="?attr/colorOnSurface" />
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -299,19 +299,19 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
+                android:layout_marginHorizontal="4dp"
                 android:layout_marginTop="8dp"
                 android:background="?attr/colorSurfaceVariant"
-                android:padding="8dp"
-                android:layout_marginHorizontal="4dp">
+                android:orientation="vertical"
+                android:padding="8dp">
 
                 <com.google.android.material.materialswitch.MaterialSwitch
                     android:id="@+id/filter_van_check"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:minHeight="48dp"
                     android:text="@string/van_filter_aktief"
-                    android:textColor="?attr/colorOnSurface"
-                    android:minHeight="48dp" />
+                    android:textColor="?attr/colorOnSurface" />
 
                 <com.google.android.material.textfield.TextInputLayout
                     style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -330,8 +330,8 @@
                         android:layout_height="wrap_content"
                         android:enabled="false"
                         android:inputType="none"
-                        android:text="@string/gelyk_aan"
                         android:paddingStart="8dp"
+                        android:text="@string/gelyk_aan"
                         android:textColor="?attr/colorOnSurface" />
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -359,19 +359,19 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
+                android:layout_marginHorizontal="4dp"
                 android:layout_marginTop="8dp"
                 android:background="?attr/colorSurfaceVariant"
-                android:padding="8dp"
-                android:layout_marginHorizontal="4dp">
+                android:orientation="vertical"
+                android:padding="8dp">
 
                 <com.google.android.material.materialswitch.MaterialSwitch
                     android:id="@+id/filter_noemnaam_check"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:minHeight="48dp"
                     android:text="@string/noemnaam_filter_aktief"
-                    android:textColor="?attr/colorOnSurface"
-                    android:minHeight="48dp" />
+                    android:textColor="?attr/colorOnSurface" />
 
                 <com.google.android.material.textfield.TextInputLayout
                     style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -390,8 +390,8 @@
                         android:layout_height="wrap_content"
                         android:enabled="false"
                         android:inputType="none"
-                        android:text="@string/gelyk_aan"
                         android:paddingStart="8dp"
+                        android:text="@string/gelyk_aan"
                         android:textColor="?attr/colorOnSurface" />
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -419,19 +419,19 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
+                android:layout_marginHorizontal="4dp"
                 android:layout_marginTop="8dp"
                 android:background="?attr/colorSurfaceVariant"
-                android:padding="8dp"
-                android:layout_marginHorizontal="4dp">
+                android:orientation="vertical"
+                android:padding="8dp">
 
                 <com.google.android.material.materialswitch.MaterialSwitch
                     android:id="@+id/filter_nooiensvan_check"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:minHeight="48dp"
                     android:text="@string/nooiensvan_filter_aktief"
-                    android:textColor="?attr/colorOnSurface"
-                    android:minHeight="48dp" />
+                    android:textColor="?attr/colorOnSurface" />
 
                 <com.google.android.material.textfield.TextInputLayout
                     style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -450,8 +450,8 @@
                         android:layout_height="wrap_content"
                         android:enabled="false"
                         android:inputType="none"
-                        android:text="@string/gelyk_aan"
                         android:paddingStart="8dp"
+                        android:text="@string/gelyk_aan"
                         android:textColor="?attr/colorOnSurface" />
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -479,19 +479,19 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
+                android:layout_marginHorizontal="4dp"
                 android:layout_marginTop="8dp"
                 android:background="?attr/colorSurfaceVariant"
-                android:padding="8dp"
-                android:layout_marginHorizontal="4dp">
+                android:orientation="vertical"
+                android:padding="8dp">
 
                 <com.google.android.material.materialswitch.MaterialSwitch
                     android:id="@+id/filter_wyk_check"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:minHeight="48dp"
                     android:text="@string/wyk_filter_aktief"
-                    android:textColor="?attr/colorOnSurface"
-                    android:minHeight="48dp" />
+                    android:textColor="?attr/colorOnSurface" />
 
                 <com.google.android.material.textfield.TextInputLayout
                     style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -510,8 +510,8 @@
                         android:layout_height="wrap_content"
                         android:enabled="false"
                         android:inputType="none"
-                        android:text="@string/gelyk_aan"
                         android:paddingStart="8dp"
+                        android:text="@string/gelyk_aan"
                         android:textColor="?attr/colorOnSurface" />
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -548,19 +548,19 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
+                android:layout_marginHorizontal="4dp"
                 android:layout_marginTop="8dp"
                 android:background="?attr/colorSurfaceVariant"
-                android:padding="8dp"
-                android:layout_marginHorizontal="4dp">
+                android:orientation="vertical"
+                android:padding="8dp">
 
                 <com.google.android.material.materialswitch.MaterialSwitch
                     android:id="@+id/filter_ouderdom_check"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:minHeight="48dp"
                     android:text="@string/ouderdom_filter_aktief"
-                    android:textColor="?attr/colorOnSurface"
-                    android:minHeight="48dp" />
+                    android:textColor="?attr/colorOnSurface" />
 
                 <com.google.android.material.textfield.TextInputLayout
                     style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -579,24 +579,24 @@
                         android:layout_height="wrap_content"
                         android:enabled="false"
                         android:inputType="none"
-                        android:text="@string/gelyk_aan"
                         android:paddingStart="8dp"
+                        android:text="@string/gelyk_aan"
                         android:textColor="?attr/colorOnSurface" />
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
                     android:layout_marginStart="32dp"
-                    android:layout_marginTop="8dp">
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal">
 
                     <com.google.android.material.textfield.TextInputLayout
                         style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                         android:layout_width="0dp"
-                        android:layout_weight="1"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="4dp"
+                        android:layout_weight="1"
                         android:hint="Van"
                         app:boxBackgroundMode="outline"
                         app:boxStrokeColor="?attr/colorPrimary">
@@ -614,16 +614,16 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
+                        android:layout_marginHorizontal="4dp"
                         android:text="@string/tot"
-                        android:textColor="?attr/colorOnSurface"
-                        android:layout_marginHorizontal="4dp" />
+                        android:textColor="?attr/colorOnSurface" />
 
                     <com.google.android.material.textfield.TextInputLayout
                         style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                         android:layout_width="0dp"
-                        android:layout_weight="1"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
+                        android:layout_weight="1"
                         android:hint="@string/tot"
                         app:boxBackgroundMode="outline"
                         app:boxStrokeColor="?attr/colorPrimary">
@@ -648,41 +648,41 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
         android:layout_marginTop="16dp"
-        android:paddingTop="8dp"
         android:background="?attr/colorSurface"
-        android:gravity="center">
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:paddingTop="8dp">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnReset"
             style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="0dp"
-            android:layout_weight="1"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:text="@string/herstel"
-            android:textColor="?attr/colorPrimary"
-            android:textAllCaps="false" />
+            android:textAllCaps="false"
+            android:textColor="?attr/colorPrimary" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnCancel"
             style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="0dp"
-            android:layout_weight="1"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:text="@string/kanselleer"
-            android:textColor="?attr/colorPrimary"
-            android:textAllCaps="false" />
+            android:textAllCaps="false"
+            android:textColor="?attr/colorPrimary" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnApply"
             style="@style/Widget.Material3.Button"
             android:layout_width="0dp"
-            android:layout_weight="2"
             android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:backgroundTint="?attr/colorPrimary"
             android:text="@string/pas_filter_toe"
             android:textAllCaps="false"
-            android:backgroundTint="?attr/colorPrimary"
             android:textColor="?attr/colorOnPrimary" />
 
     </LinearLayout>

@@ -83,7 +83,11 @@ class VerjaarSmsActivity : AppCompatActivity() {
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (!isGranted) {
-            Snackbar.make(binding.root, "SMS permission required to send greetings", Snackbar.LENGTH_LONG).show()
+            Snackbar.make(
+                binding.root,
+                "SMS permission required to send greetings",
+                Snackbar.LENGTH_LONG
+            ).show()
         }
     }
 
@@ -148,12 +152,14 @@ class VerjaarSmsActivity : AppCompatActivity() {
 
     private fun requestPermissions() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS)
-            != PackageManager.PERMISSION_GRANTED) {
+            != PackageManager.PERMISSION_GRANTED
+        ) {
             smsPermissionLauncher.launch(Manifest.permission.SEND_SMS)
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
-            != PackageManager.PERMISSION_GRANTED) {
+            != PackageManager.PERMISSION_GRANTED
+        ) {
             notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
@@ -291,29 +297,40 @@ class VerjaarSmsActivity : AppCompatActivity() {
         when (checkedId) {
             R.id.Keuse_Verjaar -> {
                 keuse = "Verjaar"
-                setMessageForEventType(prefs, "VerjaarBoodskap",
-                    "<<<naam>>>\nBaie geluk met jou verjaarsdag!\nMag die Here se genade jou daagliks vervul!\nGroete Ds ")
+                setMessageForEventType(
+                    prefs, "VerjaarBoodskap",
+                    "<<<naam>>>\nBaie geluk met jou verjaarsdag!\nMag die Here se genade jou daagliks vervul!\nGroete Ds "
+                )
                 binding.verjaarSms.setImageResource(R.drawable.bdaysms)
                 binding.verjaarSms.contentDescription = getString(R.string.verjaar_send_birthday)
             }
+
             R.id.Keuse_Doop -> {
                 keuse = "Doop"
-                setMessageForEventType(prefs, "DoopBoodskap",
-                    "<<<naam>>>\nBaie geluk met jou doopherdenking!\nMag die Here se genade jou daagliks vervul!\nGroete Ds ")
+                setMessageForEventType(
+                    prefs, "DoopBoodskap",
+                    "<<<naam>>>\nBaie geluk met jou doopherdenking!\nMag die Here se genade jou daagliks vervul!\nGroete Ds "
+                )
                 binding.verjaarSms.setImageResource(R.drawable.doopsms)
                 binding.verjaarSms.contentDescription = getString(R.string.verjaar_send_baptism)
             }
+
             R.id.Keuse_Huwelik -> {
                 keuse = "Huwelik"
-                setMessageForEventType(prefs, "HuwelikBoodskap",
-                    "<<<naam>>>\nBaie geluk met jou huweliksherdenking!\nMag die Here se genade jou daagliks vervul!\nGroete Ds ")
+                setMessageForEventType(
+                    prefs, "HuwelikBoodskap",
+                    "<<<naam>>>\nBaie geluk met jou huweliksherdenking!\nMag die Here se genade jou daagliks vervul!\nGroete Ds "
+                )
                 binding.verjaarSms.setImageResource(R.drawable.huweliksms)
                 binding.verjaarSms.contentDescription = getString(R.string.verjaar_send_wedding)
             }
+
             R.id.Keuse_Belydenis -> {
                 keuse = "Bely"
-                setMessageForEventType(prefs, "BelyBoodskap",
-                    "<<<naam>>>\nBaie geluk met jou herdenking van jou belydenis van geloof!\nMag die Here se genade jou daagliks vervul!\nGroete Ds ")
+                setMessageForEventType(
+                    prefs, "BelyBoodskap",
+                    "<<<naam>>>\nBaie geluk met jou herdenking van jou belydenis van geloof!\nMag die Here se genade jou daagliks vervul!\nGroete Ds "
+                )
                 binding.verjaarSms.setImageResource(R.drawable.bely)
                 binding.verjaarSms.contentDescription = getString(R.string.verjaar_send_confession)
             }
@@ -436,16 +453,20 @@ class VerjaarSmsActivity : AppCompatActivity() {
             calendar.timeInMillis
         }
         val alarmIntent = Intent(this, AlarmReceiver::class.java).apply { action = "VerjaarSMS" }
-        val pendingIntent = PendingIntent.getBroadcast(this, 0, alarmIntent,
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        val pendingIntent = PendingIntent.getBroadcast(
+            this, 0, alarmIntent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
         (getSystemService(ALARM_SERVICE) as AlarmManager).setRepeating(
-            AlarmManager.RTC_WAKEUP, triggerTime, AlarmManager.INTERVAL_DAY, pendingIntent)
+            AlarmManager.RTC_WAKEUP, triggerTime, AlarmManager.INTERVAL_DAY, pendingIntent
+        )
     }
 
     private fun setupButtons() {
         binding.opdateerBoodskap.setOnClickListener {
             saveCurrentMessage()
-            Snackbar.make(binding.root, R.string.verjaar_message_updated, Snackbar.LENGTH_SHORT).show()
+            Snackbar.make(binding.root, R.string.verjaar_message_updated, Snackbar.LENGTH_SHORT)
+                .show()
         }
     }
 
@@ -477,7 +498,11 @@ class VerjaarSmsActivity : AppCompatActivity() {
         saveCurrentMessage()
         val messageTemplate = binding.boodskap.text.toString()
         val smsManager = getSystemService(SmsManager::class.java) ?: run {
-            Snackbar.make(binding.root, R.string.verjaar_sms_manager_unavailable, Snackbar.LENGTH_SHORT).show()
+            Snackbar.make(
+                binding.root,
+                R.string.verjaar_sms_manager_unavailable,
+                Snackbar.LENGTH_SHORT
+            ).show()
             return
         }
 
@@ -574,20 +599,23 @@ class VerjaarSmsActivity : AppCompatActivity() {
         val landline = member.landline
         val email = member.email
 
-        popup.menu.findItem(R.id.kyk_lidmaat_detail).title = getString(R.string.verjaar_detail, name, surname)
+        popup.menu.findItem(R.id.kyk_lidmaat_detail).title =
+            getString(R.string.verjaar_detail, name, surname)
         popup.menu.findItem(R.id.submenu_bel).title = getString(R.string.verjaar_call, name)
         popup.menu.findItem(R.id.submenu_teks).title = getString(R.string.verjaar_text, name)
         popup.menu.findItem(R.id.submenu_ander).title = name
 
         if (phone.isNotEmpty()) {
-            popup.menu.findItem(R.id.bel_selfoon).title = getString(R.string.verjaar_call_phone, phone)
+            popup.menu.findItem(R.id.bel_selfoon).title =
+                getString(R.string.verjaar_call_phone, phone)
             popup.menu.findItem(R.id.stuur_sms).title = getString(R.string.verjaar_sms_phone, phone)
         } else {
             popup.menu.findItem(R.id.submenu_bel).subMenu?.removeItem(R.id.bel_selfoon)
             popup.menu.findItem(R.id.submenu_teks).subMenu?.removeItem(R.id.stuur_sms)
         }
         if (landline.isNotEmpty()) {
-            popup.menu.findItem(R.id.bel_landlyn).title = getString(R.string.verjaar_call_landline, landline)
+            popup.menu.findItem(R.id.bel_landlyn).title =
+                getString(R.string.verjaar_call_landline, landline)
         } else {
             popup.menu.findItem(R.id.submenu_bel).subMenu?.removeItem(R.id.bel_landlyn)
         }
@@ -605,13 +633,18 @@ class VerjaarSmsActivity : AppCompatActivity() {
                 R.id.stuur_whatsapp, R.id.stuur_whatsapp2, R.id.stuur_whatsapp3 -> {
                     val phone = fixphonenumber(member.cellphone)
                     if (phone.isNullOrEmpty()) {
-                        Snackbar.make(binding.root, R.string.verjaar_no_phone, Snackbar.LENGTH_SHORT).show()
+                        Snackbar.make(
+                            binding.root,
+                            R.string.verjaar_no_phone,
+                            Snackbar.LENGTH_SHORT
+                        ).show()
                         return@setOnMenuItemClickListener false
                     }
                     val msg = MessageComposer.personalize(binding.boodskap.text.toString(), member)
                     sendWhatsApp(phone, item.itemId, msg)
                     true
                 }
+
                 else -> MemberActionHandler(this, member, memberViewModel).handleAction(item.itemId)
             }
         }
@@ -631,7 +664,11 @@ class VerjaarSmsActivity : AppCompatActivity() {
                 else -> false
             }
         } catch (_: Exception) {
-            Snackbar.make(binding.root, R.string.verjaar_whatsapp_not_installed, Snackbar.LENGTH_SHORT).show()
+            Snackbar.make(
+                binding.root,
+                R.string.verjaar_whatsapp_not_installed,
+                Snackbar.LENGTH_SHORT
+            ).show()
             false
         }
     }

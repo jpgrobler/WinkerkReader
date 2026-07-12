@@ -61,7 +61,9 @@ class MemberPhotoController(
      */
     var pendingImageUri: Uri?
         get() = mImageUri
-        set(value) { mImageUri = value }
+        set(value) {
+            mImageUri = value
+        }
 
     private val photoPickerLauncher =
         activity.registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
@@ -75,8 +77,12 @@ class MemberPhotoController(
                 processSelectedImage(uri)
             } else {
                 if (uri == null) {
-                    if (BuildConfig.DEBUG) Log.e(TAG, "Camera returned but image URI is null (activity state lost)")
-                    Toast.makeText(activity, "Camera error: lost image URI", Toast.LENGTH_SHORT).show()
+                    if (BuildConfig.DEBUG) Log.e(
+                        TAG,
+                        "Camera returned but image URI is null (activity state lost)"
+                    )
+                    Toast.makeText(activity, "Camera error: lost image URI", Toast.LENGTH_SHORT)
+                        .show()
                 }
             }
             // Clear the temporary URI to avoid re-use
@@ -96,10 +102,12 @@ class MemberPhotoController(
                     kamera()
                     true
                 }
+
                 R.id.gallery_foto -> {
                     openImageChooser()
                     true
                 }
+
                 else -> false
             }
         }
@@ -229,7 +237,8 @@ class MemberPhotoController(
         try {
             val photo = createTemporaryFile("picture", ".jpg")
             photo.delete()
-            val imageUri = FileProvider.getUriForFile(activity, "${activity.packageName}.fileprovider", photo)
+            val imageUri =
+                FileProvider.getUriForFile(activity, "${activity.packageName}.fileprovider", photo)
             mImageUri = imageUri
             takePictureLauncher.launch(imageUri)
         } catch (e: Exception) {

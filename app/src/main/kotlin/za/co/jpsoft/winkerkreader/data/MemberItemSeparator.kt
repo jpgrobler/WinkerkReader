@@ -42,24 +42,33 @@ object MemberItemSeparator {
                 if (prev.familyHead != item.familyHead)
                     showSep2 = true
             }
+
             "GESINNE" -> {
                 if (prev.familyHead != item.familyHead) showSep = true
             }
+
             "VAN" -> {
                 if (prev.surname.isNotEmpty() && item.surname.isNotEmpty() &&
-                    prev.surname[0] != item.surname[0]) showSep = true
+                    prev.surname[0] != item.surname[0]
+                ) showSep = true
             }
+
             "ADRES" -> {
                 if (prev.address != item.address) showSep = true
             }
+
             "VERJAAR" -> {
                 if (prev.birthday.length >= 5 && item.birthday.length >= 5 &&
-                    prev.birthday.substring(3, 5) != item.birthday.substring(3, 5)) showSep = true
+                    prev.birthday.substring(3, 5) != item.birthday.substring(3, 5)
+                ) showSep = true
             }
+
             "HUWELIK" -> {
                 if (prev.weddingDate.length >= 5 && item.weddingDate.length >= 5 &&
-                    prev.weddingDate.substring(3, 5) != item.weddingDate.substring(3, 5)) showSep = true
+                    prev.weddingDate.substring(3, 5) != item.weddingDate.substring(3, 5)
+                ) showSep = true
             }
+
             "OUDERDOM" -> {
                 if (prev.age != item.age) showSep = true
             }
@@ -81,20 +90,34 @@ object MemberItemSeparator {
                 val label = if (showSep) "${item.ward}\n$addr" else addr
                 Pair(label, "Wyk: ${item.ward}")
             }
+
             "VAN" -> Pair(
                 if (item.surname.isNotEmpty()) item.surname.substring(0, 1) else "",
                 ""
             )
+
             "GESINNE" -> Pair(cleanAddress(item.address), "Wyk: ${item.ward}")
             "ADRES" -> Pair(cleanAddress(item.address), "Wyk: ${item.ward}")
             "VERJAAR" -> Pair(
-                if (item.birthday.length >= 5) getMonthFullName(item.birthday.substring(3, 5)) else "",
+                if (item.birthday.length >= 5) getMonthFullName(
+                    item.birthday.substring(
+                        3,
+                        5
+                    )
+                ) else "",
                 ""
             )
+
             "HUWELIK" -> Pair(
-                if (item.weddingDate.length >= 5) getMonthFullName(item.weddingDate.substring(3, 5)) else "",
+                if (item.weddingDate.length >= 5) getMonthFullName(
+                    item.weddingDate.substring(
+                        3,
+                        5
+                    )
+                ) else "",
                 ""
             )
+
             "OUDERDOM" -> Pair("${item.age} jaar", "")
             else -> Pair("", "")
         }

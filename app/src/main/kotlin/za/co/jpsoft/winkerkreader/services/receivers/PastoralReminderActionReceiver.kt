@@ -31,18 +31,30 @@ class PastoralReminderActionReceiver : BroadcastReceiver() {
                 when (intent.action) {
                     ACTION_COMPLETE -> {
                         repository.completeReminder(reminderId)
-                        if (BuildConfig.DEBUG) Log.d(TAG, "Reminder $reminderId marked complete via notification")
+                        if (BuildConfig.DEBUG) Log.d(
+                            TAG,
+                            "Reminder $reminderId marked complete via notification"
+                        )
                     }
+
                     ACTION_SNOOZE_1_DAY -> {
                         val until = LocalDateTime.now().plusDays(1)
                             .withHour(8).withMinute(0).withSecond(0).withNano(0)
                         repository.snoozeReminder(reminderId, until)
-                        if (BuildConfig.DEBUG) Log.d(TAG, "Reminder $reminderId snoozed to $until via notification")
+                        if (BuildConfig.DEBUG) Log.d(
+                            TAG,
+                            "Reminder $reminderId snoozed to $until via notification"
+                        )
                     }
+
                     else -> Log.w(TAG, "Unknown action: ${intent.action}")
                 }
             } catch (e: Exception) {
-                if (BuildConfig.DEBUG) Log.e(TAG, "Error handling reminder action for $reminderId", e)
+                if (BuildConfig.DEBUG) Log.e(
+                    TAG,
+                    "Error handling reminder action for $reminderId",
+                    e
+                )
             } finally {
                 // Always cancel the notification and release goAsync
                 if (notifId != -1) {
@@ -56,10 +68,10 @@ class PastoralReminderActionReceiver : BroadcastReceiver() {
     companion object {
         private const val TAG = "PastoralActionReceiver"
 
-        const val ACTION_COMPLETE      = "za.co.jpsoft.winkerkreader.ACTION_PASTORAL_COMPLETE"
-        const val ACTION_SNOOZE_1_DAY  = "za.co.jpsoft.winkerkreader.ACTION_PASTORAL_SNOOZE"
+        const val ACTION_COMPLETE = "za.co.jpsoft.winkerkreader.ACTION_PASTORAL_COMPLETE"
+        const val ACTION_SNOOZE_1_DAY = "za.co.jpsoft.winkerkreader.ACTION_PASTORAL_SNOOZE"
 
         const val EXTRA_REMINDER_ID = "extra_reminder_id"
-        const val EXTRA_NOTIF_ID    = "extra_notif_id"
+        const val EXTRA_NOTIF_ID = "extra_notif_id"
     }
 }

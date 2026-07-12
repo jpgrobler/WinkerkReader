@@ -65,7 +65,11 @@ class UitlegPastoraalFragment : Fragment() {
         settingsManager = SettingsManager.getInstance(requireContext())
 
         // Tydelike spinner
-        val tempAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, listOf("Laai kalenders…"))
+        val tempAdapter = ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_spinner_item,
+            listOf("Laai kalenders…")
+        )
         tempAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         binding.pastoralCalendarSpinner.adapter = tempAdapter
 
@@ -80,7 +84,8 @@ class UitlegPastoraalFragment : Fragment() {
         }, 300)
 
         if (settingsManager.googleTasksMode() == SettingsManager.GoogleTasksMode.API &&
-            settingsManager.isTasksScriptConfigured()) {
+            settingsManager.isTasksScriptConfigured()
+        ) {
             loadTaskLists()
         }
 
@@ -130,18 +135,25 @@ class UitlegPastoraalFragment : Fragment() {
         }
         initialCalendarId = selectedId
 
-        binding.pastoralCalendarSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                val activity = requireActivity() as? UitlegActivity
-                val calId = activity!!.getCalendarIdAtPosition(position)
-                listener?.onCallCalendarSelected(calId)
-                // Only mark dirty if the user actually picked a different calendar
-                if (calId != initialCalendarId) {
-                    onUserChanged()
+        binding.pastoralCalendarSpinner.onItemSelectedListener =
+            object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(
+                    parent: AdapterView<*>?,
+                    view: View?,
+                    position: Int,
+                    id: Long
+                ) {
+                    val activity = requireActivity() as? UitlegActivity
+                    val calId = activity!!.getCalendarIdAtPosition(position)
+                    listener?.onCallCalendarSelected(calId)
+                    // Only mark dirty if the user actually picked a different calendar
+                    if (calId != initialCalendarId) {
+                        onUserChanged()
+                    }
                 }
+
+                override fun onNothingSelected(parent: AdapterView<*>?) {}
             }
-            override fun onNothingSelected(parent: AdapterView<*>?) {}
-        }
 
         // Update save state after adapter is set
         isInitializing = false
@@ -169,29 +181,40 @@ class UitlegPastoraalFragment : Fragment() {
         binding.appsScriptLink.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            override fun afterTextChanged(s: Editable?) { onUserChanged() }
+            override fun afterTextChanged(s: Editable?) {
+                onUserChanged()
+            }
         })
         binding.appsScriptKey.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            override fun afterTextChanged(s: Editable?) { onUserChanged() }
+            override fun afterTextChanged(s: Editable?) {
+                onUserChanged()
+            }
         })
 
         binding.tasksModeGroup.setOnCheckedChangeListener { _, _ -> onUserChanged() }
         binding.pastoralCalendarAutoSync.setOnCheckedChangeListener { _, _ -> onUserChanged() }
 
-        binding.tasksListSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                val newId = if (position < taskLists.size) taskLists[position].first else null
-                if (newId != selectedTaskListId) {
-                    selectedTaskListId = newId
-                    onUserChanged()
-                } else {
-                    selectedTaskListId = newId  // keep in sync without marking dirty
+        binding.tasksListSpinner.onItemSelectedListener =
+            object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(
+                    parent: AdapterView<*>?,
+                    view: View?,
+                    position: Int,
+                    id: Long
+                ) {
+                    val newId = if (position < taskLists.size) taskLists[position].first else null
+                    if (newId != selectedTaskListId) {
+                        selectedTaskListId = newId
+                        onUserChanged()
+                    } else {
+                        selectedTaskListId = newId  // keep in sync without marking dirty
+                    }
                 }
+
+                override fun onNothingSelected(parent: AdapterView<*>?) {}
             }
-            override fun onNothingSelected(parent: AdapterView<*>?) {}
-        }
 
         binding.btnRefreshLists.setOnClickListener { loadTaskLists() }
         binding.btnCopyScript.setOnClickListener { copyScriptToClipboard() }
@@ -246,14 +269,19 @@ class UitlegPastoraalFragment : Fragment() {
         val secret = binding.appsScriptKey.text?.toString()?.trim()?.ifBlank { null }
 
         if (url.isNullOrBlank() || secret.isNullOrBlank()) {
-            Toast.makeText(requireContext(), "Stel eers die Apps Script URL en Geheime kode", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                requireContext(),
+                "Stel eers die Apps Script URL en Geheime kode",
+                Toast.LENGTH_SHORT
+            ).show()
             return
         }
 
         // If not logged in, this is a login attempt
         if (!isLoggedIn) {
             binding.btnRefreshLists.isEnabled = false
-            binding.btnRefreshLists.text = getString(R.string.logging_in) // optional, or just keep "Login"
+            binding.btnRefreshLists.text =
+                getString(R.string.logging_in) // optional, or just keep "Login"
         }
 
         lifecycleScope.launch(Dispatchers.IO) {
@@ -349,10 +377,15 @@ class UitlegPastoraalFragment : Fragment() {
         val scriptCode = """…"""
         val instructions = """…"""
         val fullText = "$scriptCode\n\n$instructions"
-        val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clipboard =
+            requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val clip = ClipData.newPlainText("WinkerkReader Script", fullText)
         clipboard.setPrimaryClip(clip)
-        Toast.makeText(requireContext(), "Skrip en instruksies is na knipbord gekopieer", Toast.LENGTH_LONG).show()
+        Toast.makeText(
+            requireContext(),
+            "Skrip en instruksies is na knipbord gekopieer",
+            Toast.LENGTH_LONG
+        ).show()
     }
 
     override fun onDestroyView() {
@@ -362,7 +395,11 @@ class UitlegPastoraalFragment : Fragment() {
 
     private fun setupBackupStatusSection() {
         binding.backupLocationText.text =
-            "Ligging: ${za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.getWkrDir(requireContext())}"
+            "Ligging: ${
+                za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.getWkrDir(
+                    requireContext()
+                )
+            }"
 
         binding.backupStatusPastoralText.text =
             "Herinneringe & notas: ${formatBackupTimestamp(settingsManager.lastPastoralBackupTimestamp)}"
@@ -378,7 +415,9 @@ class UitlegPastoraalFragment : Fragment() {
                 // next call/mutation, so the status line updates right away.
                 viewLifecycleOwner.lifecycleScope.launch {
                     withContext(Dispatchers.IO) {
-                        za.co.jpsoft.winkerkreader.data.calllog.CallLogDatabaseBackup.backupNow(requireContext())
+                        za.co.jpsoft.winkerkreader.data.calllog.CallLogDatabaseBackup.backupNow(
+                            requireContext()
+                        )
                     }
                     binding.backupStatusCallLogText.text =
                         "Oproeplog: ${formatBackupTimestamp(settingsManager.lastCallLogBackupTimestamp)}"
@@ -402,7 +441,8 @@ class UitlegPastoraalFragment : Fragment() {
             diffHours < 24 -> "$diffHours ure gelede"
             diffDays == 1L -> "Gister"
             else -> {
-                val formatter = java.text.SimpleDateFormat("d MMM yyyy, HH:mm", java.util.Locale("af"))
+                val formatter =
+                    java.text.SimpleDateFormat("d MMM yyyy, HH:mm", java.util.Locale("af"))
                 formatter.format(java.util.Date(timestamp))
             }
         }

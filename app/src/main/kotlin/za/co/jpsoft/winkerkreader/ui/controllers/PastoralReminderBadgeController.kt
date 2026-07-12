@@ -71,14 +71,21 @@ class PastoralReminderBadgeController(
                 }.distinct()
 
                 if (BuildConfig.DEBUG) {
-                    Log.d("PastoralBadgeCtrl", "📌 Found ${guids.size} distinct member GUIDs with pending reminders: $guids")
+                    Log.d(
+                        "PastoralBadgeCtrl",
+                        "📌 Found ${guids.size} distinct member GUIDs with pending reminders: $guids"
+                    )
                 }
 
                 withContext(Dispatchers.Main) {
                     memberViewModel.updatePendingRemindersSet(guids.toSet())
                 }
             } catch (e: Exception) {
-                if (BuildConfig.DEBUG) Log.e("PastoralBadgeCtrl", "Failed to load pending reminder guids", e)
+                if (BuildConfig.DEBUG) Log.e(
+                    "PastoralBadgeCtrl",
+                    "Failed to load pending reminder guids",
+                    e
+                )
             }
         }
     }
@@ -113,7 +120,11 @@ class PastoralReminderBadgeController(
                     if (it.moveToFirst()) return@withContext it.getString(0)
                 }
             } catch (e: Exception) {
-                if (BuildConfig.DEBUG) Log.e("PastoralBadgeCtrl", "Error resolving member GUID by name", e)
+                if (BuildConfig.DEBUG) Log.e(
+                    "PastoralBadgeCtrl",
+                    "Error resolving member GUID by name",
+                    e
+                )
             }
             null
         }

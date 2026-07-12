@@ -20,16 +20,16 @@ class FollowUpReminderWorker(
     override suspend fun doWork(): Result {
         if (BuildConfig.DEBUG) Log.d(TAG, "FollowUpReminderWorker started")
 
-        val zoneId    = ZoneId.systemDefault()
-        val nowUtc    = System.currentTimeMillis()
-        val today     = LocalDate.now(zoneId)
+        val zoneId = ZoneId.systemDefault()
+        val nowUtc = System.currentTimeMillis()
+        val today = LocalDate.now(zoneId)
         val startOfTodayUtc = today.atStartOfDay(zoneId).toInstant().toEpochMilli()
-        val endOfDayUtc     = today.plusDays(1).atStartOfDay(zoneId).toInstant().toEpochMilli() - 1
+        val endOfDayUtc = today.plusDays(1).atStartOfDay(zoneId).toInstant().toEpochMilli() - 1
 
         return try {
-            val database    = PastoralDatabase.getInstance(applicationContext)
+            val database = PastoralDatabase.getInstance(applicationContext)
             val reminderDao = database.followUpReminderDao()
-            val resolver    = CongregationMemberGuidResolver(applicationContext)
+            val resolver = CongregationMemberGuidResolver(applicationContext)
 
             // Single query: all PENDING reminders due today-or-earlier, not snoozed
             val dueReminders = reminderDao.getPendingDue(endOfDayUtc, nowUtc)
@@ -45,6 +45,7 @@ class FollowUpReminderWorker(
                         val lastNotified = reminder.lastNotifiedDateUtc
                         lastNotified == null || lastNotified < startOfTodayUtc
                     }
+
                     ScheduleType.TIMED -> {
                         // Notify if the scheduled time is within the current day
                         // (worker fires at 7am — TIMED reminders for today appear here)
@@ -60,8 +61,8 @@ class FollowUpReminderWorker(
                         ?: reminder.memberDisplayNameCache.orEmpty()
 
                     PastoralNotificationHelper.postReminderNotification(
-                        context          = applicationContext,
-                        reminder         = reminder,
+                        context = applicationContext,
+                        reminder = reminder,
                         memberDisplayName = displayName
                     )
 
@@ -69,14 +70,17 @@ class FollowUpReminderWorker(
                     reminderDao.update(
                         reminder.copy(
                             lastNotifiedDateUtc = startOfTodayUtc,
-                            updatedAt           = nowUtc
+                            updatedAt = nowUtc
                         )
                     )
                     notified++
                 }
             }
 
-            if (BuildConfig.DEBUG) Log.i(TAG, "FollowUpReminderWorker complete — notified $notified reminders")
+            if (BuildConfig.DEBUG) Log.i(
+                TAG,
+                "FollowUpReminderWorker complete — notified $notified reminders"
+            )
             Result.success()
 
         } catch (e: Exception) {

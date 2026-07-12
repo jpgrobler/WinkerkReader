@@ -56,9 +56,10 @@ class BedieningViewModel(
     private val zoneId = ZoneId.systemDefault()
     private val today = LocalDate.now(zoneId)
     private val startOfTodayUtc = today.atStartOfDay(zoneId).toInstant().toEpochMilli()
-    private val endOfTodayUtc   = today.plusDays(1).atStartOfDay(zoneId).toInstant().toEpochMilli() - 1
-    private val endOfWeekUtc    = today.plusDays(7).atStartOfDay(zoneId).toInstant().toEpochMilli() - 1
-    private val nowUtc get()    = System.currentTimeMillis()
+    private val endOfTodayUtc =
+        today.plusDays(1).atStartOfDay(zoneId).toInstant().toEpochMilli() - 1
+    private val endOfWeekUtc = today.plusDays(7).atStartOfDay(zoneId).toInstant().toEpochMilli() - 1
+    private val nowUtc get() = System.currentTimeMillis()
 
     // -------------------------------------------------------------------------
     // Dashboard (infinite flow)
@@ -82,10 +83,10 @@ class BedieningViewModel(
         alsItems
     ) { filter, dash, week, als ->
         when (filter) {
-            Filter.VANDAG        -> dash?.dueToday.orEmpty()
-            Filter.AGTERSTALLIG  -> dash?.overdue.orEmpty()
-            Filter.HIERDIE_WEEK  -> week
-            Filter.ALS           -> als
+            Filter.VANDAG -> dash?.dueToday.orEmpty()
+            Filter.AGTERSTALLIG -> dash?.overdue.orEmpty()
+            Filter.HIERDIE_WEEK -> week
+            Filter.ALS -> als
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
@@ -148,9 +149,9 @@ class BedieningViewModel(
 
     fun snoozeReminder(reminderId: String, snoozeOption: SnoozeOption) {
         val until = when (snoozeOption) {
-            SnoozeOption.TOMORROW   -> LocalDateTime.now().plusDays(1)
+            SnoozeOption.TOMORROW -> LocalDateTime.now().plusDays(1)
             SnoozeOption.THREE_DAYS -> LocalDateTime.now().plusDays(3)
-            SnoozeOption.ONE_WEEK   -> LocalDateTime.now().plusDays(7)
+            SnoozeOption.ONE_WEEK -> LocalDateTime.now().plusDays(7)
         }.withHour(8).withMinute(0).withSecond(0).withNano(0)
 
         viewModelScope.launch {

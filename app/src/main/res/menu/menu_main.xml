@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Options menu for the CatalogActivity -->
+<?xml version="1.0" encoding="utf-8"?><!-- Options menu for the CatalogActivity -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -12,36 +11,31 @@
     <item
         android:id="@+id/action_search"
         android:title="@string/mainmenu_soek"
-        app:showAsAction="collapseActionView"
         app:actionViewClass="androidx.appcompat.widget.SearchView"
-         />
+        app:showAsAction="collapseActionView" />
     <item
         android:id="@+id/filter_options"
-        android:title="@string/mainmenu_filter">
-    </item>
+        android:title="@string/mainmenu_filter"></item>
     <item
         android:id="@+id/action_bediening"
         android:title="@string/mainmenu_bediening"
         app:showAsAction="never" />
-    <item
-        android:title="@string/mainmenu_taggedtitle">
+    <item android:title="@string/mainmenu_taggedtitle">
         <menu>
-        <item
-            android:id="@+id/tagged"
-            android:title="@string/mainmenu_tagged">
-        </item>
-        <item
-            android:id="@+id/deselect"
-            android:title="@string/mainmenu_untagged"
-            app:showAsAction="never"
-            />
+            <item
+                android:id="@+id/tagged"
+                android:title="@string/mainmenu_tagged"></item>
+            <item
+                android:id="@+id/deselect"
+                android:title="@string/mainmenu_untagged"
+                app:showAsAction="never" />
         </menu>
     </item>
     <item
-        android:title="@string/mainmenu_sorteer"
         android:id="@+id/menu_sorteer_titel"
-        app:showAsAction="never" >
-        <menu >
+        android:title="@string/mainmenu_sorteer"
+        app:showAsAction="never">
+        <menu>
             <item
                 android:id="@+id/sort_wyk"
                 android:title="@string/mainmenu_sort_wyk"
@@ -57,41 +51,35 @@
             <item
                 android:id="@+id/sort_adres"
                 android:title="@string/mainmenu_sort_adres"
-                app:showAsAction="never"
-                />
+                app:showAsAction="never" />
             <item
                 android:id="@+id/verjaar"
                 android:title="@string/mainmenu_sort_verjaar"
-                app:showAsAction="never"
-                />
+                app:showAsAction="never" />
             <item
                 android:id="@+id/sort_gesin"
                 android:title="@string/mainmenu_sort_gesin"
                 android:visible="true"
-                app:showAsAction="never"
-                />
+                app:showAsAction="never" />
         </menu>
     </item>
     <item
-        android:title="@string/mainmenu_admin"
         android:id="@+id/menu_andmin_titel"
+        android:title="@string/mainmenu_admin"
         app:showAsAction="never">
         <menu>
             <item
                 android:id="@+id/laai"
                 android:title="@string/mainmenu_laai"
-                app:showAsAction="never"
-                />
+                app:showAsAction="never" />
             <item
                 android:id="@+id/RegistreerActivity"
                 android:title="@string/mainmenu_registreer"
-                app:showAsAction="never"
-                />
+                app:showAsAction="never" />
             <item
                 android:id="@+id/uitleg"
                 android:title="@string/mainmenu_uitleg_funksies"
-                app:showAsAction="never"
-                />
+                app:showAsAction="never" />
             <item
                 android:id="@+id/menu_permissions"
                 android:title="@string/mainmenu_manage_permissions"
@@ -101,16 +89,13 @@
     <item
         android:id="@+id/sms_verjaar"
         android:title="@string/mainmenu_sms_verjaar"
-        app:showAsAction="never"
-        />
+        app:showAsAction="never" />
     <item
         android:id="@+id/argief"
         android:title="@string/mainmenu_argief"
-        app:showAsAction="never"
-        />
+        app:showAsAction="never" />
     <item
         android:id="@+id/action_view_call_log"
         android:title="@string/mainmenu_view_call_log"
-        app:showAsAction="never"
-        />
+        app:showAsAction="never" />
 </menu>

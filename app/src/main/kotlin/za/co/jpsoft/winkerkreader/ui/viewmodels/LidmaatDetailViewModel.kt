@@ -111,7 +111,10 @@ class LidmaatDetailViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
-    private fun queryFamilyMembers(familyHeadGuid: String, recordStatus: String): List<FamilyMemberItem> {
+    private fun queryFamilyMembers(
+        familyHeadGuid: String,
+        recordStatus: String
+    ): List<FamilyMemberItem> {
         val selection = """
             SELECT _rowid_ AS _id,
                    ${winkerkEntry.LIDMATE_TABLE_NAME}.${winkerkEntry.LIDMATE_VAN},
@@ -150,7 +153,8 @@ class LidmaatDetailViewModel(application: Application) : AndroidViewModel(applic
                 parseDate(bDay)?.let {
                     ageYears = ChronoUnit.YEARS.between(it, LocalDate.now())
                 }
-            } catch (_: Exception) {}
+            } catch (_: Exception) {
+            }
         }
 
         val huwelikDatum = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_HUWELIKSDATUM)
@@ -160,7 +164,8 @@ class LidmaatDetailViewModel(application: Application) : AndroidViewModel(applic
                 parseDate(huwelikDatum)?.let {
                     huwelikYears = ChronoUnit.YEARS.between(it, LocalDate.now())
                 }
-            } catch (_: Exception) {}
+            } catch (_: Exception) {
+            }
         }
 
         return MemberDetailItem(
@@ -171,8 +176,10 @@ class LidmaatDetailViewModel(application: Application) : AndroidViewModel(applic
             surname = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_VAN),
             fullNames = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_VOORNAME),
             maidenName = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_NOOIENSVAN),
-            cellphone = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_SELFOON).let { if (it.isNotBlank()) fixphonenumber(it) ?: "" else "" },
-            landline = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_LANDLYN).let { if (it.isNotBlank()) fixphonenumber(it) ?: "" else "" },
+            cellphone = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_SELFOON)
+                .let { if (it.isNotBlank()) fixphonenumber(it) ?: "" else "" },
+            landline = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_LANDLYN)
+                .let { if (it.isNotBlank()) fixphonenumber(it) ?: "" else "" },
             ward = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_WYK),
             birthday = bDay,
             age = ageYears,
@@ -186,7 +193,8 @@ class LidmaatDetailViewModel(application: Application) : AndroidViewModel(applic
             profession = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_BEROEP),
             employer = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_WERKGEWER),
             gender = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_GESLAG),
-            marriageStatus = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_HUWELIKSTATUS).ifEmpty { "Ongetroud" },
+            marriageStatus = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_HUWELIKSTATUS)
+                .ifEmpty { "Ongetroud" },
             memberStatus = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_LIDMAATSTATUS),
             certificateStatus = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_BEWYSSTATUS),
             baptismDate = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_DOOPDATUM),
@@ -208,7 +216,8 @@ class LidmaatDetailViewModel(application: Application) : AndroidViewModel(applic
                 parseDate(bDay)?.let {
                     age = ChronoUnit.YEARS.between(it, LocalDate.now())
                 }
-            } catch (_: Exception) {}
+            } catch (_: Exception) {
+            }
         }
 
         return FamilyMemberItem(

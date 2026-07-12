@@ -38,7 +38,10 @@ object CursorDataExtractor {
                 cursor.getString(columnIndex) ?: defaultValue
             } else defaultValue
         } catch (e: Exception) {
-            if (BuildConfig.DEBUG) Log.w(TAG, "Error reading string column $columnName: ${e.message}")
+            if (BuildConfig.DEBUG) Log.w(
+                TAG,
+                "Error reading string column $columnName: ${e.message}"
+            )
             defaultValue
         }
     }
@@ -113,7 +116,10 @@ object CursorDataExtractor {
                 cursor.getDouble(columnIndex)
             } else defaultValue
         } catch (e: Exception) {
-            if (BuildConfig.DEBUG) Log.w(TAG, "Error reading double column $columnName: ${e.message}")
+            if (BuildConfig.DEBUG) Log.w(
+                TAG,
+                "Error reading double column $columnName: ${e.message}"
+            )
             defaultValue
         }
     }
@@ -138,7 +144,10 @@ object CursorDataExtractor {
                 cursor.getFloat(columnIndex)
             } else defaultValue
         } catch (e: Exception) {
-            if (BuildConfig.DEBUG) Log.w(TAG, "Error reading float column $columnName: ${e.message}")
+            if (BuildConfig.DEBUG) Log.w(
+                TAG,
+                "Error reading float column $columnName: ${e.message}"
+            )
             defaultValue
         }
     }
@@ -163,7 +172,10 @@ object CursorDataExtractor {
                 cursor.getInt(columnIndex) != 0
             } else defaultValue
         } catch (e: Exception) {
-            if (BuildConfig.DEBUG) Log.w(TAG, "Error reading boolean column $columnName: ${e.message}")
+            if (BuildConfig.DEBUG) Log.w(
+                TAG,
+                "Error reading boolean column $columnName: ${e.message}"
+            )
             defaultValue
         }
     }
@@ -205,7 +217,10 @@ object CursorDataExtractor {
         return try {
             cursor.getColumnIndex(columnName) != -1
         } catch (e: Exception) {
-            if (BuildConfig.DEBUG) Log.w(TAG, "Error checking column existence $columnName: ${e.message}")
+            if (BuildConfig.DEBUG) Log.w(
+                TAG,
+                "Error checking column existence $columnName: ${e.message}"
+            )
             false
         }
     }
@@ -223,7 +238,10 @@ object CursorDataExtractor {
             val columnIndex = cursor.getColumnIndex(columnName)
             columnIndex == -1 || cursor.isNull(columnIndex)
         } catch (e: Exception) {
-            if (BuildConfig.DEBUG) Log.w(TAG, "Error checking null for column $columnName: ${e.message}")
+            if (BuildConfig.DEBUG) Log.w(
+                TAG,
+                "Error checking null for column $columnName: ${e.message}"
+            )
             true
         }
     }

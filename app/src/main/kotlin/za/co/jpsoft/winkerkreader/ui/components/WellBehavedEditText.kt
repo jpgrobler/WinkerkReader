@@ -24,7 +24,8 @@ class WellBehavedEditText @JvmOverloads constructor(
         val result = super.requestFocus(direction, previouslyFocusedRect)
         if (result) {
             post {
-                val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                val imm =
+                    context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
                 imm.showSoftInput(this, 0)
             }
         }

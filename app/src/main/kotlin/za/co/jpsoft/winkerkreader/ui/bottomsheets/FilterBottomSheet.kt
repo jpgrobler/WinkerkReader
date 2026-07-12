@@ -78,7 +78,10 @@ class FilterBottomSheet : BottomSheetDialogFragment() {
         if (BuildConfig.DEBUG) {
             Log.d(TAG, "Original sort order captured: $originalSortOrder")
             if (BuildConfig.DEBUG) Log.d(TAG, "Original record status: $originalRecordStatus")
-            if (BuildConfig.DEBUG) Log.d(TAG, "Original filter list: ${originalFilterList?.size ?: 0} items")
+            if (BuildConfig.DEBUG) Log.d(
+                TAG,
+                "Original filter list: ${originalFilterList?.size ?: 0} items"
+            )
         }
 
         // Setup AutoCompleteTextViews with adapters
@@ -204,10 +207,12 @@ class FilterBottomSheet : BottomSheetDialogFragment() {
                         binding.filterGeslagCheck.isChecked = filter.checked
                         setAutoCompleteText(binding.filterGeslagOpsies, filter.text3)
                     }
+
                     "Huwelikstatus" -> {
                         binding.filterHuwelikstatusCheck.isChecked = filter.checked
                         setAutoCompleteText(binding.filterHuwelikstatusOpsies, filter.text3)
                     }
+
                     "Lidmaatskap" -> {
                         binding.filterLidmaatskapCheck.isChecked = filter.checked
                         setAutoCompleteText(binding.filterLidmaatskapOpsies, filter.text3)
@@ -218,16 +223,19 @@ class FilterBottomSheet : BottomSheetDialogFragment() {
                         setAutoCompleteText(binding.filterVanOpsies, filter.text3)
                         binding.filterVan.setText(filter.text1)
                     }
+
                     "Noemnaam" -> {
                         binding.filterNoemnaamCheck.isChecked = filter.checked
                         setAutoCompleteText(binding.filterNoemnaamOpsies, filter.text3)
                         binding.filterNoemnaam.setText(filter.text1)
                     }
+
                     "Nooiensvan" -> {
                         binding.filterNooiensvanCheck.isChecked = filter.checked
                         setAutoCompleteText(binding.filterNooiensvanOpsies, filter.text3)
                         binding.filterNooiensvan.setText(filter.text1)
                     }
+
                     "Wyk" -> {
                         binding.filterWykCheck.isChecked = filter.checked
                         setAutoCompleteText(binding.filterWykOpsies, filter.text3)
@@ -319,38 +327,52 @@ class FilterBottomSheet : BottomSheetDialogFragment() {
         addSwitchFilter("Gesinshoof", binding.filterGesinshoof)
 
         // 3. Complex filters with AutoCompleteTextViews
-        addComplexFilter("Geslag",
+        addComplexFilter(
+            "Geslag",
             binding.filterGeslagCheck,
-            binding.filterGeslagOpsies.text.toString())
+            binding.filterGeslagOpsies.text.toString()
+        )
 
-        addComplexFilter("Huwelikstatus",
+        addComplexFilter(
+            "Huwelikstatus",
             binding.filterHuwelikstatusCheck,
-            binding.filterHuwelikstatusOpsies.text.toString())
+            binding.filterHuwelikstatusOpsies.text.toString()
+        )
 
-        addComplexFilter("Lidmaatskap",
+        addComplexFilter(
+            "Lidmaatskap",
             binding.filterLidmaatskapCheck,
-            binding.filterLidmaatskapOpsies.text.toString())
+            binding.filterLidmaatskapOpsies.text.toString()
+        )
 
         // 4. Text filters
-        addTextFilter("Van",
+        addTextFilter(
+            "Van",
             binding.filterVanCheck,
             binding.filterVanOpsies.text.toString(),
-            binding.filterVan.text.toString())
+            binding.filterVan.text.toString()
+        )
 
-        addTextFilter("Noemnaam",
+        addTextFilter(
+            "Noemnaam",
             binding.filterNoemnaamCheck,
             binding.filterNoemnaamOpsies.text.toString(),
-            binding.filterNoemnaam.text.toString())
+            binding.filterNoemnaam.text.toString()
+        )
 
-        addTextFilter("Nooiensvan",
+        addTextFilter(
+            "Nooiensvan",
             binding.filterNooiensvanCheck,
             binding.filterNooiensvanOpsies.text.toString(),
-            binding.filterNooiensvan.text.toString())
+            binding.filterNooiensvan.text.toString()
+        )
 
-        addTextFilter("Wyk",
+        addTextFilter(
+            "Wyk",
             binding.filterWykCheck,
             binding.filterWykOpsies.text.toString(),
-            binding.filterWyk.text.toString())
+            binding.filterWyk.text.toString()
+        )
 
         // 5. Ouderdom
         val ouderdomSpinner = binding.filterOuderdomOpsies.text.toString()
@@ -382,7 +404,8 @@ class FilterBottomSheet : BottomSheetDialogFragment() {
             if (activity != null) {
                 if (activity.searchFilterCoordinator.originalLayoutBeforeFilter.isEmpty() &&
                     activity.searchFilterCoordinator.originalLayoutBeforeSearch.isEmpty() &&
-                    currentSortOrder != "Filter" && currentSortOrder != "FILTER_DATA") {
+                    currentSortOrder != "Filter" && currentSortOrder != "FILTER_DATA"
+                ) {
                     activity.searchFilterCoordinator.originalLayoutBeforeFilter = currentSortOrder
                     if (BuildConfig.DEBUG) {
                         Log.d(TAG, "Saved original sort order: $currentSortOrder")
@@ -462,7 +485,12 @@ class FilterBottomSheet : BottomSheetDialogFragment() {
         }
     }
 
-    private fun addTextFilter(title: String, switch: MaterialSwitch, operator: String, value: String) {
+    private fun addTextFilter(
+        title: String,
+        switch: MaterialSwitch,
+        operator: String,
+        value: String
+    ) {
         if (switch.isChecked && value.isNotEmpty()) {
             filterList.add(
                 FilterBox(
@@ -550,7 +578,10 @@ class FilterBottomSheet : BottomSheetDialogFragment() {
             Log.d(TAG, "restoreOriginalState called")
             if (BuildConfig.DEBUG) Log.d(TAG, "originalSortOrder = $originalSortOrder")
             if (BuildConfig.DEBUG) Log.d(TAG, "originalRecordStatus = $originalRecordStatus")
-            if (BuildConfig.DEBUG) Log.d(TAG, "originalFilterList size = ${originalFilterList?.size ?: 0}")
+            if (BuildConfig.DEBUG) Log.d(
+                TAG,
+                "originalFilterList size = ${originalFilterList?.size ?: 0}"
+            )
         }
 
         val activity = activity as? MainActivity
@@ -558,7 +589,10 @@ class FilterBottomSheet : BottomSheetDialogFragment() {
         // ✅ Step 1: Restore the filter list to original (or clear if none)
         if (originalFilterList != null && originalFilterList!!.isNotEmpty()) {
             viewModel.updateFilter(originalFilterList!!)
-            if (BuildConfig.DEBUG) Log.d(TAG, "Restored filter list with ${originalFilterList!!.size} filters")
+            if (BuildConfig.DEBUG) Log.d(
+                TAG,
+                "Restored filter list with ${originalFilterList!!.size} filters"
+            )
         } else {
             viewModel.updateFilter(ArrayList())
             if (BuildConfig.DEBUG) Log.d(TAG, "Cleared filter list (no original filters)")
@@ -572,12 +606,16 @@ class FilterBottomSheet : BottomSheetDialogFragment() {
         // If originalLayoutBeforeFilter has a value, use it (filter was applied)
         // Otherwise, use the captured originalSortOrder (no filter was ever applied)
         val restoreSort = if (activity != null &&
-            activity.searchFilterCoordinator.originalLayoutBeforeFilter.isNotEmpty()) {
+            activity.searchFilterCoordinator.originalLayoutBeforeFilter.isNotEmpty()
+        ) {
             val saved = activity.searchFilterCoordinator.originalLayoutBeforeFilter
             if (BuildConfig.DEBUG) Log.d(TAG, "Using originalLayoutBeforeFilter: $saved")
             saved
         } else {
-            if (BuildConfig.DEBUG) Log.d(TAG, "Using captured originalSortOrder: $originalSortOrder")
+            if (BuildConfig.DEBUG) Log.d(
+                TAG,
+                "Using captured originalSortOrder: $originalSortOrder"
+            )
             originalSortOrder
         }
 
@@ -618,7 +656,10 @@ class FilterBottomSheet : BottomSheetDialogFragment() {
         activity?.recomputeBirthdayOffset()
 
         if (BuildConfig.DEBUG) {
-            Log.d(TAG, "restoreOriginalState completed. Sort order: $restoreSort, Status: ${viewModel.recordStatus}")
+            Log.d(
+                TAG,
+                "restoreOriginalState completed. Sort order: $restoreSort, Status: ${viewModel.recordStatus}"
+            )
         }
     }
 }

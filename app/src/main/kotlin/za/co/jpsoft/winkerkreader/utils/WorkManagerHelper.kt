@@ -189,7 +189,10 @@ object WorkManagerHelper {
             workRequest
         )
 
-        if (BuildConfig.DEBUG) Log.d("WorkManagerHelper", "Follow-up reminder worker scheduled at $hour:$minute")
+        if (BuildConfig.DEBUG) Log.d(
+            "WorkManagerHelper",
+            "Follow-up reminder worker scheduled at $hour:$minute"
+        )
     }
 
     /**

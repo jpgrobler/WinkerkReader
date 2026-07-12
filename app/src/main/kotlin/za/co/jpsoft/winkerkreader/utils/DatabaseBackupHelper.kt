@@ -65,7 +65,10 @@ object DatabaseBackupHelper {
         // PC sync tooling depend on this exact filename never changing.
         val fixedDest = File(destDir, fixedFilename)
         source.copyTo(fixedDest, overwrite = true)
-        if (BuildConfig.DEBUG) Log.i(tag, "Backed up to ${fixedDest.absolutePath} (${fixedDest.length()} bytes)")
+        if (BuildConfig.DEBUG) Log.i(
+            tag,
+            "Backed up to ${fixedDest.absolutePath} (${fixedDest.length()} bytes)"
+        )
 
         // 2 — Dated snapshot, one per calendar day (same-day re-runs just
         // overwrite that day's own snapshot, so this doesn't grow within a day).
@@ -78,7 +81,12 @@ object DatabaseBackupHelper {
         pruneOldSnapshots(destDir, baseName, retentionDays, tag)
     }
 
-    private fun pruneOldSnapshots(destDir: File, baseName: String, retentionDays: Int, tag: String) {
+    private fun pruneOldSnapshots(
+        destDir: File,
+        baseName: String,
+        retentionDays: Int,
+        tag: String
+    ) {
         if (retentionDays <= 0) return
         val cutoff = System.currentTimeMillis() - (retentionDays.toLong() * 24 * 60 * 60 * 1000)
         val pattern = Regex("^${Regex.escape(baseName)}_(\\d{8})\\.db$")
@@ -94,7 +102,10 @@ object DatabaseBackupHelper {
 
             if (fileEpochMillis < cutoff) {
                 val deleted = file.delete()
-                if (BuildConfig.DEBUG) Log.d(tag, "Pruned old backup snapshot ${file.name} (deleted=$deleted)")
+                if (BuildConfig.DEBUG) Log.d(
+                    tag,
+                    "Pruned old backup snapshot ${file.name} (deleted=$deleted)"
+                )
             }
         }
     }

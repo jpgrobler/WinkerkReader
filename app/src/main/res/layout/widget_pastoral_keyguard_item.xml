@@ -3,9 +3,9 @@
     android:id="@+id/widget_pastoral_keyguard_item_text"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingVertical="1dp"
+    android:ellipsize="end"
     android:paddingHorizontal="2dp"
-    android:textSize="11sp"
-    android:textColor="@color/white"
+    android:paddingVertical="1dp"
     android:singleLine="true"
-    android:ellipsize="end" />
+    android:textColor="@color/white"
+    android:textSize="11sp" />

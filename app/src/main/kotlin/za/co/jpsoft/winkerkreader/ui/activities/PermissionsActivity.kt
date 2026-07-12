@@ -31,17 +31,20 @@ class PermissionsActivity : AppCompatActivity() {
     private lateinit var adapter: PermissionsAdapter
     private lateinit var permissionsList: List<PermissionItem>
 
-    private val overlayPermissionLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        refreshPermissions()
-    }
+    private val overlayPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            refreshPermissions()
+        }
 
-    private val notificationPolicyLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        refreshPermissions()
-    }
+    private val notificationPolicyLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            refreshPermissions()
+        }
 
-    private val runtimePermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { _ ->
-        refreshPermissions()
-    }
+    private val runtimePermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { _ ->
+            refreshPermissions()
+        }
 
     // Request code for individual runtime permission requests
     private val REQUEST_CODE_RUNTIME = 100
@@ -88,125 +91,153 @@ class PermissionsActivity : AppCompatActivity() {
 
     }
 
-        fun updateBatteryStatus() {
-            val isIgnoring = BatteryOptimizationHelper.isIgnoringBatteryOptimizations(this)
-            binding.tvBatteryStatus.text = if (isIgnoring) {
-                "🔋 ${getString(R.string.battery_optimization_disabled)}"
-            } else {
-                "🪫 ${getString(R.string.battery_optimization_enabled)}"
-            }
+    fun updateBatteryStatus() {
+        val isIgnoring = BatteryOptimizationHelper.isIgnoringBatteryOptimizations(this)
+        binding.tvBatteryStatus.text = if (isIgnoring) {
+            "🔋 ${getString(R.string.battery_optimization_disabled)}"
+        } else {
+            "🪫 ${getString(R.string.battery_optimization_enabled)}"
         }
+    }
 
 
     private fun initializePermissionsList() {
         permissionsList = buildList {
             // Exact Alarm permissions
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                add(PermissionItem(
-                    "Alarms",
-                    "Maak dit moontlik dat app jou kan herinner op sekere tye",
-                    null,
-                    PermissionType.EXACT_ALARM
-                ))
+                add(
+                    PermissionItem(
+                        "Alarms",
+                        "Maak dit moontlik dat app jou kan herinner op sekere tye",
+                        null,
+                        PermissionType.EXACT_ALARM
+                    )
+                )
             }
 
             // Notification permission
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                add(PermissionItem(
-                    "Notifications",
-                    "Wys Kennisgewings",
-                    Manifest.permission.POST_NOTIFICATIONS,
-                    PermissionType.RUNTIME
-                ))
+                add(
+                    PermissionItem(
+                        "Notifications",
+                        "Wys Kennisgewings",
+                        Manifest.permission.POST_NOTIFICATIONS,
+                        PermissionType.RUNTIME
+                    )
+                )
             }
 
             // Notification Policy Access
-            add(PermissionItem(
-                "Do Not Disturb Access",
-                "Laat app toe om beleid te lees",
-                null,
-                PermissionType.NOTIFICATION_POLICY
-            ))
+            add(
+                PermissionItem(
+                    "Do Not Disturb Access",
+                    "Laat app toe om beleid te lees",
+                    null,
+                    PermissionType.NOTIFICATION_POLICY
+                )
+            )
 
             // Phone permissions
-            add(PermissionItem(
-                "Phone State",
-                "Laat app toe om inkomende nommer op te soek teen gemeente data",
-                Manifest.permission.READ_PHONE_STATE,
-                PermissionType.RUNTIME
-            ))
-            add(PermissionItem(
-                "Call Log",
-                "Laat app toe om nommer op te soek teen gemeente data",
-                Manifest.permission.READ_CALL_LOG,
-                PermissionType.RUNTIME
-            ))
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                add(PermissionItem(
-                    "Phone Numbers",
+            add(
+                PermissionItem(
+                    "Phone State",
                     "Laat app toe om inkomende nommer op te soek teen gemeente data",
-                    Manifest.permission.READ_PHONE_NUMBERS,
+                    Manifest.permission.READ_PHONE_STATE,
                     PermissionType.RUNTIME
-                ))
+                )
+            )
+            add(
+                PermissionItem(
+                    "Call Log",
+                    "Laat app toe om nommer op te soek teen gemeente data",
+                    Manifest.permission.READ_CALL_LOG,
+                    PermissionType.RUNTIME
+                )
+            )
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                add(
+                    PermissionItem(
+                        "Phone Numbers",
+                        "Laat app toe om inkomende nommer op te soek teen gemeente data",
+                        Manifest.permission.READ_PHONE_NUMBERS,
+                        PermissionType.RUNTIME
+                    )
+                )
             }
 
             // SMS permissions
-            add(PermissionItem(
-                "Send SMS",
-                "Laat app toe om SMS te stuur",
-                Manifest.permission.SEND_SMS,
-                PermissionType.RUNTIME
-            ))
-            add(PermissionItem(
-                "Read SMS",
-                "Laat app toe om SMS'e te lees",
-                Manifest.permission.READ_SMS,
-                PermissionType.RUNTIME
-            ))
+            add(
+                PermissionItem(
+                    "Send SMS",
+                    "Laat app toe om SMS te stuur",
+                    Manifest.permission.SEND_SMS,
+                    PermissionType.RUNTIME
+                )
+            )
+            add(
+                PermissionItem(
+                    "Read SMS",
+                    "Laat app toe om SMS'e te lees",
+                    Manifest.permission.READ_SMS,
+                    PermissionType.RUNTIME
+                )
+            )
 
             // Contacts permissions
-            add(PermissionItem(
-                "Read Contacts",
-                "Laat app toe om jou foon se kontakte te lees",
-                Manifest.permission.READ_CONTACTS,
-                PermissionType.RUNTIME
-            ))
-            add(PermissionItem(
-                "Write Contacts",
-                "Laat app toe om kontak by te voeg op jou foon",
-                Manifest.permission.WRITE_CONTACTS,
-                PermissionType.RUNTIME
-            ))
+            add(
+                PermissionItem(
+                    "Read Contacts",
+                    "Laat app toe om jou foon se kontakte te lees",
+                    Manifest.permission.READ_CONTACTS,
+                    PermissionType.RUNTIME
+                )
+            )
+            add(
+                PermissionItem(
+                    "Write Contacts",
+                    "Laat app toe om kontak by te voeg op jou foon",
+                    Manifest.permission.WRITE_CONTACTS,
+                    PermissionType.RUNTIME
+                )
+            )
 
             // Calendar permissions
-            add(PermissionItem(
-                "Read Calendar",
-                "Laat app toe om kalender te lees",
-                Manifest.permission.READ_CALENDAR,
-                PermissionType.RUNTIME
-            ))
-            add(PermissionItem(
-                "Write Calendar",
-                "Laat app toe om veranderinge aan jou kalender te maak",
-                Manifest.permission.WRITE_CALENDAR,
-                PermissionType.RUNTIME
-            ))
+            add(
+                PermissionItem(
+                    "Read Calendar",
+                    "Laat app toe om kalender te lees",
+                    Manifest.permission.READ_CALENDAR,
+                    PermissionType.RUNTIME
+                )
+            )
+            add(
+                PermissionItem(
+                    "Write Calendar",
+                    "Laat app toe om veranderinge aan jou kalender te maak",
+                    Manifest.permission.WRITE_CALENDAR,
+                    PermissionType.RUNTIME
+                )
+            )
 
             // System overlay permission
-            add(PermissionItem(
-                "Display over other apps",
-                "Toestemming om bo oor ander apps te wys",
-                null,
-                PermissionType.OVERLAY
-            ))
+            add(
+                PermissionItem(
+                    "Display over other apps",
+                    "Toestemming om bo oor ander apps te wys",
+                    null,
+                    PermissionType.OVERLAY
+                )
+            )
 
             // Notification Listener
-            add(PermissionItem(
-                "Notification Access",
-                "Luister na kennisgewings (vir VOIP oproepe bv. Whatsapp)",
-                null,
-                PermissionType.NOTIFICATION_LISTENER
-            ))
+            add(
+                PermissionItem(
+                    "Notification Access",
+                    "Luister na kennisgewings (vir VOIP oproepe bv. Whatsapp)",
+                    null,
+                    PermissionType.NOTIFICATION_LISTENER
+                )
+            )
         }
     }
 
@@ -235,6 +266,7 @@ class PermissionsActivity : AppCompatActivity() {
                     )
                 }
             }
+
             PermissionType.OVERLAY -> requestOverlayPermission()
             PermissionType.EXACT_ALARM -> requestExactAlarmPermission()
             PermissionType.NOTIFICATION_POLICY -> requestNotificationPolicyAccess()
@@ -280,7 +312,8 @@ class PermissionsActivity : AppCompatActivity() {
     }
 
     private fun requestNotificationPolicyAccess() {
-        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as android.app.NotificationManager
+        val notificationManager =
+            getSystemService(NOTIFICATION_SERVICE) as android.app.NotificationManager
         if (!notificationManager.isNotificationPolicyAccessGranted) {
             val intent = Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
             notificationPolicyLauncher.launch(intent)
@@ -326,12 +359,16 @@ class PermissionsActivity : AppCompatActivity() {
             Manifest.permission.READ_PHONE_STATE,
             Manifest.permission.READ_CALL_LOG,
             Manifest.permission.READ_PHONE_NUMBERS -> R.string.rationale_phone_title
+
             Manifest.permission.READ_CONTACTS,
             Manifest.permission.WRITE_CONTACTS -> R.string.rationale_contacts_title
+
             Manifest.permission.SEND_SMS,
             Manifest.permission.READ_SMS -> R.string.rationale_sms_title
+
             Manifest.permission.READ_CALENDAR,
             Manifest.permission.WRITE_CALENDAR -> R.string.rationale_calendar_title
+
             Manifest.permission.POST_NOTIFICATIONS -> R.string.rationale_notifications_title
             Manifest.permission.SCHEDULE_EXACT_ALARM -> R.string.rationale_exact_alarm_title
             else -> R.string.rationale_generic_title
@@ -343,12 +380,16 @@ class PermissionsActivity : AppCompatActivity() {
             Manifest.permission.READ_PHONE_STATE,
             Manifest.permission.READ_CALL_LOG,
             Manifest.permission.READ_PHONE_NUMBERS -> R.string.rationale_phone_message
+
             Manifest.permission.READ_CONTACTS,
             Manifest.permission.WRITE_CONTACTS -> R.string.rationale_contacts_message
+
             Manifest.permission.SEND_SMS,
             Manifest.permission.READ_SMS -> R.string.rationale_sms_message
+
             Manifest.permission.READ_CALENDAR,
             Manifest.permission.WRITE_CALENDAR -> R.string.rationale_calendar_message
+
             Manifest.permission.POST_NOTIFICATIONS -> R.string.rationale_notifications_message
             Manifest.permission.SCHEDULE_EXACT_ALARM -> R.string.rationale_exact_alarm_message
             else -> R.string.rationale_generic_message
@@ -379,20 +420,28 @@ class PermissionsActivity : AppCompatActivity() {
         fun updateStatus(activity: PermissionsActivity) {
             isGranted = when (type) {
                 PermissionType.RUNTIME -> {
-                    permission != null && ContextCompat.checkSelfPermission(activity, permission) == PackageManager.PERMISSION_GRANTED
+                    permission != null && ContextCompat.checkSelfPermission(
+                        activity,
+                        permission
+                    ) == PackageManager.PERMISSION_GRANTED
                 }
+
                 PermissionType.OVERLAY -> Settings.canDrawOverlays(activity)
                 PermissionType.EXACT_ALARM -> {
                     // Check if exact alarm permission is granted
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        val alarmManager = getSystemService(ALARM_SERVICE) as android.app.AlarmManager
+                        val alarmManager =
+                            getSystemService(ALARM_SERVICE) as android.app.AlarmManager
                         alarmManager.canScheduleExactAlarms()
                     } else true
                 }
+
                 PermissionType.NOTIFICATION_POLICY -> {
-                    val manager = activity.getSystemService(NOTIFICATION_SERVICE) as android.app.NotificationManager
+                    val manager =
+                        activity.getSystemService(NOTIFICATION_SERVICE) as android.app.NotificationManager
                     manager.isNotificationPolicyAccessGranted
                 }
+
                 PermissionType.NOTIFICATION_LISTENER -> {
                     NotificationManagerCompat.getEnabledListenerPackages(activity)
                         .contains(activity.packageName)
@@ -426,12 +475,22 @@ class PermissionsActivity : AppCompatActivity() {
 
                 if (item.isGranted) {
                     itemBinding.ivPermissionStatus.setImageResource(android.R.drawable.checkbox_on_background)
-                    itemBinding.ivPermissionStatus.setColorFilter(ContextCompat.getColor(this@PermissionsActivity, android.R.color.holo_green_dark))
+                    itemBinding.ivPermissionStatus.setColorFilter(
+                        ContextCompat.getColor(
+                            this@PermissionsActivity,
+                            android.R.color.holo_green_dark
+                        )
+                    )
                     itemBinding.btnRequestPermission.isEnabled = false
                     itemBinding.btnRequestPermission.setText(R.string.permission_granted)
                 } else {
                     itemBinding.ivPermissionStatus.setImageResource(android.R.drawable.ic_delete)
-                    itemBinding.ivPermissionStatus.setColorFilter(ContextCompat.getColor(this@PermissionsActivity, android.R.color.holo_red_dark))
+                    itemBinding.ivPermissionStatus.setColorFilter(
+                        ContextCompat.getColor(
+                            this@PermissionsActivity,
+                            android.R.color.holo_red_dark
+                        )
+                    )
                     itemBinding.btnRequestPermission.isEnabled = true
                     itemBinding.btnRequestPermission.setText(R.string.permission_request)
                 }

@@ -1,11 +1,8 @@
 package za.co.jpsoft.winkerkreader.services
 
 import android.app.Notification
-import android.content.BroadcastReceiver
 import android.content.ComponentName
-import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
@@ -38,6 +35,7 @@ class WhatsAppNotificationService : NotificationListenerService() {
     private lateinit var settingsManager: SettingsManager
 
     private data class TrackedVoipCall(val callId: String, val startTime: Long)
+
     private val activeVoipCalls = ConcurrentHashMap<String, TrackedVoipCall>()
     private val loggedUnclassifiedKeys = ConcurrentHashMap.newKeySet<String>()
 
@@ -67,13 +65,15 @@ class WhatsAppNotificationService : NotificationListenerService() {
         if (BuildConfig.DEBUG) Log.d(TAG, "WhatsAppNotificationService destroyed")
         super.onDestroy()
     }
+
     private fun initialize() {
         val appContext = applicationContext
         settingsManager = SettingsManager.getInstance(appContext)
         val callLogDao = CallLogDatabase.getInstance(appContext).callLogDao()
         val calendarManager = CalendarManager(appContext)
         val calendarId = settingsManager.selectedCalendarId
-        unifiedMonitor = UnifiedCallMonitor.getInstance(appContext, callLogDao, calendarManager, calendarId)
+        unifiedMonitor =
+            UnifiedCallMonitor.getInstance(appContext, callLogDao, calendarManager, calendarId)
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
@@ -111,7 +111,6 @@ class WhatsAppNotificationService : NotificationListenerService() {
     }
 
 
-
     // -------------------------------------------------------------------------
     // Main VoIP notification processing
     // -------------------------------------------------------------------------
@@ -124,9 +123,11 @@ class WhatsAppNotificationService : NotificationListenerService() {
         val title = extras.getString(Notification.EXTRA_TITLE) ?: ""
         val text = extras.getString(Notification.EXTRA_TEXT) ?: ""
         if (BuildConfig.DEBUG) {
-            Log.d(TAG, "VoIP notification from $appName: category=${notification.category}, " +
-                    "callType=${extras.getInt(Notification.EXTRA_CALL_TYPE, -1)}, " +
-                    "title='$title', text='$text', key=$notificationKey")
+            Log.d(
+                TAG, "VoIP notification from $appName: category=${notification.category}, " +
+                        "callType=${extras.getInt(Notification.EXTRA_CALL_TYPE, -1)}, " +
+                        "title='$title', text='$text', key=$notificationKey"
+            )
         }
 
         val category = notification.category
@@ -141,27 +142,43 @@ class WhatsAppNotificationService : NotificationListenerService() {
             CallState.INCOMING, CallState.SCREENING -> {
                 val reservation = TrackedVoipCall(callId, callStartTime)
                 if (activeVoipCalls.putIfAbsent(notificationKey, reservation) != null) {
-                    if (BuildConfig.DEBUG) Log.d(TAG, "Ignoring repost of already-tracked call: $notificationKey")
+                    if (BuildConfig.DEBUG) Log.d(
+                        TAG,
+                        "Ignoring repost of already-tracked call: $notificationKey"
+                    )
                     return
                 }
                 // ✅ Launch coroutine to process the call
                 serviceScope.launch {
-                    handleIncomingOrScreeningCall(notificationKey, callId, appName, extras, callStartTime, reservation)
+                    handleIncomingOrScreeningCall(
+                        notificationKey,
+                        callId,
+                        appName,
+                        extras,
+                        callStartTime,
+                        reservation
+                    )
                 }
             }
+
             CallState.OUTGOING -> {
                 val reservation = TrackedVoipCall(callId, callStartTime)
                 if (activeVoipCalls.putIfAbsent(notificationKey, reservation) != null) {
-                    if (BuildConfig.DEBUG) Log.d(TAG, "Ignoring repost of already-tracked outgoing call: $notificationKey")
+                    if (BuildConfig.DEBUG) Log.d(
+                        TAG,
+                        "Ignoring repost of already-tracked outgoing call: $notificationKey"
+                    )
                     return
                 }
                 serviceScope.launch {
                     try {
                         val number = extractPhoneNumberFromExtras(extras)
                         val finalNumber = if (number.isBlank()) {
-                            extractPhoneNumber(title, text,
+                            extractPhoneNumber(
+                                title, text,
                                 extras.getString(Notification.EXTRA_BIG_TEXT) ?: "",
-                                extras.getString(Notification.EXTRA_SUB_TEXT) ?: "")
+                                extras.getString(Notification.EXTRA_SUB_TEXT) ?: ""
+                            )
                         } else number
 
                         val result = if (finalNumber.isNotBlank()) {
@@ -177,14 +194,18 @@ class WhatsAppNotificationService : NotificationListenerService() {
                         }
 
                         if (finalNumber.isBlank() && displayName == null) {
-                            if (BuildConfig.DEBUG) Log.d(TAG, "Skipping outgoing call: no usable number/name")
+                            if (BuildConfig.DEBUG) Log.d(
+                                TAG,
+                                "Skipping outgoing call: no usable number/name"
+                            )
                             activeVoipCalls.remove(notificationKey, reservation)
                             return@launch
                         }
 
                         unifiedMonitor.onCallDetected(
                             callId = callId,
-                            number = if (finalNumber.isNotBlank()) finalNumber else displayName ?: "Unknown",
+                            number = if (finalNumber.isNotBlank()) finalNumber else displayName
+                                ?: "Unknown",
                             direction = "outgoing",
                             source = appName,
                             timestamp = System.currentTimeMillis(),
@@ -196,6 +217,7 @@ class WhatsAppNotificationService : NotificationListenerService() {
                     }
                 }
             }
+
             CallState.MISSED -> {
                 // Single-arg remove is safe here because we haven't inserted a reservation for this call.
                 val tracked = activeVoipCalls.remove(notificationKey)
@@ -230,6 +252,7 @@ class WhatsAppNotificationService : NotificationListenerService() {
                     }
                 }
             }
+
             CallState.ENDED -> {
                 // Single-arg remove is okay; if the key was reused, the wrong entry could be removed,
                 // but that is extremely unlikely because keys are unique per notification.
@@ -239,9 +262,13 @@ class WhatsAppNotificationService : NotificationListenerService() {
                         unifiedMonitor.onCallEnded(tracked.callId, System.currentTimeMillis())
                     }
                 } else {
-                    if (BuildConfig.DEBUG) Log.w(TAG, "Ended call without matching start: $notificationKey")
+                    if (BuildConfig.DEBUG) Log.w(
+                        TAG,
+                        "Ended call without matching start: $notificationKey"
+                    )
                 }
             }
+
             CallState.UNKNOWN -> {
                 fallbackTextBasedProcessing(sbn, appName, notificationKey)
             }
@@ -285,12 +312,16 @@ class WhatsAppNotificationService : NotificationListenerService() {
             }
 
             if (finalNumber.isBlank() && displayName == null) {
-                if (BuildConfig.DEBUG) Log.d(TAG, "Skipping incoming/screening call: no usable number/name")
+                if (BuildConfig.DEBUG) Log.d(
+                    TAG,
+                    "Skipping incoming/screening call: no usable number/name"
+                )
                 activeVoipCalls.remove(notificationKey, reservation)
                 return
             }
 
-            val displayNumber = if (finalNumber.isNotBlank()) finalNumber else displayName ?: "Unknown"
+            val displayNumber =
+                if (finalNumber.isNotBlank()) finalNumber else displayName ?: "Unknown"
 
             unifiedMonitor.onCallDetected(
                 callId = callId,
@@ -315,7 +346,11 @@ class WhatsAppNotificationService : NotificationListenerService() {
     // Legacy fallback (also fully async)
     // -------------------------------------------------------------------------
 
-    private fun fallbackTextBasedProcessing(sbn: StatusBarNotification, appName: String, notificationKey: String) {
+    private fun fallbackTextBasedProcessing(
+        sbn: StatusBarNotification,
+        appName: String,
+        notificationKey: String
+    ) {
         val extras = sbn.notification.extras ?: return
         val title = extras.getString(Notification.EXTRA_TITLE) ?: ""
         val text = extras.getString(Notification.EXTRA_TEXT) ?: ""
@@ -323,7 +358,8 @@ class WhatsAppNotificationService : NotificationListenerService() {
         val subText = extras.getString(Notification.EXTRA_SUB_TEXT) ?: ""
 
         if (title.isBlank() && text.isBlank() && bigText.isBlank() && subText.isBlank()
-            && notificationKey in loggedUnclassifiedKeys) {
+            && notificationKey in loggedUnclassifiedKeys
+        ) {
             return
         }
 
@@ -344,10 +380,18 @@ class WhatsAppNotificationService : NotificationListenerService() {
                 }
 
                 when {
-                    isCallEndedNotification(title, text, bigText, subText) -> { /* unchanged */ }
-                    isMissedCall(title, text, bigText, subText) -> { /* unchanged */ }
-                    isIncomingCall(title, text, bigText, subText) -> { /* unchanged */ }
-                    isPossibleOutgoingCall(title, text, bigText, subText) -> { /* unchanged */ }
+                    isCallEndedNotification(title, text, bigText, subText) -> { /* unchanged */
+                    }
+
+                    isMissedCall(title, text, bigText, subText) -> { /* unchanged */
+                    }
+
+                    isIncomingCall(title, text, bigText, subText) -> { /* unchanged */
+                    }
+
+                    isPossibleOutgoingCall(title, text, bigText, subText) -> { /* unchanged */
+                    }
+
                     else -> {
                         recordUnrecognizedCallNotification(appName, title, text, bigText, subText)
                         loggedUnclassifiedKeys.add(notificationKey)
@@ -382,6 +426,7 @@ class WhatsAppNotificationService : NotificationListenerService() {
                 }
                 return inferCallStateFromExtras(extras)
             }
+
             Notification.CATEGORY_MISSED_CALL -> return CallState.MISSED
         }
 
@@ -514,16 +559,42 @@ class WhatsAppNotificationService : NotificationListenerService() {
         return normalized.isEmpty() || normalized == "unknown contact" || normalized == "unknown"
     }
 
-    private fun isIncomingCall(title: String, text: String, bigText: String, subText: String): Boolean {
+    private fun isIncomingCall(
+        title: String,
+        text: String,
+        bigText: String,
+        subText: String
+    ): Boolean {
         val combinedText = "$title $text $bigText $subText".lowercase(Locale.ROOT)
         val strongIncoming = arrayOf(
-            "is calling you", "wants to call you", "incoming call", "incoming video call",
-            "incoming voice call", "inkomende oproep", "inkomende video-oproep", "inkomende stemoproep",
-            "bel jou", "wil jou bel", "eingehender anruf", "eingehender videoanruf",
-            "eingehender sprachanruf", "ruft dich an", "appel entrant", "appel video entrant",
-            "appel vocal entrant", "vous appelle", "llamada entrante", "videollamada entrante",
-            "llamada de voz entrante", "te esta llamando", "te está llamando", "chamada recebida",
-            "chamada de entrada", "chamada de video recebida", "está ligando para você", "esta ligando para voce"
+            "is calling you",
+            "wants to call you",
+            "incoming call",
+            "incoming video call",
+            "incoming voice call",
+            "inkomende oproep",
+            "inkomende video-oproep",
+            "inkomende stemoproep",
+            "bel jou",
+            "wil jou bel",
+            "eingehender anruf",
+            "eingehender videoanruf",
+            "eingehender sprachanruf",
+            "ruft dich an",
+            "appel entrant",
+            "appel video entrant",
+            "appel vocal entrant",
+            "vous appelle",
+            "llamada entrante",
+            "videollamada entrante",
+            "llamada de voz entrante",
+            "te esta llamando",
+            "te está llamando",
+            "chamada recebida",
+            "chamada de entrada",
+            "chamada de video recebida",
+            "está ligando para você",
+            "esta ligando para voce"
         )
         if (strongIncoming.any { combinedText.contains(it) }) return true
 
@@ -534,16 +605,39 @@ class WhatsAppNotificationService : NotificationListenerService() {
             combinedText.contains("chamada efetuada")
         ) return false
 
-        return combinedText.contains("calling") && (!combinedText.contains("you") || combinedText.contains("calling you"))
+        return combinedText.contains("calling") && (!combinedText.contains("you") || combinedText.contains(
+            "calling you"
+        ))
     }
 
-    private fun isPossibleOutgoingCall(title: String, text: String, bigText: String, subText: String): Boolean {
+    private fun isPossibleOutgoingCall(
+        title: String,
+        text: String,
+        bigText: String,
+        subText: String
+    ): Boolean {
         val combinedText = "$title $text $bigText $subText".lowercase(Locale.ROOT)
         val strongOutgoing = arrayOf(
-            "you called", "you are calling", "outgoing call", "call started", "calling…",
-            "uitgaande oproep", "jy het gebel", "jy bel", "ausgehender anruf", "du rufst an",
-            "appel sortant", "vous appelez", "llamada saliente", "estas llamando", "estás llamando",
-            "chamada efetuada", "ligacao efetuada", "ligação efetuada", "voce esta ligando", "você está ligando"
+            "you called",
+            "you are calling",
+            "outgoing call",
+            "call started",
+            "calling…",
+            "uitgaande oproep",
+            "jy het gebel",
+            "jy bel",
+            "ausgehender anruf",
+            "du rufst an",
+            "appel sortant",
+            "vous appelez",
+            "llamada saliente",
+            "estas llamando",
+            "estás llamando",
+            "chamada efetuada",
+            "ligacao efetuada",
+            "ligação efetuada",
+            "voce esta ligando",
+            "você está ligando"
         )
         if (strongOutgoing.any { combinedText.contains(it) }) return true
         if (combinedText.contains("is calling") || combinedText.contains("calling you") ||
@@ -552,32 +646,92 @@ class WhatsAppNotificationService : NotificationListenerService() {
         return false
     }
 
-    private fun isCallEndedNotification(title: String, text: String, bigText: String, subText: String): Boolean {
+    private fun isCallEndedNotification(
+        title: String,
+        text: String,
+        bigText: String,
+        subText: String
+    ): Boolean {
         val endedKeywords = arrayOf(
-            "call ended", "call finished", "call completed", "call duration", "call lasted",
-            "hung up", "disconnected", "call time", "oproep beeindig", "oproep beëindig",
-            "gesprek beeindig", "gesprek beëindig", "oproep klaar", "gesprek klaar", "gesprekstyd",
-            "anruf beendet", "gesprach beendet", "gespräch beendet", "appel termine", "appel terminé",
-            "llamada finalizada", "llamada terminada", "duracion de la llamada", "duración de la llamada",
-            "chamada encerrada", "ligacao encerrada", "ligação encerrada", "duracao da chamada", "duração da chamada"
+            "call ended",
+            "call finished",
+            "call completed",
+            "call duration",
+            "call lasted",
+            "hung up",
+            "disconnected",
+            "call time",
+            "oproep beeindig",
+            "oproep beëindig",
+            "gesprek beeindig",
+            "gesprek beëindig",
+            "oproep klaar",
+            "gesprek klaar",
+            "gesprekstyd",
+            "anruf beendet",
+            "gesprach beendet",
+            "gespräch beendet",
+            "appel termine",
+            "appel terminé",
+            "llamada finalizada",
+            "llamada terminada",
+            "duracion de la llamada",
+            "duración de la llamada",
+            "chamada encerrada",
+            "ligacao encerrada",
+            "ligação encerrada",
+            "duracao da chamada",
+            "duração da chamada"
         )
         val combinedText = "$title $text $bigText $subText".lowercase(Locale.ROOT)
         return endedKeywords.any { combinedText.contains(it) }
     }
 
-    private fun isMissedCall(title: String, text: String, bigText: String, subText: String): Boolean {
+    private fun isMissedCall(
+        title: String,
+        text: String,
+        bigText: String,
+        subText: String
+    ): Boolean {
         val missedKeywords = arrayOf(
-            "missed call", "missed video call", "missed voice call", "unanswered", "didn't answer", "no answer",
-            "gemiste oproep", "gemisde oproep", "onbeantwoord", "verpasster anruf", "nicht beantwortet",
-            "appel manque", "appel manqué", "sans reponse", "sans réponse", "llamada perdida", "no respondio",
-            "no respondió", "chamada perdida", "ligacao perdida", "ligação perdida", "nao atendida", "não atendida"
+            "missed call",
+            "missed video call",
+            "missed voice call",
+            "unanswered",
+            "didn't answer",
+            "no answer",
+            "gemiste oproep",
+            "gemisde oproep",
+            "onbeantwoord",
+            "verpasster anruf",
+            "nicht beantwortet",
+            "appel manque",
+            "appel manqué",
+            "sans reponse",
+            "sans réponse",
+            "llamada perdida",
+            "no respondio",
+            "no respondió",
+            "chamada perdida",
+            "ligacao perdida",
+            "ligação perdida",
+            "nao atendida",
+            "não atendida"
         )
         val combinedText = "$title $text $bigText $subText".lowercase(Locale.ROOT)
         return missedKeywords.any { combinedText.contains(it) }
     }
 
-    private fun extractCallerInfo(title: String, text: String, bigText: String, subText: String): String {
-        if (BuildConfig.DEBUG) Log.d(TAG, "Extracting caller from - Title: '$title', Text: '$text', BigText: '$bigText', SubText: '$subText'")
+    private fun extractCallerInfo(
+        title: String,
+        text: String,
+        bigText: String,
+        subText: String
+    ): String {
+        if (BuildConfig.DEBUG) Log.d(
+            TAG,
+            "Extracting caller from - Title: '$title', Text: '$text', BigText: '$bigText', SubText: '$subText'"
+        )
         val candidates = arrayOf(
             extractFromTitle(title), extractFromText(text), extractFromBigText(bigText),
             extractFromSubText(subText), extractPhoneNumber(title, text, bigText, subText),
@@ -595,8 +749,14 @@ class WhatsAppNotificationService : NotificationListenerService() {
         if (title.isEmpty()) return ""
         val cleaned = title
             .replace(Regex("[📞📹☎️📱🎥]"), "")
-            .replace(Regex("(?i)(incoming call|calling|video call|voice call|missed call|call from).*"), "")
-            .replace(Regex("(?i).*(whatsapp|skype|zoom|teams|discord|telegram|viber|messenger|meet).*"), "")
+            .replace(
+                Regex("(?i)(incoming call|calling|video call|voice call|missed call|call from).*"),
+                ""
+            )
+            .replace(
+                Regex("(?i).*(whatsapp|skype|zoom|teams|discord|telegram|viber|messenger|meet).*"),
+                ""
+            )
             .trim()
         return if (cleaned.isNotEmpty() && cleaned.length > 2 && !containsOnlyCallKeywords(cleaned)) cleaned else ""
     }
@@ -604,7 +764,10 @@ class WhatsAppNotificationService : NotificationListenerService() {
     private fun extractFromText(text: String): String {
         if (text.isEmpty()) return ""
         val patterns = arrayOf(
-            Regex("^(.+?)\\s+(is calling|calling you|wants to call|started a call)", RegexOption.IGNORE_CASE),
+            Regex(
+                "^(.+?)\\s+(is calling|calling you|wants to call|started a call)",
+                RegexOption.IGNORE_CASE
+            ),
             Regex("^(.+?)\\s+(voice call|video call|missed call)", RegexOption.IGNORE_CASE),
             Regex("Call from\\s+(.+?)\\s*$", RegexOption.IGNORE_CASE),
             Regex("^(.+?)\\s+.*call.*$", RegexOption.IGNORE_CASE)
@@ -626,7 +789,10 @@ class WhatsAppNotificationService : NotificationListenerService() {
         val lines = bigText.split("\n")
         for (line in lines) {
             val cleaned = line.trim()
-            if (cleaned.isNotEmpty() && !containsAppKeywords(cleaned) && !containsOnlyCallKeywords(cleaned)) {
+            if (cleaned.isNotEmpty() && !containsAppKeywords(cleaned) && !containsOnlyCallKeywords(
+                    cleaned
+                )
+            ) {
                 val words = cleaned.split("\\s+".toRegex())
                 if (words.isNotEmpty() && words[0].length > 2) {
                     return cleanExtractedName(words[0])
@@ -639,12 +805,20 @@ class WhatsAppNotificationService : NotificationListenerService() {
     private fun extractFromSubText(subText: String): String {
         if (subText.isEmpty()) return ""
         val cleaned = subText.trim()
-        return if (cleaned.isNotEmpty() && !containsAppKeywords(cleaned) && !containsOnlyCallKeywords(cleaned)) {
+        return if (cleaned.isNotEmpty() && !containsAppKeywords(cleaned) && !containsOnlyCallKeywords(
+                cleaned
+            )
+        ) {
             cleanExtractedName(cleaned)
         } else ""
     }
 
-    private fun extractPhoneNumber(title: String, text: String, bigText: String, subText: String): String {
+    private fun extractPhoneNumber(
+        title: String,
+        text: String,
+        bigText: String,
+        subText: String
+    ): String {
         val combinedText = "$title $text $bigText $subText"
         val phonePatterns = arrayOf(
             Regex("\\+?\\d{1,4}[\\s-]?\\(?\\d{1,4}\\)?[\\s-]?\\d{1,4}[\\s-]?\\d{1,9}"),
@@ -661,10 +835,17 @@ class WhatsAppNotificationService : NotificationListenerService() {
         return ""
     }
 
-    private fun extractFromTickerText(title: String, text: String, bigText: String, subText: String): String {
+    private fun extractFromTickerText(
+        title: String,
+        text: String,
+        bigText: String,
+        subText: String
+    ): String {
         val combinedText = "$title $text $bigText $subText"
         val patterns = arrayOf(
-            Regex("\"(.+?)\""), Regex("\\((.+?)\\)"), Regex("from\\s+(.+?)\\s*$", RegexOption.IGNORE_CASE),
+            Regex("\"(.+?)\""),
+            Regex("\\((.+?)\\)"),
+            Regex("from\\s+(.+?)\\s*$", RegexOption.IGNORE_CASE),
             Regex("^(.+?)\\s*:", RegexOption.IGNORE_CASE)
         )
         for (pattern in patterns) {
@@ -680,7 +861,8 @@ class WhatsAppNotificationService : NotificationListenerService() {
     }
 
     private fun containsOnlyCallKeywords(text: String): Boolean {
-        val callOnlyWords = arrayOf("call", "calling", "voice", "video", "incoming", "missed", "ended")
+        val callOnlyWords =
+            arrayOf("call", "calling", "voice", "video", "incoming", "missed", "ended")
         val words = text.lowercase(Locale.ROOT).split("\\s+".toRegex())
         for (word in words) {
             val isCallWord = callOnlyWords.any { it == word }
@@ -696,8 +878,24 @@ class WhatsAppNotificationService : NotificationListenerService() {
 
     private fun containsAppKeywords(text: String): Boolean {
         val appKeywords = arrayOf(
-            "whatsapp", "skype", "zoom", "teams", "discord", "telegram", "viber", "messenger", "meet",
-            "notification", "app", "calling", "call", "video", "voice", "missed", "incoming", "ended"
+            "whatsapp",
+            "skype",
+            "zoom",
+            "teams",
+            "discord",
+            "telegram",
+            "viber",
+            "messenger",
+            "meet",
+            "notification",
+            "app",
+            "calling",
+            "call",
+            "video",
+            "voice",
+            "missed",
+            "incoming",
+            "ended"
         )
         val lowerText = text.lowercase(Locale.ROOT)
         return appKeywords.any { lowerText.contains(it) }
@@ -713,7 +911,10 @@ class WhatsAppNotificationService : NotificationListenerService() {
 
     private fun extractSimpleNameFromText(text: String): String {
         val patterns = listOf(
-            Regex("^(.+?)\\s+(is calling|calling you|wants to call|started a call)", RegexOption.IGNORE_CASE),
+            Regex(
+                "^(.+?)\\s+(is calling|calling you|wants to call|started a call)",
+                RegexOption.IGNORE_CASE
+            ),
             Regex("Call from\\s+(.+?)\\s*$", RegexOption.IGNORE_CASE),
             Regex("^(.+?)\\s+(voice call|video call|missed call)", RegexOption.IGNORE_CASE)
         )
@@ -761,7 +962,10 @@ class WhatsAppNotificationService : NotificationListenerService() {
         loggedUnclassifiedKeys.remove(notificationKey)
         val tracked = activeVoipCalls.remove(notificationKey)
         if (tracked != null) {
-            if (BuildConfig.DEBUG) Log.d(TAG, "VoIP notification removed, ending call: ${tracked.callId} ($appName)")
+            if (BuildConfig.DEBUG) Log.d(
+                TAG,
+                "VoIP notification removed, ending call: ${tracked.callId} ($appName)"
+            )
             serviceScope.launch {
                 unifiedMonitor.onCallEnded(tracked.callId, System.currentTimeMillis())
             }
@@ -800,8 +1004,18 @@ class WhatsAppNotificationService : NotificationListenerService() {
     private fun recordUnrecognizedCallNotification(
         appName: String, title: String, text: String, bigText: String, subText: String
     ) {
-        if (BuildConfig.DEBUG) Log.w(TAG, "Unrecognized call-app notification from $appName: '$title' / '$text'")
-        CallNotificationDiagnostics.record(applicationContext, appName, title, text, bigText, subText)
+        if (BuildConfig.DEBUG) Log.w(
+            TAG,
+            "Unrecognized call-app notification from $appName: '$title' / '$text'"
+        )
+        CallNotificationDiagnostics.record(
+            applicationContext,
+            appName,
+            title,
+            text,
+            bigText,
+            subText
+        )
     }
 
     companion object {

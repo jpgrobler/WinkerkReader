@@ -40,7 +40,7 @@ class TemplateManagerActivity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         adapter = TemplateManagerAdapter(
-            onOpen   = { templateId -> navigationController.navigateToTemplateEditor(templateId) },
+            onOpen = { templateId -> navigationController.navigateToTemplateEditor(templateId) },
             onToggleActive = { templateId, isActive -> viewModel.setActive(templateId, isActive) },
             onDelete = { templateId, titleAf -> confirmDelete(templateId, titleAf) }
         )

@@ -65,7 +65,8 @@ class UitlegVertoonFragment : Fragment() {
             }
             settingsManager.themeMode = mode
             applyTheme(mode)
-            Toast.makeText(requireContext(), "Tema verander. Herbegin die app.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Tema verander. Herbegin die app.", Toast.LENGTH_SHORT)
+                .show()
         }
 
         Handler(Looper.getMainLooper()).postDelayed({
@@ -75,9 +76,17 @@ class UitlegVertoonFragment : Fragment() {
 
     private fun applyTheme(mode: SettingsManager.ThemeMode) {
         when (mode) {
-            SettingsManager.ThemeMode.LIGHT -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-            SettingsManager.ThemeMode.DARK -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-            SettingsManager.ThemeMode.SYSTEM -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+            SettingsManager.ThemeMode.LIGHT -> AppCompatDelegate.setDefaultNightMode(
+                AppCompatDelegate.MODE_NIGHT_NO
+            )
+
+            SettingsManager.ThemeMode.DARK -> AppCompatDelegate.setDefaultNightMode(
+                AppCompatDelegate.MODE_NIGHT_YES
+            )
+
+            SettingsManager.ThemeMode.SYSTEM -> AppCompatDelegate.setDefaultNightMode(
+                AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+            )
         }
     }
 
@@ -143,10 +152,16 @@ class UitlegVertoonFragment : Fragment() {
 
         // Layout spinner
         binding.layoutOpsies.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+            override fun onItemSelected(
+                parent: AdapterView<*>?,
+                view: View?,
+                position: Int,
+                id: Long
+            ) {
                 val selected = parent?.getItemAtPosition(position)?.toString() ?: return
                 if (selected != initialLayout) onUserChanged()
             }
+
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
 
@@ -282,7 +297,10 @@ class UitlegVertoonFragment : Fragment() {
         // Only apply if it's NOT the sentinel and NOT transparent
         if (color != Int.MIN_VALUE && color != 0) {
             textView.background = android.graphics.drawable.ColorDrawable(color)
-            val darkness = 1 - (0.299 * Color.red(color) + 0.587 * Color.green(color) + 0.114 * Color.blue(color)) / 255
+            val darkness =
+                1 - (0.299 * Color.red(color) + 0.587 * Color.green(color) + 0.114 * Color.blue(
+                    color
+                )) / 255
             textView.setTextColor(if (darkness >= 0.5) Color.WHITE else Color.BLACK)
         } else {
             // Reset to default background

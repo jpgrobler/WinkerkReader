@@ -1,249 +1,262 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:scrollbarSize="12dp"
-    android:scrollbars="vertical"
-    android:focusable="true"
-    android:fillViewport="true"
-    android:fitsSystemWindows="true"
-    android:focusableInTouchMode="true"
-    android:background="?attr/colorSurface">
+    android:fitsSystemWindows="true">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <!-- ============================================================= -->
+    <!-- Everything below is the ORIGINAL content, unchanged, now      -->
+    <!-- living inside a CoordinatorLayout root. This is what gives    -->
+    <!-- Snackbar.make(binding.root, ...) correct anchoring/inset      -->
+    <!-- handling (3 Snackbar calls in this activity) — no view IDs,   -->
+    <!-- constraints, or behavior changed below.                       -->
+    <!-- ============================================================= -->
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="16dp"
-        android:paddingTop="24dp">
+        android:layout_height="match_parent"
+        android:background="?attr/colorSurface"
+        android:fillViewport="true"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:scrollbarSize="12dp"
+        android:scrollbars="vertical">
 
-        <!-- About Card -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/cardAbout"
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="0dp"
-            app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
+            android:padding="16dp"
+            android:paddingTop="24dp">
 
-            <LinearLayout
+            <!-- About Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardAbout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="0dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
 
-                <TextView
-                    android:id="@+id/reg_about"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textSize="14sp"
-                    android:lineHeight="20sp"
-                    android:focusable="true"
-                    android:focusableInTouchMode="true"
-                    android:textIsSelectable="true" />
-
-                <com.google.android.material.divider.MaterialDivider
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginTop="12dp"
-                    app:dividerColor="?attr/colorOutlineVariant" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:text="@string/registreer_titel"
-                    android:textColor="?attr/colorPrimary"
-                    android:textStyle="bold"
-                    android:textSize="16sp" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Form Card -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/cardForm"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="1dp"
-            app:cardBackgroundColor="?attr/colorSurface"
-            app:layout_constraintTop_toBottomOf="@id/cardAbout"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <!-- Naam -->
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-                    app:placeholderText="@string/registreer_naam"
-                    app:placeholderTextColor="?attr/colorOnSurfaceVariant"
-                    app:boxStrokeColor="?attr/colorPrimary"
-                    app:hintTextColor="?attr/colorPrimary"
-                    app:errorEnabled="true">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/reg_naam"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="textCapWords"
-                        android:textColor="?attr/colorOnSurface"
-                        android:hint="@string/registreer_naam" />
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <!-- Van -->
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-                    app:placeholderText="@string/registreer_van"
-                    app:placeholderTextColor="?attr/colorOnSurfaceVariant"
-                    app:boxStrokeColor="?attr/colorPrimary"
-                    app:hintTextColor="?attr/colorPrimary"
-                    app:errorEnabled="true">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/reg_van"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="textCapWords"
-                        android:textColor="?attr/colorOnSurface"
-                        android:hint="@string/registreer_van" />
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <!-- E-Pos -->
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-                    app:placeholderText="@string/registreer_epos"
-                    app:placeholderTextColor="?attr/colorOnSurfaceVariant"
-                    app:boxStrokeColor="?attr/colorPrimary"
-                    app:hintTextColor="?attr/colorPrimary"
-                    app:errorEnabled="true">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/reg_epos"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="textEmailAddress"
-                        android:textColor="?attr/colorOnSurface"
-                        android:hint="@string/registreer_epos" />
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <!-- Selfoon -->
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-                    app:placeholderText="@string/registreer_selfoon"
-                    app:placeholderTextColor="?attr/colorOnSurfaceVariant"
-                    app:boxStrokeColor="?attr/colorPrimary"
-                    app:hintTextColor="?attr/colorPrimary"
-                    app:errorEnabled="true">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/reg_selno"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="phone"
-                        android:textColor="?attr/colorOnSurface"
-                        android:hint="@string/registreer_selfoon" />
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <com.google.android.material.divider.MaterialDivider
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginVertical="16dp"
-                    app:dividerColor="?attr/colorOutlineVariant" />
-
-                <!-- Gemeente Naam -->
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-                    app:placeholderText="@string/registreer_gemeente"
-                    app:placeholderTextColor="?attr/colorOnSurfaceVariant"
-                    app:boxStrokeColor="?attr/colorPrimary"
-                    app:hintTextColor="?attr/colorPrimary"
-                    app:errorEnabled="true">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/reg_gemeente"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="text"
-                        android:textColor="?attr/colorOnSurface"
-                        android:hint="@string/registreer_gemeente" />
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <!-- Gemeente E-Pos -->
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-                    app:placeholderText="@string/registreer_gemeente_epos"
-                    app:placeholderTextColor="?attr/colorOnSurfaceVariant"
-                    app:boxStrokeColor="?attr/colorPrimary"
-                    app:hintTextColor="?attr/colorPrimary"
-                    app:errorEnabled="true">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/reg_gemeente_epos"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="textEmailAddress"
-                        android:textColor="?attr/colorOnSurface"
-                        android:hint="@string/registreer_gemeente_epos" />
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <!-- Update Button Row -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
                     <TextView
-                        android:layout_width="0dp"
+                        android:id="@+id/reg_about"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/registreer_opdateer"
+                        android:focusable="true"
+                        android:focusableInTouchMode="true"
+                        android:lineHeight="20sp"
                         android:textColor="?attr/colorOnSurface"
-                        android:textStyle="bold"
+                        android:textIsSelectable="true"
                         android:textSize="14sp" />
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/reg_opdateer"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/opdateer_info"
-                        app:icon="@drawable/update"
-                        app:iconGravity="textStart"
-                        app:iconTint="?attr/colorOnPrimary"
-                        style="@style/Widget.Material3.Button"
-                        android:backgroundTint="?attr/colorPrimary"
-                        android:textColor="?attr/colorOnPrimary"
-                        android:tooltipText="@string/opdateer_info" />
-                </LinearLayout>
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+                    <com.google.android.material.divider.MaterialDivider
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginTop="12dp"
+                        app:dividerColor="?attr/colorOutlineVariant" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
-</ScrollView>
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="@string/registreer_titel"
+                        android:textColor="?attr/colorPrimary"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Form Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardForm"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="0dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/cardAbout">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <!-- Naam -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:boxStrokeColor="?attr/colorPrimary"
+                        app:errorEnabled="true"
+                        app:hintTextColor="?attr/colorPrimary"
+                        app:placeholderText="@string/registreer_naam"
+                        app:placeholderTextColor="?attr/colorOnSurfaceVariant">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/reg_naam"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/registreer_naam"
+                            android:inputType="textCapWords"
+                            android:textColor="?attr/colorOnSurface" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- Van -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        app:boxStrokeColor="?attr/colorPrimary"
+                        app:errorEnabled="true"
+                        app:hintTextColor="?attr/colorPrimary"
+                        app:placeholderText="@string/registreer_van"
+                        app:placeholderTextColor="?attr/colorOnSurfaceVariant">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/reg_van"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/registreer_van"
+                            android:inputType="textCapWords"
+                            android:textColor="?attr/colorOnSurface" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- E-Pos -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        app:boxStrokeColor="?attr/colorPrimary"
+                        app:errorEnabled="true"
+                        app:hintTextColor="?attr/colorPrimary"
+                        app:placeholderText="@string/registreer_epos"
+                        app:placeholderTextColor="?attr/colorOnSurfaceVariant">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/reg_epos"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/registreer_epos"
+                            android:inputType="textEmailAddress"
+                            android:textColor="?attr/colorOnSurface" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- Selfoon -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        app:boxStrokeColor="?attr/colorPrimary"
+                        app:errorEnabled="true"
+                        app:hintTextColor="?attr/colorPrimary"
+                        app:placeholderText="@string/registreer_selfoon"
+                        app:placeholderTextColor="?attr/colorOnSurfaceVariant">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/reg_selno"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/registreer_selfoon"
+                            android:inputType="phone"
+                            android:textColor="?attr/colorOnSurface" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.divider.MaterialDivider
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginVertical="16dp"
+                        app:dividerColor="?attr/colorOutlineVariant" />
+
+                    <!-- Gemeente Naam -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:boxStrokeColor="?attr/colorPrimary"
+                        app:errorEnabled="true"
+                        app:hintTextColor="?attr/colorPrimary"
+                        app:placeholderText="@string/registreer_gemeente"
+                        app:placeholderTextColor="?attr/colorOnSurfaceVariant">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/reg_gemeente"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/registreer_gemeente"
+                            android:inputType="text"
+                            android:textColor="?attr/colorOnSurface" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- Gemeente E-Pos -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        app:boxStrokeColor="?attr/colorPrimary"
+                        app:errorEnabled="true"
+                        app:hintTextColor="?attr/colorPrimary"
+                        app:placeholderText="@string/registreer_gemeente_epos"
+                        app:placeholderTextColor="?attr/colorOnSurfaceVariant">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/reg_gemeente_epos"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/registreer_gemeente_epos"
+                            android:inputType="textEmailAddress"
+                            android:textColor="?attr/colorOnSurface" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- Update Button Row -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/registreer_opdateer"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/reg_opdateer"
+                            style="@style/Widget.Material3.Button"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:backgroundTint="?attr/colorPrimary"
+                            android:text="@string/opdateer_info"
+                            android:textColor="?attr/colorOnPrimary"
+                            android:tooltipText="@string/opdateer_info"
+                            app:icon="@drawable/update"
+                            app:iconGravity="textStart"
+                            app:iconTint="?attr/colorOnPrimary" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </ScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

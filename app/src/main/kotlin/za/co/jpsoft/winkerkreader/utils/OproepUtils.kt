@@ -31,8 +31,10 @@ class OproepUtils(
 
     init {
         logMissed = prefs.getBoolean(context.getString(R.string.log_missed_preference_key), true)
-        logOutgoing = prefs.getBoolean(context.getString(R.string.log_outgoing_preference_key), true)
-        logIncoming = prefs.getBoolean(context.getString(R.string.log_incoming_preference_key), true)
+        logOutgoing =
+            prefs.getBoolean(context.getString(R.string.log_outgoing_preference_key), true)
+        logIncoming =
+            prefs.getBoolean(context.getString(R.string.log_incoming_preference_key), true)
     }
 
     /**
@@ -42,13 +44,15 @@ class OproepUtils(
     @WorkerThread
     fun syncRecentCallsToCalendar() {
         // Check permissions
-                if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CALL_LOG)
-                    != PackageManager.PERMISSION_GRANTED) {
-                    if (BuildConfig.DEBUG) Log.w(TAG, "READ_CALL_LOG permission missing, skipping sync")
-                    return
-                }
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CALL_LOG)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            if (BuildConfig.DEBUG) Log.w(TAG, "READ_CALL_LOG permission missing, skipping sync")
+            return
+        }
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_CALENDAR)
-            != PackageManager.PERMISSION_GRANTED) {
+            != PackageManager.PERMISSION_GRANTED
+        ) {
             if (BuildConfig.DEBUG) Log.w(TAG, "WRITE_CALENDAR permission missing, skipping sync")
             return
         }
@@ -108,7 +112,8 @@ class OproepUtils(
                 }
 
                 if (shouldLog) {
-                    val callRecord = CallRecord(number, name, type, duration, date, numberType, context)
+                    val callRecord =
+                        CallRecord(number, name, type, duration, date, numberType, context)
                     val tag = "[call_log_id=$id]"
 
                     // Check if an event with this call_log_id already exists in the calendar
@@ -125,9 +130,15 @@ class OproepUtils(
                         )
 
                         try {
-                            val uri = context.contentResolver.insert(CalendarContract.Events.CONTENT_URI, values)
+                            val uri = context.contentResolver.insert(
+                                CalendarContract.Events.CONTENT_URI,
+                                values
+                            )
                             if (uri == null) {
-                                if (BuildConfig.DEBUG) Log.e(TAG, "Insert returned null for call ID $id")
+                                if (BuildConfig.DEBUG) Log.e(
+                                    TAG,
+                                    "Insert returned null for call ID $id"
+                                )
                                 // Stop processing to avoid gaps; next sync will retry from maxProcessedId
                                 break
                             }
@@ -164,7 +175,8 @@ class OproepUtils(
      */
     @WorkerThread
     private fun eventExistsWithTag(calendarId: Long, tag: String): Boolean {
-        val selection = "${CalendarContract.Events.DESCRIPTION} LIKE ? AND ${CalendarContract.Events.CALENDAR_ID} = ?"
+        val selection =
+            "${CalendarContract.Events.DESCRIPTION} LIKE ? AND ${CalendarContract.Events.CALENDAR_ID} = ?"
         val pattern = "%$tag%"
         val cursor = context.contentResolver.query(
             CalendarContract.Events.CONTENT_URI,
@@ -179,7 +191,13 @@ class OproepUtils(
     // Helper to create event with call log ID in description
     // Helper to create event with call log ID in description
     @WorkerThread
-    private fun createEventWithCallId(calendarId: Long, title: String, description: String, start: Long, end: Long): ContentValues {
+    private fun createEventWithCallId(
+        calendarId: Long,
+        title: String,
+        description: String,
+        start: Long,
+        end: Long
+    ): ContentValues {
         return ContentValues().apply {
             put(CalendarContract.Events.CALENDAR_ID, calendarId)
             put(CalendarContract.Events.TITLE, title)

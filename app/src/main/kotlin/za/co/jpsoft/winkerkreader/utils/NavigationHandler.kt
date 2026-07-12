@@ -13,7 +13,11 @@ import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel
 object NavigationHandler {
 
     @JvmStatic
-    fun handleLeftSwipe(activity: MainActivity, sortOrderView: TextView, viewModel: MemberViewModel) {
+    fun handleLeftSwipe(
+        activity: MainActivity,
+        sortOrderView: TextView,
+        viewModel: MemberViewModel
+    ) {
         when (viewModel.sortOrder) {
             "HUWELIK" -> switchTo(activity, sortOrderView, "VAN", "VAN", viewModel)
             "VAN" -> switchTo(activity, sortOrderView, "GESINNE", "GESINNE", viewModel)
@@ -26,7 +30,11 @@ object NavigationHandler {
     }
 
     @JvmStatic
-    fun handleRightSwipe(activity: MainActivity, sortOrderView: TextView, viewModel: MemberViewModel) {
+    fun handleRightSwipe(
+        activity: MainActivity,
+        sortOrderView: TextView,
+        viewModel: MemberViewModel
+    ) {
         when (viewModel.sortOrder) {
             "HUWELIK" -> switchTo(activity, sortOrderView, "VERJAAR", "VERJAAR", viewModel)
             "VERJAAR" -> switchTo(activity, sortOrderView, "ADRES", "ADRES", viewModel)
@@ -38,7 +46,13 @@ object NavigationHandler {
         }
     }
 
-    private fun switchTo(activity: MainActivity, sortOrderView: TextView, sortOrder: String, layout: String, viewModel: MemberViewModel) {
+    private fun switchTo(
+        activity: MainActivity,
+        sortOrderView: TextView,
+        sortOrder: String,
+        layout: String,
+        viewModel: MemberViewModel
+    ) {
         sortOrderView.background = null
         viewModel.soekList = false
         activity.updateSortOrder(sortOrder)   // ✅ this updates settingsManager, text, eventType, AND refreshes

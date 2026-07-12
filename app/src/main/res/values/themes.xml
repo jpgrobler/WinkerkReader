@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <style name="Theme.WinkerkReader" parent="Theme.Material3.DayNight">
         <!-- Colour roles -->
         <item name="colorPrimary">@color/md_theme_primary</item>
@@ -38,7 +39,7 @@
         <item name="colorOutline">@color/md_theme_outline</item>
         <item name="colorOutlineVariant">@color/md_theme_outlineVariant</item>
 
-         <!-- Status bar -->
+        <!-- Status bar -->
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">true</item>
 

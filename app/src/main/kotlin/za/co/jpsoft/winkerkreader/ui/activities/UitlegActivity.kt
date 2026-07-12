@@ -86,7 +86,10 @@ class UitlegActivity : AppCompatActivity(), UitlegCalendarSelectionListener {
         var funksies: UitlegFunksiesFragment? = null
         for (fragment in fragments) {
             if (BuildConfig.DEBUG) {
-                Log.d("UitlegActivity", "Fragment: ${fragment.javaClass.simpleName}, tag: ${fragment.tag}")
+                Log.d(
+                    "UitlegActivity",
+                    "Fragment: ${fragment.javaClass.simpleName}, tag: ${fragment.tag}"
+                )
             }
             when (fragment) {
                 is UitlegPastoraalFragment -> pastoraal = fragment
@@ -101,7 +104,11 @@ class UitlegActivity : AppCompatActivity(), UitlegCalendarSelectionListener {
                 pastoraal.setPastoralCalendarSpinner(adapter, selectedPastoralCalendarId)
                 funksies.setCallCalendarSpinner(adapter, selectedCalendarId)
             } else {
-                val emptyAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, listOf("Geen kalenders gevind"))
+                val emptyAdapter = ArrayAdapter(
+                    this,
+                    android.R.layout.simple_spinner_item,
+                    listOf("Geen kalenders gevind")
+                )
                 emptyAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                 pastoraal.setPastoralCalendarSpinner(emptyAdapter, -1L)
                 funksies.setCallCalendarSpinner(emptyAdapter, -1L)
@@ -112,20 +119,31 @@ class UitlegActivity : AppCompatActivity(), UitlegCalendarSelectionListener {
             retryCount++
             if (retryCount <= MAX_RETRIES) {
                 if (BuildConfig.DEBUG) {
-                    Log.d("UitlegActivity", "Retry $retryCount/$MAX_RETRIES: Pastoraal found: ${pastoraal != null}, Funksies found: ${funksies != null}")
+                    Log.d(
+                        "UitlegActivity",
+                        "Retry $retryCount/$MAX_RETRIES: Pastoraal found: ${pastoraal != null}, Funksies found: ${funksies != null}"
+                    )
                 }
                 Handler(Looper.getMainLooper()).postDelayed({
                     findAndSetFragments()
                 }, 500)
             } else {
                 // Gee op – stel leë spinners
-                val emptyAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, listOf("Foute: kon fragmente nie vind nie"))
+                val emptyAdapter = ArrayAdapter(
+                    this,
+                    android.R.layout.simple_spinner_item,
+                    listOf("Foute: kon fragmente nie vind nie")
+                )
                 emptyAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                 // Probeer nog een keer om die fragmente te kry, maar as dit nie werk nie, is daar niks
                 val lastTry = supportFragmentManager.fragments
                 for (f in lastTry) {
                     when (f) {
-                        is UitlegPastoraalFragment -> f.setPastoralCalendarSpinner(emptyAdapter, -1L)
+                        is UitlegPastoraalFragment -> f.setPastoralCalendarSpinner(
+                            emptyAdapter,
+                            -1L
+                        )
+
                         is UitlegFunksiesFragment -> f.setCallCalendarSpinner(emptyAdapter, -1L)
                     }
                 }
@@ -133,18 +151,30 @@ class UitlegActivity : AppCompatActivity(), UitlegCalendarSelectionListener {
         }
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == PERMISSION_REQUEST_CALENDAR) {
             if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
                 tryLoadCalendars()
             } else {
-                val emptyAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, listOf("Toestemming benodig"))
+                val emptyAdapter = ArrayAdapter(
+                    this,
+                    android.R.layout.simple_spinner_item,
+                    listOf("Toestemming benodig")
+                )
                 emptyAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                 val fragments = supportFragmentManager.fragments
                 for (f in fragments) {
                     when (f) {
-                        is UitlegPastoraalFragment -> f.setPastoralCalendarSpinner(emptyAdapter, -1L)
+                        is UitlegPastoraalFragment -> f.setPastoralCalendarSpinner(
+                            emptyAdapter,
+                            -1L
+                        )
+
                         is UitlegFunksiesFragment -> f.setCallCalendarSpinner(emptyAdapter, -1L)
                     }
                 }

@@ -2,25 +2,25 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="12dp"
     android:layout_margin="4dp"
-    android:background="@drawable/call_log_item_background">
+    android:background="@drawable/call_log_item_background"
+    android:orientation="vertical"
+    android:padding="12dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical">
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
 
         <!-- Call Icon with dynamic emoji -->
         <TextView
+            android:id="@+id/callIcon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/callIcon"
+            android:layout_marginEnd="12dp"
             android:text="@string/call_icon_phone"
-            android:textSize="20sp"
-            android:layout_marginEnd="12dp" />
+            android:textSize="20sp" />
 
         <!-- Call Info -->
         <LinearLayout
@@ -34,18 +34,18 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/caller_name_placeholder"
+                android:textColor="#333333"
                 android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="#333333" />
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/dateTime"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
                 android:text="@string/call_datetime_placeholder"
-                android:textSize="14sp"
                 android:textColor="#666666"
-                android:layout_marginTop="2dp" />
+                android:textSize="14sp" />
 
         </LinearLayout>
 
@@ -54,12 +54,12 @@
             android:id="@+id/callNumber"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/call_number_placeholder"
-            android:textSize="12sp"
-            android:textColor="#888888"
+            android:layout_marginStart="8dp"
             android:background="#E0E0E0"
             android:padding="4dp"
-            android:layout_marginStart="8dp" />
+            android:text="@string/call_number_placeholder"
+            android:textColor="#888888"
+            android:textSize="12sp" />
 
     </LinearLayout>
 

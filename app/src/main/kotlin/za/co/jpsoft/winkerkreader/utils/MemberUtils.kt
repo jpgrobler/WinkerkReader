@@ -85,7 +85,8 @@ object MemberUtils {
     fun copyToContacts(context: Context, item: MemberItem) {
         val name = item.name
         val surname = item.surname
-        val cellPhone = if (item.cellphone.isNotEmpty()) Utils.fixphonenumber(item.cellphone) else null
+        val cellPhone =
+            if (item.cellphone.isNotEmpty()) Utils.fixphonenumber(item.cellphone) else null
         val landline = if (item.landline.isNotEmpty()) Utils.fixphonenumber(item.landline) else null
         val email = item.email
         val address = item.address
@@ -99,12 +100,18 @@ object MemberUtils {
 
             cellPhone?.let {
                 putExtra(ContactsContract.Intents.Insert.PHONE, it)
-                putExtra(ContactsContract.Intents.Insert.PHONE_TYPE, ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE)
+                putExtra(
+                    ContactsContract.Intents.Insert.PHONE_TYPE,
+                    ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE
+                )
             }
 
             landline?.let {
                 putExtra(ContactsContract.Intents.Insert.SECONDARY_PHONE, it)
-                putExtra(ContactsContract.Intents.Insert.SECONDARY_PHONE_TYPE, ContactsContract.CommonDataKinds.Phone.TYPE_HOME)
+                putExtra(
+                    ContactsContract.Intents.Insert.SECONDARY_PHONE_TYPE,
+                    ContactsContract.CommonDataKinds.Phone.TYPE_HOME
+                )
             }
 
             email?.let {
@@ -120,14 +127,29 @@ object MemberUtils {
                 val data = ArrayList<ContentValues>().apply {
                     // Birthday
                     add(ContentValues().apply {
-                        put(ContactsContract.CommonDataKinds.Event.MIMETYPE, ContactsContract.CommonDataKinds.Event.CONTENT_ITEM_TYPE)
-                        put(ContactsContract.CommonDataKinds.Event.TYPE, ContactsContract.CommonDataKinds.Event.TYPE_BIRTHDAY)
-                        put(ContactsContract.CommonDataKinds.Event.START_DATE, birthday.substring(0, 10))
+                        put(
+                            ContactsContract.CommonDataKinds.Event.MIMETYPE,
+                            ContactsContract.CommonDataKinds.Event.CONTENT_ITEM_TYPE
+                        )
+                        put(
+                            ContactsContract.CommonDataKinds.Event.TYPE,
+                            ContactsContract.CommonDataKinds.Event.TYPE_BIRTHDAY
+                        )
+                        put(
+                            ContactsContract.CommonDataKinds.Event.START_DATE,
+                            birthday.substring(0, 10)
+                        )
                     })
                     // Nickname
                     add(ContentValues().apply {
-                        put(ContactsContract.CommonDataKinds.Nickname.MIMETYPE, ContactsContract.CommonDataKinds.Nickname.CONTENT_ITEM_TYPE)
-                        put(ContactsContract.CommonDataKinds.Nickname.TYPE, ContactsContract.CommonDataKinds.Nickname.TYPE_SHORT_NAME)
+                        put(
+                            ContactsContract.CommonDataKinds.Nickname.MIMETYPE,
+                            ContactsContract.CommonDataKinds.Nickname.CONTENT_ITEM_TYPE
+                        )
+                        put(
+                            ContactsContract.CommonDataKinds.Nickname.TYPE,
+                            ContactsContract.CommonDataKinds.Nickname.TYPE_SHORT_NAME
+                        )
                         put(ContactsContract.CommonDataKinds.Nickname.NAME, name)
                     })
                 }
@@ -177,6 +199,7 @@ object MemberUtils {
                     val uri = Uri.parse("smsto: $phone")
                     Intent(Intent.ACTION_SENDTO, uri).apply { `package` = "com.whatsapp" }
                 }
+
                 2 -> {
                     val url = "https://api.whatsapp.com/send?phone=$phone"
                     Intent(Intent.ACTION_VIEW).apply {
@@ -184,6 +207,7 @@ object MemberUtils {
                         `package` = "com.whatsapp"
                     }
                 }
+
                 else -> {
                     Intent("android.intent.action.MAIN").apply {
                         action = Intent.ACTION_SEND
@@ -212,7 +236,10 @@ object MemberUtils {
 
     fun openMemberDetail(context: Context, item: MemberItem, recordStatus: String) {
         try {
-            if (BuildConfig.DEBUG) Log.d("MemberUtils", "Opening detail for ${item.name} ${item.surname}, GUID = ${item.guid}")
+            if (BuildConfig.DEBUG) Log.d(
+                "MemberUtils",
+                "Opening detail for ${item.name} ${item.surname}, GUID = ${item.guid}"
+            )
             val intent = Intent(context, LidmaatDetailActivity::class.java).apply {
                 data = ContentUris.withAppendedId(
                     za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.CONTENT_URI,
@@ -240,15 +267,18 @@ object MemberUtils {
         }
         val guid = item.guid
         if (guid.isNullOrBlank()) {
-            if (BuildConfig.DEBUG) Log.e(TAG, "openVoegNotaBy: memberGuid is null/blank for ${item.name}")
+            if (BuildConfig.DEBUG) Log.e(
+                TAG,
+                "openVoegNotaBy: memberGuid is null/blank for ${item.name}"
+            )
             return
         }
         VoegNotaByBottomSheet.newInstance(
-            memberGuid        = guid,
-            familyHeadGuid    = item.familyHead,
+            memberGuid = guid,
+            familyHeadGuid = item.familyHead,
             memberDisplayName = "${item.name} ${item.surname}".trim(),
-            memberSurname     = item.surname.ifBlank { null },
-            memberGivenName   = item.name.ifBlank { null }
+            memberSurname = item.surname.ifBlank { null },
+            memberGivenName = item.name.ifBlank { null }
         ).show(activity.supportFragmentManager, VoegNotaByBottomSheet.TAG)
     }
 
@@ -259,16 +289,22 @@ object MemberUtils {
     fun openStelHerinnering(context: Context, item: MemberItem) {
         val activity = context as? androidx.fragment.app.FragmentActivity
         if (activity == null) {
-            if (BuildConfig.DEBUG) Log.e(TAG, "openStelHerinnering: context is not a FragmentActivity")
+            if (BuildConfig.DEBUG) Log.e(
+                TAG,
+                "openStelHerinnering: context is not a FragmentActivity"
+            )
             return
         }
         val guid = item.guid
         if (guid.isNullOrBlank()) {
-            if (BuildConfig.DEBUG) Log.e(TAG, "openStelHerinnering: memberGuid is null/blank for ${item.name}")
+            if (BuildConfig.DEBUG) Log.e(
+                TAG,
+                "openStelHerinnering: memberGuid is null/blank for ${item.name}"
+            )
             return
         }
         StelHerinneringBottomSheet.newInstance(
-            memberGuid     = guid,
+            memberGuid = guid,
             familyHeadGuid = item.familyHead
         ).show(activity.supportFragmentManager, StelHerinneringBottomSheet.TAG)
     }
@@ -289,8 +325,14 @@ object MemberUtils {
 
         add("Naam", item.name)
         add("Van", item.surname)
-        add("Selfoon", if (item.cellphone.isNotEmpty()) Utils.fixphonenumber(item.cellphone) else null)
-        add("Landlyn", if (item.landline.isNotEmpty()) Utils.fixphonenumber(item.landline) else null)
+        add(
+            "Selfoon",
+            if (item.cellphone.isNotEmpty()) Utils.fixphonenumber(item.cellphone) else null
+        )
+        add(
+            "Landlyn",
+            if (item.landline.isNotEmpty()) Utils.fixphonenumber(item.landline) else null
+        )
         add("Epos", item.email)
         add("Adres", item.address)
 

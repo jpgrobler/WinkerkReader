@@ -33,7 +33,8 @@ class StepEditorDialog : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         _binding = DialogStepEditorBinding.inflate(layoutInflater)
 
-        editingStep = arguments?.getString(ARG_STEP_JSON)?.let { /* not used — passed via setter below */ null }
+        editingStep = arguments?.getString(ARG_STEP_JSON)
+            ?.let { /* not used — passed via setter below */ null }
 
         // Prefill if editing
         stepBeingEdited?.let { step ->
@@ -108,7 +109,8 @@ class StepEditorDialog : DialogFragment() {
 
     companion object {
         private const val ARG_STEP_JSON = "arg_step_json"
-        private var stepBeingEdited: TemplateStepEntity? = null   // simplest carrier; cleared on use
+        private var stepBeingEdited: TemplateStepEntity? =
+            null   // simplest carrier; cleared on use
 
         /** For adding a new step. */
         fun newInstance(): StepEditorDialog {

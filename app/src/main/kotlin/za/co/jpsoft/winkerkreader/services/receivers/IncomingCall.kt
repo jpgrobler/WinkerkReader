@@ -45,6 +45,7 @@ class IncomingCall : BroadcastReceiver() {
                     }
                 }
             }
+
             TelephonyManager.EXTRA_STATE_IDLE -> {
                 if (OproepDetailService.isOn) {
                     scheduleServiceStop(context)
@@ -76,9 +77,16 @@ class IncomingCall : BroadcastReceiver() {
                 val intent = Intent(context, CallMonitoringService::class.java)
                     .putExtra("incoming_number", number)
                 context.startForegroundService(intent)
-                if (BuildConfig.DEBUG) Log.d(TAG, "Forwarded incoming number to running CallMonitoringService: $number")
+                if (BuildConfig.DEBUG) Log.d(
+                    TAG,
+                    "Forwarded incoming number to running CallMonitoringService: $number"
+                )
             } catch (e: Exception) {
-                if (BuildConfig.DEBUG) Log.e(TAG, "Failed to forward number to CallMonitoringService", e)
+                if (BuildConfig.DEBUG) Log.e(
+                    TAG,
+                    "Failed to forward number to CallMonitoringService",
+                    e
+                )
             }
         }
     }
@@ -90,7 +98,10 @@ class IncomingCall : BroadcastReceiver() {
             context.startForegroundService(serviceIntent)
             if (BuildConfig.DEBUG) Log.d(TAG, "Caller identification service started for $number")
         } catch (e: Exception) {
-            if (BuildConfig.DEBUG) Log.e(TAG, "Failed to start caller identification service: ${e.message}")
+            if (BuildConfig.DEBUG) Log.e(
+                TAG,
+                "Failed to start caller identification service: ${e.message}"
+            )
         }
     }
 
@@ -108,7 +119,10 @@ class IncomingCall : BroadcastReceiver() {
             context.stopService(serviceIntent)
             if (BuildConfig.DEBUG) Log.d(TAG, "Caller identification service stopped")
         } catch (e: Exception) {
-            if (BuildConfig.DEBUG) Log.e(TAG, "Failed to stop caller identification service: ${e.message}")
+            if (BuildConfig.DEBUG) Log.e(
+                TAG,
+                "Failed to stop caller identification service: ${e.message}"
+            )
         }
     }
 

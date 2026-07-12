@@ -41,13 +41,13 @@ object WinkerkContract {
     const val KEY_WHATSAPP3 = "Whatsapp3"
     const val KEY_EPOSHTML = "EposHtml"
     const val KEY_SELECTED_CALENDAR_ID = "selected_calendar_id"
-    const val KEY_PASTORAL_SYNC_CALENDAR       = "pref_pastoral_sync_calendar"
+    const val KEY_PASTORAL_SYNC_CALENDAR = "pref_pastoral_sync_calendar"
     const val KEY_PASTORAL_CALENDAR_AUTO_TIMED = "pref_pastoral_calendar_auto_timed"
 
     // Google Tasks
-    const val KEY_GOOGLE_TASKS_MODE      = "pref_google_tasks_mode"       // "off" | "api" | "share"
-    const val KEY_GOOGLE_TASKS_LIST_ID   = "pref_google_tasks_list_id"
-    const val KEY_GOOGLE_TASKS_ACCOUNT   = "pref_google_tasks_account"    // cached email for display
+    const val KEY_GOOGLE_TASKS_MODE = "pref_google_tasks_mode"       // "off" | "api" | "share"
+    const val KEY_GOOGLE_TASKS_LIST_ID = "pref_google_tasks_list_id"
+    const val KEY_GOOGLE_TASKS_ACCOUNT = "pref_google_tasks_account"    // cached email for display
 
     // Widget Settings Keys
     const val KEY_WIDGET_DOOP = "Widget_Doop"
@@ -97,80 +97,116 @@ object WinkerkContract {
     object winkerkEntry : BaseColumns {
 
 
+        @JvmField
+        val CONTENT_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_LIDMATE)
+        @JvmField
+        val ARGIEF_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_ARGIEF)
 
-        @JvmField val CONTENT_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_LIDMATE)
-        @JvmField val ARGIEF_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_ARGIEF)
-
-        @JvmField val CONTENT_LIST_TYPE =
+        @JvmField
+        val CONTENT_LIST_TYPE =
             ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_LIDMATE
 
-        @JvmField val CONTENT_ITEM_TYPE =
+        @JvmField
+        val CONTENT_ITEM_TYPE =
             ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_LIDMATE
 
-        @JvmField val CONTENT_ADRES_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_ADRES)
-        @JvmField val CONTENT_ADRES_TYPE =
+        @JvmField
+        val CONTENT_ADRES_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_ADRES)
+        @JvmField
+        val CONTENT_ADRES_TYPE =
             ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_ADRES
 
-        @JvmField val CONTENT_GESINNE_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_GESINNE)
-        @JvmField val CONTENT_GESINNE_TYPE =
+        @JvmField
+        val CONTENT_GESINNE_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_GESINNE)
+        @JvmField
+        val CONTENT_GESINNE_TYPE =
             ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_GESINNE
 
-        @JvmField val CONTENT_GESIN_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_GESIN)
-        @JvmField val CONTENT_GESIN_LIST_TYPE =
+        @JvmField
+        val CONTENT_GESIN_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_GESIN)
+        @JvmField
+        val CONTENT_GESIN_LIST_TYPE =
             ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_GESIN
 
-        @JvmField val CONTENT_FOON_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_FOON)
-        @JvmField val CONTENT_FOON_LIST_TYPE =
+        @JvmField
+        val CONTENT_FOON_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_FOON)
+        @JvmField
+        val CONTENT_FOON_LIST_TYPE =
             ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_FOON
 
-        @JvmField val CONTENT_MYLPALE_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_MYLPALE)
-        @JvmField val CONTENT_MYLPALE_LIST_TYPE =
+        @JvmField
+        val CONTENT_MYLPALE_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_MYLPALE)
+        @JvmField
+        val CONTENT_MYLPALE_LIST_TYPE =
             ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_MYLPALE
 
-        @JvmField val CONTENT_MEELEWING_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_MEELEWING)
-        @JvmField val CONTENT_MEELEWING_LIST_TYPE =
+        @JvmField
+        val CONTENT_MEELEWING_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_MEELEWING)
+        @JvmField
+        val CONTENT_MEELEWING_LIST_TYPE =
             ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_MEELEWING
 
-        @JvmField val CONTENT_GROEPE_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_GROEPE)
-        @JvmField val CONTENT_GROEPE_LIST_TYPE =
+        @JvmField
+        val CONTENT_GROEPE_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_GROEPE)
+        @JvmField
+        val CONTENT_GROEPE_LIST_TYPE =
             ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_GROEPE
 
-        @JvmField val CONTENT_GROEPE_LYS_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_GROEPE_LYS)
-        @JvmField val CONTENT_GROEPE_LYS_TYPE =
+        @JvmField
+        val CONTENT_GROEPE_LYS_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_GROEPE_LYS)
+        @JvmField
+        val CONTENT_GROEPE_LYS_TYPE =
             ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_GROEPE_LYS
 
-        @JvmField val LIDMAAT_LOADER_VERJAAR_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_VERJAAR)
-        @JvmField val LIDMAAT_LOADER_VERJAAR_LIST_TYPE =
+        @JvmField
+        val LIDMAAT_LOADER_VERJAAR_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_VERJAAR)
+        @JvmField
+        val LIDMAAT_LOADER_VERJAAR_LIST_TYPE =
             ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_VERJAAR
 
-        @JvmField val CONTENT_GEMEENTE_NAAM_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_GEMEENTE_NAAM)
-        @JvmField val CONTENT_GEMEENTE_NAAM_LIST_TYPE =
+        @JvmField
+        val CONTENT_GEMEENTE_NAAM_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_GEMEENTE_NAAM)
+        @JvmField
+        val CONTENT_GEMEENTE_NAAM_LIST_TYPE =
             ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_GEMEENTE_NAAM
 
-        @JvmField val LIDMAAT_LOADER_OUDERDOM_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_OUDERDOM)
-        @JvmField val LIDMAAT_LOADER_OUDERDOM_LIST_TYPE =
+        @JvmField
+        val LIDMAAT_LOADER_OUDERDOM_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_OUDERDOM)
+        @JvmField
+        val LIDMAAT_LOADER_OUDERDOM_LIST_TYPE =
             ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_OUDERDOM
 
-        @JvmField val INFO_LOADER_FOTO_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_FOTO)
-        @JvmField val INFO_LOADER_FOTO_LIST_TYPE =
+        @JvmField
+        val INFO_LOADER_FOTO_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_FOTO)
+        @JvmField
+        val INFO_LOADER_FOTO_LIST_TYPE =
             ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_FOTO
 
-        @JvmField val FOTO_UPDATER_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_FOTO_UPDATER)
-        @JvmField val FOTO_UPDATER_LIST_TYPE =
+        @JvmField
+        val FOTO_UPDATER_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_FOTO_UPDATER)
+        @JvmField
+        val FOTO_UPDATER_LIST_TYPE =
             ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_FOTO_UPDATER
 
-        @JvmField val INFO_LOADER_WKR_GROEPE_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_WKR_GROEPE)
-        @JvmField val INFO_LOADER_WKR_GROEPE_TYPE =
+        @JvmField
+        val INFO_LOADER_WKR_GROEPE_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_WKR_GROEPE)
+        @JvmField
+        val INFO_LOADER_WKR_GROEPE_TYPE =
             ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_WKR_GROEPE
 
-        @JvmField val INFO_LOADER_WKR_GROEPE_LIST_TYPE =
+        @JvmField
+        val INFO_LOADER_WKR_GROEPE_LIST_TYPE =
             ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_WKR_GROEPE
 
-        @JvmField val INFO_LOADER_WKR_GROEPLEDE_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_WKR_GROEPLEDE)
-        @JvmField val INFO_LOADER_WKR_GROEPE_LEDE =
+        @JvmField
+        val INFO_LOADER_WKR_GROEPLEDE_URI =
+            Uri.withAppendedPath(BASE_CONTENT_URI, PATH_WKR_GROEPLEDE)
+        @JvmField
+        val INFO_LOADER_WKR_GROEPE_LEDE =
             ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_WKR_GROEPLEDE
 
-        @JvmField val INFO_LOADER_ARGIEF =
+        @JvmField
+        val INFO_LOADER_ARGIEF =
             ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_ARGIEF
 
         // DATABASES
@@ -287,17 +323,21 @@ object WinkerkContract {
         const val ADRESSE_PREDIKANTSWYKGUID = "PastorDistrictGUID"
 
         // SQL SELECTIONS (Use col() helper for brackets)
-        @JvmField val SELECTION_LIDMAAT_WIDGET =
+        @JvmField
+        val SELECTION_LIDMAAT_WIDGET =
             "SELECT Members._rowid_ as _id, " +
                     LIDMATE_TABLE_NAME + "." + col(LIDMATE_VAN) + ", " +
                     LIDMATE_TABLE_NAME + "." + col(LIDMATE_NOEMNAAM) + ", " +
                     LIDMATE_TABLE_NAME + "." + col(LIDMATE_GEBOORTEDATUM) + ", " +
                     LIDMATE_TABLE_NAME + "." + col(LIDMATE_REKORDSTATUS) + ", " +
                     "quote (" + LIDMATE_TABLE_NAME + "." + col(LIDMATE_LIDMAATGUID) + ") AS MemberGUID, " +
-                    "date(SUBSTR(" + col(LIDMATE_GEBOORTEDATUM) + ", 7,4) || '-' || SUBSTR(" + col(LIDMATE_GEBOORTEDATUM) + ", 4, 2) || '-' || SUBSTR(" + col(LIDMATE_GEBOORTEDATUM) + ", 1, 2)) AS birthdate, " +
+                    "date(SUBSTR(" + col(LIDMATE_GEBOORTEDATUM) + ", 7,4) || '-' || SUBSTR(" + col(
+                LIDMATE_GEBOORTEDATUM
+            ) + ", 4, 2) || '-' || SUBSTR(" + col(LIDMATE_GEBOORTEDATUM) + ", 1, 2)) AS birthdate, " +
                     LIDMATE_TABLE_NAME + "." + col(LIDMATE_GEMEENTE)
 
-        @JvmField val SELECTION_LIDMAAT_INFO =
+        @JvmField
+        val SELECTION_LIDMAAT_INFO =
             "SELECT Members._rowid_ as _id, " +
                     LIDMATE_TABLE_NAME + "." + col(LIDMATE_TAG) + ", " +
                     LIDMATE_TABLE_NAME + "." + col(LIDMATE_VAN) + ", " +
@@ -319,12 +359,16 @@ object WinkerkContract {
                     LIDMATE_TABLE_NAME + "." + col(LIDMATE_KORTADRES) + ", " +
                     LIDMATE_TABLE_NAME + "." + col(LIDMATE_GESINSHOOFGUID) + ", " +
                     LIDMATE_TABLE_NAME + "." + col(LIDMATE_LIDMAATGUID) + ", " +
-                    "date(SUBSTR(" + col(LIDMATE_GEBOORTEDATUM) + ", 7,4) || '-' || SUBSTR(" + col(LIDMATE_GEBOORTEDATUM) + ", 4, 2) || '-' || SUBSTR(" + col(LIDMATE_GEBOORTEDATUM) + ", 1, 2)) AS birthdate, " +
+                    "date(SUBSTR(" + col(LIDMATE_GEBOORTEDATUM) + ", 7,4) || '-' || SUBSTR(" + col(
+                LIDMATE_GEBOORTEDATUM
+            ) + ", 4, 2) || '-' || SUBSTR(" + col(LIDMATE_GEBOORTEDATUM) + ", 1, 2)) AS birthdate, " +
                     LIDMATE_TABLE_NAME + "." + col(LIDMATE_GEMEENTE)
 
-        @JvmField val SELECTION_LIDMAAT_INFO_GESINSHOOF = ""
+        @JvmField
+        val SELECTION_LIDMAAT_INFO_GESINSHOOF = ""
 
-        @JvmField val SELECTION_LIDMAAT_DETAIL =
+        @JvmField
+        val SELECTION_LIDMAAT_DETAIL =
             "SELECT Members._rowid_ as _id, " +
                     LIDMATE_TABLE_NAME + "." + col(LIDMATE_TAG) + ", " +
                     LIDMATE_TABLE_NAME + "." + col(LIDMATE_VAN) + ", " +
@@ -351,7 +395,9 @@ object WinkerkContract {
                     LIDMATE_TABLE_NAME + "." + col(LIDMATE_KORTADRES) + ", " +
                     LIDMATE_TABLE_NAME + "." + col(LIDMATE_GESINSHOOFGUID) + ", " +
                     LIDMATE_TABLE_NAME + "." + col(LIDMATE_LIDMAATGUID) + ", " +
-                    "date(SUBSTR(" + col(LIDMATE_GEBOORTEDATUM) + ", 7,4) || '-' || SUBSTR(" + col(LIDMATE_GEBOORTEDATUM) + ", 4, 2) || '-' || SUBSTR(" + col(LIDMATE_GEBOORTEDATUM) + ", 1, 2)) AS birthdate, " +
+                    "date(SUBSTR(" + col(LIDMATE_GEBOORTEDATUM) + ", 7,4) || '-' || SUBSTR(" + col(
+                LIDMATE_GEBOORTEDATUM
+            ) + ", 4, 2) || '-' || SUBSTR(" + col(LIDMATE_GEBOORTEDATUM) + ", 1, 2)) AS birthdate, " +
                     LIDMATE_TABLE_NAME + "." + col(LIDMATE_GEMEENTE)
 
 
@@ -458,7 +504,6 @@ object WinkerkContract {
         const val argief_ArchiveDate = "ArchiveDate"
 
 
-
         // CONSTANTS
         const val THUMBSIZE = 96
         const val GROEPLIST_LOADER = 500
@@ -476,7 +521,7 @@ object WinkerkContract {
 
         const val KEY_LOG_VOIP = "LOG_VOIP"
 
-        
+
         // Legacy static fields removed — use getWkrDir(context), getFotoDir(context),
         // getCacheDir(context) instead for Scoped Storage compliance.
 
@@ -503,13 +548,14 @@ object WinkerkContract {
             if (!dir.exists()) dir.mkdirs()
             return dir.absolutePath + "/"
         }
+
         @JvmStatic
         fun isValidGender(gender: Int): Boolean {
             return gender == GENDER_UNKNOWN || gender == GENDER_MALE || gender == GENDER_FEMALE
         }
     }
 
-    const val KEY_TASKS_SCRIPT_URL    = "pref_tasks_script_url"
+    const val KEY_TASKS_SCRIPT_URL = "pref_tasks_script_url"
     const val KEY_TASKS_SCRIPT_SECRET = "pref_tasks_script_secret"
 
     const val KEY_PASTORAL_CALENDAR_ID = "pref_pastoral_calendar_id"

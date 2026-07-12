@@ -11,11 +11,9 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
-import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -275,21 +273,37 @@ class MemberViewModel(
                 if (i > 0) sb.append(") EN (")
                 val toets = f.text3
                 when {
-                    toets == "gelyk aan" -> sb.append(f.title).append(" = '").append(f.text1).append("'")
-                    toets == "is nie" || toets == "nie gelyk aan" -> sb.append(f.title).append(" is nie '").append(f.text1).append("'")
-                    toets == "begin met" -> sb.append(f.title).append(" begin met '").append(f.text1).append("%'")
-                    toets == "eindig met" -> sb.append(f.title).append(" eindig met '").append(f.text1).append("%'")
+                    toets == "gelyk aan" -> sb.append(f.title).append(" = '").append(f.text1)
+                        .append("'")
+
+                    toets == "is nie" || toets == "nie gelyk aan" -> sb.append(f.title)
+                        .append(" is nie '").append(f.text1).append("'")
+
+                    toets == "begin met" -> sb.append(f.title).append(" begin met '")
+                        .append(f.text1).append("%'")
+
+                    toets == "eindig met" -> sb.append(f.title).append(" eindig met '")
+                        .append(f.text1).append("%'")
+
                     toets == "leeg" -> sb.append(f.title).append(" is leeg")
                     toets == "kleiner as" -> sb.append("Ouderdom is kleiner as ").append(f.text1)
                     toets == "groter as" -> sb.append("Ouderdom is groter as ").append(f.text1)
-                    toets == "tussen" && f.title == "Ouderdom" -> sb.append("Ouderdom is tussen ").append(f.text1).append(" en ").append(f.text2)
-                    toets == "gelyk" && f.title == "Ouderdom" -> sb.append("Ouderdom = ").append(f.text1)
+                    toets == "tussen" && f.title == "Ouderdom" -> sb.append("Ouderdom is tussen ")
+                        .append(f.text1).append(" en ").append(f.text2)
+
+                    toets == "gelyk" && f.title == "Ouderdom" -> sb.append("Ouderdom = ")
+                        .append(f.text1)
+
                     f.title == "Geslag" -> sb.append(if (toets == "manlik") "alle MANS" else "alle VROUE")
                     f.title == "Selfoon" -> sb.append("Almal met selfoon")
                     f.title == "E-pos" -> sb.append("Almal met epos")
                     f.title == "Landlyn" -> sb.append("Almal met landlyn")
-                    f.title == "Huwelikstatus" -> sb.append("Almal wat ").append(f.text3).append(" is")
-                    f.title == "Lidmaatskap" -> sb.append("Waar Lidmaatskapstatus ").append(f.text3).append(" is")
+                    f.title == "Huwelikstatus" -> sb.append("Almal wat ").append(f.text3)
+                        .append(" is")
+
+                    f.title == "Lidmaatskap" -> sb.append("Waar Lidmaatskapstatus ").append(f.text3)
+                        .append(" is")
+
                     f.title == "Gesinshoof" -> sb.append("Almal wat GESINSHOOFDE is")
                 }
             }
@@ -340,6 +354,7 @@ class MemberViewModel(
     fun delay(i: Int) {}
 
     fun getCurrentCongregations(): Set<String> = _congregationFilter.value
+
     // ✅ Data class for paging parameters - includes congregations
     private data class PagingParams(
         val sort: String,
@@ -354,7 +369,13 @@ class MemberViewModel(
      * Main paging data flow – recreates the Pager when any parameter changes.
      */
     private val pagingDataFlow = combine(
-        _sortOrder, _soek, _recordStatus, _filterList, _eventType, _congregationFilter, _refreshTrigger
+        _sortOrder,
+        _soek,
+        _recordStatus,
+        _filterList,
+        _eventType,
+        _congregationFilter,
+        _refreshTrigger
     ) { args ->
         PagingParams(
             sort = args[0] as String,

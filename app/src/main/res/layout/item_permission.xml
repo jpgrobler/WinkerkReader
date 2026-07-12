@@ -10,42 +10,42 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:padding="12dp"
-        android:gravity="center_vertical">
+        android:padding="12dp">
 
         <ImageView
             android:id="@+id/ivPermissionStatus"
             android:layout_width="32dp"
             android:layout_height="32dp"
-            android:src="@android:drawable/ic_delete"
-            android:contentDescription="@string/permission_status"/>
+            android:contentDescription="@string/permission_status"
+            android:src="@android:drawable/ic_delete" />
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
             android:layout_marginStart="12dp"
-            android:layout_marginEnd="12dp">
+            android:layout_marginEnd="12dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
 
             <TextView
                 android:id="@+id/tvPermissionName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/permission_name_placeholder"
+                android:textColor="@android:color/black"
                 android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="@android:color/black"/>
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/tvPermissionDescription"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/permission_description_placeholder"
-                android:textSize="12sp"
                 android:layout_marginTop="4dp"
-                android:textColor="@android:color/darker_gray"/>
+                android:text="@string/permission_description_placeholder"
+                android:textColor="@android:color/darker_gray"
+                android:textSize="12sp" />
 
         </LinearLayout>
 
@@ -53,10 +53,10 @@
             android:id="@+id/btnRequestPermission"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/permission_request"
-            android:textAllCaps="false"
             android:minWidth="80dp"
-            android:padding="8dp"/>
+            android:padding="8dp"
+            android:text="@string/permission_request"
+            android:textAllCaps="false" />
 
     </LinearLayout>
 

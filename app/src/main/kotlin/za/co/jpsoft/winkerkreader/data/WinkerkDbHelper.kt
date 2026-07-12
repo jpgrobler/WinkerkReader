@@ -9,7 +9,7 @@ import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import java.util.concurrent.ConcurrentHashMap
 
 class WinkerkDbHelper private constructor(context: Context, dbName: String) :
-        SQLiteAssetHelper(context, dbName, null, WinkerkContract.DATABASE_VERSION) {
+    SQLiteAssetHelper(context, dbName, null, WinkerkContract.DATABASE_VERSION) {
 
     private val tag = "WinkerkDbHelper"
 
@@ -26,7 +26,10 @@ class WinkerkDbHelper private constructor(context: Context, dbName: String) :
                 val type = cursor.getString(2)
                 val notNull = cursor.getInt(3)
                 val pk = cursor.getInt(5)
-                if (BuildConfig.DEBUG) Log.d("DBinfo", "Column: '$name' | Type: '$type' | PK: $pk | NotNull: $notNull")
+                if (BuildConfig.DEBUG) Log.d(
+                    "DBinfo",
+                    "Column: '$name' | Type: '$type' | PK: $pk | NotNull: $notNull"
+                )
             }
             cursor.close()
         }
@@ -50,7 +53,10 @@ class WinkerkDbHelper private constructor(context: Context, dbName: String) :
             if (!isColumnExists(db, "Members", WinkerkContract.winkerkEntry.LIDMATE_TAG)) {
                 try {
                     db.execSQL("ALTER TABLE Members ADD COLUMN ${WinkerkContract.winkerkEntry.LIDMATE_TAG} BIT")
-                    if (BuildConfig.DEBUG) Log.d(tag, "Added ${WinkerkContract.winkerkEntry.LIDMATE_TAG} column to Members table")
+                    if (BuildConfig.DEBUG) Log.d(
+                        tag,
+                        "Added ${WinkerkContract.winkerkEntry.LIDMATE_TAG} column to Members table"
+                    )
                 } catch (e: Exception) {
                     if (BuildConfig.DEBUG) Log.e(tag, "Failed to add TAG column", e)
                 }
@@ -118,7 +124,8 @@ class WinkerkDbHelper private constructor(context: Context, dbName: String) :
                 db.rawQuery("SELECT * FROM Datum", null).use { cursor ->
                     if (cursor.moveToFirst()) {
                         val dateIdx = cursor.getColumnIndex("DataDatum")
-                        settingsManager.dataDatum = if (dateIdx != -1) cursor.getString(dateIdx) ?: "" else ""
+                        settingsManager.dataDatum =
+                            if (dateIdx != -1) cursor.getString(dateIdx) ?: "" else ""
 
                     } else {
                         settingsManager.dataDatum = ""

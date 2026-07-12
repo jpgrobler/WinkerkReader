@@ -108,7 +108,12 @@ class DatabaseHelper private constructor(context: Context) :
     // Finished call log (unchanged from before this feature was added)
     // -------------------------------------------------------------------
 
-    private fun isDuplicateCall(callerInfo: String, timestamp: Long, source: String, timeWindowMs: Long = 3000): Boolean {
+    private fun isDuplicateCall(
+        callerInfo: String,
+        timestamp: Long,
+        source: String,
+        timeWindowMs: Long = 3000
+    ): Boolean {
         val query = """
         SELECT COUNT(*) FROM $TABLE_CALL_LOGS 
         WHERE $COLUMN_CALLER_INFO = ? 
@@ -116,7 +121,10 @@ class DatabaseHelper private constructor(context: Context) :
         AND $COLUMN_SOURCE = ?
     """.trimIndent()
 
-        readableDatabase.rawQuery(query, arrayOf(callerInfo, timestamp.toString(), timeWindowMs.toString(), source)).use { cursor ->
+        readableDatabase.rawQuery(
+            query,
+            arrayOf(callerInfo, timestamp.toString(), timeWindowMs.toString(), source)
+        ).use { cursor ->
             if (cursor.moveToFirst()) {
                 return cursor.getInt(0) > 0
             }
@@ -139,7 +147,10 @@ class DatabaseHelper private constructor(context: Context) :
 
         // Check for duplicate
         if (isDuplicateCall(callerInfo, timestamp, source)) {
-            if (BuildConfig.DEBUG) Log.d(TAG, "Duplicate call detected, skipping insert: $callerInfo")
+            if (BuildConfig.DEBUG) Log.d(
+                TAG,
+                "Duplicate call detected, skipping insert: $callerInfo"
+            )
             return false
         }
 
@@ -248,7 +259,8 @@ class DatabaseHelper private constructor(context: Context) :
                             callId = getSafeString(cursor, COL_ACTIVE_CALL_ID, "") ?: "",
                             number = getSafeString(cursor, COL_ACTIVE_NUMBER, "") ?: "",
                             contactName = getSafeString(cursor, COL_ACTIVE_CONTACT_NAME, "") ?: "",
-                            callType = getSafeString(cursor, COL_ACTIVE_CALL_TYPE, "UNKNOWN") ?: "UNKNOWN",
+                            callType = getSafeString(cursor, COL_ACTIVE_CALL_TYPE, "UNKNOWN")
+                                ?: "UNKNOWN",
                             source = getSafeString(cursor, COL_ACTIVE_SOURCE, "") ?: "",
                             startTime = getSafeLong(cursor, COL_ACTIVE_START_TIME, 0L)
                         )

@@ -114,6 +114,7 @@ object PastoralTaskScriptManager {
         fun param(key: String, value: String) {
             params += "${URLEncoder.encode(key, "UTF-8")}=${URLEncoder.encode(value, "UTF-8")}"
         }
+
         fun build() = if (params.isEmpty()) base else "$base?${params.joinToString("&")}"
     }
 

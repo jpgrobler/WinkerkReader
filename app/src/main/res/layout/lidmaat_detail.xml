@@ -1,38 +1,31 @@
-<?xml version="1.0" encoding="utf-8"?>
-
-<androidx.coordinatorlayout.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:ns1="http://schemas.android.com/apk/res-auto"
+    xmlns:ns2="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/colorSurface">
 
-    <!-- ============================================================= -->
-    <!-- APP BAR — simple pinned toolbar, no parallax hero. Keeping    -->
-    <!-- this plain avoids fighting the existing MemberPhotoController -->
-    <!-- which manages detail_kontak_foto's size/content directly.      -->
-    <!-- ============================================================= -->
+
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/detail_appbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-
         android:background="@android:color/transparent"
         android:elevation="0dp">
+
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/detail_toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="@android:color/transparent"
-            app:navigationIcon="@drawable/ic_close"
             android:paddingTop="10dp"
-            app:navigationIconTint="?attr/colorOnSurface"
-            app:title=""
-            app:menu="@menu/menu_lidmaat_detail" />
+            ns1:menu="@menu/menu_lidmaat_detail"
+            ns1:navigationIcon="@drawable/ic_close"
+            ns1:navigationIconTint="?attr/colorOnSurface"
+            ns1:title="" />
 
-        <!-- Loading indicator lives under the toolbar, full width -->
+
         <ProgressBar
             android:id="@+id/detail_indeterminateBar"
             style="?android:attr/progressBarStyleHorizontal"
@@ -41,87 +34,88 @@
             android:progressTint="?attr/colorPrimary"
             android:visibility="visible" />
 
+
     </com.google.android.material.appbar.AppBarLayout>
+
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"
         android:clipToPadding="false"
-        android:paddingBottom="32dp">
+        android:paddingBottom="32dp"
+        ns1:layout_behavior="@string/appbar_scrolling_view_behavior">
+
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- ========================================================= -->
-            <!-- HERO / PROFILE HEADER                                      -->
-            <!-- Gemeente-tinted gradient card: photo, name, gemeente chip, -->
-            <!-- age/status chips, and the quick-action row. This replaces  -->
-            <!-- the old top ConstraintLayout (photo + spinners + name).    -->
-            <!-- ========================================================= -->
+
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
+
 
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="180dp"
                     android:background="@drawable/bg_profile_header_gradient" />
 
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
                     android:gravity="center_horizontal"
+                    android:orientation="vertical"
+                    android:paddingHorizontal="16dp"
                     android:paddingTop="16dp"
-                    android:paddingBottom="16dp"
-                    android:paddingHorizontal="16dp">
+                    android:paddingBottom="16dp">
+
 
                     <FrameLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content">
 
+
                         <com.google.android.material.imageview.ShapeableImageView
                             android:id="@+id/detail_kontak_foto"
                             android:layout_width="96dp"
                             android:layout_height="96dp"
+                            android:elevation="4dp"
                             android:scaleType="centerCrop"
                             android:src="@drawable/kontak"
                             android:tag="default"
-                            android:elevation="4dp"
-                            app:shapeAppearanceOverlay="@style/CircleImageStyle" />
+                            ns1:shapeAppearanceOverlay="@style/CircleImageStyle" />
 
-                        <!-- small camera badge, purely decorative affordance
-                             that the photo itself is tappable -->
+
                         <ImageView
                             android:layout_width="28dp"
                             android:layout_height="28dp"
                             android:layout_gravity="bottom|end"
-                            android:padding="5dp"
-
-                            android:src="@drawable/family_roof"
-                            app:tint="?attr/colorPrimary"
+                            android:contentDescription="WinkerkReader"
                             android:elevation="4dp"
-                            android:importantForAccessibility="no" />
+                            android:importantForAccessibility="no"
+                            android:padding="5dp"
+                            android:src="@drawable/family_roof"
+                            ns1:tint="?attr/colorPrimary" />
+
+
                     </FrameLayout>
 
-                    <!-- Display name (read-only, large). The underlying
-                         EditTexts (detail_noemnaam / detail_van) still exist
-                         further down inside the "Persoonlik" card for
-                         editing — this is just the glanceable header. -->
+
                     <TextView
                         android:id="@+id/detail_header_naam"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
+                        android:ellipsize="end"
+                        android:maxLines="1"
                         android:textAppearance="?attr/textAppearanceHeadlineSmall"
                         android:textColor="?attr/colorOnSurface"
                         android:textStyle="bold"
-                        android:maxLines="1"
-                        android:ellipsize="end"
-                        tools:text="Pieter Grobler" />
+                        ns2:text="Pieter Grobler" />
+
 
                     <TextView
                         android:id="@+id/detail_gemeentenaam"
@@ -135,13 +129,14 @@
                         android:textAppearance="?attr/textAppearanceBodyMedium"
                         android:textColor="?attr/colorOnSurfaceVariant" />
 
-                    <!-- Status chips: age + wyk + lidmaatstatus at a glance -->
+
                     <com.google.android.material.chip.ChipGroup
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        app:chipSpacingHorizontal="6dp"
-                        app:singleLine="true">
+                        ns1:chipSpacingHorizontal="6dp"
+                        ns1:singleLine="true">
+
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chip_ouderdom"
@@ -150,8 +145,9 @@
                             android:layout_height="wrap_content"
                             android:clickable="false"
                             android:focusable="false"
-                            app:chipIcon="@drawable/bday"
-                            tools:text="42 jaar" />
+                            ns1:chipIcon="@drawable/bday"
+                            ns2:text="42 jaar" />
+
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chip_wyk"
@@ -160,7 +156,8 @@
                             android:layout_height="wrap_content"
                             android:clickable="false"
                             android:focusable="false"
-                            tools:text="Wyk 4" />
+                            ns2:text="Wyk 4" />
+
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chip_lidmaatstatus"
@@ -169,23 +166,20 @@
                             android:layout_height="wrap_content"
                             android:clickable="false"
                             android:focusable="false"
-                            tools:text="Belydend" />
+                            ns2:text="Belydend" />
+
 
                     </com.google.android.material.chip.ChipGroup>
 
-                    <!-- ================================================= -->
-                    <!-- QUICK ACTIONS — one row, tonal icon buttons.       -->
-                    <!-- Disabled/hidden per-button when the relevant field -->
-                    <!-- is empty (wire up in setupQuickActions()).         -->
-                    <!-- ================================================= -->
+
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
-                        android:orientation="horizontal"
-                        android:gravity="center">
+                        android:gravity="center"
+                        android:orientation="horizontal">
 
-                        <!-- Monochrome action: fine to let the tonal tint apply -->
+
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/quick_action_bel"
                             style="@style/Widget.Material3.Button.IconButton.Filled.Tonal"
@@ -193,14 +187,13 @@
                             android:layout_height="48dp"
                             android:layout_marginEnd="4dp"
                             android:contentDescription="@string/herinnering_bel"
-                            app:icon="@drawable/cell3"
-                            app:iconTint="@null"
-                            app:iconSize="24dp"
-                            app:iconGravity="textStart"
-                            app:iconPadding="0dp" />
+                            ns1:icon="@drawable/cell3"
+                            ns1:iconGravity="textStart"
+                            ns1:iconPadding="0dp"
+                            ns1:iconSize="24dp"
+                            ns1:iconTint="@null" />
 
-                        <!-- Full-colour brand icon: kill the auto-tint so its own
-                             colours (green) render, not a flattened tonal grey -->
+
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/quick_action_whatsapp"
                             style="@style/Widget.Material3.Button.IconButton.Filled.Tonal"
@@ -208,11 +201,12 @@
                             android:layout_height="48dp"
                             android:layout_marginEnd="4dp"
                             android:contentDescription="@string/herinnering_whatsapp"
-                            app:icon="@drawable/whatsapp"
-                            app:iconTint="@null"
-                            app:iconSize="24dp"
-                            app:iconGravity="textStart"
-                            app:iconPadding="0dp" />
+                            ns1:icon="@drawable/whatsapp"
+                            ns1:iconGravity="textStart"
+                            ns1:iconPadding="0dp"
+                            ns1:iconSize="24dp"
+                            ns1:iconTint="@null" />
+
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/quick_action_sms"
@@ -221,11 +215,12 @@
                             android:layout_height="48dp"
                             android:layout_marginEnd="4dp"
                             android:contentDescription="@string/lidmaatlistmenu_stuur_sms"
-                            app:icon="@drawable/sms2"
-                            app:iconTint="@null"
-                            app:iconSize="24dp"
-                            app:iconGravity="textStart"
-                            app:iconPadding="0dp" />
+                            ns1:icon="@drawable/sms2"
+                            ns1:iconGravity="textStart"
+                            ns1:iconPadding="0dp"
+                            ns1:iconSize="24dp"
+                            ns1:iconTint="@null" />
+
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/quick_action_epos"
@@ -234,11 +229,12 @@
                             android:layout_height="48dp"
                             android:layout_marginEnd="4dp"
                             android:contentDescription="@string/detail_epos"
-                            app:icon="@drawable/email2"
-                            app:iconTint="@null"
-                            app:iconSize="24dp"
-                            app:iconGravity="textStart"
-                            app:iconPadding="0dp" />
+                            ns1:icon="@drawable/email2"
+                            ns1:iconGravity="textStart"
+                            ns1:iconPadding="0dp"
+                            ns1:iconSize="24dp"
+                            ns1:iconTint="@null" />
+
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/quick_action_kalender"
@@ -246,12 +242,13 @@
                             android:layout_width="48dp"
                             android:layout_height="48dp"
                             android:contentDescription="@string/lidmaatlistmenu_nota"
-                            app:iconTint="@null"
-                            app:icon="@drawable/kalender"
-                            app:iconSize="24dp"
-                            app:iconGravity="textStart"
-                            app:iconPadding="0dp" />
-                        <!-- ✅ Pastoral Reminder -->
+                            ns1:icon="@drawable/kalender"
+                            ns1:iconGravity="textStart"
+                            ns1:iconPadding="0dp"
+                            ns1:iconSize="24dp"
+                            ns1:iconTint="@null" />
+
+
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/quick_action_herinnering"
                             style="@style/Widget.Material3.Button.IconButton.Filled.Tonal"
@@ -259,30 +256,32 @@
                             android:layout_height="48dp"
                             android:layout_marginEnd="4dp"
                             android:contentDescription="@string/quick_action_herinnering"
-                            app:icon="@drawable/ic_bediening"
-                            app:iconTint="@null"
-                            app:iconSize="24dp"
-                            app:iconGravity="textStart"
-                            app:iconPadding="0dp" />
+                            ns1:icon="@drawable/ic_bediening"
+                            ns1:iconGravity="textStart"
+                            ns1:iconPadding="0dp"
+                            ns1:iconSize="24dp"
+                            ns1:iconTint="@null" />
 
-                        <!-- ✅ Notes -->
+
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/quick_action_notas"
                             style="@style/Widget.Material3.Button.IconButton.Filled.Tonal"
                             android:layout_width="48dp"
                             android:layout_height="48dp"
                             android:contentDescription="@string/quick_action_notas"
-                            app:icon="@drawable/ic_note"
-                            app:iconTint="@null"
-                            app:iconSize="24dp"
-                            app:iconGravity="textStart"
-                            app:iconPadding="0dp" />
+                            ns1:icon="@drawable/ic_note"
+                            ns1:iconGravity="textStart"
+                            ns1:iconPadding="0dp"
+                            ns1:iconSize="24dp"
+                            ns1:iconTint="@null" />
+
+
                     </LinearLayout>
+
 
                 </LinearLayout>
 
-                <!-- Floating edit action, overlapping the bottom-end of the
-                     header card. Replaces the old full-width "Wysig" button. -->
+
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/buttonWysig"
                     style="@style/Widget.Material3.Button.IconButton.Filled"
@@ -292,65 +291,73 @@
                     android:layout_marginTop="12dp"
                     android:layout_marginEnd="12dp"
                     android:text="@string/detail_wysig"
-                    app:icon="@android:drawable/ic_menu_edit"
-                    app:iconGravity="textStart"
-                    app:iconPadding="0dp" />
+                    ns1:icon="@android:drawable/ic_menu_edit"
+                    ns1:iconGravity="textStart"
+                    ns1:iconPadding="0dp" />
+
 
             </FrameLayout>
 
-            <!-- ========================================================= -->
-            <!-- CARD: KONTAK                                               -->
-            <!-- ========================================================= -->
+
             <com.google.android.material.card.MaterialCardView
                 style="@style/Widget.WinkerkReader.Card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                app:cardBackgroundColor="?attr/colorSurface">
+                ns1:cardBackgroundColor="?attr/colorSurfaceContainerLow">
+
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
 
+
                     <TextView
                         style="@style/TextAppearance.WinkerkReader.Subtitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginBottom="4dp"
                         android:text="@string/detail_kontak_info"
                         android:textColor="?attr/colorPrimary"
-                        android:layout_marginBottom="4dp"
-                        tools:ignore="HardcodedText" />
+                        ns2:ignore="HardcodedText" />
 
-                    <!-- Selfoon -->
+
                     <LinearLayout
                         android:id="@+id/detail_selfoonBlock"
                         style="@style/Widget.WinkerkReader.ListItem"
                         android:orientation="horizontal">
+
 
                         <ImageView
                             android:id="@+id/detail_selfoon_icon"
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:layout_gravity="center_vertical"
+                            android:contentDescription="Selfoon"
                             android:src="@drawable/cell3"
-                            app:tint="?attr/colorPrimary" />
+                            ns1:tint="?attr/colorPrimary" />
+
 
                         <EditText
                             android:id="@+id/detail_selfoon"
                             style="@style/EditorFieldStyle"
-                            android:layout_marginStart="12dp"
-                            android:hint="@string/detail_selfoon"
                             android:layout_gravity="center_vertical"
+                            android:layout_marginStart="12dp"
+                            android:autofillHints="Edit Selfoon"
+                            android:hint="@string/detail_selfoon"
                             android:inputType="phone"
-                            tools:text="082 123 4567" />
+                            ns2:text="082 123 4567" />
+
 
                         <ImageView
                             android:id="@+id/detail_whatsapp_icon"
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:layout_gravity="center_vertical"
+                            android:contentDescription="Whatsapp"
                             android:src="@drawable/whatsapp" />
+
 
                         <ImageView
                             android:id="@+id/detail_sms_icon"
@@ -358,78 +365,94 @@
                             android:layout_height="24dp"
                             android:layout_gravity="center_vertical"
                             android:layout_marginStart="12dp"
+                            android:contentDescription="Sms"
                             android:src="@drawable/sms2"
-                            app:tint="?attr/colorOnSurfaceVariant" />
+                            ns1:tint="?attr/colorOnSurfaceVariant" />
+
+
                     </LinearLayout>
 
-                    <!-- After Selfoon block -->
+
                     <View
                         android:id="@+id/divider_selfoon"
                         style="@style/Widget.WinkerkReader.Divider" />
 
-                    <!-- Landlyn -->
+
                     <LinearLayout
                         android:id="@+id/detail_telefoonBlock"
                         style="@style/Widget.WinkerkReader.ListItem"
                         android:orientation="horizontal">
+
 
                         <ImageView
                             android:id="@+id/detail_landlyn_icon"
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:layout_gravity="center_vertical"
+                            android:contentDescription="Landlyn"
                             android:src="@drawable/oldphone"
-                            app:tint="?attr/colorPrimary" />
+                            ns1:tint="?attr/colorPrimary" />
+
 
                         <EditText
                             android:id="@+id/detail_telefoon"
                             style="@style/EditorFieldStyle"
-                            android:layout_marginStart="12dp"
-                            android:hint="@string/detail_landlyn"
                             android:layout_gravity="center_vertical"
+                            android:layout_marginStart="12dp"
+                            android:autofillHints="Edit Telefoon"
+                            android:hint="@string/detail_landlyn"
                             android:inputType="phone"
-                            tools:text="021 555 1234" />
+                            ns2:text="021 555 1234" />
+
+
                     </LinearLayout>
 
-                    <!-- After Landlyn block -->
+
                     <View
                         android:id="@+id/divider_telefoon"
                         style="@style/Widget.WinkerkReader.Divider" />
 
-                    <!-- Epos -->
+
                     <LinearLayout
                         android:id="@+id/detail_eposBlock"
                         style="@style/Widget.WinkerkReader.ListItem"
                         android:orientation="horizontal">
+
 
                         <ImageView
                             android:id="@+id/detail_email_icon"
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:layout_gravity="center_vertical"
+                            android:contentDescription="E-pos"
                             android:src="@drawable/email2"
-                            app:tint="?attr/colorPrimary" />
+                            ns1:tint="?attr/colorPrimary" />
+
 
                         <EditText
                             android:id="@+id/detail_epos"
                             style="@style/EditorFieldStyle"
-                            android:layout_marginStart="12dp"
                             android:layout_gravity="center_vertical"
+                            android:layout_marginStart="12dp"
+                            android:autofillHints="Edit Epos"
                             android:hint="@string/detail_epos"
                             android:inputType="textEmailAddress"
-                            tools:text="pieter@voorbeeld.co.za" />
+                            ns2:text="pieter@voorbeeld.co.za" />
+
+
                     </LinearLayout>
 
-                    <!-- After Epos block -->
+
                     <View
                         android:id="@+id/divider_epos"
                         style="@style/Widget.WinkerkReader.Divider" />
 
-                    <!-- Straatadres -->
+
                     <LinearLayout
                         android:id="@+id/detail_straatadresBlock"
                         style="@style/Widget.WinkerkReader.ListItem"
                         android:orientation="horizontal">
+
 
                         <ImageView
                             android:id="@+id/detail_straat_icon"
@@ -437,55 +460,67 @@
                             android:layout_height="24dp"
                             android:layout_gravity="top"
                             android:layout_marginTop="14dp"
+                            android:contentDescription="Adres"
                             android:src="@drawable/location"
-                            app:tint="?attr/colorPrimary" />
+                            ns1:tint="?attr/colorPrimary" />
+
 
                         <EditText
                             android:id="@+id/detail_straatadres"
                             style="@style/EditorFieldStyle"
-                            android:layout_marginStart="12dp"
                             android:layout_gravity="center_vertical"
+                            android:layout_marginStart="12dp"
+                            android:autofillHints="Edit Straatadres"
                             android:hint="@string/detail_straatadres"
                             android:inputType="textPostalAddress|textMultiLine"
-                            tools:text="Kerkstraat 12, Stellenbosch" />
+                            ns2:text="Kerkstraat 12, Stellenbosch" />
+
+
                     </LinearLayout>
 
-                    <!-- After Straatadres block -->
+
                     <View
                         android:id="@+id/divider_straatadres"
                         style="@style/Widget.WinkerkReader.Divider" />
 
-                    <!-- Posadres (label-only block kept for legacy visibility toggling) -->
+
                     <LinearLayout
                         android:id="@+id/detail_posadresBlock"
                         style="@style/Widget.WinkerkReader.ListItem"
                         android:orientation="horizontal">
 
+
                         <Space
                             android:layout_width="24dp"
                             android:layout_height="1dp" />
 
+
                         <EditText
                             android:id="@+id/detail_posadres"
                             style="@style/EditorFieldStyle"
-                            android:layout_marginStart="12dp"
-                            android:hint="@string/detail_posadres"
                             android:layout_gravity="center_vertical"
+                            android:layout_marginStart="12dp"
+                            android:autofillHints="Edit Posadres"
+                            android:hint="@string/detail_posadres"
                             android:inputType="textPostalAddress|textMultiLine"
-                            tools:text="Posbus 45, Stellenbosch, 7599" />
+                            ns2:text="Posbus 45, Stellenbosch, 7599" />
+
+
                     </LinearLayout>
 
+
                 </LinearLayout>
+
+
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- ========================================================= -->
-            <!-- CARD: PERSOONLIK                                           -->
-            <!-- ========================================================= -->
+
             <com.google.android.material.card.MaterialCardView
                 style="@style/Widget.WinkerkReader.Card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardBackgroundColor="?attr/colorSurface">
+                ns1:cardBackgroundColor="?attr/colorSurfaceContainerLow">
+
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -493,76 +528,132 @@
                     android:orientation="vertical"
                     android:padding="4dp">
 
-                    <!-- Noemnaam -->
-                    <LinearLayout style="@style/Widget.WinkerkReader.ListItem" android:orientation="horizontal">
-                        <TextView style="@style/CategoryStyle" android:text="@string/detail_naam" />
+
+                    <LinearLayout
+                        style="@style/Widget.WinkerkReader.ListItem"
+                        android:orientation="horizontal">
+
+
+                        <TextView
+                            style="@style/CategoryStyle"
+                            android:text="@string/detail_naam" />
+
+
                         <EditText
                             android:id="@+id/detail_noemnaam"
                             style="@style/EditorFieldStyle"
+                            android:autofillHints="Edit Noemnaam"
                             android:textIsSelectable="true"
-                            tools:text="Pieter" />
+                            ns2:text="Pieter" />
+
+
                     </LinearLayout>
 
-                    <!-- Van -->
-                    <LinearLayout style="@style/Widget.WinkerkReader.ListItem" android:orientation="horizontal">
-                        <TextView style="@style/CategoryStyle" android:text="@string/detail_van" />
+
+                    <LinearLayout
+                        style="@style/Widget.WinkerkReader.ListItem"
+                        android:orientation="horizontal">
+
+
+                        <TextView
+                            style="@style/CategoryStyle"
+                            android:text="@string/detail_van" />
+
+
                         <EditText
                             android:id="@+id/detail_van"
                             style="@style/EditorFieldStyle"
+                            android:autofillHints="Edit Van"
                             android:textIsSelectable="true"
-                            tools:text="Grobler" />
+                            ns2:text="Grobler" />
+
+
                     </LinearLayout>
 
-                    <!-- Vollename -->
-                    <LinearLayout style="@style/Widget.WinkerkReader.ListItem" android:orientation="horizontal">
-                        <TextView style="@style/CategoryStyle" android:text="@string/detail_vollename" />
+
+                    <LinearLayout
+                        style="@style/Widget.WinkerkReader.ListItem"
+                        android:orientation="horizontal">
+
+
+                        <TextView
+                            style="@style/CategoryStyle"
+                            android:text="@string/detail_vollename" />
+
+
                         <EditText
                             android:id="@+id/detail_vollename"
                             style="@style/EditorFieldStyle"
+                            android:autofillHints="Edit Vollename"
                             android:textIsSelectable="true"
-                            tools:text="Pieter Jacobus" />
+                            ns2:text="Pieter Jacobus" />
+
+
                     </LinearLayout>
 
-                    <!-- Nooiensvan (optional) -->
+
                     <LinearLayout
                         android:id="@+id/detail_nooiensvanBlock"
                         style="@style/Widget.WinkerkReader.ListItem"
                         android:orientation="horizontal">
-                        <TextView style="@style/CategoryStyle" android:text="@string/detail_Nooiensvan" />
+
+
+                        <TextView
+                            style="@style/CategoryStyle"
+                            android:text="@string/detail_Nooiensvan" />
+
+
                         <EditText
                             android:id="@+id/detail_nooiensvan"
                             style="@style/EditorFieldStyle"
+                            android:autofillHints="Edit Nooiensvan"
                             android:textIsSelectable="true" />
+
+
                     </LinearLayout>
+
 
                     <View style="@style/Widget.WinkerkReader.Divider" />
 
-                    <!-- Geboortedatum + ouderdom -->
-                    <LinearLayout style="@style/Widget.WinkerkReader.ListItem" android:orientation="horizontal">
-                        <TextView style="@style/CategoryStyle"
+
+                    <LinearLayout
+                        style="@style/Widget.WinkerkReader.ListItem"
+                        android:orientation="horizontal">
+
+
+                        <TextView
+                            style="@style/CategoryStyle"
                             android:text="@string/detail_gebore" />
+
+
                         <EditText
                             android:id="@+id/detail_geboortedatum"
                             style="@style/EditorFieldStyle"
-                            android:layout_weight="2"
                             android:layout_gravity="center_vertical"
-                            tools:text="12/04/1978" />
+                            android:layout_weight="2"
+                            android:autofillHints="Edit Geboortedatum"
+                            ns2:text="12/04/1978" />
+
+
                         <TextView
                             android:id="@+id/detail_jareoud"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_gravity="center_vertical"
                             android:textColor="?attr/colorOnSurfaceVariant"
-                            tools:text="(47)" />
+                            ns2:text="(47)" />
+
+
                     </LinearLayout>
 
-                    <!-- Geslag / Huwelikstatus spinners -->
+
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:paddingHorizontal="16dp"
                         android:paddingVertical="8dp">
+
 
                         <Spinner
                             android:id="@+id/geslag"
@@ -571,81 +662,124 @@
                             android:layout_weight="1"
                             android:backgroundTint="?attr/colorPrimary" />
 
+
                         <Spinner
                             android:id="@+id/huwelikstatus"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
                             android:layout_marginStart="8dp"
+                            android:layout_weight="1"
                             android:backgroundTint="?attr/colorPrimary" />
+
+
                     </LinearLayout>
+
 
                     <View style="@style/Widget.WinkerkReader.Divider" />
 
-                    <!-- Beroep -->
+
                     <LinearLayout
                         android:id="@+id/detail_BeroepBlock"
                         style="@style/Widget.WinkerkReader.ListItem"
                         android:orientation="horizontal">
-                        <TextView style="@style/CategoryStyle" android:text="@string/detail_beroep" />
+
+
+                        <TextView
+                            style="@style/CategoryStyle"
+                            android:text="@string/detail_beroep" />
+
+
                         <EditText
                             android:id="@+id/detail_Beroep"
                             style="@style/EditorFieldStyle"
+                            android:autofillHints="Edit Beroep"
                             android:textIsSelectable="true" />
+
+
                     </LinearLayout>
 
-                    <!-- Werkgewer -->
+
                     <LinearLayout
                         android:id="@+id/detail_WerkgewerBlock"
                         style="@style/Widget.WinkerkReader.ListItem"
                         android:orientation="horizontal">
-                        <TextView style="@style/CategoryStyle" android:text="@string/detail_werkgewer" />
+
+
+                        <TextView
+                            style="@style/CategoryStyle"
+                            android:text="@string/detail_werkgewer" />
+
+
                         <EditText
                             android:id="@+id/detail_Werkgewer"
                             style="@style/EditorFieldStyle"
+                            android:autofillHints="Edit Werkgewer"
                             android:textIsSelectable="true" />
+
+
                     </LinearLayout>
+
 
                     <View style="@style/Widget.WinkerkReader.Divider" />
 
-                    <!-- Wyk -->
+
                     <LinearLayout
                         android:id="@+id/detail_wykBlock"
                         style="@style/Widget.WinkerkReader.ListItem"
                         android:orientation="horizontal">
-                        <TextView style="@style/CategoryStyle" android:text="@string/detail_wyk" />
+
+
+                        <TextView
+                            style="@style/CategoryStyle"
+                            android:text="@string/detail_wyk" />
+
+
                         <EditText
                             android:id="@+id/detail_wyk"
                             style="@style/EditorFieldStyle"
+                            android:autofillHints="Edit Wyk"
                             android:textIsSelectable="true" />
+
+
                     </LinearLayout>
 
-                    <!-- Lidmaatstatus -->
+
                     <LinearLayout
                         android:id="@+id/detail_lidmaatstatusBlock"
                         style="@style/Widget.WinkerkReader.ListItem"
                         android:orientation="horizontal">
-                        <TextView style="@style/CategoryStyle" android:text="@string/detail_lidmaatskap" />
+
+
+                        <TextView
+                            style="@style/CategoryStyle"
+                            android:text="@string/detail_lidmaatskap" />
+
+
                         <EditText
                             android:id="@+id/detail_Lidmaatstatus"
                             style="@style/EditorFieldStyle"
+                            android:autofillHints="Edit Lidmaatstatus"
                             android:textIsSelectable="true" />
+
+
                     </LinearLayout>
 
+
                 </LinearLayout>
+
+
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- ========================================================= -->
-            <!-- CARD: MYLPALE (collapsible)                                -->
-            <!-- ========================================================= -->
+
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/detail_mylpaleBlock2"
                 style="@style/Widget.WinkerkReader.Card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:visibility="gone"
-                app:cardBackgroundColor="?attr/colorSurface"
-                tools:visibility="visible">
+                ns1:cardBackgroundColor="?attr/colorSurfaceContainerLow"
+                ns2:visibility="visible">
+
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -653,17 +787,19 @@
                     android:orientation="vertical"
                     android:padding="4dp">
 
+
                     <LinearLayout
                         android:id="@+id/card_mylpale_header"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:paddingVertical="8dp"
-                        android:paddingHorizontal="12dp"
                         android:background="?attr/selectableItemBackground"
                         android:clickable="true"
-                        android:focusable="true">
+                        android:focusable="true"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="12dp"
+                        android:paddingVertical="8dp">
+
 
                         <TextView
                             android:layout_width="0dp"
@@ -673,13 +809,18 @@
                             android:textAppearance="?attr/textAppearanceTitleSmall"
                             android:textColor="?attr/colorPrimary" />
 
+
                         <ImageView
                             android:id="@+id/card_mylpale_chevron"
                             android:layout_width="20dp"
                             android:layout_height="20dp"
+                            android:contentDescription="Af pyltjie"
                             android:src="@drawable/ic_chevron_down"
-                            app:tint="?attr/colorOnSurfaceVariant" />
+                            ns1:tint="?attr/colorOnSurfaceVariant" />
+
+
                     </LinearLayout>
+
 
                     <LinearLayout
                         android:id="@+id/detail_mylpaleBlock"
@@ -689,20 +830,22 @@
                         android:paddingHorizontal="12dp"
                         android:paddingBottom="12dp" />
 
+
                 </LinearLayout>
+
+
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- ========================================================= -->
-            <!-- CARD: GESIN (collapsible)                                  -->
-            <!-- ========================================================= -->
+
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/detail_gesinBlock"
                 style="@style/Widget.WinkerkReader.Card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:visibility="gone"
-                app:cardBackgroundColor="?attr/colorSurface"
-                tools:visibility="visible">
+                ns1:cardBackgroundColor="?attr/colorSurfaceContainerLow"
+                ns2:visibility="visible">
+
 
                 <LinearLayout
                     android:id="@+id/detail_gesin_content"
@@ -710,6 +853,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:padding="4dp">
+
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -720,21 +864,19 @@
                         android:textAppearance="?attr/textAppearanceTitleSmall"
                         android:textColor="?attr/colorPrimary" />
 
-                    <!-- Family member rows are added programmatically here by
-                         LidmaatDetailActivity.displayFamily() — same container,
-                         just re-parented into a card. -->
 
                 </LinearLayout>
+
+
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- ========================================================= -->
-            <!-- CARD: GROEPE / MEELEWING / GAWES / PASSIE (collapsible)    -->
-            <!-- ========================================================= -->
+
             <com.google.android.material.card.MaterialCardView
                 style="@style/Widget.WinkerkReader.Card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardBackgroundColor="?attr/colorSurface">
+                ns1:cardBackgroundColor="?attr/colorSurfaceContainerLow">
+
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -742,14 +884,16 @@
                     android:orientation="vertical"
                     android:padding="4dp">
 
+
                     <LinearLayout
                         android:id="@+id/detail_groepBlockm"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:visibility="gone"
                         android:paddingHorizontal="12dp"
-                        android:paddingTop="8dp">
+                        android:paddingTop="8dp"
+                        android:visibility="gone">
+
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -758,12 +902,16 @@
                             android:textAppearance="?attr/textAppearanceTitleSmall"
                             android:textColor="?attr/colorPrimary" />
 
+
                         <LinearLayout
                             android:id="@+id/detail_groepBlock"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="vertical" />
+
+
                     </LinearLayout>
+
 
                     <LinearLayout
                         android:id="@+id/detail_meelewingBlock"
@@ -773,13 +921,17 @@
                         android:paddingHorizontal="12dp"
                         android:paddingTop="8dp">
 
+
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/detail_meelewing"
                             android:textAppearance="?attr/textAppearanceTitleSmall"
                             android:textColor="?attr/colorPrimary" />
+
+
                     </LinearLayout>
+
 
                     <LinearLayout
                         android:id="@+id/detail_gawesBlock"
@@ -789,13 +941,17 @@
                         android:paddingHorizontal="12dp"
                         android:paddingTop="8dp">
 
+
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/detail_gawes"
                             android:textAppearance="?attr/textAppearanceTitleSmall"
                             android:textColor="?attr/colorPrimary" />
+
+
                     </LinearLayout>
+
 
                     <LinearLayout
                         android:id="@+id/detail_passieBlock"
@@ -805,16 +961,23 @@
                         android:paddingHorizontal="12dp"
                         android:paddingVertical="8dp">
 
+
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/detail_passie"
                             android:textAppearance="?attr/textAppearanceTitleSmall"
                             android:textColor="?attr/colorPrimary" />
+
+
                     </LinearLayout>
 
+
                 </LinearLayout>
+
+
             </com.google.android.material.card.MaterialCardView>
+
 
             <ProgressBar
                 android:id="@+id/detail_indeterminateBar2"
@@ -823,17 +986,15 @@
                 android:layout_height="wrap_content"
                 android:visibility="gone" />
 
-            <!-- ========================================================= -->
-            <!-- CARD: BEDIENING (reminders) — internals unchanged, just   -->
-            <!-- wrapped in a MaterialCardView instead of a bare           -->
-            <!-- LinearLayout with a manual divider.                       -->
-            <!-- ========================================================= -->
+
             <com.google.android.material.card.MaterialCardView
                 style="@style/Widget.WinkerkReader.Card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardBackgroundColor="?attr/colorSurface"
-                app:strokeWidth="0dp">
+                ns1:cardBackgroundColor="?attr/colorSurfaceContainerHigh"
+                ns1:strokeWidth="0dp">
+
+
                 <LinearLayout
                     android:id="@+id/detail_bediening_block"
                     android:layout_width="match_parent"
@@ -841,27 +1002,31 @@
                     android:orientation="vertical"
                     android:paddingVertical="8dp">
 
+
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
                         android:gravity="center_vertical"
+                        android:orientation="horizontal"
                         android:paddingHorizontal="16dp">
+
 
                         <ImageView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:src="@drawable/ic_bediening"
-                            />
+                            android:contentDescription="Bediening"
+                            android:src="@drawable/ic_bediening" />
+
 
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
                             android:layout_marginStart="8dp"
+                            android:layout_weight="1"
                             android:text="@string/detail_bediening"
                             android:textAppearance="?attr/textAppearanceTitleSmall"
                             android:textColor="?attr/colorOnTertiaryContainer" />
+
 
                         <TextView
                             android:id="@+id/detail_herinnering_count"
@@ -873,6 +1038,7 @@
                             android:textColor="?attr/colorOnTertiaryContainer"
                             android:visibility="gone" />
 
+
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/detail_stel_herinnering"
                             style="@style/Widget.Material3.Button.TonalButton"
@@ -880,16 +1046,20 @@
                             android:layout_height="40dp"
                             android:text="@string/detail_stel_herinnering"
                             android:textSize="12sp" />
+
+
                     </LinearLayout>
+
 
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/detail_pending_reminders"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:nestedScrollingEnabled="false"
-                        android:paddingTop="4dp"
                         android:paddingHorizontal="16dp"
+                        android:paddingTop="4dp"
                         android:visibility="gone" />
+
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnWysAlHerinneringe"
@@ -901,18 +1071,20 @@
                         android:textSize="12sp"
                         android:visibility="gone" />
 
+
                 </LinearLayout>
+
+
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- ========================================================= -->
-            <!-- CARD: BEDIENINGSNOTAS — collapsible, internals unchanged.  -->
-            <!-- ========================================================= -->
+
             <com.google.android.material.card.MaterialCardView
                 style="@style/Widget.WinkerkReader.Card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                app:cardBackgroundColor="?attr/colorSurface">
+                ns1:cardBackgroundColor="?attr/colorSurfaceContainerLow">
+
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -920,16 +1092,18 @@
                     android:orientation="vertical"
                     android:paddingHorizontal="16dp">
 
+
                     <LinearLayout
                         android:id="@+id/layoutDetailNotasHeader"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:paddingVertical="8dp"
                         android:background="?attr/selectableItemBackground"
                         android:clickable="true"
-                        android:focusable="true">
+                        android:focusable="true"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingVertical="8dp">
+
 
                         <TextView
                             android:layout_width="0dp"
@@ -938,6 +1112,7 @@
                             android:text="@string/bedieningsnotas"
                             android:textAppearance="?attr/textAppearanceTitleSmall"
                             android:textColor="?attr/colorOnSurface" />
+
 
                         <TextView
                             android:id="@+id/tvDetailNotaCount"
@@ -948,6 +1123,7 @@
                             android:textColor="?attr/colorOnSurfaceVariant"
                             android:visibility="gone" />
 
+
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnDetailNuweNota"
                             style="@style/Widget.Material3.Button.TextButton"
@@ -956,6 +1132,7 @@
                             android:text="@string/nota"
                             android:textSize="12sp" />
 
+
                         <ImageView
                             android:id="@+id/ivDetailNotasChevron"
                             android:layout_width="20dp"
@@ -963,9 +1140,11 @@
                             android:layout_marginEnd="4dp"
                             android:contentDescription="@string/uitvou"
                             android:src="@drawable/ic_chevron_down"
-                            app:tint="?attr/colorOnSurfaceVariant" />
+                            ns1:tint="?attr/colorOnSurfaceVariant" />
+
 
                     </LinearLayout>
+
 
                     <LinearLayout
                         android:id="@+id/layoutDetailNotasInhoud"
@@ -974,12 +1153,14 @@
                         android:orientation="vertical"
                         android:visibility="gone">
 
+
                         <androidx.recyclerview.widget.RecyclerView
                             android:id="@+id/rvDetailNotas"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:nestedScrollingEnabled="false"
                             android:visibility="gone" />
+
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnDetailWysAlNotas"
@@ -989,6 +1170,7 @@
                             android:text="@string/wys_ouer_notas"
                             android:textSize="12sp"
                             android:visibility="gone" />
+
 
                         <TextView
                             android:id="@+id/tvDetailGeenNotas"
@@ -1001,12 +1183,20 @@
                             android:textStyle="italic"
                             android:visibility="gone" />
 
+
                     </LinearLayout>
 
+
                 </LinearLayout>
+
+
             </com.google.android.material.card.MaterialCardView>
 
+
         </LinearLayout>
+
+
     </androidx.core.widget.NestedScrollView>
+
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

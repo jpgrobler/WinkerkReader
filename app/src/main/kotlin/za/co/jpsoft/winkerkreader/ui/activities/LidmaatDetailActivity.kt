@@ -10,6 +10,7 @@ import android.graphics.Color
 import android.graphics.Outline
 import android.net.Uri
 import android.os.Bundle
+import android.provider.CalendarContract
 import android.text.Html
 import android.text.Spanned
 import android.util.Log
@@ -27,6 +28,7 @@ import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.graphics.toColorInt
 import androidx.core.net.toUri
 import androidx.core.widget.TextViewCompat
@@ -41,6 +43,7 @@ import za.co.jpsoft.winkerkreader.data.models.MemberDetailItem
 import za.co.jpsoft.winkerkreader.databinding.LidmaatDetailBinding
 import za.co.jpsoft.winkerkreader.ui.adapters.SpinnerAdapter
 import za.co.jpsoft.winkerkreader.ui.bottomsheets.StelHerinneringBottomSheet
+import za.co.jpsoft.winkerkreader.ui.bottomsheets.VoegNotaByBottomSheet
 import za.co.jpsoft.winkerkreader.ui.controllers.LidmaatPastoralSectionController
 import za.co.jpsoft.winkerkreader.ui.controllers.MemberPhotoController
 import za.co.jpsoft.winkerkreader.ui.viewmodels.LidmaatDetailPastoralViewModel
@@ -50,9 +53,6 @@ import za.co.jpsoft.winkerkreader.utils.MainNavigationController
 import za.co.jpsoft.winkerkreader.utils.MemberUtils
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import java.io.File
-import android.provider.CalendarContract
-import androidx.core.content.ContextCompat
-import za.co.jpsoft.winkerkreader.ui.bottomsheets.VoegNotaByBottomSheet
 
 
 class LidmaatDetailActivity : AppCompatActivity() {
@@ -296,14 +296,26 @@ class LidmaatDetailActivity : AppCompatActivity() {
                 try {
                     val intent = Intent(Intent.ACTION_INSERT).apply {
                         data = CalendarContract.Events.CONTENT_URI
-                        putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, System.currentTimeMillis())
-                        putExtra(CalendarContract.EXTRA_EVENT_END_TIME, System.currentTimeMillis() + 60 * 60 * 1000)
-                        putExtra(CalendarContract.Events.TITLE, "${member.name} ${member.surname}".trim())
+                        putExtra(
+                            CalendarContract.EXTRA_EVENT_BEGIN_TIME,
+                            System.currentTimeMillis()
+                        )
+                        putExtra(
+                            CalendarContract.EXTRA_EVENT_END_TIME,
+                            System.currentTimeMillis() + 60 * 60 * 1000
+                        )
+                        putExtra(
+                            CalendarContract.Events.TITLE,
+                            "${member.name} ${member.surname}".trim()
+                        )
                         putExtra(CalendarContract.Events.DESCRIPTION, buildString {
-                            member.birthday?.takeIf { it.isNotEmpty() }?.let { append("Geboortedatum: $it\n") }
-                            member.cellphone?.takeIf { it.isNotEmpty() }?.let { append("Selfoon: $it\n") }
+                            member.birthday?.takeIf { it.isNotEmpty() }
+                                ?.let { append("Geboortedatum: $it\n") }
+                            member.cellphone?.takeIf { it.isNotEmpty() }
+                                ?.let { append("Selfoon: $it\n") }
                             member.email?.takeIf { it.isNotEmpty() }?.let { append("Epos: $it\n") }
-                            member.streetAddress?.takeIf { it.isNotEmpty() }?.let { append("Adres: $it\n") }
+                            member.streetAddress?.takeIf { it.isNotEmpty() }
+                                ?.let { append("Adres: $it\n") }
                         }.trimEnd())
                     }
                     startActivity(intent)
@@ -373,6 +385,7 @@ class LidmaatDetailActivity : AppCompatActivity() {
             chevron.animate().rotation(180f).duration = 200
         }
     }
+
     private fun toggleMylpaleSection() {
         val content = binding.detailMylpaleBlock
         val chevron = binding.cardMylpaleChevron
@@ -471,29 +484,52 @@ class LidmaatDetailActivity : AppCompatActivity() {
 // In displayMemberData()
         when (item.certificateStatus) {
             "Ontvang" -> {
-                binding.detailLidmaatstatus.setText("✓ " +item.memberStatus)
-                binding.detailLidmaatstatus.setTextColor(ContextCompat.getColor(this, R.color.md_theme_primary))
+                binding.detailLidmaatstatus.setText("✓ " + item.memberStatus)
+                binding.detailLidmaatstatus.setTextColor(
+                    ContextCompat.getColor(
+                        this,
+                        R.color.md_theme_primary
+                    )
+                )
 //                binding.detailLidmaatstatus.setCompoundDrawablesWithIntrinsicBounds(
 //                    R.drawable.ic_check_circle, 0, 0, 0
 //                )
             }
+
             "Aangevra" -> {
-                binding.detailLidmaatstatus.setText("⏳ " +item.memberStatus)
-                binding.detailLidmaatstatus.setTextColor(ContextCompat.getColor(this, R.color.md_theme_secondary))
+                binding.detailLidmaatstatus.setText("⏳ " + item.memberStatus)
+                binding.detailLidmaatstatus.setTextColor(
+                    ContextCompat.getColor(
+                        this,
+                        R.color.md_theme_secondary
+                    )
+                )
 //                binding.detailLidmaatstatus.setCompoundDrawablesWithIntrinsicBounds(
 //                    R.drawable.ic_pending, 0, 0, 0
 //                )
             }
+
             "Nie Aangevra" -> {
-                binding.detailLidmaatstatus.setText("✕ " +item.memberStatus)
-                binding.detailLidmaatstatus.setTextColor(ContextCompat.getColor(this, R.color.md_theme_error))
+                binding.detailLidmaatstatus.setText("✕ " + item.memberStatus)
+                binding.detailLidmaatstatus.setTextColor(
+                    ContextCompat.getColor(
+                        this,
+                        R.color.md_theme_error
+                    )
+                )
 //                binding.detailLidmaatstatus.setCompoundDrawablesWithIntrinsicBounds(
 //                    R.drawable.ic_error, 0, 0, 0
 //                )
             }
+
             else -> {
                 binding.detailLidmaatstatus.setText("? " + item.memberStatus)
-                binding.detailLidmaatstatus.setTextColor(ContextCompat.getColor(this, R.color.md_theme_onSurface))
+                binding.detailLidmaatstatus.setTextColor(
+                    ContextCompat.getColor(
+                        this,
+                        R.color.md_theme_onSurface
+                    )
+                )
 //                binding.detailLidmaatstatus.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0)
             }
         }
@@ -501,15 +537,23 @@ class LidmaatDetailActivity : AppCompatActivity() {
         val street = item.streetAddress ?: ""
         val postal = item.postalAddress ?: ""
 
-        binding.detailSelfoonBlock.visibility = if (item.cellphone.isNotEmpty()) View.VISIBLE else View.GONE
-        binding.detailTelefoonBlock.visibility = if (item.landline.isNotEmpty()) View.VISIBLE else View.GONE
-        binding.detailEposBlock.visibility = if (item.email.isNotEmpty()) View.VISIBLE else View.GONE
-        binding.detailNooiensvanBlock.visibility = if (item.maidenName.isNotEmpty()) View.VISIBLE else View.GONE
-        binding.detailBeroepBlock.visibility = if (item.profession.isNotEmpty()) View.VISIBLE else View.GONE
-        binding.detailWerkgewerBlock.visibility = if (item.employer.isNotEmpty()) View.VISIBLE else View.GONE
-        binding.detailStraatadresBlock.visibility = if (street.isNotEmpty()) View.VISIBLE else View.GONE
+        binding.detailSelfoonBlock.visibility =
+            if (item.cellphone.isNotEmpty()) View.VISIBLE else View.GONE
+        binding.detailTelefoonBlock.visibility =
+            if (item.landline.isNotEmpty()) View.VISIBLE else View.GONE
+        binding.detailEposBlock.visibility =
+            if (item.email.isNotEmpty()) View.VISIBLE else View.GONE
+        binding.detailNooiensvanBlock.visibility =
+            if (item.maidenName.isNotEmpty()) View.VISIBLE else View.GONE
+        binding.detailBeroepBlock.visibility =
+            if (item.profession.isNotEmpty()) View.VISIBLE else View.GONE
+        binding.detailWerkgewerBlock.visibility =
+            if (item.employer.isNotEmpty()) View.VISIBLE else View.GONE
+        binding.detailStraatadresBlock.visibility =
+            if (street.isNotEmpty()) View.VISIBLE else View.GONE
         // Show postal only if it exists and is different from street
-        binding.detailPosadresBlock.visibility = if (postal.isNotEmpty() && postal != street) View.VISIBLE else View.GONE
+        binding.detailPosadresBlock.visibility =
+            if (postal.isNotEmpty() && postal != street) View.VISIBLE else View.GONE
 
         // ─── Manage dividers between visible contact blocks ──
         val blockDividerPairs = listOf(
@@ -519,7 +563,8 @@ class LidmaatDetailActivity : AppCompatActivity() {
             binding.detailStraatadresBlock to binding.dividerStraatadres
         )
         blockDividerPairs.forEach { (_, divider) -> divider.visibility = View.GONE }
-        val visibleBlocks = blockDividerPairs.map { it.first }.filter { it.visibility == View.VISIBLE }
+        val visibleBlocks =
+            blockDividerPairs.map { it.first }.filter { it.visibility == View.VISIBLE }
         for (i in 0 until visibleBlocks.size - 1) {
             val block = visibleBlocks[i]
             val divider = blockDividerPairs.find { it.first == block }?.second
@@ -567,7 +612,8 @@ class LidmaatDetailActivity : AppCompatActivity() {
                 layoutParams = LinearLayout.LayoutParams(256, 256)
                 scaleType = ImageView.ScaleType.FIT_XY
                 if (member.picturePath.isNotEmpty()) {
-                    val file = File(winkerkEntry.getCacheDir(this@LidmaatDetailActivity) + member.picturePath)
+                    val file =
+                        File(winkerkEntry.getCacheDir(this@LidmaatDetailActivity) + member.picturePath)
                     if (file.exists()) {
                         Glide.with(this@LidmaatDetailActivity)
                             .load(file)
@@ -637,7 +683,10 @@ class LidmaatDetailActivity : AppCompatActivity() {
             if (item.baptismDs.isNotEmpty()) {
                 val leraarTv = TextView(this).apply {
                     text = item.baptismDs
-                    TextViewCompat.setTextAppearance(this, android.R.style.TextAppearance_Holo_Small)
+                    TextViewCompat.setTextAppearance(
+                        this,
+                        android.R.style.TextAppearance_Holo_Small
+                    )
                 }
                 mylpaleBlock.addView(leraarTv)
             }
@@ -654,7 +703,10 @@ class LidmaatDetailActivity : AppCompatActivity() {
             if (item.confessionDs.isNotEmpty()) {
                 val leraarTv = TextView(this).apply {
                     text = item.confessionDs
-                    TextViewCompat.setTextAppearance(this, android.R.style.TextAppearance_Holo_Small)
+                    TextViewCompat.setTextAppearance(
+                        this,
+                        android.R.style.TextAppearance_Holo_Small
+                    )
                 }
                 mylpaleBlock.addView(leraarTv)
             }
@@ -762,18 +814,54 @@ class LidmaatDetailActivity : AppCompatActivity() {
             }
         }
 
-        checkAndPut(winkerkEntry.LIDMATE_NOEMNAAM, binding.detailNoemnaam.text.toString(), item.name)
+        checkAndPut(
+            winkerkEntry.LIDMATE_NOEMNAAM,
+            binding.detailNoemnaam.text.toString(),
+            item.name
+        )
         checkAndPut(winkerkEntry.LIDMATE_VAN, binding.detailVan.text.toString(), item.surname)
-        checkAndPut(winkerkEntry.LIDMATE_VOORNAME, binding.detailVollename.text.toString(), item.fullNames)
-        checkAndPut(winkerkEntry.LIDMATE_SELFOON, binding.detailSelfoon.text.toString(), item.cellphone)
-        checkAndPut(winkerkEntry.LIDMATE_LANDLYN, binding.detailTelefoon.text.toString(), item.landline)
+        checkAndPut(
+            winkerkEntry.LIDMATE_VOORNAME,
+            binding.detailVollename.text.toString(),
+            item.fullNames
+        )
+        checkAndPut(
+            winkerkEntry.LIDMATE_SELFOON,
+            binding.detailSelfoon.text.toString(),
+            item.cellphone
+        )
+        checkAndPut(
+            winkerkEntry.LIDMATE_LANDLYN,
+            binding.detailTelefoon.text.toString(),
+            item.landline
+        )
         checkAndPut(winkerkEntry.LIDMATE_WYK, binding.detailWyk.text.toString(), item.ward)
-        checkAndPut(winkerkEntry.LIDMATE_LIDMAATSTATUS, binding.detailLidmaatstatus.text.toString(), item.memberStatus)
-        checkAndPut(winkerkEntry.LIDMATE_GEBOORTEDATUM, binding.detailGeboortedatum.text.toString(), item.birthday)
+        checkAndPut(
+            winkerkEntry.LIDMATE_LIDMAATSTATUS,
+            binding.detailLidmaatstatus.text.toString(),
+            item.memberStatus
+        )
+        checkAndPut(
+            winkerkEntry.LIDMATE_GEBOORTEDATUM,
+            binding.detailGeboortedatum.text.toString(),
+            item.birthday
+        )
         checkAndPut(winkerkEntry.LIDMATE_EPOS, binding.detailEpos.text.toString(), item.email)
-        checkAndPut(winkerkEntry.LIDMATE_NOOIENSVAN, binding.detailNooiensvan.text.toString(), item.maidenName)
-        checkAndPut(winkerkEntry.LIDMATE_BEROEP, binding.detailBeroep.text.toString(), item.profession)
-        checkAndPut(winkerkEntry.LIDMATE_WERKGEWER, binding.detailWerkgewer.text.toString(), item.employer)
+        checkAndPut(
+            winkerkEntry.LIDMATE_NOOIENSVAN,
+            binding.detailNooiensvan.text.toString(),
+            item.maidenName
+        )
+        checkAndPut(
+            winkerkEntry.LIDMATE_BEROEP,
+            binding.detailBeroep.text.toString(),
+            item.profession
+        )
+        checkAndPut(
+            winkerkEntry.LIDMATE_WERKGEWER,
+            binding.detailWerkgewer.text.toString(),
+            item.employer
+        )
 
         val newStraat = binding.detailStraatadres.text.toString()
         if (newStraat != mStraatAdres) {
@@ -879,6 +967,7 @@ class LidmaatDetailActivity : AppCompatActivity() {
         val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         imm.showSoftInput(view, 0)
     }
+
     private fun buildEventDescription(member: MemberDetailItem): String {
         return buildString {
             member.birthday?.takeIf { it.isNotEmpty() }?.let { append("Geboortedatum: $it\n") }

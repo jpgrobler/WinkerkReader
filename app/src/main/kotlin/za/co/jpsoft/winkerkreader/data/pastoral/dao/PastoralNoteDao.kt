@@ -13,26 +13,32 @@ interface PastoralNoteDao {
 
     // ── Observe (Flow) ────────────────────────────────────────────────────────
 
-    @Query("""
+    @Query(
+        """
         SELECT * FROM pastoral_notes
         WHERE memberGuid = :memberGuid
         ORDER BY noteDateUtc DESC
-    """)
+    """
+    )
     fun observeForMember(memberGuid: String): Flow<List<PastoralNoteEntity>>
 
-    @Query("""
+    @Query(
+        """
         SELECT * FROM pastoral_notes
         ORDER BY noteDateUtc DESC
-    """)
+    """
+    )
     fun observeAll(): Flow<List<PastoralNoteEntity>>
 
     // ── One-shot queries ──────────────────────────────────────────────────────
 
-    @Query("""
+    @Query(
+        """
         SELECT * FROM pastoral_notes
         WHERE memberGuid = :memberGuid
         ORDER BY noteDateUtc DESC
-    """)
+    """
+    )
     suspend fun getForMember(memberGuid: String): List<PastoralNoteEntity>
 
     @Query("SELECT * FROM pastoral_notes WHERE noteId = :noteId LIMIT 1")
@@ -43,11 +49,13 @@ interface PastoralNoteDao {
 
     // ── Recent notes across all members (for "Laaste aktiwiteit" overview) ───
 
-    @Query("""
+    @Query(
+        """
         SELECT * FROM pastoral_notes
         ORDER BY noteDateUtc DESC
         LIMIT :limit
-    """)
+    """
+    )
     suspend fun getRecent(limit: Int = 20): List<PastoralNoteEntity>
 
     // ── Write ─────────────────────────────────────────────────────────────────
@@ -63,11 +71,13 @@ interface PastoralNoteDao {
 
     // ── Link to reminder (set after reminder is created alongside the note) ───
 
-    @Query("""
+    @Query(
+        """
         UPDATE pastoral_notes
         SET linkedReminderId = :reminderId,
             updatedAt        = :now
         WHERE noteId = :noteId
-    """)
+    """
+    )
     suspend fun linkToReminder(noteId: String, reminderId: String, now: Long)
 }

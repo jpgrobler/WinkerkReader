@@ -77,8 +77,9 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         const val EXTRA_PROMPT_RESTORE = "pastoral_prompt_restore"
         private const val PICKFILE_RESULT_CODE = 1
         private val CURRENT_PASTORAL_SCHEMA_VERSION
-        get() = PastoralDatabaseBackup.CURRENT_PASTORAL_SCHEMA_VERSION
-        private val RECEIVER_EXPORTED = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) Context.RECEIVER_EXPORTED else 0
+            get() = PastoralDatabaseBackup.CURRENT_PASTORAL_SCHEMA_VERSION
+        private val RECEIVER_EXPORTED =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) Context.RECEIVER_EXPORTED else 0
         private var privateDownloadFile: File? = null
         private fun writeExtractedFileToDisk(`in`: InputStream, outs: OutputStream) {
             val buffer = ByteArray(1024)
@@ -101,6 +102,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
             return m.matches()
         }
     }
+
     private var isDownloadReceiverRegistered = false
     private lateinit var settings: SharedPreferences
     private lateinit var settingsManager: SettingsManager
@@ -125,41 +127,48 @@ class LaaiDatabasisActivity : AppCompatActivity() {
     private var syncPhotosAfterDb: Boolean = false
     private var fromMenu: Boolean = true
 
-    private val notificationPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-        if (isGranted) Log.d("LaaiDatabasis", "Notification permission granted")
-    }
+    private val notificationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            if (isGranted) Log.d("LaaiDatabasis", "Notification permission granted")
+        }
 
-    private val pickFileLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) {
-            val dbPath = File(applicationInfo.dataDir, "databases")
-            if (!dbPath.exists()) dbPath.mkdirs()
+    private val pickFileLauncher =
+        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            if (uri != null) {
+                val dbPath = File(applicationInfo.dataDir, "databases")
+                if (!dbPath.exists()) dbPath.mkdirs()
 
-            val targetFile = File(dbPath, DB_NAME)
-            try {
-                // Close Room before overwriting
-                WinkerkDatabase.closeInstance()
+                val targetFile = File(dbPath, DB_NAME)
+                try {
+                    // Close Room before overwriting
+                    WinkerkDatabase.closeInstance()
 
-                contentResolver.openInputStream(uri)?.use { input ->
-                    FileOutputStream(targetFile).use { output ->
-                        input.copyTo(output)
+                    contentResolver.openInputStream(uri)?.use { input ->
+                        FileOutputStream(targetFile).use { output ->
+                            input.copyTo(output)
+                        }
+                    } ?: run {
+                        Toast.makeText(this, "Kon nie lêer oopmaak nie", Toast.LENGTH_LONG).show()
+                        return@registerForActivityResult
                     }
-                } ?: run {
-                    Toast.makeText(this, "Kon nie lêer oopmaak nie", Toast.LENGTH_LONG).show()
-                    return@registerForActivityResult
-                }
 
-                if (!migrateDownloadedDatabase(targetFile)) {
-                    Toast.makeText(this, "Databasis omskakeling misluk", Toast.LENGTH_LONG).show()
-                    return@registerForActivityResult
-                }
+                    if (!migrateDownloadedDatabase(targetFile)) {
+                        Toast.makeText(this, "Databasis omskakeling misluk", Toast.LENGTH_LONG)
+                            .show()
+                        return@registerForActivityResult
+                    }
 
-                reloadDatabaseAndFinish()
-            } catch (e: IOException) {
-                if (BuildConfig.DEBUG) Log.e(TAG, "File copy failed", e)
-                Toast.makeText(this, "Kon nie lêer kopieer nie: ${e.message}", Toast.LENGTH_LONG).show()
+                    reloadDatabaseAndFinish()
+                } catch (e: IOException) {
+                    if (BuildConfig.DEBUG) Log.e(TAG, "File copy failed", e)
+                    Toast.makeText(
+                        this,
+                        "Kon nie lêer kopieer nie: ${e.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
             }
         }
-    }
 
     private fun cancelOngoingDownloads() {
         fileDownloadWorkId?.let { workId ->
@@ -174,7 +183,8 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         }
         try {
             recieverDownloadComplete?.let { unregisterReceiver(it) }
-        } catch (_: Exception) { }
+        } catch (_: Exception) {
+        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -208,7 +218,11 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         })
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            if (ActivityCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
                 notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
         }
@@ -295,7 +309,8 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         WorkManager.getInstance(this).enqueue(photoWorkRequest)
 
         currentWorkInfoLiveData?.removeObserver(workInfoObserver)
-        currentWorkInfoLiveData = WorkManager.getInstance(this).getWorkInfoByIdLiveData(photoWorkRequest.id)
+        currentWorkInfoLiveData =
+            WorkManager.getInstance(this).getWorkInfoByIdLiveData(photoWorkRequest.id)
         workInfoObserver = Observer { workInfo ->
             if (workInfo != null) {
                 if (workInfo.state.isFinished) {
@@ -309,11 +324,16 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                         val message = getString(R.string.photo_sync_done, success, fail)
                         binding.photoSyncStatus.text = message
                         binding.photoSyncStatus.visibility = View.VISIBLE
-                        Toast.makeText(this@LaaiDatabasisActivity, message, Toast.LENGTH_LONG).show()
+                        Toast.makeText(this@LaaiDatabasisActivity, message, Toast.LENGTH_LONG)
+                            .show()
                     } else if (workInfo.state == WorkInfo.State.FAILED) {
                         binding.photoSyncStatus.setText(R.string.photo_sync_failed_status)
                         binding.photoSyncStatus.visibility = View.VISIBLE
-                        Toast.makeText(this@LaaiDatabasisActivity, R.string.photo_sync_failed_toast, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@LaaiDatabasisActivity,
+                            R.string.photo_sync_failed_toast,
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 } else {
                     val progress = workInfo.progress
@@ -323,7 +343,8 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                     if (tot > 0) {
                         binding.photoSyncProgress.max = tot
                         binding.photoSyncProgress.progress = prog
-                        binding.photoSyncStatus.text = getString(R.string.photo_sync_progress, prog, tot, guid ?: "")
+                        binding.photoSyncStatus.text =
+                            getString(R.string.photo_sync_progress, prog, tot, guid ?: "")
                         binding.photoSyncStatus.visibility = View.VISIBLE
                     }
                 }
@@ -401,7 +422,13 @@ class LaaiDatabasisActivity : AppCompatActivity() {
     }
 
     private fun handlePickFile() {
-        pickFileLauncher.launch(arrayOf("application/octet-stream", "application/x-sqlite3", "application/vnd.sqlite3"))
+        pickFileLauncher.launch(
+            arrayOf(
+                "application/octet-stream",
+                "application/x-sqlite3",
+                "application/vnd.sqlite3"
+            )
+        )
         binding.laaiPicker.setBackgroundColor(Color.GREEN)
     }
 
@@ -457,30 +484,33 @@ class LaaiDatabasisActivity : AppCompatActivity() {
             .build()
         WorkManager.getInstance(this).enqueue(workRequest)
         fileDownloadWorkId = workRequest.id
-        WorkManager.getInstance(this).getWorkInfoByIdLiveData(workRequest.id).observe(this) { workInfo ->
-            if (workInfo == null) return@observe
-            val progress = workInfo.progress.getInt(FileDownloadWorker.KEY_PROGRESS, 0)
-            if (progress > 0) {
-                binding.laaiBoodskap.text = getString(R.string.download_received_percent, progress)
-            }
-            if (workInfo.state.isFinished) {
-                button.background.clearColorFilter()
-                if (workInfo.state == WorkInfo.State.SUCCEEDED) {
-                    val dbFile = File(applicationInfo.dataDir, "databases/$DB_NAME")
-                    if (dbFile.exists()) {
-                        migrateDownloadedDatabase(dbFile)
-                    }
-                    binding.laaiBoodskap.setText(R.string.download_completed)
-                    Toast.makeText(this, R.string.db_received_success, Toast.LENGTH_SHORT).show()
-                    Handler(Looper.getMainLooper()).postDelayed({ navigateBackToMain() }, 1500)
-                } else {
-                    binding.laaiBoodskap.setText(R.string.download_failed)
-                    Toast.makeText(this, R.string.db_download_failed, Toast.LENGTH_LONG).show()
+        WorkManager.getInstance(this).getWorkInfoByIdLiveData(workRequest.id)
+            .observe(this) { workInfo ->
+                if (workInfo == null) return@observe
+                val progress = workInfo.progress.getInt(FileDownloadWorker.KEY_PROGRESS, 0)
+                if (progress > 0) {
+                    binding.laaiBoodskap.text =
+                        getString(R.string.download_received_percent, progress)
                 }
-                if (isWiFi) FlagCancelledWiFi = false else FlagCancelledUSB = false
-                fileDownloadWorkId = null
+                if (workInfo.state.isFinished) {
+                    button.background.clearColorFilter()
+                    if (workInfo.state == WorkInfo.State.SUCCEEDED) {
+                        val dbFile = File(applicationInfo.dataDir, "databases/$DB_NAME")
+                        if (dbFile.exists()) {
+                            migrateDownloadedDatabase(dbFile)
+                        }
+                        binding.laaiBoodskap.setText(R.string.download_completed)
+                        Toast.makeText(this, R.string.db_received_success, Toast.LENGTH_SHORT)
+                            .show()
+                        Handler(Looper.getMainLooper()).postDelayed({ navigateBackToMain() }, 1500)
+                    } else {
+                        binding.laaiBoodskap.setText(R.string.download_failed)
+                        Toast.makeText(this, R.string.db_download_failed, Toast.LENGTH_LONG).show()
+                    }
+                    if (isWiFi) FlagCancelledWiFi = false else FlagCancelledUSB = false
+                    fileDownloadWorkId = null
+                }
             }
-        }
     }
 
     private fun saveIPAddress(ipAddress: String) {
@@ -504,7 +534,10 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         try {
             getFileList(winkerkEntry.getWkrDir(this))
         } catch (e: Exception) {
-            if (BuildConfig.DEBUG) Log.e("WinkerkReader LaaiDatabasisActivity", "Error scanning files: $e")
+            if (BuildConfig.DEBUG) Log.e(
+                "WinkerkReader LaaiDatabasisActivity",
+                "Error scanning files: $e"
+            )
         }
     }
 
@@ -525,7 +558,8 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         val additionalData = getFileAdditionalData(this.fileList[index]["Path"])
 
         val radioButton = RadioButton(this).apply {
-            text = "${this@LaaiDatabasisActivity.fileList[index]["Path"]}\n${size} Mb$additionalData"
+            text =
+                "${this@LaaiDatabasisActivity.fileList[index]["Path"]}\n${size} Mb$additionalData"
             id = index
             background = ContextCompat.getDrawable(this@LaaiDatabasisActivity, R.drawable.border2)
             layoutParams = LinearLayoutCompat.LayoutParams(
@@ -540,7 +574,11 @@ class LaaiDatabasisActivity : AppCompatActivity() {
     private fun getFileAdditionalData(filePath: String?): String {
         if (filePath == null) return ""
         return try {
-            SQLiteDatabase.openDatabase(filePath, null, SQLiteDatabase.OPEN_READONLY or SQLiteDatabase.NO_LOCALIZED_COLLATORS).use { sqlite ->
+            SQLiteDatabase.openDatabase(
+                filePath,
+                null,
+                SQLiteDatabase.OPEN_READONLY or SQLiteDatabase.NO_LOCALIZED_COLLATORS
+            ).use { sqlite ->
                 val cursor = sqlite.rawQuery(
                     "SELECT MyCongregationInfo.Name, MyCongregationInfo.Email, Denominations.Abbreviation " +
                             "FROM MyCongregationInfo " +
@@ -561,26 +599,29 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                 }
             }
         } catch (e: Exception) {
-            if (BuildConfig.DEBUG) Log.e("WinkerkReader LaaiDatabasisActivity", "Error reading database info: $e")
+            if (BuildConfig.DEBUG) Log.e(
+                "WinkerkReader LaaiDatabasisActivity",
+                "Error reading database info: $e"
+            )
             ""
         }
     }
 
     private fun handleIntentExtras() {
-         val intentMain = intent
-         if (intentMain.extras == null) return
+        val intentMain = intent
+        if (intentMain.extras == null) return
 
-         // Pastoral restore request from BedieningActivity / MainActivity snackbar
-         if (intentMain.getBooleanExtra(EXTRA_PROMPT_RESTORE, false)) {
-             openFilePicker()       // launches the SAF OpenDocument picker
-             return
-         }
+        // Pastoral restore request from BedieningActivity / MainActivity snackbar
+        if (intentMain.getBooleanExtra(EXTRA_PROMPT_RESTORE, false)) {
+            openFilePicker()       // launches the SAF OpenDocument picker
+            return
+        }
 
-         // Existing congregation DB auto-update path
-         val extra = intentMain.getStringExtra("DataBase_Update")
-         if (extra.isNullOrEmpty()) return
-         processAutomaticDatabaseUpdate(extra)
-     }
+        // Existing congregation DB auto-update path
+        val extra = intentMain.getStringExtra("DataBase_Update")
+        if (extra.isNullOrEmpty()) return
+        processAutomaticDatabaseUpdate(extra)
+    }
 
     private fun processAutomaticDatabaseUpdate(filePath: String) {
         Toast.makeText(this, "WKR - Databasislaai", Toast.LENGTH_SHORT).show()
@@ -660,7 +701,9 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                 val absolutePath = sourceFile.absolutePath
                 sourceFile.delete()
                 MediaScannerConnection.scanFile(this, arrayOf(absolutePath), null, null)
-            } catch (e: IOException) { Log.e(TAG, "File Delete failed", e) }
+            } catch (e: IOException) {
+                Log.e(TAG, "File Delete failed", e)
+            }
         }
         if (syncPhotosAfterDb) startPhotoSync()
         return result
@@ -876,8 +919,8 @@ class LaaiDatabasisActivity : AppCompatActivity() {
             ?: return
 
         val backupVersion = PastoralDatabaseBackup.readSchemaVersion(backupFile)
-        val backupSizeMb  = "%.1f".format(backupFile.length() / 1_048_576.0)
-        val backupDate    = java.text.SimpleDateFormat("d MMM yyyy HH:mm", Locale.getDefault())
+        val backupSizeMb = "%.1f".format(backupFile.length() / 1_048_576.0)
+        val backupDate = java.text.SimpleDateFormat("d MMM yyyy HH:mm", Locale.getDefault())
             .format(Date(backupFile.lastModified()))
 
         when {
@@ -888,6 +931,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                     .setPositiveButton(android.R.string.ok, null)
                     .show()
             }
+
             backupVersion > CURRENT_PASTORAL_SCHEMA_VERSION -> {
                 AlertDialog.Builder(this)
                     .setTitle(getString(R.string.pastoral_import_fout_titel))
@@ -901,6 +945,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                     .setPositiveButton(android.R.string.ok, null)
                     .show()
             }
+
             else -> {
                 AlertDialog.Builder(this)
                     .setTitle(getString(R.string.pastoral_import_gevind_titel))
@@ -929,7 +974,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
 
         lifecycleScope.launch(Dispatchers.IO) {
             val success = PastoralDatabaseBackup.importBackup(
-                context    = applicationContext,
+                context = applicationContext,
                 backupFile = backupFile
             )
             withContext(Dispatchers.Main) {
@@ -1055,6 +1100,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                 handleImportResult(result)
             }
         }
+
     private fun openFilePicker() {
         // SQLite has no standard MIME type; offer both options so pickers show .db files
         pickBackupFile.launch(arrayOf("application/octet-stream", "*/*"))
@@ -1062,16 +1108,18 @@ class LaaiDatabasisActivity : AppCompatActivity() {
 
     private fun handleImportResult(result: PastoralDatabaseBackup.ImportResult) {
         val msg = when (result) {
-            is PastoralDatabaseBackup.ImportResult.Success     ->
+            is PastoralDatabaseBackup.ImportResult.Success ->
                 if (result.migratedFrom < CURRENT_PASTORAL_SCHEMA_VERSION)
                     "Rugsteun herstel en opgradeer van v${result.migratedFrom}"
                 else
                     "Rugsteun suksesvol herstel"
-            is PastoralDatabaseBackup.ImportResult.TooNew      ->
+
+            is PastoralDatabaseBackup.ImportResult.TooNew ->
                 "Lêer is van 'n nuwer weergawe (v${result.backupVersion}). Dateer die app op."
-            PastoralDatabaseBackup.ImportResult.InvalidFile    -> "Ongeldige rugsteunlêer"
-            PastoralDatabaseBackup.ImportResult.ReadError      -> "Kon nie lêer lees nie — probeer weer"
-            PastoralDatabaseBackup.ImportResult.Failed         -> "Herstel misluk"
+
+            PastoralDatabaseBackup.ImportResult.InvalidFile -> "Ongeldige rugsteunlêer"
+            PastoralDatabaseBackup.ImportResult.ReadError -> "Kon nie lêer lees nie — probeer weer"
+            PastoralDatabaseBackup.ImportResult.Failed -> "Herstel misluk"
         }
         Snackbar.make(binding.root, msg, Snackbar.LENGTH_LONG).show()
         if (result is PastoralDatabaseBackup.ImportResult.Success) {
@@ -1113,25 +1161,29 @@ class LaaiDatabasisActivity : AppCompatActivity() {
 
         // 2. Optional: ensure the Members table exists and has rows
         return try {
-            SQLiteDatabase.openDatabase(file.absolutePath, null, SQLiteDatabase.OPEN_READONLY).use { db ->
-                // Check that the Members table exists and has at least minMemberCount rows
-                val cursor = db.rawQuery(
-                    "SELECT COUNT(*) FROM Members",
-                    null
-                )
-                cursor.use {
-                    if (it.moveToFirst()) {
-                        val count = it.getInt(0)
-                        if (count < minMemberCount) {
-                            if (BuildConfig.DEBUG) Log.e(TAG, "Members table has only $count rows (minimum $minMemberCount)")
-                            return false
+            SQLiteDatabase.openDatabase(file.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
+                .use { db ->
+                    // Check that the Members table exists and has at least minMemberCount rows
+                    val cursor = db.rawQuery(
+                        "SELECT COUNT(*) FROM Members",
+                        null
+                    )
+                    cursor.use {
+                        if (it.moveToFirst()) {
+                            val count = it.getInt(0)
+                            if (count < minMemberCount) {
+                                if (BuildConfig.DEBUG) Log.e(
+                                    TAG,
+                                    "Members table has only $count rows (minimum $minMemberCount)"
+                                )
+                                return false
+                            }
+                            true
+                        } else {
+                            false
                         }
-                        true
-                    } else {
-                        false
                     }
                 }
-            }
         } catch (e: Exception) {
             if (BuildConfig.DEBUG) Log.e(TAG, "Error querying Members table", e)
             false

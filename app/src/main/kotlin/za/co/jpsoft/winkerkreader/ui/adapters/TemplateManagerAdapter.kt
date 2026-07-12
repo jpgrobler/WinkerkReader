@@ -16,7 +16,8 @@ class TemplateManagerAdapter(
     private val onDelete: (templateId: String, titleAf: String) -> Unit
 ) : ListAdapter<TemplateWithSteps, TemplateManagerAdapter.ViewHolder>(DIFF) {
 
-    class ViewHolder(val binding: ItemTemplateManagerBinding) : RecyclerView.ViewHolder(binding.root)
+    class ViewHolder(val binding: ItemTemplateManagerBinding) :
+        RecyclerView.ViewHolder(binding.root)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = ViewHolder(
         ItemTemplateManagerBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -37,7 +38,12 @@ class TemplateManagerAdapter(
             onToggleActive(template.templateId, checked)
         }
         holder.binding.btnDelete.visibility = if (template.isSystem) View.GONE else View.VISIBLE
-        holder.binding.btnDelete.setOnClickListener { onDelete(template.templateId, template.titleAf) }
+        holder.binding.btnDelete.setOnClickListener {
+            onDelete(
+                template.templateId,
+                template.titleAf
+            )
+        }
         holder.binding.root.setOnClickListener { onOpen(template.templateId) }
     }
 
@@ -45,6 +51,7 @@ class TemplateManagerAdapter(
         private val DIFF = object : DiffUtil.ItemCallback<TemplateWithSteps>() {
             override fun areItemsTheSame(a: TemplateWithSteps, b: TemplateWithSteps) =
                 a.template.templateId == b.template.templateId
+
             override fun areContentsTheSame(a: TemplateWithSteps, b: TemplateWithSteps) = a == b
         }
     }

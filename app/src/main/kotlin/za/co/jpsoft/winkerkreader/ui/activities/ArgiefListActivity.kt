@@ -215,7 +215,8 @@ class ArgiefLysAdapter(context: Context, cursor: Cursor?) : CursorAdapter(contex
 
             if (position == 0) {
                 itemBinding.argiefListSeparator.visibility = View.VISIBLE
-                itemBinding.argiefListSeparator.text = context.getString(R.string.separator_format, keuse, current)
+                itemBinding.argiefListSeparator.text =
+                    context.getString(R.string.separator_format, keuse, current)
             } else {
                 cursor.moveToPosition(position - 1)
                 val previous = when (keuse) {
@@ -228,7 +229,8 @@ class ArgiefLysAdapter(context: Context, cursor: Cursor?) : CursorAdapter(contex
 
                 if (previous != null && current != null && previous != current) {
                     itemBinding.argiefListSeparator.visibility = View.VISIBLE
-                    itemBinding.argiefListSeparator.text = context.getString(R.string.separator_format, keuse, current)
+                    itemBinding.argiefListSeparator.text =
+                        context.getString(R.string.separator_format, keuse, current)
                 }
             }
         } catch (e: Exception) {

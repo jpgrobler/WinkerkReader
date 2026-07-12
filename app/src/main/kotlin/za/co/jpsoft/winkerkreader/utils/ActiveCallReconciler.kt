@@ -19,7 +19,10 @@ object ActiveCallReconciler {
         val orphaned = callLogDao.getAllActiveCalls()
         if (orphaned.isEmpty()) return
 
-        if (BuildConfig.DEBUG) Log.w(TAG, "Reconciling ${orphaned.size} orphaned active call(s) from a prior process death")
+        if (BuildConfig.DEBUG) Log.w(
+            TAG,
+            "Reconciling ${orphaned.size} orphaned active call(s) from a prior process death"
+        )
 
         orphaned.forEach { call ->
             // We have a start time but no real end time — log with duration 0
@@ -40,7 +43,10 @@ object ActiveCallReconciler {
     }
 
     private fun formatDateTime(timestamp: Long): String {
-        val formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault())
+        val formatter = java.time.format.DateTimeFormatter.ofPattern(
+            "yyyy-MM-dd HH:mm:ss",
+            java.util.Locale.getDefault()
+        )
         return java.time.Instant.ofEpochMilli(timestamp)
             .atZone(java.time.ZoneId.systemDefault())
             .format(formatter)

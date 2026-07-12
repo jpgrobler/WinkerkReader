@@ -55,7 +55,10 @@ class PhotoDownloadWorker(
                     availableGuids.add(line!!)
                 }
             }
-            if (BuildConfig.DEBUG) Log.d("PhotoDownloadWorker", "PC has ${availableGuids.size} photos available")
+            if (BuildConfig.DEBUG) Log.d(
+                "PhotoDownloadWorker",
+                "PC has ${availableGuids.size} photos available"
+            )
         } catch (e: Exception) {
             if (BuildConfig.DEBUG) Log.e("PhotoDownloadWorker", "Failed to get photo list", e)
             return@withContext Result.failure(workDataOf("ERROR" to "Could not retrieve photo list"))
@@ -95,82 +98,91 @@ class PhotoDownloadWorker(
             val downloaded = downloadPhoto(serverIp, guid, destFile)
             if (downloaded) successCount++ else failCount++
             processed++
-            setProgress(workDataOf("progress" to processed, "total" to total, "currentGuid" to guid))
+            setProgress(
+                workDataOf(
+                    "progress" to processed,
+                    "total" to total,
+                    "currentGuid" to guid
+                )
+            )
         }
         Result.success(workDataOf("SUCCESS_COUNT" to successCount, "FAIL_COUNT" to failCount))
     }
 
-    private suspend fun downloadPhoto(serverIp: String, guid: String, destFile: File): Boolean = withContext(Dispatchers.IO) {
-        var dataSocket: Socket? = null
-        var ackSocket: Socket? = null
-        var checksumSocket: Socket? = null
-        try {
-            dataSocket = Socket(serverIp, 49517).apply { soTimeout = 30000 }
-            ackSocket = Socket(serverIp, 49518).apply { soTimeout = 30000 }
-            checksumSocket = Socket(serverIp, 49519).apply { soTimeout = 30000 }
-
-            val dataOut = dataSocket.getOutputStream()
-            val ackIn = ackSocket.getInputStream().bufferedReader()
-            val ackOut = ackSocket.getOutputStream()
-            val checksumIn = checksumSocket.getInputStream().bufferedReader()
-
-            dataOut.write("$guid\n".toByteArray())
-            dataOut.flush()
-
-            val ack1 = ackIn.readLine()
-            if (ack1 != "ACK") throw Exception("No ACK for GUID")
-
-            val sizeStr = ackIn.readLine() ?: throw Exception("No file size")
-            val fileSize = sizeStr.toLongOrNull() ?: throw Exception("Invalid file size")
-            ackOut.write("ACK\n".toByteArray())
-            ackOut.flush()
-
-            val bufferSizeStr = ackIn.readLine() ?: throw Exception("No buffer size")
-            val bufferSize = bufferSizeStr.toIntOrNull() ?: throw Exception("Invalid buffer size")
-            ackOut.write("ACK\n".toByteArray())
-            ackOut.flush()
-
-            val buffer = ByteArray(bufferSize)
-            val fileOut = FileOutputStream(destFile)
-            var totalRead = 0L
+    private suspend fun downloadPhoto(serverIp: String, guid: String, destFile: File): Boolean =
+        withContext(Dispatchers.IO) {
+            var dataSocket: Socket? = null
+            var ackSocket: Socket? = null
+            var checksumSocket: Socket? = null
             try {
-                while (totalRead < fileSize) {
-                    var bytesRead = 0
-                    while (bytesRead < buffer.size) {
-                        val read = dataSocket.getInputStream().read(buffer, bytesRead, buffer.size - bytesRead)
-                        if (read == -1) throw Exception("Stream closed")
-                        bytesRead += read
-                        if (totalRead + bytesRead == fileSize) break
-                    }
-                    ackOut.write("ACK\n".toByteArray())
-                    ackOut.flush()
+                dataSocket = Socket(serverIp, 49517).apply { soTimeout = 30000 }
+                ackSocket = Socket(serverIp, 49518).apply { soTimeout = 30000 }
+                checksumSocket = Socket(serverIp, 49519).apply { soTimeout = 30000 }
 
-                    val serverChecksum = checksumIn.readLine() ?: throw Exception("No checksum")
-                    ackOut.write("ACK\n".toByteArray())
-                    ackOut.flush()
+                val dataOut = dataSocket.getOutputStream()
+                val ackIn = ackSocket.getInputStream().bufferedReader()
+                val ackOut = ackSocket.getOutputStream()
+                val checksumIn = checksumSocket.getInputStream().bufferedReader()
 
-                    val localChecksum = calculateChecksum(buffer, 0, bytesRead)
-                    if (localChecksum != serverChecksum) {
-                        ackOut.write("ERROR\n".toByteArray())
+                dataOut.write("$guid\n".toByteArray())
+                dataOut.flush()
+
+                val ack1 = ackIn.readLine()
+                if (ack1 != "ACK") throw Exception("No ACK for GUID")
+
+                val sizeStr = ackIn.readLine() ?: throw Exception("No file size")
+                val fileSize = sizeStr.toLongOrNull() ?: throw Exception("Invalid file size")
+                ackOut.write("ACK\n".toByteArray())
+                ackOut.flush()
+
+                val bufferSizeStr = ackIn.readLine() ?: throw Exception("No buffer size")
+                val bufferSize =
+                    bufferSizeStr.toIntOrNull() ?: throw Exception("Invalid buffer size")
+                ackOut.write("ACK\n".toByteArray())
+                ackOut.flush()
+
+                val buffer = ByteArray(bufferSize)
+                val fileOut = FileOutputStream(destFile)
+                var totalRead = 0L
+                try {
+                    while (totalRead < fileSize) {
+                        var bytesRead = 0
+                        while (bytesRead < buffer.size) {
+                            val read = dataSocket.getInputStream()
+                                .read(buffer, bytesRead, buffer.size - bytesRead)
+                            if (read == -1) throw Exception("Stream closed")
+                            bytesRead += read
+                            if (totalRead + bytesRead == fileSize) break
+                        }
+                        ackOut.write("ACK\n".toByteArray())
                         ackOut.flush()
-                        throw Exception("Checksum mismatch")
+
+                        val serverChecksum = checksumIn.readLine() ?: throw Exception("No checksum")
+                        ackOut.write("ACK\n".toByteArray())
+                        ackOut.flush()
+
+                        val localChecksum = calculateChecksum(buffer, 0, bytesRead)
+                        if (localChecksum != serverChecksum) {
+                            ackOut.write("ERROR\n".toByteArray())
+                            ackOut.flush()
+                            throw Exception("Checksum mismatch")
+                        }
+                        fileOut.write(buffer, 0, bytesRead)
+                        totalRead += bytesRead
                     }
-                    fileOut.write(buffer, 0, bytesRead)
-                    totalRead += bytesRead
+                } finally {
+                    fileOut.close()
                 }
+                true
+            } catch (e: Exception) {
+                if (BuildConfig.DEBUG) Log.e("PhotoDownload", "Error for $guid", e)
+                false
             } finally {
-                fileOut.close()
+                dataSocket?.close()
+                ackSocket?.close()
+                checksumSocket?.close()
             }
-            true
-        } catch (e: Exception) {
-            if (BuildConfig.DEBUG) Log.e("PhotoDownload", "Error for $guid", e)
-            false
-        } finally {
-            dataSocket?.close()
-            ackSocket?.close()
-            checksumSocket?.close()
         }
-    }
 
     private fun calculateChecksum(data: ByteArray, offset: Int, length: Int): String {
         val digest = MessageDigest.getInstance("SHA-256")

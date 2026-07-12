@@ -14,7 +14,14 @@ object CallNotificationDiagnostics {
     private const val PREF_KEY = "pref_unrecognized_call_samples"
     private const val MAX_SAMPLES = 20
 
-    fun record(context: Context, appName: String, title: String, text: String, bigText: String, subText: String) {
+    fun record(
+        context: Context,
+        appName: String,
+        title: String,
+        text: String,
+        bigText: String,
+        subText: String
+    ) {
         val settings = SettingsManager.getInstance(context)
         if (!settings.diagnosticCallCaptureEnabled) return
 

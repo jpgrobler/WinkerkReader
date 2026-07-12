@@ -7,7 +7,8 @@ import androidx.recyclerview.widget.RecyclerView
 import za.co.jpsoft.winkerkreader.data.models.CallLog
 import za.co.jpsoft.winkerkreader.databinding.ItemCallLogBinding
 
-class CallLogAdapter(initialLogs: List<CallLog>) : RecyclerView.Adapter<CallLogAdapter.CallLogViewHolder>() {
+class CallLogAdapter(initialLogs: List<CallLog>) :
+    RecyclerView.Adapter<CallLogAdapter.CallLogViewHolder>() {
 
     private var callLogs: List<CallLog> = initialLogs.toList()
 
@@ -29,6 +30,7 @@ class CallLogAdapter(initialLogs: List<CallLog>) : RecyclerView.Adapter<CallLogA
                     else -> "📞"
                 }
             }
+
             callLog.source == "WhatsApp" -> "💬"
             else -> "📞"
         }
@@ -65,6 +67,7 @@ class CallLogAdapter(initialLogs: List<CallLog>) : RecyclerView.Adapter<CallLogA
         override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
             return oldList[oldItemPosition].id == newList[newItemPosition].id
         }
+
         override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
             return oldList[oldItemPosition] == newList[newItemPosition]
         }

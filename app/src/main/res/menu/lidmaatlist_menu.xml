@@ -5,13 +5,13 @@
         android:id="@+id/kyk_lidmaat_detail"
         android:title="@string/lidmaatlistmenu_detail" />
     <item
-        android:title="@string/lidmaatlistmenu_skakel"
-        android:id="@+id/submenu_bel">
+        android:id="@+id/submenu_bel"
+        android:title="@string/lidmaatlistmenu_skakel">
         <menu>
             <group android:id="@+id/bel_sel_group">
-            <item
-                android:id="@+id/bel_selfoon"
-                android:title="@string/lidmaatlistmenu_bel_selfoon" />
+                <item
+                    android:id="@+id/bel_selfoon"
+                    android:title="@string/lidmaatlistmenu_bel_selfoon" />
             </group>
             <item
                 android:id="@+id/bel_landlyn"
@@ -19,8 +19,8 @@
         </menu>
     </item>
     <item
-        android:title="@string/lidmaatlistmenu_teks"
-        android:id="@+id/submenu_teks">
+        android:id="@+id/submenu_teks"
+        android:title="@string/lidmaatlistmenu_teks">
         <menu>
             <group android:id="@+id/sel_group">
                 <item
@@ -42,8 +42,8 @@
         </menu>
     </item>
     <item
-        android:title="@string/lidmaatlistmenu_ander"
-        android:id="@+id/submenu_ander">
+        android:id="@+id/submenu_ander"
+        android:title="@string/lidmaatlistmenu_ander">
         <menu>
             <item
                 android:id="@+id/kopieer"
@@ -58,11 +58,11 @@
     </item>
     <item
         android:id="@+id/voeg_nota_by"
-        android:title="@string/voeg_nota_by"
-        android:orderInCategory="1"/>
+        android:orderInCategory="1"
+        android:title="@string/voeg_nota_by" />
 
     <item
         android:id="@+id/stel_herinnering"
-        android:title="@string/stel_herinnering"
-        android:orderInCategory="2"/>
+        android:orderInCategory="2"
+        android:title="@string/stel_herinnering" />
 </menu>

@@ -1,119 +1,135 @@
-<?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:ns1="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/colorSurface">
+
 
     <HorizontalScrollView
         android:id="@+id/chip_scroll"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:scrollbars="none"
+        android:background="?attr/colorSurface"
+        android:fillViewport="true"
         android:paddingHorizontal="12dp"
         android:paddingTop="8dp"
         android:paddingBottom="4dp"
-        android:fillViewport="true"
-        android:background="?attr/colorSurface"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        android:scrollbars="none"
+        ns1:layout_constraintEnd_toEndOf="parent"
+        ns1:layout_constraintStart_toStartOf="parent"
+        ns1:layout_constraintTop_toTopOf="parent">
+
 
         <com.google.android.material.chip.ChipGroup
             android:id="@+id/chip_group_filter"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:singleSelection="true"
-            app:selectionRequired="true">
+            ns1:selectionRequired="true"
+            ns1:singleSelection="true">
+
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chip_vandag"
                 style="@style/Widget.WinkerkReader.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:checked="true"
                 android:text="@string/bediening_filter_vandag"
-                android:textColor="?attr/colorOnSurface"
-                android:checked="true" />
+                android:textColor="?attr/colorOnSurface" />
+
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chip_agterstallig"
                 style="@style/Widget.WinkerkReader.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="?attr/colorOnSurface"
-                android:text="@string/bediening_filter_agterstallig" />
+                android:text="@string/bediening_filter_agterstallig"
+                android:textColor="?attr/colorOnSurface" />
+
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chip_hierdie_week"
                 style="@style/Widget.WinkerkReader.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="?attr/colorOnSurface"
-                android:text="@string/bediening_filter_hierdie_week" />
+                android:text="@string/bediening_filter_hierdie_week"
+                android:textColor="?attr/colorOnSurface" />
+
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chip_als"
                 style="@style/Widget.WinkerkReader.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="?attr/colorOnSurface"
-                android:text="@string/bediening_filter_als" />
+                android:text="@string/bediening_filter_als"
+                android:textColor="?attr/colorOnSurface" />
+
 
         </com.google.android.material.chip.ChipGroup>
+
+
     </HorizontalScrollView>
+
 
     <ProgressBar
         android:id="@+id/progressBar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:visibility="gone"
         android:indeterminateTint="?attr/colorPrimary"
-        app:layout_constraintTop_toBottomOf="@id/chip_scroll"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        android:visibility="gone"
+        ns1:layout_constraintBottom_toBottomOf="parent"
+        ns1:layout_constraintEnd_toEndOf="parent"
+        ns1:layout_constraintStart_toStartOf="parent"
+        ns1:layout_constraintTop_toBottomOf="@id/chip_scroll" />
+
 
     <LinearLayout
         android:id="@+id/layout_empty_state"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
         android:gravity="center"
+        android:orientation="vertical"
         android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@id/chip_scroll"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        ns1:layout_constraintBottom_toBottomOf="parent"
+        ns1:layout_constraintEnd_toEndOf="parent"
+        ns1:layout_constraintStart_toStartOf="parent"
+        ns1:layout_constraintTop_toBottomOf="@id/chip_scroll">
+
 
         <ImageView
             android:layout_width="64dp"
             android:layout_height="64dp"
-            android:src="@drawable/ic_check_circle"
             android:alpha="0.4"
-            app:tint="?attr/colorOnSurfaceVariant" />
+            android:contentDescription="Merk"
+            android:src="@drawable/ic_check_circle"
+            ns1:tint="?attr/colorOnSurfaceVariant" />
+
 
         <TextView
             android:id="@+id/tv_empty_state"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
+            android:alpha="0.6"
             android:text="@string/bediening_geen_herinnerings"
             android:textAppearance="?attr/textAppearanceBodyMedium"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            android:alpha="0.6" />
+            android:textColor="?attr/colorOnSurfaceVariant" />
+
+
     </LinearLayout>
+
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_bediening_reminders"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:background="?attr/colorSurface"
         android:clipToPadding="false"
         android:paddingBottom="80dp"
-        android:background="?attr/colorSurface"
-        app:layout_constraintTop_toBottomOf="@id/chip_scroll"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        ns1:layout_constraintBottom_toBottomOf="parent"
+        ns1:layout_constraintEnd_toEndOf="parent"
+        ns1:layout_constraintStart_toStartOf="parent"
+        ns1:layout_constraintTop_toBottomOf="@id/chip_scroll" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

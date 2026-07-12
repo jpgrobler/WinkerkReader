@@ -60,19 +60,19 @@ class PastoralNoteRepository(context: Context) {
             .toEpochMilli()
 
         val entity = PastoralNoteEntity(
-            noteId                  = UUID.randomUUID().toString(),
-            memberGuid              = memberGuid,
-            familyHeadGuid          = familyHeadGuid,
-            memberSurname           = memberSurname,
-            memberGivenName         = memberGivenName,
-            memberDisplayNameCache  = memberDisplayName,
-            noteDateUtc             = noteDateUtc,
-            category                = category.name,
-            noteText                = noteText,
-            isConfidential          = isConfidential,
-            linkedReminderId        = linkedReminderId,
-            createdAt               = now,
-            updatedAt               = now
+            noteId = UUID.randomUUID().toString(),
+            memberGuid = memberGuid,
+            familyHeadGuid = familyHeadGuid,
+            memberSurname = memberSurname,
+            memberGivenName = memberGivenName,
+            memberDisplayNameCache = memberDisplayName,
+            noteDateUtc = noteDateUtc,
+            category = category.name,
+            noteText = noteText,
+            isConfidential = isConfidential,
+            linkedReminderId = linkedReminderId,
+            createdAt = now,
+            updatedAt = now
         )
         dao.insert(entity)
         return entity

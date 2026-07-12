@@ -3,8 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true"
-    android:background="?attr/colorSurface">
+    android:background="?attr/colorSurface"
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -17,9 +17,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp"
+            app:cardBackgroundColor="?attr/colorSurface"
             app:cardCornerRadius="8dp"
-            app:cardElevation="2dp"
-            app:cardBackgroundColor="?attr/colorSurface">
+            app:cardElevation="2dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -41,11 +41,11 @@
 
                 <Button
                     android:id="@+id/funksoie_Stoor"
+                    style="@style/Widget.WinkerkReader.Button.Primary"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:layout_marginBottom="8dp"
-                    style="@style/Widget.WinkerkReader.Button.Primary"
                     android:enabled="false"
                     android:text="@string/stoor" />
 
@@ -91,8 +91,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="8dp"
-                    android:minHeight="48dp"
-                    android:backgroundTint="?attr/colorPrimary" />
+                    android:backgroundTint="?attr/colorPrimary"
+                    android:minHeight="48dp" />
 
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
@@ -102,9 +102,9 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:layout_marginBottom="4dp"
+            app:cardBackgroundColor="?attr/colorSurfaceVariant"
             app:cardCornerRadius="4dp"
-            app:cardElevation="0dp"
-            app:cardBackgroundColor="?attr/colorSurfaceVariant">
+            app:cardElevation="0dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -135,10 +135,10 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="32dp"
                     android:layout_marginBottom="8dp"
-                    android:minHeight="48dp"
                     android:backgroundTint="?attr/colorPrimary"
-                    android:entries="@array/biometric_timeout_options" />
-                </LinearLayout>
+                    android:entries="@array/biometric_timeout_options"
+                    android:minHeight="48dp" />
+            </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
         <!-- WhatsApp Methods -->
         <com.google.android.material.card.MaterialCardView
@@ -146,9 +146,9 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:layout_marginBottom="8dp"
+            app:cardBackgroundColor="?attr/colorSurfaceVariant"
             app:cardCornerRadius="4dp"
-            app:cardElevation="0dp"
-            app:cardBackgroundColor="?attr/colorSurfaceVariant">
+            app:cardElevation="0dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -161,13 +161,15 @@
                     android:layout_height="wrap_content"
                     android:paddingTop="8dp"
                     android:text="@string/uitleg_whatsapp_label"
-                    android:textSize="16sp"
-                    android:textColor="?attr/colorOnSurface" />
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="16sp" />
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:padding="4dp">
+
                     <CheckBox
                         android:id="@+id/uitleg_w1"
                         android:layout_width="wrap_content"
@@ -193,34 +195,34 @@
         </com.google.android.material.card.MaterialCardView>
         <!-- Email -->
         <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            app:cardBackgroundColor="?attr/colorSurfaceVariant"
+            app:cardCornerRadius="4dp"
+            app:cardElevation="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="8dp">
+
+                <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    app:cardCornerRadius="4dp"
-                    app:cardElevation="0dp"
-                    app:cardBackgroundColor="?attr/colorSurfaceVariant">
+                    android:paddingTop="8dp"
+                    android:text="@string/uitleg_epos_label"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="16sp" />
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="8dp">
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:paddingTop="8dp"
-                            android:text="@string/uitleg_epos_label"
-                            android:textSize="16sp"
-                            android:textColor="?attr/colorOnSurface" />
-
-                        <CheckBox
-                            android:id="@+id/uitleg_html"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="@string/uitleg_html_epos"
-                            android:textColor="?attr/colorOnSurface" />
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
+                <CheckBox
+                    android:id="@+id/uitleg_html"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/uitleg_html_epos"
+                    android:textColor="?attr/colorOnSurface" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
     </LinearLayout>
 </ScrollView>

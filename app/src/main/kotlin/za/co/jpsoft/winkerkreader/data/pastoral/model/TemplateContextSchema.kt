@@ -11,11 +11,11 @@ object TemplateContextSchema {
         val labelAfr: String,
         val required: Boolean = false
     ) {
-        class Text(key: String, labelAfr: String, required: Boolean = false)
-            : Field(key, labelAfr, required)
+        class Text(key: String, labelAfr: String, required: Boolean = false) :
+            Field(key, labelAfr, required)
 
-        class DateField(key: String, labelAfr: String, required: Boolean = false)
-            : Field(key, labelAfr, required)
+        class DateField(key: String, labelAfr: String, required: Boolean = false) :
+            Field(key, labelAfr, required)
     }
 
     /** Returns context fields for [templateCode], empty list if none needed. */
@@ -23,27 +23,27 @@ object TemplateContextSchema {
 
         "NA_STERF" -> listOf(
             Field.Text(
-                key       = "deceasedName",
-                labelAfr  = "Naam van oorledene",
-                required  = false
+                key = "deceasedName",
+                labelAfr = "Naam van oorledene",
+                required = false
             ),
             Field.DateField(
-                key       = "deceasedDob",
-                labelAfr  = "Geboortedatum van oorledene",
-                required  = false
+                key = "deceasedDob",
+                labelAfr = "Geboortedatum van oorledene",
+                required = false
             ),
             Field.DateField(
-                key       = "deceasedDate",
-                labelAfr  = "Datum van afsterwe",
-                required  = false
+                key = "deceasedDate",
+                labelAfr = "Datum van afsterwe",
+                required = false
             ),
         )
 
         "OPERASIE" -> listOf(
             Field.Text(
-                key       = "hospital",
-                labelAfr  = "Hospitaal",
-                required  = true
+                key = "hospital",
+                labelAfr = "Hospitaal",
+                required = true
             )
             // Anchor date = operation date — no separate date field needed
         )
@@ -52,18 +52,21 @@ object TemplateContextSchema {
             Field.Text(
                 key = "illness",
                 labelAfr = "Tipe siekte",
-                required = false)
+                required = false
+            )
         )
 
         "TRAUMA" -> listOf(
             Field.Text(
                 key = "traumaType",
                 labelAfr = "Tipe trauma",
-                required = false),
+                required = false
+            ),
             Field.DateField(
                 key = "traumaDate",
                 labelAfr = "Datum van trauma",
-                required = false)
+                required = false
+            )
         )
 
 
@@ -75,7 +78,7 @@ object TemplateContextSchema {
         "NA_STERF" -> "Datum van afsterwe"
         "OPERASIE" -> "Hospitalisasiedatum"
         "NUWE_LID" -> "Datum van aansluiting"
-        else       -> "Verwysingsdatum"
+        else -> "Verwysingsdatum"
     }
 
     fun hasContext(templateCode: String) = fieldsFor(templateCode).isNotEmpty()

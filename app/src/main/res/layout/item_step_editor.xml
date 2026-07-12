@@ -1,24 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
     android:gravity="center_vertical"
+    android:orientation="horizontal"
     android:paddingVertical="8dp">
 
     <ImageView
         android:layout_width="20dp"
         android:layout_height="20dp"
-        android:src="@android:drawable/ic_menu_sort_by_size"
-        android:alpha="0.4"
         android:layout_marginEnd="8dp"
-        android:contentDescription="@null" />
+        android:alpha="0.4"
+        android:contentDescription="@null"
+        android:src="@android:drawable/ic_menu_sort_by_size" />
 
     <LinearLayout
         android:layout_width="0dp"
-        android:layout_weight="1"
         android:layout_height="wrap_content"
+        android:layout_weight="1"
         android:orientation="vertical">
 
         <TextView
@@ -31,8 +30,8 @@
             android:id="@+id/tv_step_offset"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textAppearance="?attr/textAppearanceLabelSmall"
-            android:alpha="0.6" />
+            android:alpha="0.6"
+            android:textAppearance="?attr/textAppearanceLabelSmall" />
 
     </LinearLayout>
 
@@ -40,16 +39,16 @@
         android:id="@+id/btn_step_edit"
         android:layout_width="36dp"
         android:layout_height="36dp"
-        android:src="@android:drawable/ic_menu_edit"
         android:background="?attr/selectableItemBackgroundBorderless"
-        android:contentDescription="@string/template_wysig_stap" />
+        android:contentDescription="@string/template_wysig_stap"
+        android:src="@android:drawable/ic_menu_edit" />
 
     <ImageButton
         android:id="@+id/btn_step_delete"
         android:layout_width="36dp"
         android:layout_height="36dp"
-        android:src="@android:drawable/ic_menu_delete"
         android:background="?attr/selectableItemBackgroundBorderless"
-        android:contentDescription="@string/template_verwyder_stap_titel" />
+        android:contentDescription="@string/template_verwyder_stap_titel"
+        android:src="@android:drawable/ic_menu_delete" />
 
 </LinearLayout>

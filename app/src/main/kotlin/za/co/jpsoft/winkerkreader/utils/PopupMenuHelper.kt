@@ -22,14 +22,16 @@ fun PopupMenu.forceShowIcons() {
         val field = PopupMenu::class.java.getDeclaredField("mPopup")
         field.isAccessible = true
         val helper = field.get(this)
-        val method = helper.javaClass.getMethod("setForceShowIcon", Boolean::class.javaPrimitiveType)
+        val method =
+            helper.javaClass.getMethod("setForceShowIcon", Boolean::class.javaPrimitiveType)
         method.invoke(helper, true)
     } catch (e: Exception) {
         try {
             val field = PopupMenu::class.java.getDeclaredField("mMenuPopupHelper")
             field.isAccessible = true
             val helper = field.get(this)
-            val method = helper.javaClass.getMethod("setForceShowIcon", Boolean::class.javaPrimitiveType)
+            val method =
+                helper.javaClass.getMethod("setForceShowIcon", Boolean::class.javaPrimitiveType)
             method.invoke(helper, true)
         } catch (e2: Exception) {
             try {

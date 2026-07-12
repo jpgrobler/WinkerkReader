@@ -27,7 +27,8 @@ class AlarmReceiver : BroadcastReceiver() {
         val channelName = "WinkerkReader"
         val importance = NotificationManager.IMPORTANCE_DEFAULT
 
-        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notificationManager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(channelId, channelName, importance)
@@ -45,7 +46,8 @@ class AlarmReceiver : BroadcastReceiver() {
                         context, 0, notificationIntent,
                         PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
                     )
-                    val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+                    val alarmSound =
+                        RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
                     val now = LocalDateTime.now()
                     val formatter = DateTimeFormatter.ofPattern("ddHHmmss", Locale.US)
                     val id = now.format(formatter).toInt()
@@ -62,15 +64,18 @@ class AlarmReceiver : BroadcastReceiver() {
 
                     notificationManager.notify(id, builder.build())
                 }
+
                 "DropBoxDownLoad" -> {
-                    val notificationIntent = Intent(context, LaaiDatabasisActivity::class.java).apply {
-                        flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
-                    }
+                    val notificationIntent =
+                        Intent(context, LaaiDatabasisActivity::class.java).apply {
+                            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+                        }
                     val pendingIntent = PendingIntent.getActivity(
                         context, 0, notificationIntent,
                         PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
                     )
-                    val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+                    val alarmSound =
+                        RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
                     val now = LocalDateTime.now()
                     val formatter = DateTimeFormatter.ofPattern("ddHHmmss", Locale.US)
                     val id = now.format(formatter).toInt()

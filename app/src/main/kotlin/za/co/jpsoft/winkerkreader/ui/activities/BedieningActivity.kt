@@ -102,16 +102,21 @@ class BedieningActivity : AppCompatActivity() {
                 sharePastoralDb()
                 true
             }
+
             R.id.action_bestuur_sjablone -> {
                 //TemplateManagerActivity.launch(this)
                 navigationController.navigateToTemplateManager()
                 true
             }
+
             R.id.action_herstel_rugsteun -> {
-                startActivity(Intent(this, LaaiDatabasisActivity::class.java)
-                    .putExtra(LaaiDatabasisActivity.EXTRA_PROMPT_RESTORE, true))
+                startActivity(
+                    Intent(this, LaaiDatabasisActivity::class.java)
+                        .putExtra(LaaiDatabasisActivity.EXTRA_PROMPT_RESTORE, true)
+                )
                 true
             }
+
             else -> super.onOptionsItemSelected(item)
         }
     }

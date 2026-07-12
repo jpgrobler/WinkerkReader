@@ -13,6 +13,7 @@ class TemplatePickerAdapter(
 
     // Full list of all templates (never filtered)
     private var fullList: List<TemplateWithSteps> = emptyList()
+
     // Currently displayed list (filtered based on selection)
     private var displayList: List<TemplateWithSteps> = emptyList()
     private var selectedId: String? = null

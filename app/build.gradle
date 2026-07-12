@@ -3,6 +3,8 @@ plugins {
     id 'com.google.devtools.ksp' version '2.3.9'
 }
 
+def espressoCoreVersion = '3.7.0'
+
 android {
     compileSdk = 37
     defaultConfig {
@@ -13,12 +15,24 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         targetSdk = 35
         vectorDrawables.useSupportLibrary = true
+
+        // ✅ Add BuildConfig fields if you use them
+        buildConfigField "String", "BUILD_TIME", "\"${System.currentTimeMillis()}\""
+        // Add any other BuildConfig fields you need
+    }
+
+    aaptOptions {
+        noCompress = ['png', 'webp', 'jpg', 'jpeg']
+        cruncherEnabled = false
+        cruncherProcesses = 4
     }
 
     buildFeatures {
-        buildConfig = true
-        viewBinding true
+        viewBinding = true
+        dataBinding = true
+        buildConfig = true  // ✅ CRITICAL FIX
     }
+
     viewBinding {
         enabled = true
     }
@@ -47,6 +61,13 @@ android {
         }
         debug {
             jniDebuggable = true
+            minifyEnabled = false
+            shrinkResources = false
+            crunchPngs = false
+            debuggable = true
+            testCoverageEnabled = false
+            pseudoLocalesEnabled false
+            zipAlignEnabled false
         }
     }
 
@@ -58,15 +79,6 @@ android {
 
     tasks.withType(JavaCompile).configureEach {
         options.compilerArgs << "-Xlint:deprecation"
-    }
-
-    // kotlin { compilerOptions } block REMOVED — AGP built-in Kotlin manages this
-    // Set JVM target via compileOptions above instead
-
-    java {
-        toolchain {
-            languageVersion = JavaLanguageVersion.of(17)
-        }
     }
 
     testOptions {
@@ -90,9 +102,9 @@ android {
     }
 }
 
+
 dependencies {
     implementation 'androidx.security:security-crypto:1.1.0-alpha06'
-    implementation 'androidx.lifecycle:lifecycle-process:2.11.0'
     implementation 'androidx.lifecycle:lifecycle-process:2.11.0'
     implementation 'androidx.paging:paging-common:3.5.0'
     implementation "androidx.paging:paging-runtime-ktx:3.5.0"
@@ -172,16 +184,12 @@ dependencies {
     androidTestImplementation 'androidx.test:rules:1.7.0'
     androidTestImplementation 'androidx.test:runner:1.7.0'
     androidTestImplementation 'androidx.test.uiautomator:uiautomator:2.4.0'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0'
     // ========== DESUGARING ==========
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
-
-
 }
 
-// Single ksp block — handles both Room and Glide
 ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
     arg("room.verifier.enabled", "false")
+    arg("room.exportSchema", "false")
 }
-// kapt block REMOVED entirely

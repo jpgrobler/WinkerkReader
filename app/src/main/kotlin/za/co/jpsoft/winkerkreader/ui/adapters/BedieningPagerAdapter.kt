@@ -9,12 +9,12 @@ class BedieningPagerAdapter(activity: FragmentActivity) : FragmentStateAdapter(a
     override fun getItemCount() = 1   // Phase 2 adds Gevalle, Besoeke tabs here
 
     override fun createFragment(position: Int): Fragment = when (position) {
-        0    -> BedieningVandagFragment()
+        0 -> BedieningVandagFragment()
         else -> BedieningVandagFragment()
     }
 
     fun tabTitle(position: Int) = when (position) {
-        0    -> "Vandag"
+        0 -> "Vandag"
         else -> ""
     }
 }

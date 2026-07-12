@@ -18,7 +18,15 @@ object MemberQueryBuilder {
     ): SqlRequest? = when (eventType) {
         "GESINNE_DATA", "FILTER_DATA", "LIDMAAT_DATA", "LIDMAAT_DATA_WYK",
         "SOEK_DATA", "LIDMAAT_DATA_VERJAAR", "OUDERDOM_DATA", "LIDMAAT_DATA_ADRES",
-        "HUWELIK_DATA" -> buildMemberQuery(eventType, recordStatus, soek, filterList, sortOrder, congregations)
+        "HUWELIK_DATA" -> buildMemberQuery(
+            eventType,
+            recordStatus,
+            soek,
+            filterList,
+            sortOrder,
+            congregations
+        )
+
         else -> null
     }
 
@@ -65,11 +73,12 @@ object MemberQueryBuilder {
         appendWhereClause(eventType, where, argsList, soek, filterList)
         appendOrderByClause(eventType, sortOrderBuilder, sortOrder)
 
-        val finalFrom = if (eventType == "GESINNE_DATA" || eventType == "LIDMAAT_DATA_WYK" || eventType == "LIDMAAT_DATA_ADRES") {
-            winkerkEntry.SELECTION_LIDMAAT_FROM_GESINSHOOF
-        } else {
-            " Members "
-        }
+        val finalFrom =
+            if (eventType == "GESINNE_DATA" || eventType == "LIDMAAT_DATA_WYK" || eventType == "LIDMAAT_DATA_ADRES") {
+                winkerkEntry.SELECTION_LIDMAAT_FROM_GESINSHOOF
+            } else {
+                " Members "
+            }
 
         val finalSelection = selectionBase + winkerkEntry.SELECTION_LIDMAAT_INFO_GESINSHOOF
 
@@ -121,7 +130,10 @@ object MemberQueryBuilder {
                 if (!list.isNullOrEmpty()) {
                     val filterFields = list.filter { it.checked }
                     if (filterFields.isNotEmpty()) {
-                        val birthdateExpr = "date(SUBSTR(" + col(winkerkEntry.LIDMATE_GEBOORTEDATUM) + ", 7, 4) || '-' || SUBSTR(" + col(winkerkEntry.LIDMATE_GEBOORTEDATUM) + ", 4, 2) || '-' || SUBSTR(" + col(winkerkEntry.LIDMATE_GEBOORTEDATUM) + ", 1, 2))"
+                        val birthdateExpr =
+                            "date(SUBSTR(" + col(winkerkEntry.LIDMATE_GEBOORTEDATUM) + ", 7, 4) || '-' || SUBSTR(" + col(
+                                winkerkEntry.LIDMATE_GEBOORTEDATUM
+                            ) + ", 4, 2) || '-' || SUBSTR(" + col(winkerkEntry.LIDMATE_GEBOORTEDATUM) + ", 1, 2))"
                         where.append(" AND (")
                         filterFields.forEachIndexed { i, filter ->
                             if (i > 0) where.append(") AND (")
@@ -136,81 +148,117 @@ object MemberQueryBuilder {
                                             argsList.add(filter.text1)
                                             argsList.add(filter.text1)
                                         }
+
                                         "is nie", "nie gelyk aan" -> {
                                             where.append("($colNoem != ? AND $colNaam != ?)")
                                             argsList.add(filter.text1)
                                             argsList.add(filter.text1)
                                         }
+
                                         "begin met" -> {
                                             where.append("($colNoem LIKE ? OR $colNaam LIKE ?)")
                                             argsList.add("${filter.text1}%")
                                             argsList.add("${filter.text1}%")
                                         }
+
                                         "eindig met" -> {
                                             where.append("($colNoem LIKE ? OR $colNaam LIKE ?)")
                                             argsList.add("%${filter.text1}")
                                             argsList.add("%${filter.text1}")
                                         }
+
                                         "leeg" -> {
                                             where.append("($colNoem IS NULL AND $colNaam IS NULL)")
                                         }
                                     }
                                 }
+
                                 toets == "gelyk aan" -> {
                                     where.append(col(filter.title)).append(" = ?")
                                     argsList.add(filter.text1)
                                 }
+
                                 toets == "is nie" || toets == "nie gelyk aan" -> {
                                     where.append(col(filter.title)).append(" != ?")
                                     argsList.add(filter.text1)
                                 }
+
                                 toets == "begin met" -> {
                                     where.append(col(filter.title)).append(" LIKE ?")
                                     argsList.add("${filter.text1}%")
                                 }
+
                                 toets == "eindig met" -> {
                                     where.append(col(filter.title)).append(" LIKE ?")
                                     argsList.add("%${filter.text1}")
                                 }
-                                toets == "leeg" -> where.append(col(filter.title)).append(" IS NULL ")
+
+                                toets == "leeg" -> where.append(col(filter.title))
+                                    .append(" IS NULL ")
+
                                 toets == "kleiner as" -> {
                                     where.append("((strftime('%Y', 'now') - strftime('%Y', $birthdateExpr)) - (strftime('%m-%d', 'now') < strftime('%m-%d', $birthdateExpr))) < CAST(? AS INTEGER)")
                                     argsList.add(filter.text1)
                                 }
+
                                 toets == "groter as" -> {
                                     where.append("((strftime('%Y', 'now') - strftime('%Y', $birthdateExpr)) - (strftime('%m-%d', 'now') < strftime('%m-%d', $birthdateExpr))) > CAST(? AS INTEGER)")
                                     argsList.add(filter.text1)
                                 }
+
                                 toets == "tussen" && filter.title == "Ouderdom" -> {
                                     where.append(" ( ((strftime('%Y', 'now') - strftime('%Y', $birthdateExpr)) - (strftime('%m-%d', 'now') < strftime('%m-%d', $birthdateExpr))) >= CAST(? AS INTEGER) ) AND ( ((strftime('%Y', 'now') - strftime('%Y', $birthdateExpr)) - (strftime('%m-%d', 'now') < strftime('%m-%d', $birthdateExpr))) <= CAST(? AS INTEGER) )")
                                     argsList.add(filter.text1)
                                     argsList.add(filter.text2)
                                 }
+
                                 toets == "gelyk" && filter.title == "Ouderdom" -> {
                                     where.append("((strftime('%Y', 'now') - strftime('%Y', $birthdateExpr)) - (strftime('%m-%d', 'now') < strftime('%m-%d', $birthdateExpr))) = CAST(? AS INTEGER)")
                                     argsList.add(filter.text1)
                                 }
+
                                 filter.title == "Geslag" -> {
                                     where.append(col(winkerkEntry.LIDMATE_GESLAG)).append(" = ?")
                                     argsList.add(if (toets == "manlik") "Manlik" else "Vroulik")
                                 }
-                                filter.title == "Selfoon" -> where.append(" ( ").append(col(winkerkEntry.LIDMATE_SELFOON)).append(" IS NOT NULL AND ").append(col(winkerkEntry.LIDMATE_SELFOON)).append(" != '' )")
-                                filter.title == "E-pos" -> where.append(" ( ").append(col(winkerkEntry.LIDMATE_EPOS)).append(" IS NOT NULL AND ").append(col(winkerkEntry.LIDMATE_EPOS)).append(" != '' )")
-                                filter.title == "Landlyn" -> where.append(" ( ").append(col(winkerkEntry.LIDMATE_LANDLYN)).append(" IS NOT NULL AND ").append(col(winkerkEntry.LIDMATE_LANDLYN)).append(" != '' )")
+
+                                filter.title == "Selfoon" -> where.append(" ( ")
+                                    .append(col(winkerkEntry.LIDMATE_SELFOON))
+                                    .append(" IS NOT NULL AND ")
+                                    .append(col(winkerkEntry.LIDMATE_SELFOON)).append(" != '' )")
+
+                                filter.title == "E-pos" -> where.append(" ( ")
+                                    .append(col(winkerkEntry.LIDMATE_EPOS))
+                                    .append(" IS NOT NULL AND ")
+                                    .append(col(winkerkEntry.LIDMATE_EPOS)).append(" != '' )")
+
+                                filter.title == "Landlyn" -> where.append(" ( ")
+                                    .append(col(winkerkEntry.LIDMATE_LANDLYN))
+                                    .append(" IS NOT NULL AND ")
+                                    .append(col(winkerkEntry.LIDMATE_LANDLYN)).append(" != '' )")
+
                                 filter.title == "Huwelikstatus" -> {
-                                    where.append(col(winkerkEntry.LIDMATE_HUWELIKSTATUS)).append(" = ?")
+                                    where.append(col(winkerkEntry.LIDMATE_HUWELIKSTATUS))
+                                        .append(" = ?")
                                     argsList.add(filter.text3)
                                 }
+
                                 filter.title == "Lidmaatskap" -> {
                                     if (filter.text3 == "Belydend") {
-                                        where.append(col(winkerkEntry.LIDMATE_LIDMAATSTATUS)).append(" LIKE ?")
+                                        where.append(col(winkerkEntry.LIDMATE_LIDMAATSTATUS))
+                                            .append(" LIKE ?")
                                         argsList.add("Bely%")
                                     } else {
-                                        where.append(col(winkerkEntry.LIDMATE_LIDMAATSTATUS)).append(" LIKE ?")
+                                        where.append(col(winkerkEntry.LIDMATE_LIDMAATSTATUS))
+                                            .append(" LIKE ?")
                                         argsList.add(filter.text3)
                                     }
                                 }
-                                filter.title == "Gesinshoof" -> where.append(" quote(").append(col(winkerkEntry.LIDMATE_GESINSHOOFGUID)).append(") = quote(").append(col(winkerkEntry.LIDMATE_LIDMAATGUID)).append(")")
+
+                                filter.title == "Gesinshoof" -> where.append(" quote(")
+                                    .append(col(winkerkEntry.LIDMATE_GESINSHOOFGUID))
+                                    .append(") = quote(")
+                                    .append(col(winkerkEntry.LIDMATE_LIDMAATGUID)).append(")")
                             }
                         }
                         where.append(" )")
@@ -227,63 +275,114 @@ object MemberQueryBuilder {
     ) {
         when (eventType) {
             "LIDMAAT_DATA" -> {
-                sortOrderBuilder.append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ")
-                    .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
+                sortOrderBuilder.append(winkerkEntry.LIDMATE_TABLE_NAME).append(".")
+                    .append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ")
+                    .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".")
+                    .append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
             }
+
             "GESINNE_DATA" -> {
-                sortOrderBuilder.append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ")
-                    .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_GESINSHOOFGUID)).append(" DESC, ")
-                    .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_GESINSROL)).append(" ASC, ")
-                    .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
+                sortOrderBuilder.append(winkerkEntry.LIDMATE_TABLE_NAME).append(".")
+                    .append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ")
+                    .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".")
+                    .append(col(winkerkEntry.LIDMATE_GESINSHOOFGUID)).append(" DESC, ")
+                    .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".")
+                    .append(col(winkerkEntry.LIDMATE_GESINSROL)).append(" ASC, ")
+                    .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".")
+                    .append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
             }
+
             "LIDMAAT_DATA_WYK" -> {
-                sortOrderBuilder.append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_WYK)).append(" ASC, ")
-                    .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ")
-                    .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_GESINSHOOFGUID)).append(" DESC, ")
-                    .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_GESINSROL)).append(" ASC, ")
-                    .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
+                sortOrderBuilder.append(winkerkEntry.LIDMATE_TABLE_NAME).append(".")
+                    .append(col(winkerkEntry.LIDMATE_WYK)).append(" ASC, ")
+                    .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".")
+                    .append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ")
+                    .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".")
+                    .append(col(winkerkEntry.LIDMATE_GESINSHOOFGUID)).append(" DESC, ")
+                    .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".")
+                    .append(col(winkerkEntry.LIDMATE_GESINSROL)).append(" ASC, ")
+                    .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".")
+                    .append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
             }
+
             "LIDMAAT_DATA_ADRES" -> {
-                sortOrderBuilder.append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_STRAATADRES)).append(" ASC, ")
-                    .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ")
-                    .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_GESINSHOOFGUID)).append(" DESC, ")
-                    .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_GESINSROL)).append(" ASC, ")
-                    .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
+                sortOrderBuilder.append(winkerkEntry.LIDMATE_TABLE_NAME).append(".")
+                    .append(col(winkerkEntry.LIDMATE_STRAATADRES)).append(" ASC, ")
+                    .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".")
+                    .append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ")
+                    .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".")
+                    .append(col(winkerkEntry.LIDMATE_GESINSHOOFGUID)).append(" DESC, ")
+                    .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".")
+                    .append(col(winkerkEntry.LIDMATE_GESINSROL)).append(" ASC, ")
+                    .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".")
+                    .append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
             }
+
             "HUWELIK_DATA" -> {
-                sortOrderBuilder.append(" strftime('%m', ").append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_HUWELIKSDATUM)).append(") ASC,  strftime('%d', ")
-                    .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_HUWELIKSDATUM)).append(") ASC, ")
-                    .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ")
-                    .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_GESINSHOOFGUID)).append(" ASC, ")
-                    .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".").append(col(winkerkEntry.LIDMATE_GESLAG)).append(" DESC")
+                sortOrderBuilder.append(" strftime('%m', ").append(winkerkEntry.LIDMATE_TABLE_NAME)
+                    .append(".").append(col(winkerkEntry.LIDMATE_HUWELIKSDATUM))
+                    .append(") ASC,  strftime('%d', ")
+                    .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".")
+                    .append(col(winkerkEntry.LIDMATE_HUWELIKSDATUM)).append(") ASC, ")
+                    .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".")
+                    .append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ")
+                    .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".")
+                    .append(col(winkerkEntry.LIDMATE_GESINSHOOFGUID)).append(" ASC, ")
+                    .append(winkerkEntry.LIDMATE_TABLE_NAME).append(".")
+                    .append(col(winkerkEntry.LIDMATE_GESLAG)).append(" DESC")
             }
+
             "SOEK_DATA" -> {
                 // For search, use the provided sortOrder (which may be different from eventType)
                 when (sortOrder) {
-                    "GESINNE" -> sortOrderBuilder.append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ").append(col(winkerkEntry.LIDMATE_GESINSHOOFGUID)).append(" ASC, ").append(" strftime('%Y', birthdate) DESC, strftime('%m', birthdate) DESC, strftime('%d', birthdate) DESC,").append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
-                    "VAN"     -> sortOrderBuilder.append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ").append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
-                    "ADRES"   -> sortOrderBuilder.append(col(winkerkEntry.LIDMATE_STRAATADRES)).append(" ASC, ").append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ").append(col(winkerkEntry.LIDMATE_GESINSHOOFGUID)).append(" ASC, ").append(" strftime('%Y', birthdate) DESC, strftime('%m', birthdate) DESC, strftime('%d', birthdate) DESC,").append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
-                    "WYK"     -> sortOrderBuilder.append(col(winkerkEntry.LIDMATE_WYK)).append(" ASC, ").append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ").append(col(winkerkEntry.LIDMATE_GESINSHOOFGUID)).append(" ASC, ").append(" strftime('%Y', birthdate) DESC, strftime('%m', birthdate) DESC, strftime('%d', birthdate) DESC,").append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
+                    "GESINNE" -> sortOrderBuilder.append(col(winkerkEntry.LIDMATE_VAN))
+                        .append(" ASC, ").append(col(winkerkEntry.LIDMATE_GESINSHOOFGUID))
+                        .append(" ASC, ")
+                        .append(" strftime('%Y', birthdate) DESC, strftime('%m', birthdate) DESC, strftime('%d', birthdate) DESC,")
+                        .append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
+
+                    "VAN" -> sortOrderBuilder.append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ")
+                        .append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
+
+                    "ADRES" -> sortOrderBuilder.append(col(winkerkEntry.LIDMATE_STRAATADRES))
+                        .append(" ASC, ").append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ")
+                        .append(col(winkerkEntry.LIDMATE_GESINSHOOFGUID)).append(" ASC, ")
+                        .append(" strftime('%Y', birthdate) DESC, strftime('%m', birthdate) DESC, strftime('%d', birthdate) DESC,")
+                        .append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
+
+                    "WYK" -> sortOrderBuilder.append(col(winkerkEntry.LIDMATE_WYK)).append(" ASC, ")
+                        .append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ")
+                        .append(col(winkerkEntry.LIDMATE_GESINSHOOFGUID)).append(" ASC, ")
+                        .append(" strftime('%Y', birthdate) DESC, strftime('%m', birthdate) DESC, strftime('%d', birthdate) DESC,")
+                        .append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
+
                     "VERJAAR" -> sortOrderBuilder.append(" strftime('%m', birthdate) ASC, strftime('%d', birthdate) ASC")
-                    "OUDERDOM"-> sortOrderBuilder.append(" strftime('%Y', birthdate) DESC, strftime('%m', birthdate) DESC, strftime('%d', birthdate) DESC")
-                    else      -> sortOrderBuilder.append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ").append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
+                    "OUDERDOM" -> sortOrderBuilder.append(" strftime('%Y', birthdate) DESC, strftime('%m', birthdate) DESC, strftime('%d', birthdate) DESC")
+                    else -> sortOrderBuilder.append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ")
+                        .append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
                 }
             }
+
             "FILTER_DATA" -> {
                 // When filtering, we sort by the user's current sortOrder (passed in)
                 if (sortOrderBuilder.isEmpty()) {
-                    sortOrderBuilder.append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ").append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
+                    sortOrderBuilder.append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ")
+                        .append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
                 } else {
-                    sortOrderBuilder.append(", ").append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ").append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
+                    sortOrderBuilder.append(", ").append(col(winkerkEntry.LIDMATE_VAN))
+                        .append(" ASC, ").append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
                 }
             }
+
             "LIDMAAT_DATA_VERJAAR" -> sortOrderBuilder.append(" strftime('%m', birthdate) ASC, strftime('%d', birthdate) ASC")
             "OUDERDOM_DATA" -> {
                 sortOrderBuilder.append(" strftime('%Y', birthdate) DESC, strftime('%m', birthdate) DESC, strftime('%d', birthdate) DESC")
             }
+
             else -> {
                 // Fallback for any other event type (should not happen)
-                sortOrderBuilder.append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ").append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
+                sortOrderBuilder.append(col(winkerkEntry.LIDMATE_VAN)).append(" ASC, ")
+                    .append(col(winkerkEntry.LIDMATE_NOEMNAAM)).append(" ASC ")
             }
         }
     }
@@ -332,11 +431,12 @@ object MemberQueryBuilder {
 
         appendWhereClause(eventType, where, argsList, soek, filterList)
 
-        val fromClause = if (eventType == "GESINNE_DATA" || eventType == "LIDMAAT_DATA_WYK" || eventType == "LIDMAAT_DATA_ADRES") {
-            winkerkEntry.SELECTION_LIDMAAT_FROM_GESINSHOOF
-        } else {
-            " Members "
-        }
+        val fromClause =
+            if (eventType == "GESINNE_DATA" || eventType == "LIDMAAT_DATA_WYK" || eventType == "LIDMAAT_DATA_ADRES") {
+                winkerkEntry.SELECTION_LIDMAAT_FROM_GESINSHOOF
+            } else {
+                " Members "
+            }
 
         val sql = if (where.isEmpty()) {
             "SELECT COUNT(*) FROM $fromClause;"
@@ -356,7 +456,13 @@ object MemberQueryBuilder {
         todayMonth: String,
         todayDay: String
     ): Pair<String, Array<String>> {
-        val (baseSql, baseArgs) = buildCountQuery(eventType, recordStatus, soek, filterList, sortOrder)
+        val (baseSql, baseArgs) = buildCountQuery(
+            eventType,
+            recordStatus,
+            soek,
+            filterList,
+            sortOrder
+        )
         // Parse the SQL to insert the birthday condition
         val sql = insertBirthdayCondition(baseSql, todayMonth, todayDay)
         // Append the extra parameters (3 values for the condition)
@@ -367,7 +473,8 @@ object MemberQueryBuilder {
     private fun insertBirthdayCondition(sql: String, month: String, day: String): String {
         // Find the WHERE clause (if any)
         val whereIndex = sql.indexOf(" WHERE ", ignoreCase = true)
-        val cond = "((CAST(SUBSTR(Geboortedatum, 4, 2) AS INTEGER) < ?) OR (CAST(SUBSTR(Geboortedatum, 4, 2) AS INTEGER) = ? AND CAST(SUBSTR(Geboortedatum, 1, 2) AS INTEGER) < ?))"
+        val cond =
+            "((CAST(SUBSTR(Geboortedatum, 4, 2) AS INTEGER) < ?) OR (CAST(SUBSTR(Geboortedatum, 4, 2) AS INTEGER) = ? AND CAST(SUBSTR(Geboortedatum, 1, 2) AS INTEGER) < ?))"
         return if (whereIndex == -1) {
             // No WHERE – add it before ORDER BY
             val orderIndex = sql.indexOf(" ORDER BY ", ignoreCase = true)

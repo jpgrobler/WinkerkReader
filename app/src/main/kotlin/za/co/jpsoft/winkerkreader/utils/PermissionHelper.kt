@@ -87,6 +87,13 @@ object PermissionRationaleHelper {
         messageResId: Int = R.string.rationale_generic_message,
         onComplete: (() -> Unit)? = null
     ) {
-        requestWithRationale(activity, arrayOf(permission), requestCode, titleResId, messageResId, onComplete)
+        requestWithRationale(
+            activity,
+            arrayOf(permission),
+            requestCode,
+            titleResId,
+            messageResId,
+            onComplete
+        )
     }
 }

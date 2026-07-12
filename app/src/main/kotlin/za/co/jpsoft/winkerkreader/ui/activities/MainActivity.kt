@@ -27,7 +27,6 @@ import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
@@ -43,7 +42,6 @@ import androidx.work.WorkInfo
 import com.google.android.material.chip.Chip
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -88,7 +86,6 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity() {
 
@@ -131,7 +128,6 @@ class MainActivity : AppCompatActivity() {
     private var initialLoadComplete = false
     private lateinit var initialCongregations: Set<String>
     private var initialLoadDone = false
-
 
 
     companion object {
@@ -256,13 +252,13 @@ class MainActivity : AppCompatActivity() {
             onSwipeLeft = {
                 when (viewModel.sortOrder) {
                     "HUWELIK" -> updateSortOrder("VAN")
-                    "VAN"     -> updateSortOrder("GESINNE")
+                    "VAN" -> updateSortOrder("GESINNE")
                     "GESINNE" -> updateSortOrder("WYK")
-                    "WYK"     -> updateSortOrder("OUDERDOM")
-                    "OUDERDOM"-> updateSortOrder("ADRES")
-                    "ADRES"   -> updateSortOrder("VERJAAR")
+                    "WYK" -> updateSortOrder("OUDERDOM")
+                    "OUDERDOM" -> updateSortOrder("ADRES")
+                    "ADRES" -> updateSortOrder("VERJAAR")
                     "VERJAAR" -> updateSortOrder("HUWELIK")
-                    else      -> updateSortOrder("VAN")
+                    else -> updateSortOrder("VAN")
                 }
                 viewModel.refresh()
             },
@@ -270,12 +266,12 @@ class MainActivity : AppCompatActivity() {
                 when (viewModel.sortOrder) {
                     "HUWELIK" -> updateSortOrder("VERJAAR")
                     "VERJAAR" -> updateSortOrder("ADRES")
-                    "ADRES"   -> updateSortOrder("OUDERDOM")
-                    "OUDERDOM"-> updateSortOrder("WYK")
-                    "WYK"     -> updateSortOrder("GESINNE")
+                    "ADRES" -> updateSortOrder("OUDERDOM")
+                    "OUDERDOM" -> updateSortOrder("WYK")
+                    "WYK" -> updateSortOrder("GESINNE")
                     "GESINNE" -> updateSortOrder("VAN")
-                    "VAN"     -> updateSortOrder("HUWELIK")
-                    else      -> updateSortOrder("VAN")
+                    "VAN" -> updateSortOrder("HUWELIK")
+                    else -> updateSortOrder("VAN")
                 }
                 viewModel.refresh()
             }
@@ -450,7 +446,8 @@ class MainActivity : AppCompatActivity() {
         // LiveData observers (unchanged)
         viewModel.getTextLiveData().observe(this) { searchText ->
             binding.searchText.text = searchText
-            binding.searchItemBlock.visibility = if (searchText.isEmpty()) View.GONE else View.VISIBLE
+            binding.searchItemBlock.visibility =
+                if (searchText.isEmpty()) View.GONE else View.VISIBLE
         }
 
         viewModel.getVerjaarFLag().observe(this) { showBirthday ->
@@ -483,7 +480,10 @@ class MainActivity : AppCompatActivity() {
                     }
                     .collectLatest { pagingData ->
                         if (BuildConfig.DEBUG) {
-                            Log.d(TAG, "📊 Received paging data, adapter itemCount before: ${memberListAdapter.itemCount}")
+                            Log.d(
+                                TAG,
+                                "📊 Received paging data, adapter itemCount before: ${memberListAdapter.itemCount}"
+                            )
                         }
 
                         // ✅ Ensure adapter is attached
@@ -496,7 +496,10 @@ class MainActivity : AppCompatActivity() {
                         memberListAdapter.submitData(lifecycle, pagingData)
 
                         if (BuildConfig.DEBUG) {
-                            Log.d(TAG, "📊 Submitted paging data, adapter itemCount after: ${memberListAdapter.itemCount}")
+                            Log.d(
+                                TAG,
+                                "📊 Submitted paging data, adapter itemCount after: ${memberListAdapter.itemCount}"
+                            )
                         }
                     }
             }
@@ -509,16 +512,25 @@ class MainActivity : AppCompatActivity() {
                 memberListAdapter.loadStateFlow.collect { loadStates ->
                     val isLoading = loadStates.refresh is LoadState.Loading
                     if (BuildConfig.DEBUG) {
-                        Log.d(TAG, "📊 Load state: refresh=${loadStates.refresh}, append=${loadStates.append}, itemCount=${memberListAdapter.itemCount}")
+                        Log.d(
+                            TAG,
+                            "📊 Load state: refresh=${loadStates.refresh}, append=${loadStates.append}, itemCount=${memberListAdapter.itemCount}"
+                        )
                     }
                     binding.indeterminateBar.visibility = if (isLoading) View.VISIBLE else View.GONE
 
                     if (loadStates.refresh is LoadState.NotLoading && memberListAdapter.itemCount > 0) {
-                        if (BuildConfig.DEBUG) Log.d(TAG, "📊 Data loaded successfully, count=${memberListAdapter.itemCount}")
+                        if (BuildConfig.DEBUG) Log.d(
+                            TAG,
+                            "📊 Data loaded successfully, count=${memberListAdapter.itemCount}"
+                        )
                     }
 
                     if (loadStates.refresh is LoadState.Error) {
-                        if (BuildConfig.DEBUG) Log.e(TAG, "Load error: ${(loadStates.refresh as LoadState.Error).error.message}")
+                        if (BuildConfig.DEBUG) Log.e(
+                            TAG,
+                            "Load error: ${(loadStates.refresh as LoadState.Error).error.message}"
+                        )
                     }
                 }
             }
@@ -543,7 +555,8 @@ class MainActivity : AppCompatActivity() {
         initialLoadStarted = true
 
         if (::memberListAdapter.isInitialized && memberListAdapter.itemCount > 0) {
-            savedListScroll = MemberListScrollHelper.saveScrollState(binding.lidmaatList, memberListAdapter)
+            savedListScroll =
+                MemberListScrollHelper.saveScrollState(binding.lidmaatList, memberListAdapter)
         }
         initializeData(null)
         currentFocus?.let {
@@ -579,13 +592,15 @@ class MainActivity : AppCompatActivity() {
         val filterList = viewModel.getCurrentFilterList()
         val hasFilter = filterList != null && filterList.any { it.checked }
         val hasSearch = viewModel.soekList && viewModel.soek.isNotEmpty()
-        val isBirthdaySort = viewModel.sortOrder == "VERJAAR" || viewModel.sortOrder == "VERJAARSDAG"
+        val isBirthdaySort =
+            viewModel.sortOrder == "VERJAAR" || viewModel.sortOrder == "VERJAARSDAG"
 
         when {
             hasFilter -> {
                 // Show filter summary
                 updateFilterSummary()
             }
+
             hasSearch -> {
                 // Show search text
                 binding.searchItemBlock.visibility = View.VISIBLE
@@ -595,6 +610,7 @@ class MainActivity : AppCompatActivity() {
                     searchFilterCoordinator.onSearchClosed()
                 }
             }
+
             else -> {
                 // Hide everything
                 binding.searchItemBlock.visibility = View.GONE
@@ -640,7 +656,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         if (BuildConfig.DEBUG) {
-            Log.d(TAG, "observeDataset: sort=${viewModel.sortOrder}, hasFilter=$hasFilter, hasSearch=$hasSearch, isBirthdaySort=$isBirthdaySort")
+            Log.d(
+                TAG,
+                "observeDataset: sort=${viewModel.sortOrder}, hasFilter=$hasFilter, hasSearch=$hasSearch, isBirthdaySort=$isBirthdaySort"
+            )
         }
     }
 
@@ -714,7 +733,10 @@ class MainActivity : AppCompatActivity() {
     private fun restoreInstanceState(savedInstanceState: Bundle) {
         try {
             val savedSearchList = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                savedInstanceState.getParcelableArrayList(SEARCH_CHECK_BOX, SearchCheckBox::class.java)
+                savedInstanceState.getParcelableArrayList(
+                    SEARCH_CHECK_BOX,
+                    SearchCheckBox::class.java
+                )
             } else {
                 @Suppress("DEPRECATION")
                 savedInstanceState.getParcelableArrayList<SearchCheckBox>(SEARCH_CHECK_BOX)
@@ -772,7 +794,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun createNotificationChannel() {
-        val serviceChannel = NotificationChannel(CHANNEL_ID, "Oproep", NotificationManager.IMPORTANCE_DEFAULT)
+        val serviceChannel =
+            NotificationChannel(CHANNEL_ID, "Oproep", NotificationManager.IMPORTANCE_DEFAULT)
         val notificationManager = getSystemService(NotificationManager::class.java)
         notificationManager?.createNotificationChannel(serviceChannel)
     }
@@ -785,22 +808,30 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun openNotificationSettings() {
-        Toast.makeText(this, "Please enable notification access for this app", Toast.LENGTH_LONG).show()
+        Toast.makeText(this, "Please enable notification access for this app", Toast.LENGTH_LONG)
+            .show()
         startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
     }
 
     private fun isNotificationAccessEnabled(): Boolean {
-        val notificationEnabled = Settings.Secure.getString(contentResolver, "enabled_notification_listeners")
+        val notificationEnabled =
+            Settings.Secure.getString(contentResolver, "enabled_notification_listeners")
         return notificationEnabled != null && notificationEnabled.contains(packageName)
     }
 
     private fun syncSortOrderWithSettings() {
         if (!hasCompletedInitialLoad) {
-            if (BuildConfig.DEBUG) Log.d(TAG, "syncSortOrderWithSettings: skipping, initial load not complete yet")
+            if (BuildConfig.DEBUG) Log.d(
+                TAG,
+                "syncSortOrderWithSettings: skipping, initial load not complete yet"
+            )
             return
         }
         val currentDefLayout = settingsManager.defLayout
-        if (BuildConfig.DEBUG) Log.d(TAG, "syncSortOrderWithSettings: defLayout = $currentDefLayout")
+        if (BuildConfig.DEBUG) Log.d(
+            TAG,
+            "syncSortOrderWithSettings: defLayout = $currentDefLayout"
+        )
         updateSortOrder(currentDefLayout, forceRefreshIfUnchanged = true)
     }
 
@@ -843,7 +874,7 @@ class MainActivity : AppCompatActivity() {
                 setTextColor(textColor)
                 chipStrokeWidth = 2f
                 chipStrokeColor = android.content.res.ColorStateList.valueOf(
-                    if (isColorDark(color)) Color.WHITE else Color.BLACK
+                    if (isColorDark(color)) Color.BLUE else Color.BLUE
                 )
 
                 setOnCheckedChangeListener { _, isChecked ->
@@ -860,10 +891,18 @@ class MainActivity : AppCompatActivity() {
                     } else {
                         setChipBackgroundColor(
                             android.content.res.ColorStateList.valueOf(
-                                ContextCompat.getColor(this@MainActivity, R.color.md_theme_surfaceVariant)
+                                ContextCompat.getColor(
+                                    this@MainActivity,
+                                    R.color.md_theme_surfaceVariant
+                                )
                             )
                         )
-                        setTextColor(ContextCompat.getColor(this@MainActivity, R.color.md_theme_onSurface))
+                        setTextColor(
+                            ContextCompat.getColor(
+                                this@MainActivity,
+                                R.color.md_theme_onSurface
+                            )
+                        )
                         chipStrokeWidth = 0f
                     }
                     applyCongregationFilter()
@@ -875,8 +914,14 @@ class MainActivity : AppCompatActivity() {
         // ✅ Only call this ONCE, and it's already handled by the ViewModel init
         // The ViewModel is already initialized with initialCongregations
         if (BuildConfig.DEBUG) Log.d(TAG, "🔍 setupFilterChips: congregations = $congregations")
-        if (BuildConfig.DEBUG) Log.d(TAG, "🔍 setupFilterChips: initialCongregations = $initialCongregations")
-        if (BuildConfig.DEBUG) Log.d(TAG, "🔍 setupFilterChips: viewModel._congregationFilter = ${viewModel.getCurrentCongregations()}")
+        if (BuildConfig.DEBUG) Log.d(
+            TAG,
+            "🔍 setupFilterChips: initialCongregations = $initialCongregations"
+        )
+        if (BuildConfig.DEBUG) Log.d(
+            TAG,
+            "🔍 setupFilterChips: viewModel._congregationFilter = ${viewModel.getCurrentCongregations()}"
+        )
         binding.indeterminateBar.post {
             binding.indeterminateBar.visibility = View.GONE
         }
@@ -902,7 +947,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun isColorDark(color: Int): Boolean {
-        val darkness = 1 - (0.299 * Color.red(color) + 0.587 * Color.green(color) + 0.114 * Color.blue(color)) / 255
+        val darkness =
+            1 - (0.299 * Color.red(color) + 0.587 * Color.green(color) + 0.114 * Color.blue(color)) / 255
         return darkness >= 0.5
     }
 
@@ -926,7 +972,10 @@ class MainActivity : AppCompatActivity() {
     // MainActivity.kt
     // MainActivity.kt
     fun updateSortOrder(newSort: String, forceRefreshIfUnchanged: Boolean = true) {
-        if (BuildConfig.DEBUG) Log.d(TAG, "updateSortOrder: newSort=$newSort, currentSort=$currentSortOrder")
+        if (BuildConfig.DEBUG) Log.d(
+            TAG,
+            "updateSortOrder: newSort=$newSort, currentSort=$currentSortOrder"
+        )
 
         // If same sort order, just update UI and don't trigger a refresh
         if (newSort == currentSortOrder) {
@@ -983,7 +1032,10 @@ class MainActivity : AppCompatActivity() {
                 memberListAdapter.loadStateFlow.collect { loadStates ->
                     if (loadStates.refresh is LoadState.NotLoading) {
                         val itemCount = memberListAdapter.itemCount
-                        if (BuildConfig.DEBUG) Log.d(TAG, "Data loaded, itemCount=$itemCount, offset=$offset")
+                        if (BuildConfig.DEBUG) Log.d(
+                            TAG,
+                            "Data loaded, itemCount=$itemCount, offset=$offset"
+                        )
 
                         if (itemCount > 0 && offset >= 0) {
                             val scrollPos = if (offset < itemCount) offset else itemCount - 1
@@ -1016,7 +1068,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onPause() {
         if (isAppInitialized) {
-            savedListScroll = MemberListScrollHelper.saveScrollState(binding.lidmaatList, memberListAdapter)
+            savedListScroll =
+                MemberListScrollHelper.saveScrollState(binding.lidmaatList, memberListAdapter)
         }
         super.onPause()
     }
@@ -1352,7 +1405,10 @@ class MainActivity : AppCompatActivity() {
         viewModel.soekList = false
 
         updateSortOrder(restoreSort)
-        if (BuildConfig.DEBUG) Log.d(TAG, "cancelFilter: after updateSortOrder, viewModel.sortOrder = ${viewModel.sortOrder}")
+        if (BuildConfig.DEBUG) Log.d(
+            TAG,
+            "cancelFilter: after updateSortOrder, viewModel.sortOrder = ${viewModel.sortOrder}"
+        )
         searchFilterCoordinator.originalLayoutBeforeFilter = ""
         mainViewModel.setSavedSortOrderBeforeFilter(null)
 
@@ -1426,8 +1482,10 @@ class MainActivity : AppCompatActivity() {
                     "Rugsteun van $dateStr gevind. Wil jy herstel?",
                     Snackbar.LENGTH_LONG
                 ).setAction("Herstel") {
-                    startActivity(Intent(this@MainActivity, LaaiDatabasisActivity::class.java)
-                        .putExtra(LaaiDatabasisActivity.EXTRA_PROMPT_RESTORE, true))
+                    startActivity(
+                        Intent(this@MainActivity, LaaiDatabasisActivity::class.java)
+                            .putExtra(LaaiDatabasisActivity.EXTRA_PROMPT_RESTORE, true)
+                    )
                 }.show()
                 if (candidate.absolutePath.startsWith(cacheDir.absolutePath)) {
                     candidate.delete()
@@ -1461,7 +1519,8 @@ class MainActivity : AppCompatActivity() {
                 if (cursor != null && cursor.moveToFirst()) {
                     val idIdx = cursor.getColumnIndex(MediaStore.Downloads._ID)
                     val id = cursor.getLong(idIdx)
-                    val uri = ContentUris.withAppendedId(MediaStore.Downloads.EXTERNAL_CONTENT_URI, id)
+                    val uri =
+                        ContentUris.withAppendedId(MediaStore.Downloads.EXTERNAL_CONTENT_URI, id)
 
                     val tempFile = File(cacheDir, "temp_backup_check.db")
                     contentResolver.openInputStream(uri)?.use { input ->

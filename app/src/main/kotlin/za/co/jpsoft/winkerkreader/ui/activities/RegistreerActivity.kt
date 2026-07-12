@@ -2,17 +2,15 @@ package za.co.jpsoft.winkerkreader.ui.activities
 
 import android.os.Bundle
 import android.view.View
-import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
-import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.google.android.material.snackbar.Snackbar
+import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
 import za.co.jpsoft.winkerkreader.databinding.RegistreerBinding
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
-import za.co.jpsoft.winkerkreader.R
 
 class RegistreerActivity : AppCompatActivity() {
 
@@ -109,19 +107,25 @@ class RegistreerActivity : AppCompatActivity() {
 
         when (editText.id) {
             binding.regEpos.id -> {
-                if (text.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(text).matches()) {
+                if (text.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(text)
+                        .matches()
+                ) {
                     layout?.error = getString(R.string.invalid_email)
                 } else {
                     layout?.error = null
                 }
             }
+
             binding.regGemeenteEpos.id -> {
-                if (text.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(text).matches()) {
+                if (text.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(text)
+                        .matches()
+                ) {
                     layout?.error = getString(R.string.invalid_email)
                 } else {
                     layout?.error = null
                 }
             }
+
             binding.regSelno.id -> {
                 if (text.isNotEmpty() && !text.matches(Regex("^[0-9\\-\\+\\s]+$"))) {
                     layout?.error = getString(R.string.invalid_phone)

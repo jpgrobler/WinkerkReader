@@ -1,51 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
+    app:cardBackgroundColor="?attr/colorSurface"
     app:cardCornerRadius="12dp"
     app:cardElevation="4dp"
-    app:cardBackgroundColor="?attr/colorSurface"
     app:cardUseCompatPadding="true"
-    app:contentPadding="5dp">
+    app:rippleColor="?attr/colorPrimaryContainer">
 
     <LinearLayout
-        android:background="@drawable/border"
         android:id="@+id/oproepfloaterbase"
-        android:orientation="horizontal"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:padding="5dp">
+        android:background="@drawable/float_background_m3"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="8dp">
 
+        <!-- Icon with Material 3 styling -->
         <ImageView
             android:id="@+id/floatericon"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:src="@drawable/ic_launcher_round"
-            android:layout_marginEnd="16dp" />
+            android:layout_marginEnd="12dp"
+            android:background="?attr/colorPrimaryContainer"
+            android:contentDescription="@string/app_name"
+            android:padding="4dp"
+            android:src="@drawable/ic_launcher_round" />
 
+        <!-- Primary text -->
         <TextView
-            android:clickable="true"
-            android:layout_gravity="center_vertical"
             android:id="@+id/oproepnommer"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:textAppearanceMedium"
+            android:clickable="true"
+            android:gravity="center_vertical"
+            android:text="@string/oproep_titel"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
             android:textColor="?attr/colorOnSurface"
-            android:textStyle="bold"
-            android:text="@string/oproep_titel" />
+            android:textStyle="bold" />
 
+        <!-- Close button using ImageView instead of FAB -->
         <ImageView
             android:id="@+id/close_btn"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:layout_marginStart="10dp"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_marginStart="12dp"
+            android:background="@drawable/close_button_background"
+            android:contentDescription="@string/close"
+            android:padding="4dp"
             android:src="@drawable/ic_close"
-            app:tint="?attr/colorOnSurfaceVariant"
-            tools:ignore="ContentDescription" />
+            app:tint="?attr/colorOnSurfaceVariant" />
+
     </LinearLayout>
 
-</androidx.cardview.widget.CardView>
+</com.google.android.material.card.MaterialCardView>

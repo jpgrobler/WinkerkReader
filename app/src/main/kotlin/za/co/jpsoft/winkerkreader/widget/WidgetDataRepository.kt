@@ -48,9 +48,12 @@ object WidgetDataRepository {
         db.query(SimpleSQLiteQuery(query)).use { cursor ->
             while (cursor.moveToNext()) {
                 try {
-                    val firstNameIdx = cursor.getColumnIndex(WinkerkContract.winkerkEntry.LIDMATE_NOEMNAAM)
-                    val lastNameIdx = cursor.getColumnIndex(WinkerkContract.winkerkEntry.LIDMATE_VAN)
-                    val gemeenteIdx = cursor.getColumnIndex(WinkerkContract.winkerkEntry.LIDMATE_GEMEENTE)
+                    val firstNameIdx =
+                        cursor.getColumnIndex(WinkerkContract.winkerkEntry.LIDMATE_NOEMNAAM)
+                    val lastNameIdx =
+                        cursor.getColumnIndex(WinkerkContract.winkerkEntry.LIDMATE_VAN)
+                    val gemeenteIdx =
+                        cursor.getColumnIndex(WinkerkContract.winkerkEntry.LIDMATE_GEMEENTE)
                     val reasonIdx = cursor.getColumnIndex("Rede")
                     val dateIdx = cursor.getColumnIndex("Datum")
 
@@ -82,9 +85,11 @@ object WidgetDataRepository {
                         else -> "($years)"
                     }
 
-                    val eventMonthDay = java.time.MonthDay.of(eventDate.monthValue, eventDate.dayOfMonth)
+                    val eventMonthDay =
+                        java.time.MonthDay.of(eventDate.monthValue, eventDate.dayOfMonth)
                     val todayMonthDay = java.time.MonthDay.from(today)
-                    val shouldShow = eventMonthDay.isAfter(todayMonthDay) || eventMonthDay == todayMonthDay
+                    val shouldShow =
+                        eventMonthDay.isAfter(todayMonthDay) || eventMonthDay == todayMonthDay
 
                     if (shouldShow) {
                         val fullName = "$firstName $lastName".trim()

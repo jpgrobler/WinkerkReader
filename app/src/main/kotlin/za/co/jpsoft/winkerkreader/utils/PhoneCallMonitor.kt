@@ -34,6 +34,7 @@ class PhoneCallMonitor(
 ) {
 
     private var telephonyManager: TelephonyManager? = null
+
     @Suppress("DEPRECATION")
     private var phoneStateListener: PhoneStateListener? = null
     private var telephonyCallback: Any? = null
@@ -51,7 +52,8 @@ class PhoneCallMonitor(
 
     init {
         telephonyManager = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-        unifiedMonitor = UnifiedCallMonitor.getInstance(context, callLogDao, calendarManager, calendarId)
+        unifiedMonitor =
+            UnifiedCallMonitor.getInstance(context, callLogDao, calendarManager, calendarId)
     }
 
     fun setIncomingNumber(number: String?) {
@@ -65,7 +67,8 @@ class PhoneCallMonitor(
         }
 
         if (telephonyManager == null) {
-            telephonyManager = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+            telephonyManager =
+                context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -89,7 +92,10 @@ class PhoneCallMonitor(
     }
 
     private fun handleStateChanged(state: Int, phoneNumber: String?) {
-        if (BuildConfig.DEBUG) Log.d(TAG, "Call state changed: ${getCallStateName(state)}, Number: $phoneNumber")
+        if (BuildConfig.DEBUG) Log.d(
+            TAG,
+            "Call state changed: ${getCallStateName(state)}, Number: $phoneNumber"
+        )
         when (state) {
             TelephonyManager.CALL_STATE_RINGING -> handleRingingState(phoneNumber)
             TelephonyManager.CALL_STATE_OFFHOOK -> handleOffHookState(phoneNumber)
@@ -98,7 +104,8 @@ class PhoneCallMonitor(
     }
 
     @RequiresApi(Build.VERSION_CODES.S)
-    private inner class CallStateCallback : TelephonyCallback(), TelephonyCallback.CallStateListener {
+    private inner class CallStateCallback : TelephonyCallback(),
+        TelephonyCallback.CallStateListener {
         override fun onCallStateChanged(state: Int) {
             handleStateChanged(state, null)
         }
@@ -175,7 +182,8 @@ class PhoneCallMonitor(
             val callId = "phone_$callStartTime"
             currentCallId = callId
 
-            currentOutgoingNumber = if (!phoneNumber.isNullOrBlank()) phoneNumber else "Unknown Number"
+            currentOutgoingNumber =
+                if (!phoneNumber.isNullOrBlank()) phoneNumber else "Unknown Number"
             currentCallType = CallType.OUTGOING
             isCallActive = true
 
@@ -214,14 +222,19 @@ class PhoneCallMonitor(
                     unifiedMonitor?.onCallEnded(callId, callEndTime)
                 }
             }
+
             currentIncomingNumber != null && callId != null -> {
                 if (currentIncomingNumber == "Unknown Number") {
                     // Try to recover missed call number asynchronously
                     monitorScope.launch {
                         val recovered = queryLatestCallFromLog()
                         if (recovered != null) {
-                            if (BuildConfig.DEBUG) Log.d(TAG, "Recovered missed call number from CallLog: ${recovered.first}")
-                            val result = CallerInfoResolver.resolve(recovered.first, context.contentResolver)
+                            if (BuildConfig.DEBUG) Log.d(
+                                TAG,
+                                "Recovered missed call number from CallLog: ${recovered.first}"
+                            )
+                            val result =
+                                CallerInfoResolver.resolve(recovered.first, context.contentResolver)
                             val displayName = when (result) {
                                 is CallerInfoResult.Member -> result.name
                                 is CallerInfoResult.Contact -> result.name
@@ -277,7 +290,8 @@ class PhoneCallMonitor(
                     val numIdx = cursor.getColumnIndex(CallLog.Calls.NUMBER)
                     val dateIdx = cursor.getColumnIndex(CallLog.Calls.DATE)
                     val number = cursor.getString(numIdx)?.takeIf { it.isNotBlank() }
-                    val date = if (dateIdx >= 0) cursor.getLong(dateIdx) else System.currentTimeMillis()
+                    val date =
+                        if (dateIdx >= 0) cursor.getLong(dateIdx) else System.currentTimeMillis()
                     if (number != null) Pair(number, date) else null
                 } else null
             }
@@ -322,7 +336,10 @@ class PhoneCallMonitor(
             context.startForegroundService(serviceIntent)
             if (BuildConfig.DEBUG) Log.d(TAG, "Caller identification service started for $number")
         } catch (e: Exception) {
-            if (BuildConfig.DEBUG) Log.e(TAG, "Failed to start caller identification service: ${e.message}")
+            if (BuildConfig.DEBUG) Log.e(
+                TAG,
+                "Failed to start caller identification service: ${e.message}"
+            )
         }
     }
 
@@ -340,7 +357,10 @@ class PhoneCallMonitor(
             context.stopService(serviceIntent)
             if (BuildConfig.DEBUG) Log.d(TAG, "Caller identification service stopped")
         } catch (e: Exception) {
-            if (BuildConfig.DEBUG) Log.e(TAG, "Failed to stop caller identification service: ${e.message}")
+            if (BuildConfig.DEBUG) Log.e(
+                TAG,
+                "Failed to stop caller identification service: ${e.message}"
+            )
         }
     }
 

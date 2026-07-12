@@ -29,11 +29,23 @@ class WinkerkProvider : ContentProvider() {
 
         private val uriMatcher = UriMatcher(UriMatcher.NO_MATCH).apply {
             addURI(WinkerkContract.CONTENT_AUTHORITY, WinkerkContract.PATH_LIDMATE, LIDMAAT_LIST)
-            addURI(WinkerkContract.CONTENT_AUTHORITY, "${WinkerkContract.PATH_LIDMATE}/#", LIDMAAT_GUID)
+            addURI(
+                WinkerkContract.CONTENT_AUTHORITY,
+                "${WinkerkContract.PATH_LIDMATE}/#",
+                LIDMAAT_GUID
+            )
             addURI(WinkerkContract.CONTENT_AUTHORITY, "${WinkerkContract.PATH_GESIN}/#", GESIN_GUID)
             addURI(WinkerkContract.CONTENT_AUTHORITY, "${WinkerkContract.PATH_FOON}/#", OPROEP)
-            addURI(WinkerkContract.CONTENT_AUTHORITY, WinkerkContract.PATH_GEMEENTE_NAAM, GEMEENTE_NAAM)
-            addURI(WinkerkContract.CONTENT_AUTHORITY, WinkerkContract.PATH_OUDERDOM, LIDMAAT_OUDERDOM)
+            addURI(
+                WinkerkContract.CONTENT_AUTHORITY,
+                WinkerkContract.PATH_GEMEENTE_NAAM,
+                GEMEENTE_NAAM
+            )
+            addURI(
+                WinkerkContract.CONTENT_AUTHORITY,
+                WinkerkContract.PATH_OUDERDOM,
+                LIDMAAT_OUDERDOM
+            )
             addURI(WinkerkContract.CONTENT_AUTHORITY, WinkerkContract.PATH_ARGIEF, ARGIEF_LAAI)
         }
     }
@@ -79,23 +91,28 @@ class WinkerkProvider : ContentProvider() {
 
             ARGIEF_LAAI -> {
                 val finalSelection = selection ?: "SELECT * FROM Argief"
-                db.argiefDao().queryRaw(SimpleSQLiteQuery(finalSelection, selectionArgs ?: emptyArray()))
+                db.argiefDao()
+                    .queryRaw(SimpleSQLiteQuery(finalSelection, selectionArgs ?: emptyArray()))
             }
 
             GESIN_GUID -> {
-                db.memberDao().queryRaw(SimpleSQLiteQuery(selection ?: "", selectionArgs ?: emptyArray()))
+                db.memberDao()
+                    .queryRaw(SimpleSQLiteQuery(selection ?: "", selectionArgs ?: emptyArray()))
             }
 
             OPROEP -> {
-                db.memberDao().queryRaw(SimpleSQLiteQuery(selection ?: "", selectionArgs ?: emptyArray()))
+                db.memberDao()
+                    .queryRaw(SimpleSQLiteQuery(selection ?: "", selectionArgs ?: emptyArray()))
             }
 
             LIDMAAT_GUID -> {
-                db.memberDao().queryRaw(SimpleSQLiteQuery(selection ?: "", selectionArgs ?: emptyArray()))
+                db.memberDao()
+                    .queryRaw(SimpleSQLiteQuery(selection ?: "", selectionArgs ?: emptyArray()))
             }
 
             LIDMAAT_LIST -> {
-                db.memberDao().queryRaw(SimpleSQLiteQuery(selection ?: "", selectionArgs ?: emptyArray()))
+                db.memberDao()
+                    .queryRaw(SimpleSQLiteQuery(selection ?: "", selectionArgs ?: emptyArray()))
             }
 
             else -> throw IllegalArgumentException("Unsupported URI: $uri")
@@ -141,9 +158,11 @@ class WinkerkProvider : ContentProvider() {
                 statement.close()
                 rows
             }
+
             else -> 0
         }
     }
+
     override fun delete(uri: Uri, selection: String?, selectionArgs: Array<out String>?): Int = 0
 
     override fun getType(uri: Uri): String? {
@@ -166,11 +185,13 @@ class WinkerkProvider : ContentProvider() {
                 db.openHelper.writableDatabase.execSQL("UPDATE Members SET Tag = 0")
                 return null
             }
+
             "closeDatabase" -> {
                 WinkerkDatabase.closeInstance()
                 database = null
                 return null
             }
+
             "reloadDatabase" -> {
                 if (BuildConfig.DEBUG) Log.d(tag, "reloadDatabase called")
                 WinkerkDatabase.closeInstance()

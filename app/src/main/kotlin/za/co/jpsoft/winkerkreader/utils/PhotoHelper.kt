@@ -28,6 +28,7 @@ object PhotoHelper {
         val fotoDir = WinkerkContract.winkerkEntry.getFotoDir(context)
         return File(fotoDir, "$guid.jpg")
     }
+
     /**
      * Sets a default gender‑based image (male/female) on an ImageView.
      * Also resizes the view to the given DP size (default 48dp).

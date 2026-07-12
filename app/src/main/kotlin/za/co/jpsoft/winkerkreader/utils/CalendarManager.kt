@@ -38,7 +38,8 @@ class CalendarManager(private val context: Context) {
             )
 
             val selection = "${CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL} >= ?"
-            val selectionArgs = arrayOf(CalendarContract.Calendars.CAL_ACCESS_CONTRIBUTOR.toString())
+            val selectionArgs =
+                arrayOf(CalendarContract.Calendars.CAL_ACCESS_CONTRIBUTOR.toString())
 
             val cursor = context.contentResolver.query(
                 CalendarContract.Calendars.CONTENT_URI,
@@ -54,16 +55,31 @@ class CalendarManager(private val context: Context) {
                     return calendars
                 }
                 while (it.moveToNext()) {
-                    val id = CursorDataExtractor.getSafeLong(it, CalendarContract.Calendars._ID, -1L) ?: -1L
-                    val name = CursorDataExtractor.getSafeString(it, CalendarContract.Calendars.NAME, "") ?: ""
-                    val displayName = CursorDataExtractor.getSafeString(it, CalendarContract.Calendars.CALENDAR_DISPLAY_NAME, "") ?: ""
-                    val accountName = CursorDataExtractor.getSafeString(it, CalendarContract.Calendars.ACCOUNT_NAME, "") ?: ""
+                    val id =
+                        CursorDataExtractor.getSafeLong(it, CalendarContract.Calendars._ID, -1L)
+                            ?: -1L
+                    val name =
+                        CursorDataExtractor.getSafeString(it, CalendarContract.Calendars.NAME, "")
+                            ?: ""
+                    val displayName = CursorDataExtractor.getSafeString(
+                        it,
+                        CalendarContract.Calendars.CALENDAR_DISPLAY_NAME,
+                        ""
+                    ) ?: ""
+                    val accountName = CursorDataExtractor.getSafeString(
+                        it,
+                        CalendarContract.Calendars.ACCOUNT_NAME,
+                        ""
+                    ) ?: ""
 
                     calendars.add(CalendarInfo(id, name, displayName, accountName))
                 }
                 if (BuildConfig.DEBUG) Log.d(TAG, "Found ${calendars.size} calendars")
             } ?: run {
-                if (BuildConfig.DEBUG) Log.w(TAG, "Calendar query returned null cursor - no calendars available or permission denied")
+                if (BuildConfig.DEBUG) Log.w(
+                    TAG,
+                    "Calendar query returned null cursor - no calendars available or permission denied"
+                )
             }
         } catch (e: SecurityException) {
             if (BuildConfig.DEBUG) Log.e(TAG, "Permission denied accessing calendars", e)
@@ -96,7 +112,10 @@ class CalendarManager(private val context: Context) {
         isAllDay: Boolean
     ): Long? {
         if (isDuplicatePastoralEvent(calendarId, reminderId, startMillis, isAllDay)) {
-            if (BuildConfig.DEBUG) Log.w(TAG, "Skipping duplicate pastoral calendar event for reminder $reminderId")
+            if (BuildConfig.DEBUG) Log.w(
+                TAG,
+                "Skipping duplicate pastoral calendar event for reminder $reminderId"
+            )
             return null
         }
 
@@ -119,10 +138,17 @@ class CalendarManager(private val context: Context) {
         return try {
             val uri = contentResolver.insert(CalendarContract.Events.CONTENT_URI, values)
             uri?.lastPathSegment?.toLongOrNull().also { id ->
-                if (BuildConfig.DEBUG) Log.d(TAG, "Pastoral calendar event created: id=$id reminder=$reminderId")
+                if (BuildConfig.DEBUG) Log.d(
+                    TAG,
+                    "Pastoral calendar event created: id=$id reminder=$reminderId"
+                )
             }
         } catch (e: Exception) {
-            if (BuildConfig.DEBUG) Log.e(TAG, "Failed to insert pastoral calendar event for $reminderId", e)
+            if (BuildConfig.DEBUG) Log.e(
+                TAG,
+                "Failed to insert pastoral calendar event for $reminderId",
+                e
+            )
             null
         }
     }
@@ -140,10 +166,17 @@ class CalendarManager(private val context: Context) {
         return try {
             val deleted = contentResolver.delete(uri, null, null)
             (deleted > 0).also {
-                if (BuildConfig.DEBUG) Log.d(TAG, "Pastoral calendar event delete: id=$calendarEventId deleted=$it")
+                if (BuildConfig.DEBUG) Log.d(
+                    TAG,
+                    "Pastoral calendar event delete: id=$calendarEventId deleted=$it"
+                )
             }
         } catch (e: Exception) {
-            if (BuildConfig.DEBUG) Log.e(TAG, "Failed to delete pastoral calendar event $calendarEventId", e)
+            if (BuildConfig.DEBUG) Log.e(
+                TAG,
+                "Failed to delete pastoral calendar event $calendarEventId",
+                e
+            )
             false
         }
     }
@@ -188,7 +221,11 @@ class CalendarManager(private val context: Context) {
         }
     }
 
-    private fun isTimeWindowDuplicate(calendarId: Long, startMillis: Long, isAllDay: Boolean): Boolean {
+    private fun isTimeWindowDuplicate(
+        calendarId: Long,
+        startMillis: Long,
+        isAllDay: Boolean
+    ): Boolean {
         val (windowStart, windowEnd) = if (isAllDay) {
             // Same calendar day in device timezone
             val cal = Calendar.getInstance()
@@ -229,6 +266,7 @@ class CalendarManager(private val context: Context) {
             false
         }
     }
+
     fun addCallEventToCalendar(
         calendarId: Long,
         callerInfo: String,
@@ -241,7 +279,10 @@ class CalendarManager(private val context: Context) {
             // Check if we have any calendars first
             val availableCalendars = getAvailableCalendars()
             if (availableCalendars.isEmpty()) {
-                if (BuildConfig.DEBUG) Log.w(TAG, "No calendars available on device - cannot add event")
+                if (BuildConfig.DEBUG) Log.w(
+                    TAG,
+                    "No calendars available on device - cannot add event"
+                )
                 return false
             }
 
@@ -254,15 +295,24 @@ class CalendarManager(private val context: Context) {
 
             // Check for duplicate calendar events first
             if (isDuplicateCalendarEvent(calendarId, callerInfo, timestamp, callType, source)) {
-                if (BuildConfig.DEBUG) Log.d(TAG, "Duplicate calendar event detected, skipping - Contact: $callerInfo, Type: $callType, Source: $source")
+                if (BuildConfig.DEBUG) Log.d(
+                    TAG,
+                    "Duplicate calendar event detected, skipping - Contact: $callerInfo, Type: $callType, Source: $source"
+                )
                 return true // Return true as it's not really an error
             }
 
             val values = ContentValues().apply {
                 put(CalendarContract.Events.DTSTART, timestamp)
-                put(CalendarContract.Events.DTEND, timestamp + duration * 1000) // Convert seconds to milliseconds
+                put(
+                    CalendarContract.Events.DTEND,
+                    timestamp + duration * 1000
+                ) // Convert seconds to milliseconds
                 put(CalendarContract.Events.TITLE, createEventTitle(callerInfo, callType, source))
-                put(CalendarContract.Events.DESCRIPTION, createEventDescription(callerInfo, callType, source, duration, timestamp))
+                put(
+                    CalendarContract.Events.DESCRIPTION,
+                    createEventDescription(callerInfo, callType, source, duration, timestamp)
+                )
                 put(CalendarContract.Events.CALENDAR_ID, calendarId)
                 put(CalendarContract.Events.EVENT_TIMEZONE, TimeZone.getDefault().id)
                 put(CalendarContract.Events.EVENT_COLOR, getEventColor(callType, source))
@@ -327,15 +377,28 @@ class CalendarManager(private val context: Context) {
 
             cursor?.use {
                 while (it.moveToNext()) {
-                    val existingTitle = CursorDataExtractor.getSafeString(it, CalendarContract.Events.TITLE, "") ?: ""
-                    val existingDescription = CursorDataExtractor.getSafeString(it, CalendarContract.Events.DESCRIPTION, "") ?: ""
-                    val existingTime = CursorDataExtractor.getSafeLong(it, CalendarContract.Events.DTSTART, 0L)   // no Elvis, as it's non-nullable
+                    val existingTitle =
+                        CursorDataExtractor.getSafeString(it, CalendarContract.Events.TITLE, "")
+                            ?: ""
+                    val existingDescription = CursorDataExtractor.getSafeString(
+                        it,
+                        CalendarContract.Events.DESCRIPTION,
+                        ""
+                    ) ?: ""
+                    val existingTime = CursorDataExtractor.getSafeLong(
+                        it,
+                        CalendarContract.Events.DTSTART,
+                        0L
+                    )   // no Elvis, as it's non-nullable
 
                     val expectedTitle = createEventTitle(callerInfo, callType, source)
 
                     // Check if title matches and time is very close
                     if (existingTitle == expectedTitle && kotlin.math.abs(existingTime - timestamp) < timeWindow) {
-                        if (BuildConfig.DEBUG) Log.d(TAG, "Found duplicate calendar event: $existingTitle at $existingTime")
+                        if (BuildConfig.DEBUG) Log.d(
+                            TAG,
+                            "Found duplicate calendar event: $existingTitle at $existingTime"
+                        )
                         return true
                     }
 
@@ -345,7 +408,10 @@ class CalendarManager(private val context: Context) {
                         existingDescription.contains(callType.name) &&
                         kotlin.math.abs(existingTime - timestamp) < timeWindow
                     ) {
-                        if (BuildConfig.DEBUG) Log.d(TAG, "Found similar calendar event based on description")
+                        if (BuildConfig.DEBUG) Log.d(
+                            TAG,
+                            "Found similar calendar event based on description"
+                        )
                         return true
                     }
                 }
@@ -383,7 +449,13 @@ class CalendarManager(private val context: Context) {
             CallType.OTHER -> context.getString(R.string.call_type_other)
         }
 
-        return context.getString(R.string.calendar_event_title, typeEmoji, sourceEmoji, localizedType, callerInfo)
+        return context.getString(
+            R.string.calendar_event_title,
+            typeEmoji,
+            sourceEmoji,
+            localizedType,
+            callerInfo
+        )
     }
 
     private fun createEventDescription(
@@ -396,7 +468,7 @@ class CalendarManager(private val context: Context) {
         val sb = StringBuilder()
         sb.append(context.getString(R.string.calendar_details_header)).append("\n")
         sb.append(context.getString(R.string.calendar_contact, callerInfo)).append("\n")
-        
+
         val localizedType = when (callType) {
             CallType.INCOMING -> context.getString(R.string.call_type_incoming)
             CallType.OUTGOING -> context.getString(R.string.call_type_outgoing)
@@ -406,7 +478,7 @@ class CalendarManager(private val context: Context) {
             CallType.OTHER -> context.getString(R.string.call_type_other)
         }
         sb.append(context.getString(R.string.calendar_type, localizedType)).append("\n")
-        
+
         val localizedSource = when {
             "WhatsApp" == source -> context.getString(R.string.source_whatsapp)
             "Phone Call" == source || source.contains("Phone") -> context.getString(R.string.source_phone)
@@ -417,7 +489,13 @@ class CalendarManager(private val context: Context) {
         if (duration > 0) {
             val minutes = duration / 60
             val seconds = duration % 60
-            sb.append(context.getString(R.string.calendar_duration, minutes.toInt(), seconds.toInt())).append("\n")
+            sb.append(
+                context.getString(
+                    R.string.calendar_duration,
+                    minutes.toInt(),
+                    seconds.toInt()
+                )
+            ).append("\n")
         }
 
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
@@ -439,8 +517,8 @@ class CalendarManager(private val context: Context) {
 
     companion object {
         private const val TAG = "CalendarManager"
-        private const val PASTORAL_TITLE_PREFIX    = "WKR Bediening: "
-        private const val PASTORAL_REMINDER_TOKEN  = "wkr_reminder_id="
+        private const val PASTORAL_TITLE_PREFIX = "WKR Bediening: "
+        private const val PASTORAL_REMINDER_TOKEN = "wkr_reminder_id="
         private const val PASTORAL_TIMED_WINDOW_MS = 2 * 60 * 1000L   // ±2 min dedup window
     }
 }

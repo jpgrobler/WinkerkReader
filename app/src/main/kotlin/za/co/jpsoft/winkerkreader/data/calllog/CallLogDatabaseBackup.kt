@@ -31,11 +31,12 @@ import java.io.File
  */
 object CallLogDatabaseBackup {
 
-    private const val TAG              = "CallLogDbBackup"
-    private const val DEBOUNCE_MS      = 2_000L
-    private const val DB_FILENAME      = "wkr_call_log.db"   // must match CallLogDatabase's Room.databaseBuilder name
-    private const val BACKUP_FILENAME  = "wkr_call_log.db"
-    private const val BACKUP_BASENAME  = "wkr_call_log"
+    private const val TAG = "CallLogDbBackup"
+    private const val DEBOUNCE_MS = 2_000L
+    private const val DB_FILENAME =
+        "wkr_call_log.db"   // must match CallLogDatabase's Room.databaseBuilder name
+    private const val BACKUP_FILENAME = "wkr_call_log.db"
+    private const val BACKUP_BASENAME = "wkr_call_log"
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var debounceJob: Job? = null

@@ -130,7 +130,10 @@ class PermissionManager(private val context: Context) {
         Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(context)
 
     fun getOverlayPermissionIntent(): Intent? {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(context)) {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(
+                context
+            )
+        ) {
             Intent(
                 Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                 Uri.parse("package:${context.packageName}")
@@ -181,7 +184,8 @@ class PermissionManager(private val context: Context) {
     fun isFirstLaunch(): Boolean = prefs.getBoolean("isFirstLaunch", true)
     fun setFirstLaunchComplete() = prefs.edit().putBoolean("isFirstLaunch", false).apply()
     fun isCheckOnStartEnabled(): Boolean = prefs.getBoolean("checkPermissionsOnStart", true)
-    fun setCheckOnStart(enabled: Boolean) = prefs.edit().putBoolean("checkPermissionsOnStart", enabled).apply()
+    fun setCheckOnStart(enabled: Boolean) =
+        prefs.edit().putBoolean("checkPermissionsOnStart", enabled).apply()
 
     fun getMissingPermissionsCount(): Int {
         var count = 0
@@ -192,7 +196,8 @@ class PermissionManager(private val context: Context) {
         if (!isPermissionGranted(Manifest.permission.READ_SMS)) count++
         if (!isPermissionGranted(Manifest.permission.READ_CALENDAR)) count++
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            !isPermissionGranted(Manifest.permission.POST_NOTIFICATIONS)) count++
+            !isPermissionGranted(Manifest.permission.POST_NOTIFICATIONS)
+        ) count++
         return count
     }
 
@@ -201,9 +206,10 @@ class PermissionManager(private val context: Context) {
                 arePermissionsGranted(SMS_PERMISSIONS) &&
                 arePermissionsGranted(PHONE_PERMISSIONS) &&
                 arePermissionsGranted(CALENDAR_PERMISSIONS) &&
-                (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || isPermissionGranted(Manifest.permission.POST_NOTIFICATIONS))
+                (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || isPermissionGranted(
+                    Manifest.permission.POST_NOTIFICATIONS
+                ))
     }
-
 
 
     // ------------------------------------------------------------------------

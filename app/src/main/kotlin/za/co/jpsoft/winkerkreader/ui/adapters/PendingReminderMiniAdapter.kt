@@ -52,9 +52,9 @@ class PendingReminderMiniAdapter(
             val isOverdue = dueDate.isBefore(today)
 
             binding.tvMiniDate.text = when {
-                dueDate == today         -> binding.root.context.getString(R.string.datum_vandag)
+                dueDate == today -> binding.root.context.getString(R.string.datum_vandag)
                 dueDate == today.minusDays(1) -> binding.root.context.getString(R.string.datum_gister)
-                else                     -> dueDate.format(dateFormatter)
+                else -> dueDate.format(dateFormatter)
             }
 
             binding.tvMiniOverdue.visibility = if (isOverdue) View.VISIBLE else View.GONE
@@ -81,6 +81,7 @@ class PendingReminderMiniAdapter(
         private val DIFF = object : DiffUtil.ItemCallback<FollowUpReminderEntity>() {
             override fun areItemsTheSame(a: FollowUpReminderEntity, b: FollowUpReminderEntity) =
                 a.reminderId == b.reminderId
+
             override fun areContentsTheSame(a: FollowUpReminderEntity, b: FollowUpReminderEntity) =
                 a == b
         }

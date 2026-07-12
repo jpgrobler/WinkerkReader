@@ -1,16 +1,15 @@
-<androidx.coordinatorlayout.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
-    android:background="?attr/colorSurface">
+    android:background="?attr/colorSurface"
+    android:fitsSystemWindows="true">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:fitsSystemWindows="true"
-        android:background="?attr/colorPrimary">
+        android:background="?attr/colorPrimary"
+        android:fitsSystemWindows="true">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/bediening_toolbar"
@@ -18,17 +17,17 @@
             android:layout_height="?attr/actionBarSize"
             android:background="?attr/colorPrimary"
             app:navigationIcon="@drawable/ic_bediening"
+            app:popupTheme="@style/ThemeOverlay.WinkerkReader.PopupMenu"
             app:title="@string/bediening_title"
-            app:titleTextColor="?attr/colorOnPrimary"
-            app:popupTheme="@style/ThemeOverlay.WinkerkReader.PopupMenu" />
+            app:titleTextColor="?attr/colorOnPrimary" />
 
         <com.google.android.material.tabs.TabLayout
             android:id="@+id/bediening_tab_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="?attr/colorPrimary"
-            app:tabTextColor="?attr/colorOnPrimary"
-            app:tabSelectedTextColor="?attr/colorOnPrimary" />
+            app:tabSelectedTextColor="?attr/colorOnPrimary"
+            app:tabTextColor="?attr/colorOnPrimary" />
 
     </com.google.android.material.appbar.AppBarLayout>
 

@@ -79,10 +79,17 @@ object PastoralNotificationHelper {
 
         try {
             NotificationManagerCompat.from(context).notify(notifId, notification)
-            if (BuildConfig.DEBUG) Log.d(TAG, "Posted notification $notifId for reminder ${reminder.reminderId}")
+            if (BuildConfig.DEBUG) Log.d(
+                TAG,
+                "Posted notification $notifId for reminder ${reminder.reminderId}"
+            )
         } catch (e: SecurityException) {
             // POST_NOTIFICATIONS permission not granted (Android 13+)
-            if (BuildConfig.DEBUG) Log.w(TAG, "POST_NOTIFICATIONS permission missing — notification not shown", e)
+            if (BuildConfig.DEBUG) Log.w(
+                TAG,
+                "POST_NOTIFICATIONS permission missing — notification not shown",
+                e
+            )
         }
     }
 
@@ -101,7 +108,11 @@ object PastoralNotificationHelper {
     // -------------------------------------------------------------------------
 
     /** Tapping the notification body opens BedieningActivity. */
-    private fun openPendingIntent(context: Context, reminderId: String, notifId: Int): PendingIntent {
+    private fun openPendingIntent(
+        context: Context,
+        reminderId: String,
+        notifId: Int
+    ): PendingIntent {
         val intent = Intent(context, BedieningActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             putExtra(PastoralReminderActionReceiver.EXTRA_REMINDER_ID, reminderId)
@@ -116,7 +127,11 @@ object PastoralNotificationHelper {
     }
 
     /** "Voltooi" action button. */
-    private fun completePendingIntent(context: Context, reminderId: String, notifId: Int): PendingIntent {
+    private fun completePendingIntent(
+        context: Context,
+        reminderId: String,
+        notifId: Int
+    ): PendingIntent {
         val intent = Intent(context, PastoralReminderActionReceiver::class.java).apply {
             action = PastoralReminderActionReceiver.ACTION_COMPLETE
             putExtra(PastoralReminderActionReceiver.EXTRA_REMINDER_ID, reminderId)
@@ -132,7 +147,11 @@ object PastoralNotificationHelper {
     }
 
     /** "Uitstel 1 dag" action button. */
-    private fun snoozePendingIntent(context: Context, reminderId: String, notifId: Int): PendingIntent {
+    private fun snoozePendingIntent(
+        context: Context,
+        reminderId: String,
+        notifId: Int
+    ): PendingIntent {
         val intent = Intent(context, PastoralReminderActionReceiver::class.java).apply {
             action = PastoralReminderActionReceiver.ACTION_SNOOZE_1_DAY
             putExtra(PastoralReminderActionReceiver.EXTRA_REMINDER_ID, reminderId)

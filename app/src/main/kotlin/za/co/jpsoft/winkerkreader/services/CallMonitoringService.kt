@@ -27,14 +27,16 @@ import za.co.jpsoft.winkerkreader.utils.PhoneCallMonitor
 class CallMonitoringService : Service() {
 
     private var phoneCallMonitor: PhoneCallMonitor? = null
-    private var callLogDao: CallLogDao? = null   // was: private var databaseHelper: DatabaseHelper? = null
+    private var callLogDao: CallLogDao? =
+        null   // was: private var databaseHelper: DatabaseHelper? = null
     private var pendingIncomingNumber: String? = null
 
     override fun onCreate() {
         super.onCreate()
         if (BuildConfig.DEBUG) Log.d(TAG, "Call Monitoring Service created")
         createNotificationChannel()
-        callLogDao = CallLogDatabase.getInstance(this).callLogDao()   // was: databaseHelper = DatabaseHelper.getInstance(this)
+        callLogDao = CallLogDatabase.getInstance(this)
+            .callLogDao()   // was: databaseHelper = DatabaseHelper.getInstance(this)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -46,10 +48,13 @@ class CallMonitoringService : Service() {
                 if (BuildConfig.DEBUG) Log.d(TAG, "Call monitoring already running")
             }
         } else {
-            if (BuildConfig.DEBUG) Log.w(TAG, "Missing required permissions, cannot start monitoring")
+            if (BuildConfig.DEBUG) Log.w(
+                TAG,
+                "Missing required permissions, cannot start monitoring"
+            )
             stopSelf()   // ✅ Stop immediately
         }
-        
+
         startForeground(NOTIFICATION_ID, createNotification())
 
         if (intent != null && intent.hasExtra("incoming_number")) {
@@ -126,7 +131,10 @@ class CallMonitoringService : Service() {
     private fun startCallMonitoring() {
         try {
             if (!hasRequiredPermissions()) {
-                if (BuildConfig.DEBUG) Log.w(TAG, "Missing required permissions for call monitoring")
+                if (BuildConfig.DEBUG) Log.w(
+                    TAG,
+                    "Missing required permissions for call monitoring"
+                )
                 return
             }
 
@@ -179,7 +187,8 @@ class CallMonitoringService : Service() {
             // If manager is null, the service is not available
             if (manager == null) return false
 
-            val serviceName = "${context.packageName}.${CallMonitoringService::class.java.simpleName}"
+            val serviceName =
+                "${context.packageName}.${CallMonitoringService::class.java.simpleName}"
             return try {
                 manager.getRunningServices(Int.MAX_VALUE)
                     .any { it.service.className == serviceName }

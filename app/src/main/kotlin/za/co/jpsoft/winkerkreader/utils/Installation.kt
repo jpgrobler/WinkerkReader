@@ -19,7 +19,10 @@ object Installation {
         var sID = false
         val key: Int
         if (id.length > 7) {
-            key = Character.getNumericValue(id[1]) + Character.getNumericValue(id[4]) * Character.getNumericValue(id[8])
+            key =
+                Character.getNumericValue(id[1]) + Character.getNumericValue(id[4]) * Character.getNumericValue(
+                    id[8]
+                )
         }
         if (!sID) {
             val installation = File(context.filesDir, INSTALLATION)
@@ -51,7 +54,10 @@ object Installation {
             val bytes = ByteArray(f.length().toInt())
             f.readFully(bytes)
             val lid = String(bytes)
-            val key = Character.getNumericValue(id[1]) + Character.getNumericValue(id[4]) * Character.getNumericValue(id[8])
+            val key =
+                Character.getNumericValue(id[1]) + Character.getNumericValue(id[4]) * Character.getNumericValue(
+                    id[8]
+                )
             return lid == key.toString()
         }
     }

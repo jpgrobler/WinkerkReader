@@ -2,25 +2,25 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
+    android:background="?attr/colorSurface"
     android:gravity="center_vertical"
-    android:padding="8dp"
-    android:background="?attr/colorSurface">
+    android:orientation="horizontal"
+    android:padding="8dp">
 
     <CheckBox
         android:id="@+id/option_checkbox"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:checked="true"
-        android:buttonTint="?attr/colorPrimary" />
+        android:buttonTint="?attr/colorPrimary"
+        android:checked="true" />
 
     <TextView
         android:id="@+id/option_title"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
+        android:paddingStart="8dp"
         android:textAppearance="@android:style/TextAppearance.Medium"
-        android:textColor="?attr/colorOnSurface"
-        android:paddingStart="8dp" />
+        android:textColor="?attr/colorOnSurface" />
 
 </LinearLayout>

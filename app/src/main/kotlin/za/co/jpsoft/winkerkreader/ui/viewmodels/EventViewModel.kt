@@ -52,9 +52,9 @@ class EventViewModel(application: Application) : AndroidViewModel(application) {
 
         val selection = when (eventType) {
             "Verjaar" -> buildBirthdaySelection(currentMonth, currentDay)
-            "Doop"    -> buildBaptismSelection(currentMonth, currentDay)
+            "Doop" -> buildBaptismSelection(currentMonth, currentDay)
             "Huwelik" -> buildWeddingSelection(currentMonth, currentDay)
-            "Bely"    -> buildConfessionSelection(currentMonth, currentDay)
+            "Bely" -> buildConfessionSelection(currentMonth, currentDay)
             else -> {
                 if (BuildConfig.DEBUG) Log.e("EventViewModel", "Invalid event type: $eventType")
                 return emptyList()
@@ -75,7 +75,10 @@ class EventViewModel(application: Application) : AndroidViewModel(application) {
 
         if (BuildConfig.DEBUG) Log.d("EventViewModel", "Built ${members.size} members")
         members.take(3).forEach {
-            if (BuildConfig.DEBUG) Log.d("EventViewModel", "Sample: ${it.name} ${it.surname}, id=${it.id}")
+            if (BuildConfig.DEBUG) Log.d(
+                "EventViewModel",
+                "Sample: ${it.name} ${it.surname}, id=${it.id}"
+            )
         }
         return members
     }
@@ -137,10 +140,16 @@ class EventViewModel(application: Application) : AndroidViewModel(application) {
                 null,
                 null
             ).also { cursor ->
-                if (BuildConfig.DEBUG) Log.d("EventViewModel", "Query returned ${cursor?.count ?: 0} rows")
+                if (BuildConfig.DEBUG) Log.d(
+                    "EventViewModel",
+                    "Query returned ${cursor?.count ?: 0} rows"
+                )
             }
         } catch (e: Exception) {
-            if (BuildConfig.DEBUG) Log.e("EventViewModel", "Query failed: ${e.message}\nQuery: $query")
+            if (BuildConfig.DEBUG) Log.e(
+                "EventViewModel",
+                "Query failed: ${e.message}\nQuery: $query"
+            )
             null
         }
     }

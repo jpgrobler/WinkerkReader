@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/widget_pastoral_description"
+    android:initialLayout="@layout/widget_pastoral_keyguard"
     android:minWidth="250dp"
     android:minHeight="40dp"
-    android:updatePeriodMillis="0"
-    android:initialLayout="@layout/widget_pastoral_keyguard"
-    android:widgetCategory="keyguard"
     android:resizeMode="horizontal|vertical"
-    android:description="@string/widget_pastoral_description" />
+    android:updatePeriodMillis="0"
+    android:widgetCategory="keyguard" />

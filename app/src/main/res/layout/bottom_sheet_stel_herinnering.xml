@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -9,8 +8,8 @@
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:fillViewport="true"
-        android:background="?attr/colorSurface">
+        android:background="?attr/colorSurface"
+        android:fillViewport="true">
 
         <LinearLayout
             android:id="@+id/content_container"
@@ -26,17 +25,18 @@
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="4dp"
                 android:layout_marginBottom="6dp"
-                android:background="?attr/colorPrimary"
-                android:alpha="0.3" />
+                android:alpha="0.3"
+                android:background="?attr/colorPrimary" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:paddingHorizontal="24dp"
+                android:paddingBottom="8dp"
                 android:text="@string/detail_stel_herinnering"
                 android:textAppearance="?attr/textAppearanceTitleMedium"
-                android:textColor="?attr/colorOnSurface"
-                android:paddingHorizontal="24dp"
-                android:paddingBottom="8dp" />
+                android:textColor="?attr/colorOnSurface" />
+
             <ProgressBar
                 android:id="@+id/progressBar"
                 android:layout_width="wrap_content"
@@ -46,13 +46,13 @@
             <!-- Mode toggle -->
             <com.google.android.material.tabs.TabLayout
                 android:id="@+id/tab_mode"
+                style="@style/Widget.Material3.TabLayout.Secondary"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="12dp"
                 android:layout_marginBottom="8dp"
-                app:tabMode="fixed"
                 app:tabGravity="fill"
-                style="@style/Widget.Material3.TabLayout.Secondary" />
+                app:tabMode="fixed" />
 
             <!-- ===== TEMPLATE PANEL ===== -->
             <LinearLayout
@@ -61,6 +61,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:visibility="visible">
+
                 <ProgressBar
                     android:id="@+id/templateProgress"
                     android:layout_width="wrap_content"
@@ -72,18 +73,18 @@
                     android:id="@+id/rv_templates"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:paddingHorizontal="8dp"
-                    android:nestedScrollingEnabled="false" />
+                    android:nestedScrollingEnabled="false"
+                    android:paddingHorizontal="8dp" />
 
                 <!-- Anchor date -->
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/herinnering_verwysingsdatum"
-                    android:textAppearance="?attr/textAppearanceLabelMedium"
                     android:paddingHorizontal="24dp"
                     android:paddingTop="16dp"
-                    android:paddingBottom="4dp" />
+                    android:paddingBottom="4dp"
+                    android:text="@string/herinnering_verwysingsdatum"
+                    android:textAppearance="?attr/textAppearanceLabelMedium" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -110,24 +111,35 @@
                     android:paddingTop="8dp"
                     android:visibility="gone" />
 
-                <!-- Preview header & list -->
+                <!-- Preview header, hint & list -->
                 <TextView
                     android:id="@+id/tv_preview_header"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/herinnering_voorskou"
-                    android:textAppearance="?attr/textAppearanceLabelMedium"
                     android:paddingHorizontal="24dp"
                     android:paddingTop="16dp"
                     android:paddingBottom="4dp"
+                    android:text="@string/herinnering_voorskou"
+                    android:textAppearance="?attr/textAppearanceLabelMedium"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/tv_preview_hint"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="24dp"
+                    android:paddingBottom="4dp"
+                    android:text="@string/herinnering_voorskou_hint"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textColor="?attr/colorOnSurfaceVariant"
                     android:visibility="gone" />
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rv_preview"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:paddingHorizontal="16dp"
                     android:nestedScrollingEnabled="false"
+                    android:paddingHorizontal="16dp"
                     android:visibility="gone" />
 
             </LinearLayout>
@@ -144,10 +156,10 @@
                 <!-- Ad-hoc fields -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/til_title"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="@string/herinnering_titel"
-                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
+                    android:hint="@string/herinnering_titel">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/et_title"
@@ -159,11 +171,11 @@
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/til_note"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="@string/herinnering_nota"
                     android:layout_marginTop="8dp"
-                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
+                    android:hint="@string/herinnering_nota">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/et_note"
@@ -208,8 +220,8 @@
                 android:layout_gravity="center_horizontal"
                 android:layout_marginHorizontal="24dp"
                 android:layout_marginTop="16dp"
-                android:text="@string/herinnering_bevestig"
-                android:enabled="false" />
+                android:enabled="false"
+                android:text="@string/herinnering_bevestig" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

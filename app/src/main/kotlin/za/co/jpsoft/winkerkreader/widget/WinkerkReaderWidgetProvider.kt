@@ -102,10 +102,11 @@ class WinkerkReaderWidgetProvider : AppWidgetProvider() {
                 )
                 setOnClickPendingIntent(R.id.widget_image, clickPI)
 
-                val clickUpdateIntent = Intent(context, WinkerkReaderWidgetProvider::class.java).apply {
-                    action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
-                    putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, intArrayOf(appWidgetId))
-                }
+                val clickUpdateIntent =
+                    Intent(context, WinkerkReaderWidgetProvider::class.java).apply {
+                        action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+                        putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, intArrayOf(appWidgetId))
+                    }
                 val clickUpdatePI = PendingIntent.getBroadcast(
                     context, 0, clickUpdateIntent, pendingIntentFlags
                 )
@@ -127,7 +128,8 @@ class WinkerkReaderWidgetProvider : AppWidgetProvider() {
                 // ✅ Add timestamp (same logic as pastoral widget)
                 val prefs = context.getSharedPreferences("widget_prefs", Context.MODE_PRIVATE)
                 val lastRefresh = prefs.getLong("last_refresh_time", System.currentTimeMillis())
-                val timeStr = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(lastRefresh))
+                val timeStr =
+                    SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(lastRefresh))
                 setTextViewText(R.id.widget_update_time, "Laas opgedateer: $timeStr")
                 setEmptyView(R.id.words, R.id.widget_empty)
                 val headerText = getEventEmojis(context)
@@ -144,6 +146,7 @@ class WinkerkReaderWidgetProvider : AppWidgetProvider() {
             if (BuildConfig.DEBUG) Log.e(TAG, "Error updating widget $appWidgetId", e)
         }
     }
+
     private fun getEventEmojis(context: Context): String {
         val settings = SettingsManager.getInstance(context)
         val emojis = mutableListOf<String>()
@@ -159,6 +162,7 @@ class WinkerkReaderWidgetProvider : AppWidgetProvider() {
 
         return emojis.joinToString(" ")
     }
+
     /**
      * Schedule the next automatic widget update.
      */
@@ -238,7 +242,10 @@ class WinkerkReaderWidgetProvider : AppWidgetProvider() {
             )
             @Suppress("DEPRECATION")
             appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetIds, R.id.words)
-            if (BuildConfig.DEBUG) Log.d(TAG, "Notified data change for ${appWidgetIds.size} widgets")
+            if (BuildConfig.DEBUG) Log.d(
+                TAG,
+                "Notified data change for ${appWidgetIds.size} widgets"
+            )
         } catch (e: Exception) {
             if (BuildConfig.DEBUG) Log.e(TAG, "Error updating widget", e)
         }

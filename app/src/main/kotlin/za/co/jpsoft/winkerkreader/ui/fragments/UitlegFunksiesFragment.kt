@@ -56,7 +56,11 @@ class UitlegFunksiesFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         settingsManager = SettingsManager.getInstance(requireContext())
 
-        val tempAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, listOf("Laai kalenders…"))
+        val tempAdapter = ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_spinner_item,
+            listOf("Laai kalenders…")
+        )
         tempAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         binding.calendarSpinner.adapter = tempAdapter
 
@@ -129,12 +133,19 @@ class UitlegFunksiesFragment : Fragment() {
 
         // NEW: spinner change tracking, mirroring calendarSpinner's guard against
         // firing during initial load
-        binding.biometricTimeoutSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                onUserChanged()
+        binding.biometricTimeoutSpinner.onItemSelectedListener =
+            object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(
+                    parent: AdapterView<*>?,
+                    view: View?,
+                    position: Int,
+                    id: Long
+                ) {
+                    onUserChanged()
+                }
+
+                override fun onNothingSelected(parent: AdapterView<*>?) {}
             }
-            override fun onNothingSelected(parent: AdapterView<*>?) {}
-        }
 
         binding.funksoieStoor.setOnClickListener { saveFunctionSettings() }
     }
@@ -151,18 +162,25 @@ class UitlegFunksiesFragment : Fragment() {
         }
         initialCalendarId = selectedId
 
-        binding.calendarSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                val activity = requireActivity() as? UitlegActivity ?: return
-                val calId = activity.getCalendarIdAtPosition(position)
-                listener?.onCallCalendarSelected(calId)
-                // Only mark dirty if the user actually picked a different calendar
-                if (calId != initialCalendarId) {
-                    onUserChanged()
+        binding.calendarSpinner.onItemSelectedListener =
+            object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(
+                    parent: AdapterView<*>?,
+                    view: View?,
+                    position: Int,
+                    id: Long
+                ) {
+                    val activity = requireActivity() as? UitlegActivity ?: return
+                    val calId = activity.getCalendarIdAtPosition(position)
+                    listener?.onCallCalendarSelected(calId)
+                    // Only mark dirty if the user actually picked a different calendar
+                    if (calId != initialCalendarId) {
+                        onUserChanged()
+                    }
                 }
+
+                override fun onNothingSelected(parent: AdapterView<*>?) {}
             }
-            override fun onNothingSelected(parent: AdapterView<*>?) {}
-        }
 
         // Update save state after adapter is set
         isInitializing = false
@@ -193,7 +211,8 @@ class UitlegFunksiesFragment : Fragment() {
         if (binding.uitlegW3.isChecked != initialW3) return true
         if (binding.autoStartSwitch.isChecked != initialAutoStart) return true
         if (binding.uitlegBiometricLock.isChecked != initialBiometricLock) return true
-        val selectedTimeoutMs = if (binding.biometricTimeoutSpinner.selectedItemPosition == 0) Long.MAX_VALUE else 10_000L
+        val selectedTimeoutMs =
+            if (binding.biometricTimeoutSpinner.selectedItemPosition == 0) Long.MAX_VALUE else 10_000L
         if (selectedTimeoutMs != initialBiometricTimeoutMs) return true
         if (binding.calendarSpinner.adapter != null && binding.calendarSpinner.adapter.count > 0) {
             val firstItem = binding.calendarSpinner.adapter.getItem(0)?.toString()

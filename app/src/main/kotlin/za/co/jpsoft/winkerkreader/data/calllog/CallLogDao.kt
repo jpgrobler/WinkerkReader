@@ -11,13 +11,20 @@ interface CallLogDao {
 
     // --- Finished call log ---
 
-    @Query("""
+    @Query(
+        """
         SELECT COUNT(*) FROM call_logs
         WHERE callerInfo = :callerInfo
           AND ABS(timestamp - :timestamp) < :timeWindowMs
           AND source = :source
-    """)
-    suspend fun countDuplicates(callerInfo: String, timestamp: Long, source: String, timeWindowMs: Long = 3000): Int
+    """
+    )
+    suspend fun countDuplicates(
+        callerInfo: String,
+        timestamp: Long,
+        source: String,
+        timeWindowMs: Long = 3000
+    ): Int
 
     @Insert
     suspend fun insert(entity: CallLogEntity): Long
