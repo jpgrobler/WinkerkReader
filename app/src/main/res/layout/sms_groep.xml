@@ -1,0 +1,117 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:ns1="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/colorSurface"
+    android:padding="8dp">
+
+
+    <LinearLayout
+        android:id="@+id/sms_buttons"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:orientation="vertical">
+
+
+        <ImageButton
+            android:id="@+id/sms_cancel"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="15dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_close"
+            ns1:tint="?attr/colorOnSurfaceVariant" />
+
+
+        <RelativeLayout
+            android:layout_width="80dp"
+            android:layout_height="wrap_content">
+
+
+            <TextView
+                android:id="@+id/lys_count"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:text="@string/sms_groep_telling"
+                android:textAlignment="center"
+                android:textColor="?attr/colorPrimary"
+                android:textStyle="bold" />
+
+
+            <ImageView
+                android:id="@+id/sms_stuur"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginEnd="3dp"
+                android:contentDescription="SMS"
+                android:paddingTop="10dp"
+                android:scaleType="fitXY"
+                android:src="@drawable/sms_empty"
+                ns1:tint="?attr/colorPrimary" />
+
+
+        </RelativeLayout>
+
+
+        <TextView
+            android:id="@+id/sms_char_count"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/sms_groep_letters"
+            android:textAlignment="center"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+
+
+    </LinearLayout>
+
+
+    <TextView
+        android:id="@+id/groep_sms_titel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/meelewingLysTitel"
+        android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+        android:textColor="?attr/colorPrimary"
+        android:textStyle="bold" />
+
+
+    <EditText
+        android:id="@+id/sms_boodskap"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/smstip"
+        android:layout_below="@+id/groep_sms_titel"
+        android:layout_toStartOf="@+id/sms_buttons"
+        android:autofillHints="Edit Sms Boodskap"
+        android:background="@drawable/border"
+        android:backgroundTint="?attr/colorPrimary"
+        android:inputType="textMultiLine"
+        android:maxLength="160"
+        android:textAlignment="textStart"
+        android:textColor="?attr/colorOnSurface" />
+
+
+    <TextView
+        android:id="@+id/smstip"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/sms_buttons"
+        android:text="@string/smstiptext"
+        android:textAlignment="center"
+        android:textColor="?attr/colorOnSurfaceVariant" />
+
+
+    <ListView
+        android:id="@android:id/list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/smstip"
+        android:layout_alignParentBottom="true"
+        android:background="?attr/colorSurface" />
+
+
+</RelativeLayout>

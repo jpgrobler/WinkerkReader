@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base seed colour (used if dynamic colour is off) -->
+    <color name="seed_color">#3F51B5</color>
+
+    <!-- M3 Colour roles (DARK) -->
+    <color name="md_theme_primary">#B5C2FF</color>
+    <color name="md_theme_onPrimary">#001970</color>
+    <color name="md_theme_primaryContainer">#1A36A1</color>
+    <color name="md_theme_onPrimaryContainer">#DDE1FF</color>
+
+    <color name="md_theme_secondary">#4FDADA</color>
+    <color name="md_theme_onSecondary">#003737</color>
+    <color name="md_theme_secondaryContainer">#005050</color>
+    <color name="md_theme_onSecondaryContainer">#71F7F7</color>
+
+    <color name="md_theme_tertiary">#E2B7F0</color>
+    <color name="md_theme_onTertiary">#4B185B</color>
+    <color name="md_theme_tertiaryContainer">#633773</color>
+    <color name="md_theme_onTertiaryContainer">#F4D9FF</color>
+
+    <color name="md_theme_error">#FFB4AB</color>
+    <color name="md_theme_onError">#690005</color>
+    <color name="md_theme_errorContainer">#93000A</color>
+    <color name="md_theme_onErrorContainer">#FFDAD6</color>
+
+    <color name="md_theme_surface">#11131F</color>
+    <color name="md_theme_onSurface">#E2E2EC</color>
+    <color name="md_theme_surfaceVariant">#45475C</color>
+    <color name="md_theme_onSurfaceVariant">#C5C6D6</color>
+
+    <color name="md_theme_outline">#8F90A8</color>
+    <color name="md_theme_outlineVariant">#45475C</color>
+
+    <color name="md_theme_surfaceTint">#B5C2FF</color>
+
+    <!-- Surface container tonal steps (DARK) -->
+    <color name="md_theme_surfaceContainerLowest">#11131F</color>
+    <color name="md_theme_surfaceContainerLow">#191C2A</color>
+    <color name="md_theme_surfaceContainer">#212436</color>
+    <color name="md_theme_surfaceContainerHigh">#282C41</color>
+    <color name="md_theme_surfaceContainerHighest">#30344D</color>
+
+    <!-- Legacy colours - FIXED DARK THEME VALUES -->
+    <color name="colorAccent">#F06292</color>
+    <color name="background_light">#121212</color>
+    <color name="surface_light">#1E1E1E</color>
+    <color name="text_primary_light">#E0E0E0</color>
+    <color name="colorPrimary">#5C6BC0</color>
+    <color name="colorPrimaryDark">#3F51B5</color>
+    <color name="selected_view">#1A36A1</color>          <!-- DARK primary container -->
+    <color name="ripple_color">#33FFFFFF</color>
+    <color name="default_gemeente_1">#1E1E1E</color>     <!-- DARK surface -->
+    <color name="default_gemeente_2">#66BB6A</color>     <!-- lighter green -->
+    <color name="default_gemeente_3">#FFA726</color>     <!-- lighter orange -->
+    <color name="inactive_background">#6D1A1A</color>    <!-- DARK red tint -->
+    <color name="primary_blue">#5C6BC0</color>
+    <color name="white">#FFFFFF</color>
+    <color name="text_secondary_light">#B3FFFFFF</color>
+</resources>
