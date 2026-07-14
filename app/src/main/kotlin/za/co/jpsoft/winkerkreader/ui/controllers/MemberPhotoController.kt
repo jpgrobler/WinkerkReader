@@ -131,7 +131,7 @@ class MemberPhotoController(
                 binding.detailKontakFoto.layoutParams.width = pixels
                 binding.detailKontakFoto.requestLayout()
 
-                Glide.with(activity)
+                Glide.with(binding.detailKontakFoto)
                     .load(file)
                     .override(pixels, pixels)
                     .centerCrop()
@@ -179,7 +179,7 @@ class MemberPhotoController(
         binding.detailKontakFoto.requestLayout()
 
         val photoFile = File(activity.getExternalFilesDir(null), "photos/$newPath")
-        Glide.with(activity)
+        Glide.with(binding.detailKontakFoto)
             .load(photoFile)
             .override(pixels, pixels)
             .centerCrop()

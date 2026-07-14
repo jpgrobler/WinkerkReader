@@ -33,14 +33,23 @@ class CallMonitoringService : Service() {
         null   // was: private var databaseHelper: DatabaseHelper? = null
     private var pendingIncomingNumber: String? = null
 
+
     override fun onCreate() {
         super.onCreate()
+        isServiceRunning = true  // Add this
         if (BuildConfig.DEBUG) Log.d(TAG, "Call Monitoring Service created")
         createNotificationChannel()
-        callLogDao = CallLogDatabase.getInstance(this)
-            .callLogDao()   // was: databaseHelper = DatabaseHelper.getInstance(this)
+        callLogDao = CallLogDatabase.getInstance(this).callLogDao()
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        isServiceRunning = false  // Add this
+        if (BuildConfig.DEBUG) Log.d(TAG, "Call Monitoring Service destroyed")
+        phoneCallMonitor?.stopMonitoring()
+        phoneCallMonitor = null
+        callLogDao = null
+    }
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (BuildConfig.DEBUG) Log.d(TAG, "Call Monitoring Service started")
         if (hasRequiredPermissions()) {
@@ -82,15 +91,6 @@ class CallMonitoringService : Service() {
         return START_STICKY
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        if (BuildConfig.DEBUG) Log.d(TAG, "Call Monitoring Service destroyed")
-        phoneCallMonitor?.stopMonitoring()
-        phoneCallMonitor = null
-        // Room's CallLogDatabase is a process-wide singleton like DatabaseHelper
-        // was — don't close it here, just drop this service's local reference.
-        callLogDao = null
-    }
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -183,16 +183,20 @@ class CallMonitoringService : Service() {
         private const val NOTIFICATION_ID = 1
         private const val NO_CALENDAR_ID = -1L
 
+        // Add this for consistency with other services
+        private var isServiceRunning = false
+
+        @JvmStatic
+        fun isRunning(): Boolean = isServiceRunning
+
+        // Keep the existing isServiceRunning method for compatibility
         fun isServiceRunning(context: Context): Boolean {
             val manager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                // Type-safe API (requires API 23+)
                 context.getSystemService(ActivityManager::class.java)
             } else {
-                // Legacy fallback with safe cast
                 context.getSystemService(ACTIVITY_SERVICE) as? ActivityManager
             }
 
-            // If manager is null, the service is not available
             if (manager == null) return false
 
             val serviceName =
@@ -201,7 +205,6 @@ class CallMonitoringService : Service() {
                 manager.getRunningServices(Int.MAX_VALUE)
                     .any { it.service.className == serviceName }
             } catch (e: Exception) {
-                // getRunningServices may throw on some devices; fallback to false
                 false
             }
         }

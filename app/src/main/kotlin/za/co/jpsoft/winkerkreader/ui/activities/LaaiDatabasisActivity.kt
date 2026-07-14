@@ -48,13 +48,14 @@ import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.WinkerkContract
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.WINKERK_DB
+import za.co.jpsoft.winkerkreader.data.WinkerkDbHelper
 import za.co.jpsoft.winkerkreader.data.pastoral.PastoralDatabase
 import za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase
 import za.co.jpsoft.winkerkreader.databinding.LaaidatabasisBinding
 import za.co.jpsoft.winkerkreader.utils.MainNavigationController
 import za.co.jpsoft.winkerkreader.utils.PastoralDatabaseBackup
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
-import za.co.jpsoft.winkerkreader.utils.WidgetDataRepository
+import za.co.jpsoft.winkerkreader.widget.WidgetDataRepository
 import za.co.jpsoft.winkerkreader.workers.FileDownloadWorker
 import za.co.jpsoft.winkerkreader.workers.PhotoDownloadWorker
 import java.io.File
@@ -207,6 +208,9 @@ class LaaiDatabasisActivity : AppCompatActivity() {
 
         settings = getSharedPreferences(WinkerkContract.PREFS_USER_INFO, MODE_PRIVATE)
         settingsManager = SettingsManager.getInstance(this)
+
+        refreshDatabaseDate()
+
         initializeSettings()
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
@@ -522,14 +526,95 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         binding.laaiIndeterminateBar2.visibility = View.GONE
     }
 
+    override fun onResume() {
+        super.onResume()
+        // ✅ FIX: Refresh date when returning to activity
+        refreshDatabaseDate()
+        updateDateDisplay()
+    }
+
     private fun initializeDataInfo() {
-        binding.datadate.text = getString(R.string.current_data_info, settingsManager.dataDatum)
+        updateDateDisplay()
         val dropBoxUrl = settings.getString("DropBox", "")
         if (!dropBoxUrl.isNullOrEmpty()) {
             binding.dbLink.setText(dropBoxUrl)
         }
     }
 
+    private fun updateDateDisplay() {
+        val date = settingsManager.dataDatum
+        if (date.isNotEmpty()) {
+            binding.datadate.text = getString(R.string.current_data_info, date)
+        } else {
+            binding.datadate.text = getString(R.string.current_data_info, "Onbekend")
+        }
+    }
+
+    private fun refreshDatabaseDate() {
+        try {
+            WinkerkDbHelper.closeInstance(WinkerkContract.winkerkEntry.WINKERK_DB)
+            // Force a fresh read from the database
+            val db = WinkerkDbHelper.getInstance(
+                this,
+                WinkerkContract.winkerkEntry.WINKERK_DB
+            ).readableDatabase
+            val cursor = db.rawQuery("SELECT DataDatum FROM Datum", null)
+            cursor.use {
+                if (it.moveToFirst()) {
+                    val dateIdx = it.getColumnIndex("DataDatum")
+                    if (dateIdx >= 0) {
+                        val date = it.getString(dateIdx) ?: ""
+                        settingsManager.dataDatum = date
+                        if (BuildConfig.DEBUG) Log.d(TAG, "Database date loaded: $date")
+                    }
+                } else {
+                    settingsManager.dataDatum = ""
+                    if (BuildConfig.DEBUG) Log.d(TAG, "No date found in Datum table")
+                }
+            }
+        } catch (e: Exception) {
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error reading database date", e)
+            settingsManager.dataDatum = ""
+        }
+    }
+
+    private fun refreshDatabaseDateAsync() {
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                // Close existing helper
+                withContext(Dispatchers.Main) {
+                    WinkerkDbHelper.closeInstance(WinkerkContract.winkerkEntry.WINKERK_DB)
+                }
+
+                val db = WinkerkDbHelper.getInstance(
+                    this@LaaiDatabasisActivity,
+                    WinkerkContract.winkerkEntry.WINKERK_DB
+                ).readableDatabase
+
+                val cursor = db.rawQuery("SELECT DataDatum FROM Datum", null)
+                var date = ""
+                cursor.use {
+                    if (it.moveToFirst()) {
+                        val dateIdx = it.getColumnIndex("DataDatum")
+                        if (dateIdx >= 0) {
+                            date = it.getString(dateIdx) ?: ""
+                        }
+                    }
+                }
+
+                withContext(Dispatchers.Main) {
+                    settingsManager.dataDatum = date
+                    updateDateDisplay()
+                }
+            } catch (e: Exception) {
+                if (BuildConfig.DEBUG) Log.e(TAG, "Error loading database date", e)
+                withContext(Dispatchers.Main) {
+                    settingsManager.dataDatum = ""
+                    updateDateDisplay()
+                }
+            }
+        }
+    }
     private fun scanForDatabaseFiles() {
         try {
             getFileList(winkerkEntry.getWkrDir(this))

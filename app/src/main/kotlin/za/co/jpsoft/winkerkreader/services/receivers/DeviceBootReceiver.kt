@@ -1,4 +1,3 @@
-// DeviceBootReceiver.kt - Modified version
 package za.co.jpsoft.winkerkreader.services.receivers
 
 import android.app.AlarmManager
@@ -10,6 +9,10 @@ import android.os.Build
 import android.util.Log
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.services.BootForegroundServiceStarter
+import za.co.jpsoft.winkerkreader.services.CallMonitoringService
+import za.co.jpsoft.winkerkreader.services.ServiceKeepAlive
+import za.co.jpsoft.winkerkreader.services.WhatsAppNotificationService
+import za.co.jpsoft.winkerkreader.utils.ServiceUtils
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import java.util.Calendar
 
@@ -31,65 +34,113 @@ class DeviceBootReceiver : BroadcastReceiver() {
 
         if (BuildConfig.DEBUG) Log.d(TAG, "Boot receiver triggered with action: $action")
 
-        // Handle different boot/restart scenarios
-        when (action) {
-            Intent.ACTION_BOOT_COMPLETED,
-            Intent.ACTION_MY_PACKAGE_REPLACED,
-            "android.intent.action.QUICKBOOT_POWERON" -> {
+        try {
+            // Handle different boot/restart scenarios
+            when (action) {
+                Intent.ACTION_BOOT_COMPLETED,
+                Intent.ACTION_MY_PACKAGE_REPLACED,
+                "android.intent.action.QUICKBOOT_POWERON" -> {
 
-                val settings = SettingsManager.getInstance(context)
+                    // Log running services for debugging
+                    ServiceUtils.logRunningServices(context)
 
-                // ✅ FIXED: Start monitoring services through bridge service to avoid Android 15 restriction
-                startMonitoringServiceIfEnabled(context, settings)
+                    val settings = SettingsManager.getInstance(context)
 
-                // Setup birthday reminder alarm if enabled
-                setupBirthdayAlarmIfEnabled(context, settings)
-            }
-        }
-    }
+                    if (settings == null) {
+                        Log.e(TAG, "SettingsManager is null, cannot continue")
+                        return
+                    }
 
-    private fun startMonitoringServiceIfEnabled(context: Context, settings: SettingsManager) {
-        val autoStartEnabled = settings.autoStartEnabled
+                    // Start monitoring services only if enabled
+                    if (settings.autoStartEnabled) {
+                        if (BuildConfig.DEBUG) {
+                            Log.d(TAG, "Auto-start enabled, checking services...")
+                        }
 
-        if (autoStartEnabled) {
-            try {
-                // ✅ Use the bridge service instead of starting CallMonitoringService directly
-                // This avoids the Android 15 restriction on starting restricted foreground services
-                // from BOOT_COMPLETED receivers
-                val intent = Intent(context, BootForegroundServiceStarter::class.java)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    context.startForegroundService(intent)
-                } else {
-                    context.startService(intent)
+                        // Start WhatsApp Notification Listener (if not already running)
+                        ServiceUtils.startServiceIfNotRunning(
+                            context,
+                            WhatsAppNotificationService::class.java
+                        )
+
+                        // Start Call Monitoring Service (if not already running)
+                        ServiceUtils.startServiceIfNotRunning(
+                            context,
+                            CallMonitoringService::class.java
+                        )
+
+                        // Start Keep Alive Service (if not already running)
+                        ServiceUtils.startServiceIfNotRunning(
+                            context,
+                            ServiceKeepAlive::class.java
+                        )
+
+                        // Start the bridge service if needed (it will stop itself)
+                        ServiceUtils.startServiceIfNotRunning(
+                            context,
+                            BootForegroundServiceStarter::class.java
+                        )
+
+                        if (BuildConfig.DEBUG) {
+                            Log.d(TAG, "✅ All services started (or already running)")
+                            // Log services after starting
+                            ServiceUtils.logRunningServices(context)
+                        }
+
+                    } else {
+                        if (BuildConfig.DEBUG) {
+                            Log.d(TAG, "Auto-start disabled, not starting services")
+                        }
+                    }
+
+                    // Setup birthday alarm if enabled
+                    setupBirthdayAlarmIfEnabled(context, settings)
                 }
-                if (BuildConfig.DEBUG) Log.d(
-                    TAG,
-                    "BootForegroundServiceStarter started successfully"
-                )
-            } catch (e: Exception) {
-                if (BuildConfig.DEBUG) Log.e(TAG, "Failed to start BootForegroundServiceStarter", e)
             }
-        } else {
-            if (BuildConfig.DEBUG) Log.d(TAG, "Auto-start disabled, not starting services")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in DeviceBootReceiver", e)
         }
     }
+
 
     private fun setupBirthdayAlarmIfEnabled(context: Context, settings: SettingsManager) {
-        val reminderEnabled = settings.herinner
-        val timeUpdate = settings.smsTimeUpdate
-
-        if (!reminderEnabled && !timeUpdate) {
-            if (BuildConfig.DEBUG) Log.d(TAG, "Birthday reminder disabled")
-            return
-        }
-
         try {
-            val hour = settings.smsHour
-            val minute = settings.smsMinute
+            val reminderEnabled = try {
+                settings.herinner
+            } catch (e: Exception) {
+                Log.e(TAG, "Error reading herinner", e)
+                false
+            }
+
+            val timeUpdate = try {
+                settings.smsTimeUpdate
+            } catch (e: Exception) {
+                Log.e(TAG, "Error reading smsTimeUpdate", e)
+                false
+            }
+
+            if (!reminderEnabled && !timeUpdate) {
+                if (BuildConfig.DEBUG) Log.d(TAG, "Birthday reminder disabled")
+                return
+            }
+
+            val hour = try {
+                settings.smsHour?.toIntOrNull() ?: 8
+            } catch (e: Exception) {
+                Log.e(TAG, "Error reading smsHour", e)
+                8
+            }
+
+            val minute = try {
+                settings.smsMinute?.toIntOrNull() ?: 0
+            } catch (e: Exception) {
+                Log.e(TAG, "Error reading smsMinute", e)
+                0
+            }
 
             val alarmTime = Calendar.getInstance().apply {
-                set(Calendar.HOUR_OF_DAY, hour.toIntOrNull() ?: 8)
-                set(Calendar.MINUTE, minute.toIntOrNull() ?: 0)
+                set(Calendar.HOUR_OF_DAY, hour)
+                set(Calendar.MINUTE, minute)
                 set(Calendar.SECOND, 0)
                 set(Calendar.MILLISECOND, 0)
             }
@@ -97,29 +148,45 @@ class DeviceBootReceiver : BroadcastReceiver() {
             val now = Calendar.getInstance()
 
             // Clear the time update flag
-            settings.smsTimeUpdate = false
-            settings.fromMenu = false
+            try {
+                settings.smsTimeUpdate = false
+                settings.fromMenu = false
+            } catch (e: Exception) {
+                Log.e(TAG, "Error clearing settings flags", e)
+            }
 
-            // Create alarm intent
+            // Create alarm intent with unique request code
             val alarmIntent = Intent(context, AlarmReceiver::class.java).apply {
                 action = "VerjaarSMS"
+                putExtra("alarm_time", System.currentTimeMillis())
+            }
+
+            // Use FLAG_IMMUTABLE for Android 12+ and FLAG_UPDATE_CURRENT
+            val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            } else {
+                PendingIntent.FLAG_UPDATE_CURRENT
             }
 
             val pendingIntent = PendingIntent.getBroadcast(
                 context,
-                0,
+                1001, // Use constant request code
                 alarmIntent,
-                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                flags
             )
 
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager
             if (alarmManager == null) {
-                if (BuildConfig.DEBUG) Log.e(TAG, "AlarmManager is null")
+                Log.e(TAG, "AlarmManager is null")
                 return
             }
 
             // Cancel any existing alarm
-            alarmManager.cancel(pendingIntent)
+            try {
+                alarmManager.cancel(pendingIntent)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error canceling existing alarm", e)
+            }
 
             // Calculate trigger time
             var triggerTime = alarmTime.timeInMillis
@@ -134,8 +201,9 @@ class DeviceBootReceiver : BroadcastReceiver() {
                 TAG,
                 "Birthday reminder alarm scheduled for ${alarmTime.time}"
             )
+
         } catch (e: Exception) {
-            if (BuildConfig.DEBUG) Log.e(TAG, "Failed to setup birthday alarm", e)
+            Log.e(TAG, "Failed to setup birthday alarm", e)
         }
     }
 
@@ -148,29 +216,40 @@ class DeviceBootReceiver : BroadcastReceiver() {
             when {
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
                     // Android 12+ - Check if we can schedule exact alarms
-                    if (alarmManager.canScheduleExactAlarms()) {
-                        alarmManager.setExactAndAllowWhileIdle(
-                            AlarmManager.RTC_WAKEUP,
-                            triggerTime,
-                            pendingIntent
-                        )
-                        if (BuildConfig.DEBUG) Log.d(TAG, "Exact alarm scheduled for Android 12+")
-                    } else {
-                        // Fallback to inexact alarm
+                    try {
+                        if (alarmManager.canScheduleExactAlarms()) {
+                            alarmManager.setExactAndAllowWhileIdle(
+                                AlarmManager.RTC_WAKEUP,
+                                triggerTime,
+                                pendingIntent
+                            )
+                            if (BuildConfig.DEBUG) Log.d(
+                                TAG,
+                                "Exact alarm scheduled for Android 12+"
+                            )
+                        } else {
+                            alarmManager.setAndAllowWhileIdle(
+                                AlarmManager.RTC_WAKEUP,
+                                triggerTime,
+                                pendingIntent
+                            )
+                            if (BuildConfig.DEBUG) Log.w(
+                                TAG,
+                                "Using inexact alarm - exact alarm permission not granted"
+                            )
+                        }
+                    } catch (e: SecurityException) {
+                        Log.e(TAG, "SecurityException scheduling exact alarm", e)
                         alarmManager.setAndAllowWhileIdle(
                             AlarmManager.RTC_WAKEUP,
                             triggerTime,
                             pendingIntent
                         )
-                        if (BuildConfig.DEBUG) Log.w(
-                            TAG,
-                            "Using inexact alarm - exact alarm permission not granted"
-                        )
+                        Log.w(TAG, "Fallback to inexact alarm due to security exception")
                     }
                 }
 
                 else -> {
-                    // Android 6+ (but since minSdk is 26, this is always true)
                     alarmManager.setExactAndAllowWhileIdle(
                         AlarmManager.RTC_WAKEUP,
                         triggerTime,
@@ -179,29 +258,13 @@ class DeviceBootReceiver : BroadcastReceiver() {
                     if (BuildConfig.DEBUG) Log.d(TAG, "Exact alarm scheduled")
                 }
             }
-        } catch (e: SecurityException) {
-            if (BuildConfig.DEBUG) Log.e(
-                TAG,
-                "SecurityException scheduling alarm - permission may be missing",
-                e
-            )
-            // Try inexact alarm as fallback
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to schedule alarm", e)
             try {
-                alarmManager.setAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    triggerTime,
-                    pendingIntent
-                )
-                if (BuildConfig.DEBUG) Log.w(
-                    TAG,
-                    "Fallback to inexact alarm due to security exception"
-                )
+                alarmManager.set(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
+                Log.w(TAG, "Fallback to basic alarm scheduling")
             } catch (fallbackException: Exception) {
-                if (BuildConfig.DEBUG) Log.e(
-                    TAG,
-                    "Failed to schedule fallback alarm",
-                    fallbackException
-                )
+                Log.e(TAG, "All alarm scheduling methods failed", fallbackException)
             }
         }
     }

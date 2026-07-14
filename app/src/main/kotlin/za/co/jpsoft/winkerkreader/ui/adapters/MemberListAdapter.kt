@@ -1,6 +1,5 @@
 package za.co.jpsoft.winkerkreader.ui.adapters
 
-import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
@@ -19,6 +18,8 @@ import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.request.RequestOptions
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.models.MemberItem
@@ -56,6 +57,12 @@ class MemberListAdapter(
             override fun areContentsTheSame(oldItem: MemberItem, newItem: MemberItem) =
                 oldItem == newItem
         }
+
+        private val PHOTO_OPTIONS = RequestOptions()
+            .centerCrop()
+            .skipMemoryCache(false)
+            .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
+            .timeout(5000)  // 5 second timeout
     }
 
     // Renamed to avoid conflict with superclass
@@ -288,7 +295,7 @@ class MemberListAdapter(
             applyVisibilitySettings(settings)
             resetViewState()
 
-            bindPhotoData(item, context)
+            bindPhotoData(item, itemView)
             bindBasicInfo(item)
             bindContactInfo(item, settings)
             bindAgeInfo(item, settings)
@@ -384,8 +391,8 @@ class MemberListAdapter(
             wykTextView.visibility = View.GONE
         }
 
-        private fun bindPhotoData(item: MemberItem, context: Context) {
-            val density = context.resources.displayMetrics.density
+        private fun bindPhotoData(item: MemberItem, view: View) {
+            val density = view.context.resources.displayMetrics.density
             val sizeDp = if (listView == VIEW_TYPE_DETAILED) 50 else 30
             val pixels = (sizeDp * density + 0.5f).toInt()
             fotoImageView.layoutParams.width = pixels
@@ -393,18 +400,21 @@ class MemberListAdapter(
             fotoImageView.requestLayout()
 
             val defaultDrawable = when (item.gender) {
-                "Manlik" -> ContextCompat.getDrawable(context, R.drawable.kman)
-                else -> ContextCompat.getDrawable(context, R.drawable.kvrou)
-            } ?: ContextCompat.getDrawable(context, R.drawable.kontak)
+                "Manlik" -> ContextCompat.getDrawable(view.context, R.drawable.kman)
+                else -> ContextCompat.getDrawable(view.context, R.drawable.kvrou)
+            } ?: ContextCompat.getDrawable(view.context, R.drawable.kontak)
 
-            val photoFile = PhotoHelper.getSyncedPhotoFile(context, item.guid)
+            val photoFile = PhotoHelper.getSyncedPhotoFile(view.context, item.guid)
 
-            Glide.with(context)
+            // ✅ FIX: Use view as the lifecycle parameter
+            Glide.with(view)  // View is lifecycle-aware (cancels on detach)
                 .load(photoFile)
+                .apply(PHOTO_OPTIONS)
                 .placeholder(defaultDrawable)
                 .error(defaultDrawable)
                 .override(pixels, pixels)
                 .centerCrop()
+                .skipMemoryCache(false)  // Cache images for performance
                 .into(fotoImageView)
         }
 

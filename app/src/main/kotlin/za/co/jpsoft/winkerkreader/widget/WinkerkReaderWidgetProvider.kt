@@ -11,19 +11,24 @@ import android.net.Uri
 import android.os.Build
 import android.util.Log
 import android.widget.RemoteViews
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequest
+import androidx.work.WorkManager
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.services.ListViewWidgetService
 import za.co.jpsoft.winkerkreader.ui.activities.MainActivity
 import za.co.jpsoft.winkerkreader.ui.activities.VerjaarSmsActivity
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
+import za.co.jpsoft.winkerkreader.workers.WidgetRefreshWorker
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import java.util.concurrent.TimeUnit
 
 /**
- * Enhanced Widget Provider with modern Android compatibility and error handling.
+ * Enhanced Widget Provider with debounced updates via WorkManager.
  * Maintains compatibility with original layout while adding reliability improvements.
  */
 class WinkerkReaderWidgetProvider : AppWidgetProvider() {
@@ -31,86 +36,69 @@ class WinkerkReaderWidgetProvider : AppWidgetProvider() {
     companion object {
         private const val TAG = "WinkerkReaderWidget"
         const val EXTRA_WORD = "com.commonsware.android.appwidget.lorem.WORD"
-        private const val ACTION_UPDATE_WIDGET = "android.appwidget.action.APPWIDGET_UPDATE"
-        private const val UPDATE_HOUR = 1
-        private const val UPDATE_MINUTE = 0
-        private const val UPDATE_SECOND = 1
-    }
 
-    override fun onUpdate(
-        context: Context,
-        appWidgetManager: AppWidgetManager,
-        appWidgetIds: IntArray
-    ) {
-        if (BuildConfig.DEBUG) Log.d(TAG, "onUpdate called for ${appWidgetIds.size} widgets")
-
-        try {
-            for (appWidgetId in appWidgetIds) {
-                updateSingleWidget(context, appWidgetManager, appWidgetId)
-            }
-            scheduleNextUpdate(context)
-        } catch (e: Exception) {
-            if (BuildConfig.DEBUG) Log.e(TAG, "Error in onUpdate", e)
-        }
-        super.onUpdate(context, appWidgetManager, appWidgetIds)
-    }
-
-    override fun onReceive(context: Context, intent: Intent) {
-        val action = intent.action
-        if (BuildConfig.DEBUG) Log.d(TAG, "onReceive: $action")
-
-        try {
-            if (ACTION_UPDATE_WIDGET == action) {
-                val manager = AppWidgetManager.getInstance(context)
-                val ids = manager.getAppWidgetIds(
+        /**
+         * Fully rebuild and push RemoteViews for every placed instance of this widget,
+         * bypassing the direct-update debounce, and notify the ListView adapter to reload.
+         *
+         * Call this from background refresh paths (e.g. WidgetRefreshWorker) instead of
+         * broadcasting AppWidgetManager.ACTION_APPWIDGET_UPDATE — sending that broadcast
+         * would just re-trigger this class's own onReceive() debounce branch rather than
+         * actually pushing new content to the screen.
+         */
+        fun updateAllWidgets(context: Context) {
+            try {
+                val appWidgetManager = AppWidgetManager.getInstance(context)
+                val appWidgetIds = appWidgetManager.getAppWidgetIds(
                     ComponentName(context, WinkerkReaderWidgetProvider::class.java)
                 )
-                onUpdate(context, manager, ids)
-                updateWidget(context)
+                if (appWidgetIds.isEmpty()) {
+                    if (BuildConfig.DEBUG) Log.d(TAG, "updateAllWidgets: no widgets placed")
+                    return
+                }
+                for (appWidgetId in appWidgetIds) {
+                    lastDirectUpdateTime[appWidgetId] = System.currentTimeMillis()
+                    val widget = buildWidgetRemoteViews(context, appWidgetId)
+                    appWidgetManager.updateAppWidget(appWidgetId, widget)
+                    @Suppress("DEPRECATION")
+                    appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.words)
+                }
+                if (BuildConfig.DEBUG) {
+                    Log.d(
+                        TAG,
+                        "✅ updateAllWidgets pushed refresh to ${appWidgetIds.size} widget(s)"
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error in updateAllWidgets", e)
             }
-        } catch (e: Exception) {
-            if (BuildConfig.DEBUG) Log.e(TAG, "Error in onReceive", e)
         }
-        super.onReceive(context, intent)
-    }
 
-    override fun onEnabled(context: Context) {
-        super.onEnabled(context)
-        if (BuildConfig.DEBUG) Log.d(TAG, "Widget enabled - scheduling updates")
-        scheduleNextUpdate(context)
-    }
-
-    override fun onDisabled(context: Context) {
-        super.onDisabled(context)
-        if (BuildConfig.DEBUG) Log.d(TAG, "Widget disabled - canceling updates")
-        cancelScheduledUpdates(context)
-    }
-
-    /**
-     * Update a single widget instance.
-     */
-    private fun updateSingleWidget(
-        context: Context,
-        appWidgetManager: AppWidgetManager,
-        appWidgetId: Int
-    ) {
-        try {
-            val widget = RemoteViews(context.packageName, R.layout.widget).apply {
+        /**
+         * Builds the full RemoteViews tree for a single widget instance: click intents,
+         * the ListView remote adapter, timestamp text and header emojis.
+         *
+         * This is the single source of truth for widget content — used by the normal
+         * update path, the force-refresh path, and updateAllWidgets() so they can never
+         * drift out of sync again.
+         */
+        private fun buildWidgetRemoteViews(context: Context, appWidgetId: Int): RemoteViews {
+            return RemoteViews(context.packageName, R.layout.widget).apply {
                 val clickIntent = Intent(context, MainActivity::class.java)
                 val clickPI = PendingIntent.getActivity(
                     context, 0, clickIntent, pendingIntentFlags
                 )
                 setOnClickPendingIntent(R.id.widget_image, clickPI)
 
-                val clickUpdateIntent =
+                // Update button now uses force refresh
+                val forceUpdateIntent =
                     Intent(context, WinkerkReaderWidgetProvider::class.java).apply {
-                        action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
-                        putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, intArrayOf(appWidgetId))
+                        action = ACTION_FORCE_UPDATE
                     }
-                val clickUpdatePI = PendingIntent.getBroadcast(
-                    context, 0, clickUpdateIntent, pendingIntentFlags
+                val forceUpdatePI = PendingIntent.getBroadcast(
+                    context, 0, forceUpdateIntent, pendingIntentFlags
                 )
-                setOnClickPendingIntent(R.id.widget_image3, clickUpdatePI)
+                setOnClickPendingIntent(R.id.widget_image3, forceUpdatePI)
 
                 val svcIntent = Intent(context, ListViewWidgetService::class.java).apply {
                     putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
@@ -125,7 +113,8 @@ class WinkerkReaderWidgetProvider : AppWidgetProvider() {
                     context, 0, listClickIntent, pendingIntentFlags
                 )
                 setPendingIntentTemplate(R.id.words, listClickPI)
-                // ✅ Add timestamp (same logic as pastoral widget)
+
+                // Add timestamp
                 val prefs = context.getSharedPreferences("widget_prefs", Context.MODE_PRIVATE)
                 val lastRefresh = prefs.getLong("last_refresh_time", System.currentTimeMillis())
                 val timeStr =
@@ -135,32 +124,220 @@ class WinkerkReaderWidgetProvider : AppWidgetProvider() {
                 val headerText = getEventEmojis(context)
                 setTextViewText(R.id.widget_header, headerText)
             }
+        }
 
-            // Notify data changed before updating widget
+        private fun getEventEmojis(context: Context): String {
+            val settings = SettingsManager.getInstance(context)
+            val emojis = mutableListOf<String>()
+
+            // Always include birthdays (Verjaar) – they are not filtered
+            emojis.add("🎂")
+
+            // Add other events based on user settings
+            if (settings.widgetDoop) emojis.add("💧")
+            if (settings.widgetHuwelik) emojis.add("💍")
+            if (settings.widgetBelydenis) emojis.add("⛪")
+            if (settings.widgetSterf) emojis.add("🪦")
+
+            return emojis.joinToString(" ")
+        }
+
+        /**
+         * Get appropriate PendingIntent flags.
+         */
+        private val pendingIntentFlags: Int
+            get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            } else {
+                PendingIntent.FLAG_UPDATE_CURRENT
+            }
+
+        // IMPORTANT: this must NOT equal AppWidgetManager.ACTION_APPWIDGET_UPDATE
+        // ("android.appwidget.action.APPWIDGET_UPDATE"). Reusing that string here used to
+        // shadow the real system broadcast — onReceive() would intercept every genuine
+        // APPWIDGET_UPDATE and just re-schedule work instead of letting AppWidgetProvider's
+        // base onReceive() dispatch it to onUpdate(). Keep this as our own private alarm action.
+        private const val ACTION_SCHEDULED_UPDATE =
+            "za.co.jpsoft.winkerkreader.SCHEDULED_WIDGET_UPDATE"
+        private const val ACTION_FORCE_UPDATE = "za.co.jpsoft.winkerkreader.FORCE_WIDGET_UPDATE"
+        private const val UPDATE_HOUR = 1
+        private const val UPDATE_MINUTE = 0
+        private const val UPDATE_SECOND = 1
+
+        // Track last update time per widget for debounce
+        private val lastDirectUpdateTime = mutableMapOf<Int, Long>()
+        private const val MIN_DIRECT_UPDATE_MS = 5000L
+    }
+
+    override fun onUpdate(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetIds: IntArray
+    ) {
+        if (BuildConfig.DEBUG) Log.d(TAG, "onUpdate called for ${appWidgetIds.size} widgets")
+
+        try {
+            // Update widgets immediately for first display
+            for (appWidgetId in appWidgetIds) {
+                updateSingleWidget(context, appWidgetManager, appWidgetId)
+            }
+
+            // Schedule debounced refresh for future updates
+            scheduleDebouncedRefresh(context)
+
+            // Schedule next automatic update
+            scheduleNextUpdate(context)
+        } catch (e: Exception) {
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error in onUpdate", e)
+        }
+        super.onUpdate(context, appWidgetManager, appWidgetIds)
+    }
+
+    override fun onReceive(context: Context, intent: Intent) {
+        val action = intent.action
+        if (BuildConfig.DEBUG) Log.d(TAG, "onReceive: $action")
+
+        try {
+            when (action) {
+                ACTION_SCHEDULED_UPDATE -> {
+                    // Our own daily-alarm trigger: schedule a debounced refresh
+                    scheduleDebouncedRefresh(context)
+                }
+
+                ACTION_FORCE_UPDATE -> {
+                    // Force immediate update (bypass debounce)
+                    forceRefreshWidgets(context)
+                }
+
+                else -> {
+                    // Includes the real AppWidgetManager.ACTION_APPWIDGET_UPDATE broadcast,
+                    // which AppWidgetProvider's base onReceive() will route to onUpdate().
+                    super.onReceive(context, intent)
+                }
+            }
+        } catch (e: Exception) {
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error in onReceive", e)
+        }
+    }
+
+    override fun onEnabled(context: Context) {
+        super.onEnabled(context)
+        if (BuildConfig.DEBUG) Log.d(TAG, "Widget enabled - scheduling updates")
+        scheduleNextUpdate(context)
+        scheduleDebouncedRefresh(context)
+    }
+
+    override fun onDisabled(context: Context) {
+        super.onDisabled(context)
+        if (BuildConfig.DEBUG) Log.d(TAG, "Widget disabled - canceling updates")
+        cancelScheduledUpdates(context)
+    }
+
+    /**
+     * Update a single widget instance with debounce.
+     */
+    private fun updateSingleWidget(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetId: Int
+    ) {
+        try {
+            // Debounce direct updates
+            val currentTime = System.currentTimeMillis()
+            val lastUpdate = lastDirectUpdateTime[appWidgetId] ?: 0L
+
+            if (currentTime - lastUpdate < MIN_DIRECT_UPDATE_MS) {
+                if (BuildConfig.DEBUG) {
+                    Log.d(
+                        TAG,
+                        "⏱️ Skipping direct update for widget $appWidgetId - debounce active"
+                    )
+                }
+                return
+            }
+            lastDirectUpdateTime[appWidgetId] = currentTime
+
+            val widget = buildWidgetRemoteViews(context, appWidgetId)
+
+            appWidgetManager.updateAppWidget(appWidgetId, widget)
+
+            // Notify data changed AFTER the adapter has been (re)applied via updateAppWidget
             @Suppress("DEPRECATION")
             appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.words)
 
-            appWidgetManager.updateAppWidget(appWidgetId, widget)
             if (BuildConfig.DEBUG) Log.d(TAG, "Updated widget $appWidgetId")
+
         } catch (e: Exception) {
             if (BuildConfig.DEBUG) Log.e(TAG, "Error updating widget $appWidgetId", e)
         }
     }
 
-    private fun getEventEmojis(context: Context): String {
-        val settings = SettingsManager.getInstance(context)
-        val emojis = mutableListOf<String>()
+    /**
+     * Schedule a debounced refresh using WorkManager
+     */
+    private fun scheduleDebouncedRefresh(context: Context) {
+        try {
+            if (BuildConfig.DEBUG) Log.d(TAG, "📅 Scheduling debounced widget refresh")
 
-        // Always include birthdays (Verjaar) – they are not filtered
-        emojis.add("🎂")
+            val workRequest = OneTimeWorkRequest.Builder(WidgetRefreshWorker::class.java)
+                .setInitialDelay(2, TimeUnit.SECONDS)
+                .addTag(WidgetRefreshWorker.WORK_NAME)
+                .build()
 
-        // Add other events based on user settings
-        if (settings.widgetDoop) emojis.add("💧")
-        if (settings.widgetHuwelik) emojis.add("💍")
-        if (settings.widgetBelydenis) emojis.add("⛪")
-        if (settings.widgetSterf) emojis.add("🪦")
+            WorkManager.getInstance(context)
+                .enqueueUniqueWork(
+                    WidgetRefreshWorker.WORK_NAME,
+                    ExistingWorkPolicy.REPLACE,
+                    workRequest
+                )
 
-        return emojis.joinToString(" ")
+            if (BuildConfig.DEBUG) {
+                Log.d(TAG, "✅ Debounced refresh scheduled (2s delay)")
+            }
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Error scheduling debounced refresh", e)
+        }
+    }
+
+    /**
+     * Force refresh widgets immediately (bypass debounce)
+     */
+    private fun forceRefreshWidgets(context: Context) {
+        try {
+            if (BuildConfig.DEBUG) Log.d(TAG, "⚡ Force refreshing widgets")
+
+            // Clear debounce timestamps
+            lastDirectUpdateTime.clear()
+
+            // Update immediately
+            val appWidgetManager = AppWidgetManager.getInstance(context)
+            val appWidgetIds = appWidgetManager.getAppWidgetIds(
+                ComponentName(context, WinkerkReaderWidgetProvider::class.java)
+            )
+
+            for (appWidgetId in appWidgetIds) {
+                // Bypass debounce by directly updating
+                try {
+                    val currentTime = System.currentTimeMillis()
+                    lastDirectUpdateTime[appWidgetId] = currentTime
+
+                    val widget = buildWidgetRemoteViews(context, appWidgetId)
+                    appWidgetManager.updateAppWidget(appWidgetId, widget)
+                    @Suppress("DEPRECATION")
+                    appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.words)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error in force update for widget $appWidgetId", e)
+                }
+            }
+
+            if (BuildConfig.DEBUG) {
+                Log.d(TAG, "✅ Force refresh completed for ${appWidgetIds.size} widgets")
+            }
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Error force refreshing widgets", e)
+        }
     }
 
     /**
@@ -171,18 +348,15 @@ class WinkerkReaderWidgetProvider : AppWidgetProvider() {
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager
                 ?: return
 
-            // Build the pending intent for the update broadcast
             val intent = Intent(context, WinkerkReaderWidgetProvider::class.java).apply {
-                action = ACTION_UPDATE_WIDGET
+                action = ACTION_SCHEDULED_UPDATE
             }
             val pendingIntent = PendingIntent.getBroadcast(
                 context, 0, intent, pendingIntentFlags
             )
 
-            // Cancel any existing alarm first
             alarmManager.cancel(pendingIntent)
 
-            // Calculate the next desired update time (e.g., 01:00:01 AM daily)
             val calendar = Calendar.getInstance().apply {
                 set(Calendar.HOUR_OF_DAY, UPDATE_HOUR)
                 set(Calendar.MINUTE, UPDATE_MINUTE)
@@ -193,8 +367,6 @@ class WinkerkReaderWidgetProvider : AppWidgetProvider() {
                 calendar.add(Calendar.DAY_OF_MONTH, 1)
             }
 
-            // Use inexact repeating alarm – works on all API levels and does not require
-            // the SCHEDULE_EXACT_ALARM permission.
             alarmManager.setInexactRepeating(
                 AlarmManager.RTC_WAKEUP,
                 calendar.timeInMillis,
@@ -206,7 +378,6 @@ class WinkerkReaderWidgetProvider : AppWidgetProvider() {
                 Log.d(TAG, "Scheduled inexact daily update at ~${calendar.time}")
             }
         } catch (e: Exception) {
-            // Catch any unexpected errors (e.g., security exceptions if any)
             if (BuildConfig.DEBUG) Log.e(TAG, "Error scheduling widget update", e)
         }
     }
@@ -217,7 +388,7 @@ class WinkerkReaderWidgetProvider : AppWidgetProvider() {
     private fun cancelScheduledUpdates(context: Context) {
         try {
             val intent = Intent(context, WinkerkReaderWidgetProvider::class.java).apply {
-                action = ACTION_UPDATE_WIDGET
+                action = ACTION_SCHEDULED_UPDATE
             }
             val pendingIntent = PendingIntent.getBroadcast(
                 context, 0, intent, pendingIntentFlags
@@ -229,7 +400,6 @@ class WinkerkReaderWidgetProvider : AppWidgetProvider() {
             if (BuildConfig.DEBUG) Log.e(TAG, "Error cancelling updates", e)
         }
     }
-
 
     /**
      * Notify data changed for all widgets.
@@ -251,13 +421,4 @@ class WinkerkReaderWidgetProvider : AppWidgetProvider() {
         }
     }
 
-    /**
-     * Get appropriate PendingIntent flags.
-     */
-    private val pendingIntentFlags: Int
-        get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        } else {
-            PendingIntent.FLAG_UPDATE_CURRENT
-        }
 }

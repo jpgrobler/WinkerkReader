@@ -2,6 +2,9 @@ package za.co.jpsoft.winkerkreader
 
 import android.app.Application
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -10,6 +13,9 @@ import com.google.android.material.color.DynamicColors
 import za.co.jpsoft.winkerkreader.utils.AppAuthState
 import za.co.jpsoft.winkerkreader.utils.AppInitializer
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
+import za.co.jpsoft.winkerkreader.widget.PastoralWidgetProvider
+import za.co.jpsoft.winkerkreader.widget.WidgetDataRepository
+import za.co.jpsoft.winkerkreader.widget.WinkerkReaderWidgetProvider
 
 class WinkerkReader : Application() {
 
@@ -45,5 +51,47 @@ class WinkerkReader : Application() {
                 }
             }
         )
+        refreshWidgetsOnStartup()
+    }
+
+    private fun refreshWidgetsOnStartup() {
+        // ✅ Use multiple delays to ensure widget loads
+        Handler(Looper.getMainLooper()).postDelayed({
+            try {
+                if (BuildConfig.DEBUG) Log.d("WinkerkReader", "🔄 First widget refresh attempt")
+
+                // Refresh birthday widget
+                WinkerkReaderWidgetProvider.updateAllWidgets(this)
+
+                // Refresh pastoral widget - force reload
+                PastoralWidgetProvider.forceRefreshWidgets(this)
+
+                // Refresh data cache for birthday widget
+                WidgetDataRepository.invalidateCache()
+                WidgetDataRepository.refreshCache(this)
+
+                if (BuildConfig.DEBUG) {
+                    Log.d("WinkerkReader", "✅ Widgets refreshed on startup (attempt 1)")
+                }
+            } catch (e: Exception) {
+                Log.e("WinkerkReader", "Failed to refresh widgets on startup", e)
+            }
+        }, 1000) // First attempt after 1 second
+
+        // ✅ Second attempt after 3 seconds (to ensure database is ready)
+        Handler(Looper.getMainLooper()).postDelayed({
+            try {
+                if (BuildConfig.DEBUG) Log.d("WinkerkReader", "🔄 Second widget refresh attempt")
+
+                // Force pastoral widget refresh again
+                PastoralWidgetProvider.forceRefreshWidgets(this)
+
+                if (BuildConfig.DEBUG) {
+                    Log.d("WinkerkReader", "✅ Widgets refreshed on startup (attempt 2)")
+                }
+            } catch (e: Exception) {
+                Log.e("WinkerkReader", "Failed second widget refresh attempt", e)
+            }
+        }, 3000) // Second attempt after 3 seconds
     }
 }

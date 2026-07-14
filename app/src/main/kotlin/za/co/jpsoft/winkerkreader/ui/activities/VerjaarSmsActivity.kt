@@ -242,11 +242,11 @@ class VerjaarSmsActivity : AppCompatActivity() {
             if (BuildConfig.DEBUG) {
                 Log.d(TAG, "Observer received ${members.size} members for $keuse")
             }
-
-            // Submit the new data - this replaces the old data
-            lifecycleScope.launch {
-                val pagingData = PagingData.from(members)
-                memberListAdapter.submitData(lifecycle, pagingData)
+            if (members.isNotEmpty()) {
+                lifecycleScope.launch {
+                    val pagingData = PagingData.from(members)
+                    memberListAdapter.submitData(lifecycle, pagingData)
+                }
             }
         }
     }
@@ -376,7 +376,7 @@ class VerjaarSmsActivity : AppCompatActivity() {
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 val remaining = MAX_SMS_MESSAGE_LENGTH - (s?.length ?: 0)
-                binding.charCount.text = getString(R.string.verjaar_char_count, remaining)
+                //binding.charCount.text = getString(R.string.verjaar_char_count, remaining)
 
                 // Debounce save
                 saveRunnable?.let { saveHandler.removeCallbacks(it) }

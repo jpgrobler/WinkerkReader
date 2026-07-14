@@ -51,7 +51,7 @@ object WidgetQueryBuilder {
         SELECT Members.Noemnaam, Members.Van, Members.Gemeente, 'Verjaar' AS Rede,
                substr(Members.Geboortedatum,1,2) AS Day, substr(Members.Geboortedatum,4,2) AS Month,
                Members.Geboortedatum as Datum FROM Members
-        WHERE Members.Rekordstatus = "0" AND Members.Geboortedatum IS NOT NULL AND LENGTH(Members.Geboortedatum) >= 10
+        WHERE Members.Rekordstatus = '0' AND Members.Geboortedatum IS NOT NULL AND LENGTH(Members.Geboortedatum) >= 10
           AND ((CAST(substr(Geboortedatum, 1, 2) AS INTEGER) >= $currentDay AND CAST(substr(Geboortedatum, 4, 2) AS INTEGER) = $currentMonth)
             OR (CAST(substr(Geboortedatum, 1, 2) AS INTEGER) <= $futureDay AND CAST(substr(Geboortedatum, 4, 2) AS INTEGER) = $futureMonth))
     """.trimIndent()
@@ -68,7 +68,7 @@ object WidgetQueryBuilder {
         SELECT Members.Noemnaam, Members.Van, Members.Gemeente, 'Doop' AS Rede,
                substr(Members.[Doop date],1,2) AS Day, substr(Members.[Doop date],4,2) AS Month,
                Members.[Doop date] as Datum FROM Members
-        WHERE Members.Rekordstatus = "0" AND Members.[Doop date] IS NOT NULL AND LENGTH(Members.[Doop date]) >= 10
+        WHERE Members.Rekordstatus = '0' AND Members.[Doop date] IS NOT NULL AND LENGTH(Members.[Doop date]) >= 10
           AND ((CAST(substr(Members.[Doop date], 1, 2) AS INTEGER) >= $currentDay AND CAST(substr(Members.[Doop date], 4, 2) AS INTEGER) = $currentMonth)
             OR (CAST(substr(Members.[Doop date], 1, 2) AS INTEGER) <= $futureDay AND CAST(substr(Members.[Doop date], 4, 2) AS INTEGER) = $futureMonth))
     """.trimIndent()
@@ -85,7 +85,7 @@ object WidgetQueryBuilder {
         SELECT Members.Noemnaam, Members.Van, Members.Gemeente, 'Huwelik' AS Rede,
                substr(Members.[Huwelik date],1,2) AS Day, substr(Members.[Huwelik date],4,2) AS Month,
                Members.[Huwelik date] as Datum FROM Members
-        WHERE Members.Rekordstatus = "0" AND Members.[Huwelik date] IS NOT NULL AND LENGTH(Members.[Huwelik date]) >= 10
+        WHERE Members.Rekordstatus = '0' AND Members.[Huwelik date] IS NOT NULL AND LENGTH(Members.[Huwelik date]) >= 10
           AND ((CAST(substr(Members.[Huwelik date], 1, 2) AS INTEGER) >= $currentDay AND CAST(substr(Members.[Huwelik date], 4, 2) AS INTEGER) = $currentMonth)
             OR (CAST(substr(Members.[Huwelik date], 1, 2) AS INTEGER) <= $futureDay AND CAST(substr(Members.[Huwelik date], 4, 2) AS INTEGER) = $futureMonth))
     """.trimIndent()

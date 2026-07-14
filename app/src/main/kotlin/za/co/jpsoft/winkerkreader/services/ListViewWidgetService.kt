@@ -15,15 +15,11 @@ import android.widget.RemoteViewsService
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
-import za.co.jpsoft.winkerkreader.utils.WidgetDataRepository
+import za.co.jpsoft.winkerkreader.widget.WidgetDataRepository
 import za.co.jpsoft.winkerkreader.widget.WidgetRow
 import za.co.jpsoft.winkerkreader.widget.WinkerkReaderWidgetProvider
 import java.time.LocalDate
 
-/**
- * Consolidated widget service with improved error handling and thread safety.
- * Now reads from WidgetDataRepository, decoupling from the main database.
- */
 class ListViewWidgetService : RemoteViewsService() {
 
     override fun onGetViewFactory(intent: Intent): RemoteViewsFactory {
@@ -36,9 +32,6 @@ class ListViewWidgetService : RemoteViewsService() {
     }
 }
 
-/**
- * Factory that builds the list of widget items from the repository.
- */
 class WidgetViewsFactory(
     private val context: Context,
     intent: Intent
@@ -59,23 +52,33 @@ class WidgetViewsFactory(
     }
 
     override fun onDataSetChanged() {
-        if (BuildConfig.DEBUG) Log.d("WidgetViewsFactory", "onDataSetChanged - refreshing cache")
+        if (BuildConfig.DEBUG) Log.d(tag, "🔄 onDataSetChanged - forcing cache refresh")
+
+        // Force refresh the cache
         WidgetDataRepository.refreshCache(context)
+
         val rows = WidgetDataRepository.getWidgetRows()
-        if (BuildConfig.DEBUG) Log.d("WidgetViewsFactory", "Rows loaded: ${rows.size}")
+        if (BuildConfig.DEBUG) {
+            Log.d(tag, "Rows loaded: ${rows.size}")
+            if (rows.isEmpty()) {
+                Log.w(tag, "⚠️ No widget rows loaded! Check database access.")
+            }
+        }
     }
 
     override fun getCount(): Int {
         val count = WidgetDataRepository.getWidgetRows().size
-        if (BuildConfig.DEBUG) Log.d("WidgetViewsFactory", "getCount = $count")
+        if (BuildConfig.DEBUG) Log.d(tag, "getCount = $count")
         return count
     }
 
     override fun getViewAt(position: Int): RemoteViews {
-        if (BuildConfig.DEBUG) Log.d("WidgetViewsFactory", "getViewAt position=$position")
+        if (BuildConfig.DEBUG) Log.d(tag, "getViewAt position=$position")
         val rows = WidgetDataRepository.getWidgetRows()
-        if (position >= rows.size) {
-            return createErrorRow("Invalid position")
+
+        if (position >= rows.size || rows.isEmpty()) {
+            if (BuildConfig.DEBUG) Log.w(tag, "No rows available at position $position")
+            return createEmptyRow()
         }
         return createViewForRow(rows[position], position, rows)
     }
@@ -110,10 +113,12 @@ class WidgetViewsFactory(
         val textLength = spannable.length
 
         // Date formatting (first 5 chars: "dd/mm")
-        spannable.setSpan(RelativeSizeSpan(0.6f), 0, 5, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        if (textLength >= 5) {
+            spannable.setSpan(RelativeSizeSpan(0.6f), 0, 5, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
 
         // Gray out repeated dates
-        if (position > 0 && day == allRows[position - 1].day) {
+        if (position > 0 && allRows.isNotEmpty() && day == allRows[position - 1].day) {
             spannable.setSpan(
                 ForegroundColorSpan(Color.LTGRAY),
                 0,
@@ -130,11 +135,13 @@ class WidgetViewsFactory(
         }
 
         // Main text color (dark gray)
-        spannable.setSpan(
-            ForegroundColorSpan(Color.argb(200, 50, 50, 50)),
-            6, textLength,
-            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-        )
+        if (textLength > 6) {
+            spannable.setSpan(
+                ForegroundColorSpan(Color.argb(200, 50, 50, 50)),
+                6, textLength,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+        }
 
         // Highlight today's date
         val todayDay = today.toString().substring(8, 10)
@@ -145,11 +152,13 @@ class WidgetViewsFactory(
                 5,
                 Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
             )
-            spannable.setSpan(
-                ForegroundColorSpan(Color.argb(255, 0, 0, 220)),
-                6, textLength,
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
+            if (textLength > 6) {
+                spannable.setSpan(
+                    ForegroundColorSpan(Color.argb(255, 0, 0, 220)),
+                    6, textLength,
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+            }
         }
 
         // Parentheses formatting (age part)
@@ -167,7 +176,7 @@ class WidgetViewsFactory(
 
         remoteViews.setTextViewText(android.R.id.text1, spannable)
 
-        // Set up click intent (opens VerjaarSmsActivity when tapped)
+        // Set up click intent
         val fillInIntent = Intent().apply {
             putExtra(WinkerkReaderWidgetProvider.EXTRA_WORD, name)
         }
@@ -176,11 +185,12 @@ class WidgetViewsFactory(
         return remoteViews
     }
 
-    private fun createErrorRow(errorMessage: String): RemoteViews {
-        return RemoteViews(context.packageName, R.layout.row).apply {
-            setTextViewText(android.R.id.text1, "Error: $errorMessage")
-            setInt(android.R.id.text1, "setBackgroundColor", Color.RED)
-        }
+    private fun createEmptyRow(): RemoteViews {
+        if (BuildConfig.DEBUG) Log.d(tag, "Creating empty row")
+        val remoteViews = RemoteViews(context.packageName, R.layout.row)
+        remoteViews.setTextViewText(android.R.id.text1, "Geen verjaarsdae")
+        remoteViews.setInt(android.R.id.text1, "setBackgroundColor", Color.LTGRAY)
+        return remoteViews
     }
 
     override fun getLoadingView(): RemoteViews? = null

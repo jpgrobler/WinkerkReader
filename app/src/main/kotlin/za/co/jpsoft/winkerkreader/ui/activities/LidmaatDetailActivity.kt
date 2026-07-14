@@ -55,6 +55,7 @@ import za.co.jpsoft.winkerkreader.utils.MemberUtils
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import java.io.File
 
+
 class LidmaatDetailActivity : AppCompatActivity() {
 
     companion object {
@@ -62,6 +63,8 @@ class LidmaatDetailActivity : AppCompatActivity() {
         private const val STATE_IMAGE_URI = "image_uri"
 
         const val EXTRA_MEMBER_GUID = "memberGUID"
+
+
     }
 
     private val navigationController by lazy { MainNavigationController(this) }
@@ -616,13 +619,13 @@ class LidmaatDetailActivity : AppCompatActivity() {
                     val file =
                         File(winkerkEntry.getCacheDir(this@LidmaatDetailActivity) + member.picturePath)
                     if (file.exists()) {
-                        Glide.with(this@LidmaatDetailActivity)
+                        Glide.with(binding.detailKontakFoto)
                             .load(file)
                             .override(256, 256)
                             .centerCrop()
                             .placeholder(R.drawable.clipboard)
                             .error(R.drawable.clipboard)
-                            .into(this)
+                            .into(binding.detailKontakFoto)
                     } else {
                         setImageResource(R.drawable.clipboard)
                     }

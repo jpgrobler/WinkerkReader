@@ -434,8 +434,8 @@ class SettingsManager(private val context: Context) {
         if (prefs.contains(key) && !securePrefs.contains(key)) {
             val value = prefs.getString(key, null)
             if (value != null) {
-                securePrefs.edit().putString(key, value).apply()
-                prefs.edit().remove(key).apply()
+                securePrefs.edit().putString(key, value).commit()
+                prefs.edit().remove(key).commit()
             }
         }
     }
