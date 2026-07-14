@@ -1,3 +1,4 @@
+// DeviceBootReceiver.kt - Modified version
 package za.co.jpsoft.winkerkreader.services.receivers
 
 import android.app.AlarmManager
@@ -8,8 +9,7 @@ import android.content.Intent
 import android.os.Build
 import android.util.Log
 import za.co.jpsoft.winkerkreader.BuildConfig
-import za.co.jpsoft.winkerkreader.services.CallMonitoringService
-import za.co.jpsoft.winkerkreader.ui.activities.MainActivity
+import za.co.jpsoft.winkerkreader.services.BootForegroundServiceStarter
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import java.util.Calendar
 
@@ -37,35 +37,14 @@ class DeviceBootReceiver : BroadcastReceiver() {
             Intent.ACTION_MY_PACKAGE_REPLACED,
             "android.intent.action.QUICKBOOT_POWERON" -> {
 
-
                 val settings = SettingsManager.getInstance(context)
 
-                // Start monitoring services if enabled
+                // ✅ FIXED: Start monitoring services through bridge service to avoid Android 15 restriction
                 startMonitoringServiceIfEnabled(context, settings)
 
                 // Setup birthday reminder alarm if enabled
                 setupBirthdayAlarmIfEnabled(context, settings)
-
-                // Start main activity only on actual boot events (optional, can be removed)
-                // if (action == Intent.ACTION_BOOT_COMPLETED ||
-                //     action == "android.intent.action.QUICKBOOT_POWERON"
-                // ) {
-                //     startMainActivity(context)
-                // }
             }
-        }
-    }
-
-    @Suppress("unused")
-    private fun startMainActivity(context: Context) {
-        try {
-            val intent = Intent(context, MainActivity::class.java).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            context.startActivity(intent)
-            if (BuildConfig.DEBUG) Log.d(TAG, "Main activity started successfully")
-        } catch (e: Exception) {
-            if (BuildConfig.DEBUG) Log.e(TAG, "Failed to start main activity", e)
         }
     }
 
@@ -73,14 +52,25 @@ class DeviceBootReceiver : BroadcastReceiver() {
         val autoStartEnabled = settings.autoStartEnabled
 
         if (autoStartEnabled) {
-            // Start CallMonitoringService
             try {
-                val intent = Intent(context, CallMonitoringService::class.java)
-                context.startForegroundService(intent)
-                if (BuildConfig.DEBUG) Log.d(TAG, "CallMonitoringService started successfully")
+                // ✅ Use the bridge service instead of starting CallMonitoringService directly
+                // This avoids the Android 15 restriction on starting restricted foreground services
+                // from BOOT_COMPLETED receivers
+                val intent = Intent(context, BootForegroundServiceStarter::class.java)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    context.startForegroundService(intent)
+                } else {
+                    context.startService(intent)
+                }
+                if (BuildConfig.DEBUG) Log.d(
+                    TAG,
+                    "BootForegroundServiceStarter started successfully"
+                )
             } catch (e: Exception) {
-                if (BuildConfig.DEBUG) Log.e(TAG, "Failed to start CallMonitoringService", e)
+                if (BuildConfig.DEBUG) Log.e(TAG, "Failed to start BootForegroundServiceStarter", e)
             }
+        } else {
+            if (BuildConfig.DEBUG) Log.d(TAG, "Auto-start disabled, not starting services")
         }
     }
 

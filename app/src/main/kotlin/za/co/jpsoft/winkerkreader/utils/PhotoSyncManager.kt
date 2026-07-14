@@ -1,4 +1,3 @@
-// File: PhotoSyncManager.kt
 package za.co.jpsoft.winkerkreader.utils
 
 import android.content.Context

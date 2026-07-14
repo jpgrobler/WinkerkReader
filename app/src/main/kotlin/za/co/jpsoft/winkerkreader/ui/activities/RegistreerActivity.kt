@@ -5,11 +5,11 @@ import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
-import androidx.core.view.WindowInsetsControllerCompat
 import com.google.android.material.snackbar.Snackbar
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
 import za.co.jpsoft.winkerkreader.databinding.RegistreerBinding
+import za.co.jpsoft.winkerkreader.utils.EdgeToEdgeHelper
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
 
 class RegistreerActivity : AppCompatActivity() {
@@ -30,10 +30,9 @@ class RegistreerActivity : AppCompatActivity() {
         setupBackPressedCallback()
     }
 
+
     private fun setupWindowInsets() {
-        WindowInsetsControllerCompat(window, window.decorView).apply {
-            isAppearanceLightStatusBars = true
-        }
+        EdgeToEdgeHelper.setupEdgeToEdge(window, isLightStatusBar = true)
     }
 
     private fun initializeUI() {

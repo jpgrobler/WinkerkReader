@@ -545,6 +545,10 @@ class MemberViewModel(
             else -> "LIDMAAT_DATA" // fallback
         }
 
+        // Get the current congregation filter, convert to List (null-safe)
+        val congregations = _congregationFilter.value
+        val congregationList = if (congregations.isNotEmpty()) congregations.toList() else null
+
         return repository.countMembersBeforeBirthday(
             eventType = eventType,
             recordStatus = recordStatus,
@@ -552,7 +556,8 @@ class MemberViewModel(
             filterList = _filterList.value,
             sortOrder = sortOrder,
             todayMonth = month,
-            todayDay = day
+            todayDay = day,
+            congregations = _congregationFilter.value.toList()
         )
     }
 

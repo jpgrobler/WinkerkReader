@@ -22,6 +22,8 @@ import za.co.jpsoft.winkerkreader.data.calllog.CallLogDao
 import za.co.jpsoft.winkerkreader.data.calllog.CallLogDatabase
 import za.co.jpsoft.winkerkreader.ui.activities.MainActivity
 import za.co.jpsoft.winkerkreader.utils.CalendarManager
+import za.co.jpsoft.winkerkreader.utils.ForegroundServiceHelper
+import za.co.jpsoft.winkerkreader.utils.ForegroundServiceType
 import za.co.jpsoft.winkerkreader.utils.PhoneCallMonitor
 
 class CallMonitoringService : Service() {
@@ -55,7 +57,13 @@ class CallMonitoringService : Service() {
             stopSelf()   // ✅ Stop immediately
         }
 
-        startForeground(NOTIFICATION_ID, createNotification())
+        val notification = createNotification()
+        ForegroundServiceHelper.startForeground(
+            service = this,
+            id = NOTIFICATION_ID,
+            notification = notification,
+            type = ForegroundServiceType.PHONE_CALL
+        )
 
         if (intent != null && intent.hasExtra("incoming_number")) {
             val number = intent.getStringExtra("incoming_number")

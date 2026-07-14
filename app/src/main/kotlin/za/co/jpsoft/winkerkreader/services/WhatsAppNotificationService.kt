@@ -209,7 +209,7 @@ class WhatsAppNotificationService : NotificationListenerService() {
                             direction = "outgoing",
                             source = appName,
                             timestamp = System.currentTimeMillis(),
-                            displayName = displayName ?: "Unknown"
+                            displayName = displayName
                         )
                     } catch (e: Exception) {
                         if (BuildConfig.DEBUG) Log.e(TAG, "Failed to process outgoing VoIP call", e)
@@ -246,7 +246,7 @@ class WhatsAppNotificationService : NotificationListenerService() {
                             direction = "missed",
                             source = appName,
                             timestamp = callStartTime,
-                            displayName = displayName ?: "Unknown"
+                            displayName = displayName
                         )
                         unifiedMonitor.onCallEnded(callIdMissed, System.currentTimeMillis())
                     }
@@ -329,7 +329,7 @@ class WhatsAppNotificationService : NotificationListenerService() {
                 direction = "incoming",
                 source = appName,
                 timestamp = callStartTime,
-                displayName = displayName ?: "Unknown"
+                displayName = displayName
             )
 
             // Trigger popup only if we have a Member or Contact result.

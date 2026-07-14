@@ -9,7 +9,6 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
-import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
 import android.graphics.Color
 import android.graphics.PixelFormat
 import android.os.IBinder
@@ -37,6 +36,8 @@ import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
 import za.co.jpsoft.winkerkreader.utils.CallerInfoResolver
 import za.co.jpsoft.winkerkreader.utils.CallerInfoResult
+import za.co.jpsoft.winkerkreader.utils.ForegroundServiceHelper
+import za.co.jpsoft.winkerkreader.utils.ForegroundServiceType
 import java.lang.ref.WeakReference
 
 class OproepDetailService : Service() {
@@ -157,12 +158,15 @@ class OproepDetailService : Service() {
     private fun createForegroundNotification() {
         val channelId = "WinkerkReader"
         val channelName = "Oproep Service"
-        val channel =
-            NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_LOW).apply {
-                lightColor = Color.BLUE
-                lockscreenVisibility = Notification.VISIBILITY_PRIVATE
-                setShowBadge(false)
-            }
+        val channel = NotificationChannel(
+            channelId,
+            channelName,
+            NotificationManager.IMPORTANCE_LOW
+        ).apply {
+            lightColor = Color.BLUE
+            lockscreenVisibility = Notification.VISIBILITY_PRIVATE
+            setShowBadge(false)
+        }
         val manager = getSystemService(NotificationManager::class.java)
         manager?.createNotificationChannel(channel)
 
@@ -176,7 +180,13 @@ class OproepDetailService : Service() {
             .setShowWhen(false)
             .build()
 
-        startForeground(2, notification, FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+        // ✅ FIXED: Use ForegroundServiceHelper
+        ForegroundServiceHelper.startForeground(
+            service = this,
+            id = 2,
+            notification = notification,
+            type = ForegroundServiceType.DATA_SYNC
+        )
     }
 
     private fun isValidPhoneNumber(phoneNumber: String): Boolean {
@@ -205,8 +215,10 @@ class OproepDetailService : Service() {
         callerTextView.text = displayName
 
         if (!Settings.canDrawOverlays(this)) {
-            val intent =
-                Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, "package:$packageName".toUri())
+            val intent = Intent(
+                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                "package:$packageName".toUri()
+            )
             startActivity(intent)
             stopSelf()
             return
@@ -279,7 +291,6 @@ class OproepDetailService : Service() {
                     initialTouchY = event.rawY
                     return true
                 }
-
                 MotionEvent.ACTION_MOVE -> {
                     params.x = initialX + (event.rawX - initialTouchX).toInt()
                     params.y = initialY + (event.rawY - initialTouchY).toInt()

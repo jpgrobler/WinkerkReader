@@ -30,7 +30,7 @@ class MemberRepository(private val context: Context) {
     private var lastRecordStatus = "0"
     private var lastSearchTerm = ""
     private var lastFilterListSnapshot: ArrayList<FilterBox>? = null
-    private var lastCongregations: List<String>? = null  // ✅ Added
+    private var lastCongregations: List<String>? = null
 
     /**
      * Load members based on the provided parameters.
@@ -43,7 +43,7 @@ class MemberRepository(private val context: Context) {
         soek: String,
         filterList: ArrayList<FilterBox>?,
         sortOrder: String,
-        congregations: List<String>? = null  // ✅ Added
+        congregations: List<String>? = null
     ): List<MemberItem> {
         val cacheKey =
             buildCacheKey(eventType, recordStatus, soek, filterList, sortOrder, congregations)
@@ -65,7 +65,7 @@ class MemberRepository(private val context: Context) {
                 soek = soek,
                 filterList = filterList,
                 sortOrder = sortOrder,
-                congregations = congregations  // ✅ Pass congregations
+                congregations = congregations
             )?.also {
                 queryCache[cacheKey] = it
                 updateLastState(eventType, recordStatus, soek, filterList, congregations)
@@ -114,7 +114,7 @@ class MemberRepository(private val context: Context) {
         soek: String,
         filterList: ArrayList<FilterBox>?,
         sortOrder: String,
-        congregations: List<String>?  // ✅ Added
+        congregations: List<String>?
     ): String = buildString {
         append(eventType)
         append("_status_").append(recordStatus)
@@ -141,11 +141,11 @@ class MemberRepository(private val context: Context) {
         recordStatus: String,
         soek: String,
         filterList: ArrayList<FilterBox>?,
-        congregations: List<String>?  // ✅ Added
+        congregations: List<String>?
     ): Boolean = when {
         eventType != lastEventType -> true
         recordStatus != lastRecordStatus -> true
-        congregations != lastCongregations -> true  // ✅ Added
+        congregations != lastCongregations -> true
         eventType == "SOEK_DATA" && soek != lastSearchTerm -> true
         eventType == "FILTER_DATA" && !filterListsEqual(filterList, lastFilterListSnapshot) -> true
         else -> false
@@ -165,7 +165,7 @@ class MemberRepository(private val context: Context) {
         recordStatus: String,
         soek: String,
         filterList: ArrayList<FilterBox>?,
-        congregations: List<String>?  // ✅ Added
+        congregations: List<String>?
     ) {
         lastEventType = eventType
         lastRecordStatus = recordStatus
@@ -398,7 +398,7 @@ class MemberRepository(private val context: Context) {
     }
 
     // -------------------------------------------------------------------------
-    // Count methods - UPDATED with congregations parameter
+    // Count methods
     // -------------------------------------------------------------------------
 
     fun countMembers(
@@ -407,7 +407,7 @@ class MemberRepository(private val context: Context) {
         soek: String,
         filterList: ArrayList<FilterBox>?,
         sortOrder: String,
-        congregations: List<String>? = null  // ✅ Added
+        congregations: List<String>? = null
     ): Int {
         val (sql, args) = MemberQueryBuilder.buildCountQuery(
             eventType, recordStatus, soek, filterList, sortOrder, congregations
@@ -437,10 +437,18 @@ class MemberRepository(private val context: Context) {
         filterList: ArrayList<FilterBox>?,
         sortOrder: String,
         todayMonth: String,
-        todayDay: String
+        todayDay: String,
+        congregations: List<String>? = null  // ✅ FIXED: Added congregations parameter
     ): Int {
         val (sql, args) = MemberQueryBuilder.buildCountBeforeBirthdayQuery(
-            eventType, recordStatus, soek, filterList, sortOrder, todayMonth, todayDay
+            eventType,
+            recordStatus,
+            soek,
+            filterList,
+            sortOrder,
+            todayMonth,
+            todayDay,
+            congregations
         )
         return withContext(Dispatchers.IO) {
             val cursor = contentResolver.query(

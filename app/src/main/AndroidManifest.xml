@@ -12,11 +12,17 @@
         android:name="android.hardware.telephony"
         android:required="false" />
 
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SYSTEM_EXEMPTED" />
+
+    <!-- For older versions -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <!-- Call permissions -->
     <uses-permission android:name="android.permission.MANAGE_OWN_CALLS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL"
         tools:node="merge" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <!-- For Android 12+ (API 31+) exact alarms -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
@@ -261,9 +267,11 @@
 
         <!-- Services -->
         <service
-            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:name="za.co.jpsoft.winkerkreader.services.OproepDetailService"
+            android:enabled="true"
+            android:exported="false"
             android:foregroundServiceType="dataSync"
-            tools:node="merge" />
+            tools:ignore="MissingForegroundServiceType" />
 
         <service
             android:name="za.co.jpsoft.winkerkreader.services.WhatsAppNotificationService"
@@ -275,17 +283,16 @@
         </service>
 
         <service
-            android:name="za.co.jpsoft.winkerkreader.services.CallMonitoringService"
-            android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="phoneCall">
-        </service>
-
-        <service
-            android:name="za.co.jpsoft.winkerkreader.services.OproepDetailService"
+            android:name=".services.BootForegroundServiceStarter"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
+        <service
+            android:name="za.co.jpsoft.winkerkreader.services.CallMonitoringService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="phoneCall"
+            tools:ignore="MissingForegroundServiceType" />
 
         <service
             android:name="za.co.jpsoft.winkerkreader.services.ListViewWidgetService"

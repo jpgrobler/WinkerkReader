@@ -26,6 +26,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -53,7 +54,6 @@ import za.co.jpsoft.winkerkreader.utils.MainNavigationController
 import za.co.jpsoft.winkerkreader.utils.MemberUtils
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import java.io.File
-
 
 class LidmaatDetailActivity : AppCompatActivity() {
 
@@ -98,6 +98,7 @@ class LidmaatDetailActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         settingsManager = SettingsManager.getInstance(this)
         binding = LidmaatDetailBinding.inflate(layoutInflater)

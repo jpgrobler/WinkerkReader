@@ -69,18 +69,16 @@ class PastoralReminderRepository(
         stepOverrides: Map<String, LocalDate>? = null
     ): List<String> = withContext(Dispatchers.IO) {
         if (BuildConfig.DEBUG) Log.w(TAG, "Creating template reminder")
-        try {
-            val member = requireMember(memberGuid)
-            if (member.isArchived) {
-                if (BuildConfig.DEBUG) Log.w(
-                    TAG,
-                    "Creating template reminder for archived member $memberGuid"
-                )
+        val member = try {
+            requireMember(memberGuid).also {
+                if (it.isArchived && BuildConfig.DEBUG) {
+                    Log.w(TAG, "Creating template reminder for archived member $memberGuid")
+                }
             }
         } catch (e: Exception) {
             if (BuildConfig.DEBUG) Log.e(TAG, "RequireMember fail", e)
+            requireMember(memberGuid) // fallback call
         }
-        val member = requireMember(memberGuid)
         val template = templateDao.getTemplateById(templateId)
             ?: throw IllegalArgumentException("Template not found: $templateId")
         var steps = templateDao.getStepsForTemplate(templateId)
@@ -840,7 +838,7 @@ class PastoralReminderRepository(
         withContext(Dispatchers.IO) {
             val url = settingsManager.tasksScriptUrl ?: return@withContext false
             val secret = settingsManager.tasksScriptSecret ?: return@withContext false
-            if (BuildConfig.DEBUG) Log.d(TAG, "URL: $url, Secret: ${secret?.take(4)}…")
+            //if (BuildConfig.DEBUG) Log.d(TAG, "URL: $url, Secret: ${secret?.take(4)}…")
 
             val reminder = reminderDao.getById(reminderId)
                 ?: throw IllegalArgumentException("Reminder not found: $reminderId")
