@@ -167,8 +167,7 @@ dependencies {
     implementation 'pub.devrel:easypermissions:3.0.0'
 
     // ========== DEBUG ==========
-    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.14'
-
+    implementation 'com.squareup.leakcanary:leakcanary-android:2.14'
     // ========== TESTING ==========
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.mockito:mockito-core:5.23.0'

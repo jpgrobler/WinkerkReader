@@ -20,7 +20,7 @@ import za.co.jpsoft.winkerkreader.widget.WidgetDataRepository
 import za.co.jpsoft.winkerkreader.widget.WinkerkReaderWidgetProvider
 
 class WinkerkReader : Application() {
-
+    @OptIn(ExperimentalStdlibApi::class)
     override fun onCreate() {
         super.onCreate()
         if (BuildConfig.DEBUG) {
@@ -105,4 +105,6 @@ class WinkerkReader : Application() {
             }
         }, 3000) // Second attempt after 3 seconds
     }
+
+
 }
