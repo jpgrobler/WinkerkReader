@@ -60,7 +60,7 @@
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="180dp"
-                    android:background="@drawable/bg_profile_header_gradient" />
+                    android:background="?attr/colorPrimaryContainer" />
 
 
                 <LinearLayout

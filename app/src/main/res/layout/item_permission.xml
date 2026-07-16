@@ -34,7 +34,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/permission_name_placeholder"
-                android:textColor="@android:color/black"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
@@ -44,7 +44,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:text="@string/permission_description_placeholder"
-                android:textColor="@android:color/darker_gray"
+                android:textColor="?attr/colorOnSurfaceVariant"
                 android:textSize="12sp" />
 
         </LinearLayout>

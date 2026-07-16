@@ -220,24 +220,31 @@
                             android:orientation="horizontal">
 
 
-                            <EditText
-                                android:id="@+id/db_link"
+                            <com.google.android.material.textfield.TextInputLayout
+                                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_marginEnd="8dp"
                                 android:layout_weight="1"
-                                android:autofillHints="Edit Db Link"
-                                android:background="@drawable/material_outlined_edittext"
-                                android:gravity="start|center_vertical"
-                                android:importantForAutofill="no"
-                                android:inputType="textUri"
-                                android:minHeight="48dp"
-                                android:paddingStart="16dp"
-                                android:paddingEnd="16dp"
-                                android:selectAllOnFocus="true"
-                                android:text="@string/dbLink"
-                                android:textColor="?attr/colorOnSurface"
-                                android:textSize="14sp" />
+                                ns1:boxStrokeColor="?attr/colorPrimary"
+                                ns1:hintTextColor="?attr/colorPrimary">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/db_link"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:autofillHints="Edit Db Link"
+                                    android:gravity="start|center_vertical"
+                                    android:importantForAutofill="no"
+                                    android:inputType="textUri"
+                                    android:minHeight="48dp"
+                                    android:paddingStart="16dp"
+                                    android:paddingEnd="16dp"
+                                    android:selectAllOnFocus="true"
+                                    android:text="@string/dbLink"
+                                    android:textColor="?attr/colorOnSurface"
+                                    android:textSize="14sp" />
+                            </com.google.android.material.textfield.TextInputLayout>
 
 
                             <Button
@@ -317,23 +324,29 @@
                                     android:textSize="14sp" />
 
 
-                                <EditText
-                                    android:id="@+id/server_ip"
+                                <com.google.android.material.textfield.TextInputLayout
+                                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginEnd="8dp"
-                                    android:autofillHints="Edit Server Ip"
-                                    android:background="@drawable/material_outlined_edittext"
-                                    android:gravity="start|center_vertical"
-                                    android:importantForAutofill="no"
-                                    android:inputType="phone"
-                                    android:minHeight="48dp"
-                                    android:paddingStart="16dp"
-                                    android:paddingEnd="16dp"
-                                    android:selectAllOnFocus="true"
-                                    android:text="@string/IP"
-                                    android:textColor="?attr/colorOnSurface"
-                                    android:textSize="18sp" />
+                                    ns1:boxStrokeColor="?attr/colorPrimary"
+                                    ns1:hintTextColor="?attr/colorPrimary">
+
+                                    <com.google.android.material.textfield.TextInputEditText
+                                        android:id="@+id/server_ip"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:autofillHints="Edit Server Ip"
+                                        android:gravity="start|center_vertical"
+                                        android:importantForAutofill="no"
+                                        android:inputType="phone"
+                                        android:minHeight="48dp"
+                                        android:paddingStart="16dp"
+                                        android:paddingEnd="16dp"
+                                        android:selectAllOnFocus="true"
+                                        android:text="@string/IP"
+                                        android:textColor="?attr/colorOnSurface"
+                                        android:textSize="18sp" />
+                                </com.google.android.material.textfield.TextInputLayout>
 
 
                             </LinearLayout>
