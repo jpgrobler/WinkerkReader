@@ -45,6 +45,10 @@ class OproepDetailService : Service() {
     companion object {
         private const val TAG = "OproepDetailService"
         const val EXTRA_CALLER_ID = "caller_id"
+
+        // FIX #3: action sent when the call transitions to OFFHOOK (answered)
+        const val ACTION_CALL_ANSWERED = "za.co.jpsoft.winkerkreader.ACTION_CALL_ANSWERED"
+
         private var serviceInstance: WeakReference<OproepDetailService>? = null
 
         @Volatile
@@ -53,7 +57,6 @@ class OproepDetailService : Service() {
 
         fun isServiceRunning(context: Context): Boolean {
             val manager = context.getSystemService(ActivityManager::class.java) ?: return false
-
             val serviceName = "${context.packageName}.${OproepDetailService::class.java.simpleName}"
             return try {
                 manager.getRunningServices(Int.MAX_VALUE)
@@ -78,6 +81,11 @@ class OproepDetailService : Service() {
                 }
             }
         }
+
+        // FIX #3: called from PhoneCallMonitor on OFFHOOK — dismisses overlay immediately
+        fun dismissOnAnswered() {
+            serviceInstance?.get()?.stopSelf()
+        }
     }
 
     private lateinit var windowManager: WindowManager
@@ -96,6 +104,13 @@ class OproepDetailService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // FIX #3: dismiss immediately when the call is answered
+        if (intent?.action == ACTION_CALL_ANSWERED) {
+            if (BuildConfig.DEBUG) Log.d(TAG, "Call answered — dismissing overlay")
+            stopSelf()
+            return START_NOT_STICKY
+        }
+
         val callerId = intent?.getStringExtra(EXTRA_CALLER_ID) ?: ""
 
         if (!isValidPhoneNumber(callerId)) {
@@ -107,11 +122,9 @@ class OproepDetailService : Service() {
             return START_NOT_STICKY
         }
 
-        // Launch the lookup on a background thread
         serviceScope.launch {
             val result = CallerInfoResolver.resolve(callerId, contentResolver)
 
-            // Only show the floating window for a known member or contact
             val shouldShow = when (result) {
                 is CallerInfoResult.Member -> true
                 is CallerInfoResult.Contact -> true
@@ -119,15 +132,11 @@ class OproepDetailService : Service() {
             }
 
             if (!shouldShow) {
-                if (BuildConfig.DEBUG) Log.d(
-                    TAG,
-                    "Caller not found in database, skipping floating window"
-                )
+                if (BuildConfig.DEBUG) Log.d(TAG, "Caller not found in data")
                 withContext(Dispatchers.Main) { stopSelf() }
                 return@launch
             }
 
-            // Show the caller info on the main thread
             withContext(Dispatchers.Main) {
                 showCaller(callerId, result)
             }
@@ -138,7 +147,6 @@ class OproepDetailService : Service() {
 
     override fun onDestroy() {
         serviceScope.cancel()
-
         isOn = false
         serviceInstance = null
 
@@ -180,7 +188,6 @@ class OproepDetailService : Service() {
             .setShowWhen(false)
             .build()
 
-        // ✅ FIXED: Use ForegroundServiceHelper
         ForegroundServiceHelper.startForeground(
             service = this,
             id = 2,
@@ -201,7 +208,7 @@ class OproepDetailService : Service() {
         val displayName = when (result) {
             is CallerInfoResult.Member -> result.name
             is CallerInfoResult.Contact -> result.name
-            CallerInfoResult.Unknown -> return // should never happen because we check before calling
+            CallerInfoResult.Unknown -> return // should never reach here
         }
 
         if (::floatingView.isInitialized && viewAdded) {
@@ -231,10 +238,11 @@ class OproepDetailService : Service() {
     }
 
     private fun createFloatingWindow() {
+        // FIX #2: anchor to top-centre so the overlay never covers answer/decline buttons
         val params = createWindowLayoutParams().apply {
-            gravity = Gravity.CENTER or Gravity.START
+            gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
             x = 0
-            y = 100
+            y = 80  // px from top — clears the status bar on virtually all devices
         }
         try {
             windowManager.addView(floatingView, params)

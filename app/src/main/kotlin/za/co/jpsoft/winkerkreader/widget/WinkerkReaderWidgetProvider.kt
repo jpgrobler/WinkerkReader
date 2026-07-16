@@ -7,10 +7,17 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
 import android.net.Uri
 import android.os.Build
 import android.util.Log
 import android.widget.RemoteViews
+import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.content.ContextCompat
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
@@ -37,6 +44,24 @@ class WinkerkReaderWidgetProvider : AppWidgetProvider() {
         private const val TAG = "WinkerkReaderWidget"
         const val EXTRA_WORD = "com.commonsware.android.appwidget.lorem.WORD"
 
+        private fun tintDrawableToBitmap(
+            context: Context,
+            drawableRes: Int,
+            tintColor: Int
+        ): Bitmap {
+            val drawable = AppCompatResources.getDrawable(context, drawableRes)
+                ?: return Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+            val bitmap = Bitmap.createBitmap(
+                drawable.intrinsicWidth.takeIf { it > 0 } ?: 48,
+                drawable.intrinsicHeight.takeIf { it > 0 } ?: 48,
+                Bitmap.Config.ARGB_8888
+            )
+            val canvas = Canvas(bitmap)
+            drawable.setBounds(0, 0, canvas.width, canvas.height)
+            drawable.colorFilter = PorterDuffColorFilter(tintColor, PorterDuff.Mode.SRC_IN)
+            drawable.draw(canvas)
+            return bitmap
+        }
         /**
          * Fully rebuild and push RemoteViews for every placed instance of this widget,
          * bypassing the direct-update debounce, and notify the ListView adapter to reload.
@@ -74,6 +99,11 @@ class WinkerkReaderWidgetProvider : AppWidgetProvider() {
             }
         }
 
+        private fun isNightMode(context: Context): Boolean {
+            val configuration = context.resources.configuration
+            return (configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+        }
+
         /**
          * Builds the full RemoteViews tree for a single widget instance: click intents,
          * the ListView remote adapter, timestamp text and header emojis.
@@ -82,15 +112,20 @@ class WinkerkReaderWidgetProvider : AppWidgetProvider() {
          * update path, the force-refresh path, and updateAllWidgets() so they can never
          * drift out of sync again.
          */
+        /**
+         * Builds the full RemoteViews tree for a single widget instance: click intents,
+         * the ListView remote adapter, timestamp text and header emojis, plus dynamic
+         * Material 3 colors for light/dark mode.
+         */
         private fun buildWidgetRemoteViews(context: Context, appWidgetId: Int): RemoteViews {
             return RemoteViews(context.packageName, R.layout.widget).apply {
+                // ---------- Click intents ----------
                 val clickIntent = Intent(context, MainActivity::class.java)
                 val clickPI = PendingIntent.getActivity(
                     context, 0, clickIntent, pendingIntentFlags
                 )
                 setOnClickPendingIntent(R.id.widget_image, clickPI)
 
-                // Update button now uses force refresh
                 val forceUpdateIntent =
                     Intent(context, WinkerkReaderWidgetProvider::class.java).apply {
                         action = ACTION_FORCE_UPDATE
@@ -100,6 +135,7 @@ class WinkerkReaderWidgetProvider : AppWidgetProvider() {
                 )
                 setOnClickPendingIntent(R.id.widget_image3, forceUpdatePI)
 
+                // ---------- ListView adapter ----------
                 val svcIntent = Intent(context, ListViewWidgetService::class.java).apply {
                     putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
                     putExtra("nonce", System.currentTimeMillis())
@@ -114,13 +150,42 @@ class WinkerkReaderWidgetProvider : AppWidgetProvider() {
                 )
                 setPendingIntentTemplate(R.id.words, listClickPI)
 
-                // Add timestamp
+                // ---------- Dynamic Material 3 Colors ----------
+                val isNight = (context.resources.configuration.uiMode and
+                        Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+
+                val surfaceColor = ContextCompat.getColor(context, R.color.md_theme_surface)
+                val onSurfaceColor = ContextCompat.getColor(context, R.color.md_theme_onSurface)
+                val onSurfaceVariantColor = ContextCompat.getColor(
+                    context, R.color.md_theme_onSurfaceVariant
+                )
+
+                // Root background
+                setInt(R.id.widget_root, "setBackgroundColor", surfaceColor)
+
+                // Header text
+                setTextColor(R.id.widget_header, onSurfaceColor)
+
+                // Update time and empty view
+                setTextColor(R.id.widget_update_time, onSurfaceVariantColor)
+                setTextColor(R.id.widget_empty, onSurfaceVariantColor)
+
+                // ---- Icons ----
+                // widget_image: use original drawable (no tint) – keeps your branded icon
+                setImageViewResource(R.id.widget_image, R.drawable.ic_launcher_roundw)
+
+                // widget_image3: tint to match the theme (update icon is usually a simple vector)
+                val tintedUpdate = tintDrawableToBitmap(context, R.drawable.updatew, onSurfaceColor)
+                setImageViewBitmap(R.id.widget_image3, tintedUpdate)
+
+                // ---------- Timestamp & header emojis ----------
                 val prefs = context.getSharedPreferences("widget_prefs", Context.MODE_PRIVATE)
                 val lastRefresh = prefs.getLong("last_refresh_time", System.currentTimeMillis())
                 val timeStr =
                     SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(lastRefresh))
                 setTextViewText(R.id.widget_update_time, "Laas opgedateer: $timeStr")
                 setEmptyView(R.id.words, R.id.widget_empty)
+
                 val headerText = getEventEmojis(context)
                 setTextViewText(R.id.widget_header, headerText)
             }
@@ -196,7 +261,10 @@ class WinkerkReaderWidgetProvider : AppWidgetProvider() {
     override fun onReceive(context: Context, intent: Intent) {
         val action = intent.action
         if (BuildConfig.DEBUG) Log.d(TAG, "onReceive: $action")
-
+        if (intent.action == Intent.ACTION_CONFIGURATION_CHANGED) {
+            // Force refresh all widgets when configuration changes (e.g., dark/light mode)
+            forceRefreshWidgets(context)
+        }
         try {
             when (action) {
                 ACTION_SCHEDULED_UPDATE -> {

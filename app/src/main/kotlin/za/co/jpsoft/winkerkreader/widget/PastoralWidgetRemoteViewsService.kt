@@ -13,7 +13,6 @@ import android.view.View
 import android.widget.RemoteViews
 import android.widget.RemoteViewsService
 import androidx.core.content.ContextCompat
-import androidx.core.graphics.toColorInt
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.pastoral.PastoralDatabase
@@ -114,101 +113,122 @@ class PastoralWidgetRemoteViewsService : RemoteViewsService() {
         }
 
         private fun bindReminderToViews(views: RemoteViews, reminder: FollowUpReminderEntity) {
-            val darkGrey = "#444444".toColorInt()
+            // --- Dynamic colours ---
+            val surfaceColor = ContextCompat.getColor(context, R.color.md_theme_surface)
+            val primaryContainerColor =
+                ContextCompat.getColor(context, R.color.md_theme_primaryContainer)
+            val onSurfaceColor = ContextCompat.getColor(context, R.color.md_theme_onSurface)
+            val onSurfaceVariantColor =
+                ContextCompat.getColor(context, R.color.md_theme_onSurfaceVariant)
+            val primaryColor = ContextCompat.getColor(context, R.color.md_theme_primary)
 
-            val displayName =
-                reminder.memberDisplayNameCache?.takeIf { it.isNotBlank() } ?: "Lidmaat"
+            // Determine if today
             val dueDate = reminder.dueDateUtc.toLocalDateSafe() ?: LocalDate.now()
             val today = LocalDate.now(zoneId)
             val isToday = dueDate == today
             val isOverdue = dueDate.isBefore(today)
 
+            // Set row background: primary container for today, otherwise surface
+            val bgColor = if (isToday) primaryContainerColor else surfaceColor
+            views.setInt(R.id.widget_pastoral_item_root, "setBackgroundColor", bgColor)
+
+            // Build display text
+            val displayName =
+                reminder.memberDisplayNameCache?.takeIf { it.isNotBlank() } ?: "Lidmaat"
             val dateStr = if (isToday) {
                 context.getString(R.string.datum_vandag)
             } else {
                 dateFormatter.format(dueDate)
             }
-
             val symbol = reminder.symbol?.takeIf { it.isNotBlank() } ?: ""
             val fullText = "$dateStr $displayName: $symbol${reminder.title}"
 
-            // Build styled text
+            // Build spans (same logic, but use M3 colours)
             val spannable = SpannableString(fullText)
             val textLength = fullText.length
 
-            // 1. Date part
+            // Date part
             val dateEnd = dateStr.length
             if (dateEnd <= textLength) {
                 spannable.setSpan(
                     RelativeSizeSpan(0.8f),
-                    0, dateEnd,
+                    0,
+                    dateEnd,
                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                 )
-
                 if (isToday) {
                     spannable.setSpan(
-                        ForegroundColorSpan(ContextCompat.getColor(context, R.color.primary_blue)),
-                        0, dateEnd,
+                        ForegroundColorSpan(primaryColor),
+                        0,
+                        dateEnd,
                         Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                     )
                     spannable.setSpan(
                         StyleSpan(Typeface.BOLD),
-                        0, dateEnd,
+                        0,
+                        dateEnd,
                         Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                     )
                 } else {
                     spannable.setSpan(
-                        ForegroundColorSpan(darkGrey),
-                        0, dateEnd,
+                        ForegroundColorSpan(onSurfaceVariantColor),
+                        0,
+                        dateEnd,
                         Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                     )
                 }
             }
 
-            // 2. Name part (after date + space)
+            // Name part
             val nameStart = dateEnd + 1
             val nameEnd = nameStart + displayName.length
             if (nameEnd <= textLength) {
                 spannable.setSpan(
                     RelativeSizeSpan(1.25f),
-                    nameStart, nameEnd,
+                    nameStart,
+                    nameEnd,
                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                 )
-
                 spannable.setSpan(
-                    ForegroundColorSpan(darkGrey),
-                    nameStart, nameEnd,
+                    ForegroundColorSpan(onSurfaceColor),
+                    nameStart,
+                    nameEnd,
                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                 )
             }
 
-            // 3. Symbol
+            // Symbol (if any)
             val symbolStart = nameEnd + 1
             val symbolEnd = symbolStart + symbol.length
-            if (symbolEnd <= textLength && symbol.isNotEmpty()) {
+            if (symbol.isNotEmpty() && symbolEnd <= textLength) {
                 spannable.setSpan(
                     RelativeSizeSpan(1.5f),
-                    symbolStart, symbolEnd,
+                    symbolStart,
+                    symbolEnd,
                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                 )
                 spannable.setSpan(
                     StyleSpan(Typeface.BOLD),
-                    symbolStart, symbolEnd,
+                    symbolStart,
+                    symbolEnd,
                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                 )
+                // Keep symbol color as onSurface (or maybe primary? leave as onSurface)
             }
 
-            // 4. Title part
+            // Title part
             val titleStart = if (symbol.isNotEmpty()) symbolEnd + 1 else nameEnd + 1
             if (titleStart < textLength) {
                 spannable.setSpan(
                     RelativeSizeSpan(1f),
-                    titleStart, textLength,
+                    titleStart,
+                    textLength,
                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                 )
                 spannable.setSpan(
-                    ForegroundColorSpan(darkGrey),
-                    titleStart, textLength,
+                    ForegroundColorSpan(onSurfaceColor),
+                    titleStart,
+                    textLength,
                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                 )
             }
@@ -229,6 +249,11 @@ class PastoralWidgetRemoteViewsService : RemoteViewsService() {
                 context.getString(R.string.widget_pastoral_empty)
             )
             views.setViewVisibility(R.id.widget_pastoral_item_overdue, View.GONE)
+            // Set background to surface (or surfaceContainerHighest)
+            views.setInt(
+                R.id.widget_pastoral_item_root, "setBackgroundColor",
+                ContextCompat.getColor(context, R.color.md_theme_surface)
+            )
             return views
         }
 

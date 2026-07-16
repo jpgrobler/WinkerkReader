@@ -3,7 +3,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="4dp"
-    android:background="@drawable/call_log_item_background"
+    android:background="?attr/colorSurfaceContainerLow"
+    android:foreground="?attr/selectableItemBackground"
     android:orientation="vertical"
     android:padding="12dp">
 
@@ -34,7 +35,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/caller_name_placeholder"
-                android:textColor="#333333"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
@@ -44,21 +45,22 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
                 android:text="@string/call_datetime_placeholder"
-                android:textColor="#666666"
+                android:textColor="?attr/colorOnSurfaceVariant"
                 android:textSize="14sp" />
 
         </LinearLayout>
 
-        <!-- Call Number -->
+        <!-- Call Number badge -->
         <TextView
             android:id="@+id/callNumber"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            android:background="#E0E0E0"
-            android:padding="4dp"
+            android:background="?attr/colorSurfaceContainerHighest"
+            android:paddingHorizontal="6dp"
+            android:paddingVertical="2dp"
             android:text="@string/call_number_placeholder"
-            android:textColor="#888888"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:textSize="12sp" />
 
     </LinearLayout>

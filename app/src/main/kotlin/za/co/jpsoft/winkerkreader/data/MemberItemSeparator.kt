@@ -37,10 +37,12 @@ object MemberItemSeparator {
 
         when (sortOrder) {
             "WYK" -> {
-                if (prev.ward.isNotEmpty() && item.ward.isNotEmpty() && prev.ward != item.ward)
-                    showSep = true
-                if (prev.familyHead != item.familyHead)
-                    showSep2 = true
+                // Only show separator when ward changes, handling empty wards
+                val prevWard = prev.ward.takeIf { it.isNotEmpty() } ?: "Onbekend"
+                val currentWard = item.ward.takeIf { it.isNotEmpty() } ?: "Onbekend"
+                if (prevWard != currentWard) showSep = true
+                // No family head separators in WYK view
+                showSep2 = false
             }
 
             "GESINNE" -> {
@@ -86,9 +88,8 @@ object MemberItemSeparator {
 
         return when (sortOrder) {
             "WYK" -> {
-                val addr = cleanAddress(item.address)
-                val label = if (showSep) "${item.ward}\n$addr" else addr
-                Pair(label, "Wyk: ${item.ward}")
+                val displayWard = item.ward.takeIf { it.isNotEmpty() } ?: "Onbekend"
+                Pair("Wyk: $displayWard", "")
             }
 
             "VAN" -> Pair(

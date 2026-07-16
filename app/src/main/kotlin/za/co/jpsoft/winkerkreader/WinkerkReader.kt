@@ -10,6 +10,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ProcessLifecycleOwner
 import com.google.android.material.color.DynamicColors
+import leakcanary.LeakCanary
+import shark.AndroidReferenceMatchers
 import za.co.jpsoft.winkerkreader.utils.AppAuthState
 import za.co.jpsoft.winkerkreader.utils.AppInitializer
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
@@ -21,6 +23,15 @@ class WinkerkReader : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        if (BuildConfig.DEBUG) {
+            LeakCanary.config = LeakCanary.config.copy(
+                referenceMatchers = AndroidReferenceMatchers.appDefaults +
+                        AndroidReferenceMatchers.ignoredInstanceField(
+                            "android.service.notification.NotificationListenerService\$NotificationListenerWrapper",
+                            "this\$0"
+                        )
+            )
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             DynamicColors.applyToActivitiesIfAvailable(this)
         }

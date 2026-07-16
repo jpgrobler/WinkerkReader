@@ -2,6 +2,7 @@ package za.co.jpsoft.winkerkreader.ui.bottomsheets
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
@@ -22,6 +23,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.color.MaterialColors
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
@@ -389,7 +391,13 @@ class StelHerinneringBottomSheet : BottomSheetDialogFragment() {
             override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
                 val view = super.getView(position, convertView, parent)
                 if (view is TextView) {
-                    view.setTextColor(Color.BLACK)
+                    view.setTextColor(
+                        MaterialColors.getColor(
+                            view.context,
+                            com.google.android.material.R.attr.colorOnSurface,
+                            Color.BLACK
+                        )
+                    )
                     view.textSize = 16f
                 }
                 return view
@@ -402,7 +410,13 @@ class StelHerinneringBottomSheet : BottomSheetDialogFragment() {
             ): View {
                 val view = super.getDropDownView(position, convertView, parent)
                 if (view is TextView) {
-                    view.setTextColor(Color.BLACK)
+                    view.setTextColor(
+                        MaterialColors.getColor(
+                            view.context,
+                            com.google.android.material.R.attr.colorOnSurface,
+                            Color.BLACK
+                        )
+                    )
                     view.textSize = 16f
                 }
                 return view
@@ -475,7 +489,15 @@ class StelHerinneringBottomSheet : BottomSheetDialogFragment() {
         ).apply { topMargin = dpToPx(8) }
         spinner.layoutParams = params
         spinner.visibility = View.VISIBLE
-        spinner.setBackgroundColor(Color.LTGRAY)  // keep your background (arrow fix optional)
+        // Tint the existing spinner drawable rather than replacing it with a flat colour.
+        // Using backgroundTintList preserves the dropdown arrow and respects the M3 theme.
+        spinner.backgroundTintList = ColorStateList.valueOf(
+            MaterialColors.getColor(
+                spinner.context,
+                com.google.android.material.R.attr.colorSurfaceVariant,
+                Color.LTGRAY
+            )
+        )
 
         // Insert at position 1 (after the label)
         binding.layoutContextFields.addView(spinner, 1)

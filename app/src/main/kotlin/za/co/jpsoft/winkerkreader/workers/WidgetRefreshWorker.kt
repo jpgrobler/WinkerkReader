@@ -18,30 +18,21 @@ class WidgetRefreshWorker(
         private const val TAG = "WidgetRefreshWorker"
         const val WORK_NAME = "widget_refresh_work"
 
-        // Minimum interval between updates (5 seconds)
         private const val MIN_UPDATE_INTERVAL_MS = 5000L
-
-        // Track last update time - using a single timestamp for simplicity
         private var lastUpdateTime = 0L
-
-        // Track if a refresh is already in progress
         private var isRefreshing = false
-
-        // Force flag to bypass debounce
         private var forceRefresh = false
     }
 
     override suspend fun doWork(): Result {
         return try {
-            if (BuildConfig.DEBUG) {
-                Log.d(TAG, "🔄 Starting widget refresh worker (force=$forceRefresh)")
-            }
+            if (BuildConfig.DEBUG) Log.d(
+                TAG,
+                "🔄 Starting widget refresh worker (force=$forceRefresh)"
+            )
 
-            // Prevent concurrent refreshes
             if (isRefreshing && !forceRefresh) {
-                if (BuildConfig.DEBUG) {
-                    Log.d(TAG, "⏳ Refresh already in progress, skipping")
-                }
+                if (BuildConfig.DEBUG) Log.d(TAG, "⏳ Refresh already in progress, skipping")
                 return Result.success()
             }
 
@@ -51,42 +42,36 @@ class WidgetRefreshWorker(
                 val currentTime = System.currentTimeMillis()
                 val timeSinceLastUpdate = currentTime - lastUpdateTime
 
-                // Check if enough time has passed OR force refresh is true
                 if (forceRefresh || timeSinceLastUpdate >= MIN_UPDATE_INTERVAL_MS) {
+                    if (BuildConfig.DEBUG) Log.d(
+                        TAG,
+                        "🔄 Refreshing widgets (force=$forceRefresh, timeSince=${timeSinceLastUpdate}ms)"
+                    )
 
-                    if (BuildConfig.DEBUG) {
-                        Log.d(
-                            TAG,
-                            "🔄 Refreshing widgets (force=$forceRefresh, timeSince=${timeSinceLastUpdate}ms)"
-                        )
-                    }
-
-                    // ✅ FIXED: Use invalidateCache() instead of clearCache()
+                    // Refresh the shared birthday/event cache once here.
                     WidgetDataRepository.invalidateCache()
                     WidgetDataRepository.refreshCache(applicationContext)
 
-                    // Refresh both widgets
+                    // Push updated views to both widgets.
+                    // refreshBirthdayWidget() uses the cache we just populated — do NOT
+                    // invalidate/refresh again inside that method.
+                    // refreshPastoralWidget() must NOT schedule more WorkManager jobs;
+                    // it only pushes RemoteViews and notifies the adapter.
                     refreshBirthdayWidget()
                     refreshPastoralWidget()
 
-                    // Update timestamp
                     lastUpdateTime = currentTime
-                    forceRefresh = false // Reset force flag
+                    forceRefresh = false
 
-                    if (BuildConfig.DEBUG) {
-                        Log.d(TAG, "✅ Widget refresh completed")
-                    }
+                    if (BuildConfig.DEBUG) Log.d(TAG, "✅ Widget refresh completed")
                 } else {
-                    if (BuildConfig.DEBUG) {
-                        Log.d(
-                            TAG,
-                            "⏱️ Widget refresh skipped - only ${timeSinceLastUpdate}ms since last update (min: ${MIN_UPDATE_INTERVAL_MS}ms)"
-                        )
-                    }
+                    if (BuildConfig.DEBUG) Log.d(
+                        TAG,
+                        "⏱️ Widget refresh skipped — only ${timeSinceLastUpdate}ms since last update (min: ${MIN_UPDATE_INTERVAL_MS}ms)"
+                    )
                 }
 
                 Result.success()
-
             } finally {
                 isRefreshing = false
             }
@@ -101,14 +86,9 @@ class WidgetRefreshWorker(
 
     private fun refreshBirthdayWidget() {
         try {
-            // ✅ Birthday widget uses WidgetDataRepository
-            WidgetDataRepository.invalidateCache()
-            WidgetDataRepository.refreshCache(applicationContext)
+            // Cache is already fresh from doWork() — just push views.
             WinkerkReaderWidgetProvider.updateAllWidgets(applicationContext)
-
-            if (BuildConfig.DEBUG) {
-                Log.d(TAG, "📅 Birthday widget refreshed")
-            }
+            if (BuildConfig.DEBUG) Log.d(TAG, "📅 Birthday widget refreshed")
         } catch (e: Exception) {
             Log.e(TAG, "Error refreshing birthday widget", e)
         }
@@ -116,57 +96,43 @@ class WidgetRefreshWorker(
 
     private fun refreshPastoralWidget() {
         try {
-            // ✅ Pastoral widget queries pastoral database directly
-            // No cache needed - RemoteViewsService will query the database
-            PastoralWidgetProvider.refreshWidgets(applicationContext)
-
-            if (BuildConfig.DEBUG) {
-                Log.d(TAG, "📋 Pastoral widget refresh called")
+            // Call the direct update path so we do NOT re-enter WorkManager scheduling
+            // from inside a running worker. refreshWidgets() previously called
+            // forceRefreshWidgets() which enqueued more workers, creating a loop.
+            val appWidgetManager =
+                android.appwidget.AppWidgetManager.getInstance(applicationContext)
+            val ids = appWidgetManager.getAppWidgetIds(
+                android.content.ComponentName(
+                    applicationContext,
+                    PastoralWidgetProvider::class.java
+                )
+            )
+            ids.forEach {
+                PastoralWidgetProvider.updateWidget(
+                    applicationContext,
+                    appWidgetManager,
+                    it
+                )
             }
+            if (BuildConfig.DEBUG) Log.d(TAG, "📋 Pastoral widget refreshed")
         } catch (e: Exception) {
             Log.e(TAG, "Error refreshing pastoral widget", e)
         }
     }
 
-    /**
-     * Force refresh all widgets immediately (bypasses debounce)
-     * Call this when data changes significantly (e.g., after database update)
-     */
+    /** Call this from outside (e.g. after a database sync) to force a full refresh. */
     fun forceRefreshAllWidgets(context: Context) {
         try {
-            if (BuildConfig.DEBUG) {
-                Log.d(TAG, "⚡ Force refresh requested")
-            }
-
-            // Set force flag and reset timestamp
             forceRefresh = true
             lastUpdateTime = 0L
-
-            // Trigger a new work request
             val workRequest = androidx.work.OneTimeWorkRequestBuilder<WidgetRefreshWorker>()
                 .addTag(WORK_NAME)
                 .build()
-
             androidx.work.WorkManager.getInstance(context)
-                .enqueueUniqueWork(
-                    WORK_NAME,
-                    androidx.work.ExistingWorkPolicy.REPLACE,
-                    workRequest
-                )
-
+                .enqueueUniqueWork(WORK_NAME, androidx.work.ExistingWorkPolicy.REPLACE, workRequest)
+            if (BuildConfig.DEBUG) Log.d(TAG, "⚡ Force refresh requested")
         } catch (e: Exception) {
             Log.e(TAG, "Error forcing widget refresh", e)
-        }
-    }
-
-    /**
-     * Reset the debounce timer (useful after data changes)
-     */
-    fun resetDebounce() {
-        lastUpdateTime = 0L
-        forceRefresh = false
-        if (BuildConfig.DEBUG) {
-            Log.d(TAG, "Debounce timer reset")
         }
     }
 }

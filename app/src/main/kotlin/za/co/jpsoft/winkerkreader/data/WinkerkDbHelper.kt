@@ -7,39 +7,50 @@ import com.readystatesoftware.sqliteasset.SQLiteAssetHelper
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicBoolean
 
 class WinkerkDbHelper private constructor(context: Context, dbName: String) :
     SQLiteAssetHelper(context, dbName, null, WinkerkContract.DATABASE_VERSION) {
 
     private val tag = "WinkerkDbHelper"
+    private var isOpen = false
+
+    init {
+        // Don't force WAL off during initialization - this causes locks
+        // Let SQLite handle the journal mode
+        setForcedUpgrade()
+    }
+
+    // REMOVED onCreate() - it's final in SQLiteAssetHelper and can't be overridden
 
     override fun onOpen(db: SQLiteDatabase) {
         if (BuildConfig.DEBUG) Log.d(tag, "onOpen for database: $databaseName, path: ${db.path}")
-        db.disableWriteAheadLogging()
+
+        // Don't disable WAL here - it causes locks during migration
+        // Let SQLite manage its own journal mode
         super.onOpen(db)
-        ensureColumnsExist(db)
-        SQLiteDatabase.openDatabase(db.path, null, SQLiteDatabase.OPEN_READONLY).use { db ->
-            val cursor = db.rawQuery("PRAGMA table_info(Members)", null)
-            if (BuildConfig.DEBUG) Log.d("DBinfo", "")
-            while (cursor.moveToNext()) {
-                val name = cursor.getString(1)
-                val type = cursor.getString(2)
-                val notNull = cursor.getInt(3)
-                val pk = cursor.getInt(5)
-                if (BuildConfig.DEBUG) Log.d(
-                    "DBinfo",
-                    "Column: '$name' | Type: '$type' | PK: $pk | NotNull: $notNull"
-                )
-            }
-            cursor.close()
+
+        try {
+            // Enable foreign keys for better data integrity
+            db.execSQL("PRAGMA foreign_keys=ON;")
+
+            // Check if we need to run migrations
+            ensureColumnsExist(db)
+        } catch (e: Exception) {
+            if (BuildConfig.DEBUG) Log.e(tag, "Error in onOpen", e)
         }
+
+        isOpen = true
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        if (BuildConfig.DEBUG) Log.d(tag, "onUpgrade from $oldVersion to $newVersion")
         // Handle upgrades if needed
     }
 
     override fun close() {
+        if (BuildConfig.DEBUG) Log.d(tag, "Closing database: $databaseName")
+        isOpen = false
         super.close()
         instances.remove(databaseName)
     }
@@ -48,21 +59,24 @@ class WinkerkDbHelper private constructor(context: Context, dbName: String) :
      * Ensure required columns exist in the database. This runs every time the database is opened.
      */
     private fun ensureColumnsExist(db: SQLiteDatabase) {
-        // Check and add TAG column to Members table (only in main database)
-        if (databaseName == WinkerkContract.winkerkEntry.WINKERK_DB) {
+        // Only run for main database
+        if (databaseName != WinkerkContract.winkerkEntry.WINKERK_DB) return
+
+        try {
+            // Check and add TAG column to Members table
             if (!isColumnExists(db, "Members", WinkerkContract.winkerkEntry.LIDMATE_TAG)) {
                 try {
                     db.execSQL("ALTER TABLE Members ADD COLUMN ${WinkerkContract.winkerkEntry.LIDMATE_TAG} BIT")
                     if (BuildConfig.DEBUG) Log.d(
                         tag,
-                        "Added ${WinkerkContract.winkerkEntry.LIDMATE_TAG} column to Members table"
+                        "Added ${WinkerkContract.winkerkEntry.LIDMATE_TAG} column"
                     )
                 } catch (e: Exception) {
                     if (BuildConfig.DEBUG) Log.e(tag, "Failed to add TAG column", e)
                 }
             }
 
-            // Check and add _id column to Datum table (only in main database)
+            // Check and add _id column to Datum table
             if (!isColumnExists(db, "Datum", "_id")) {
                 try {
                     db.execSQL("ALTER TABLE Datum ADD COLUMN _id INTEGER PRIMARY KEY AUTOINCREMENT")
@@ -71,9 +85,9 @@ class WinkerkDbHelper private constructor(context: Context, dbName: String) :
                     if (BuildConfig.DEBUG) Log.e(tag, "Failed to add _id column", e)
                 }
             }
+        } catch (e: Exception) {
+            if (BuildConfig.DEBUG) Log.e(tag, "Error ensuring columns exist", e)
         }
-
-        // Add similar checks for INFO database if needed in the future
     }
 
     /** Check if a column exists in a given table. */
@@ -97,6 +111,7 @@ class WinkerkDbHelper private constructor(context: Context, dbName: String) :
 
     companion object {
         private val instances = ConcurrentHashMap<String, WinkerkDbHelper>()
+        private val isClosing = AtomicBoolean(false)
 
         /**
          * Get a singleton instance for the given database name. Uses application context to avoid
@@ -104,7 +119,18 @@ class WinkerkDbHelper private constructor(context: Context, dbName: String) :
          */
         @JvmStatic
         fun getInstance(context: Context, dbName: String): WinkerkDbHelper {
+            // Wait if we're in the middle of closing
+            var attempts = 0
+            while (isClosing.get() && attempts < 20) {
+                Thread.sleep(50)
+                attempts++
+            }
+
             return instances.getOrPut(dbName) {
+                if (BuildConfig.DEBUG) Log.d(
+                    "WinkerkDbHelper",
+                    "Creating new instance for: $dbName"
+                )
                 WinkerkDbHelper(context.applicationContext, dbName)
             }
         }
@@ -112,25 +138,42 @@ class WinkerkDbHelper private constructor(context: Context, dbName: String) :
         /** Close a specific database instance and remove it from the map. */
         @JvmStatic
         fun closeInstance(dbName: String) {
-            if (BuildConfig.DEBUG) Log.d("WinkerkDbHelper", "closeInstance called for: $dbName")
-            instances.remove(dbName)?.close()
-            if (BuildConfig.DEBUG) Log.d("WinkerkDbHelper", "Closed helper for: $dbName")
+            isClosing.set(true)
+            try {
+                if (BuildConfig.DEBUG) Log.d("WinkerkDbHelper", "closeInstance called for: $dbName")
+                instances.remove(dbName)?.close()
+                if (BuildConfig.DEBUG) Log.d("WinkerkDbHelper", "Closed helper for: $dbName")
+            } finally {
+                isClosing.set(false)
+            }
+        }
+
+        /** Close all database instances. */
+        @JvmStatic
+        fun closeAllInstances() {
+            isClosing.set(true)
+            try {
+                if (BuildConfig.DEBUG) Log.d("WinkerkDbHelper", "Closing all database instances")
+                instances.values.forEach { it.close() }
+                instances.clear()
+            } finally {
+                isClosing.set(false)
+            }
         }
 
         fun setDatabaseDate(context: Context) {
-            val db = getInstance(context, WinkerkContract.winkerkEntry.WINKERK_DB).readableDatabase
-            val settingsManager = SettingsManager.getInstance(context)
             try {
+                val db =
+                    getInstance(context, WinkerkContract.winkerkEntry.WINKERK_DB).readableDatabase
+                val settingsManager = SettingsManager.getInstance(context)
                 db.rawQuery("SELECT * FROM Datum", null).use { cursor ->
                     if (cursor.moveToFirst()) {
                         val dateIdx = cursor.getColumnIndex("DataDatum")
                         settingsManager.dataDatum =
                             if (dateIdx != -1) cursor.getString(dateIdx) ?: "" else ""
-
                     } else {
                         settingsManager.dataDatum = ""
                     }
-
                 }
             } catch (e: Exception) {
                 if (BuildConfig.DEBUG) Log.e("WinkerkDbHelper", "Error setting database date", e)

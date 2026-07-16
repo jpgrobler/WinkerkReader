@@ -12,17 +12,15 @@
         android:name="android.hardware.telephony"
         android:required="false" />
 
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE" />
+    <!-- Foreground Service Permissions - Cleaned up -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SYSTEM_EXEMPTED" />
 
-    <!-- For older versions -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <!-- Call permissions -->
     <uses-permission android:name="android.permission.MANAGE_OWN_CALLS" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL"
-        tools:node="merge" />
 
     <!-- For Android 12+ (API 31+) exact alarms -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
@@ -110,8 +108,7 @@
             android:exported="false"
             android:windowSoftInputMode="adjustPan|adjustResize"
             android:label="Lidmaat Detail"
-            android:parentActivityName="za.co.jpsoft.winkerkreader.ui.activities.MainActivity"
-            >
+            android:parentActivityName="za.co.jpsoft.winkerkreader.ui.activities.MainActivity">
         </activity>
 
         <activity
@@ -234,6 +231,7 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widget_pastoral_info" />
         </receiver>
+
         <!-- Keyguard Pastoral Reminder Widget -->
         <receiver
             android:name=".widget.PastoralWidgetKeyguardProvider"
@@ -255,6 +253,7 @@
             android:name=".widget.PastoralWidgetRemoteViewsService"
             android:permission="android.permission.BIND_REMOTEVIEWS"
             android:exported="false" />
+
         <receiver
             android:name="za.co.jpsoft.winkerkreader.services.receivers.AlarmReceiver"
             android:exported="false" />
@@ -274,12 +273,12 @@
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
+
         <service
             android:name="za.co.jpsoft.winkerkreader.services.OproepDetailService"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="dataSync"
-            tools:ignore="MissingForegroundServiceType" />
+            android:foregroundServiceType="dataSync" />
 
         <service
             android:name="za.co.jpsoft.winkerkreader.services.WhatsAppNotificationService"
@@ -290,8 +289,6 @@
             <intent-filter>
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
-
-            <!-- Reference the filter XML -->
             <meta-data
                 android:name="android.service.notification.NotificationListenerService"
                 android:resource="@xml/notification_listener_filter" />
@@ -302,12 +299,12 @@
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
+
         <service
             android:name="za.co.jpsoft.winkerkreader.services.CallMonitoringService"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="phoneCall"
-            tools:ignore="MissingForegroundServiceType" />
+            android:foregroundServiceType="phoneCall" />
 
         <service
             android:name="za.co.jpsoft.winkerkreader.services.ListViewWidgetService"

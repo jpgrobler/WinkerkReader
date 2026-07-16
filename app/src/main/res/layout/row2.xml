@@ -3,10 +3,8 @@
     android:id="@android:id/text1"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="#FFFFFF"
     android:gravity="center_vertical"
     android:paddingLeft="6dip"
     android:scrollHorizontally="true"
     android:text="@string/row2_placeholder"
-    android:textAppearance="?android:attr/textAppearanceMedium"
-    android:textColor="#000000" />
+    android:textAppearance="?android:attr/textAppearanceMedium" />

@@ -72,24 +72,30 @@ class DatabaseHelper private constructor(context: Context) :
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        if (oldVersion < 2) {
-            try {
-                db.execSQL("ALTER TABLE $TABLE_CALL_LOGS ADD COLUMN $COLUMN_CALL_TYPE TEXT DEFAULT 'INCOMING'")
-                db.execSQL("ALTER TABLE $TABLE_CALL_LOGS ADD COLUMN $COLUMN_SOURCE TEXT DEFAULT 'WhatsApp'")
-                db.execSQL("ALTER TABLE $TABLE_CALL_LOGS ADD COLUMN $COLUMN_DURATION INTEGER DEFAULT 0")
-            } catch (_: Exception) {
-                // If columns already exist or other error, recreate table
-                db.execSQL("DROP TABLE IF EXISTS $TABLE_CALL_LOGS")
-                onCreate(db)
+        db.beginTransaction()
+        try {
+            if (oldVersion < 2) {
+                try {
+                    db.execSQL("ALTER TABLE $TABLE_CALL_LOGS ADD COLUMN $COLUMN_CALL_TYPE TEXT DEFAULT 'INCOMING'")
+                    db.execSQL("ALTER TABLE $TABLE_CALL_LOGS ADD COLUMN $COLUMN_SOURCE TEXT DEFAULT 'WhatsApp'")
+                    db.execSQL("ALTER TABLE $TABLE_CALL_LOGS ADD COLUMN $COLUMN_DURATION INTEGER DEFAULT 0")
+                } catch (_: Exception) {
+                    // If columns already exist or other error, recreate table
+                    db.execSQL("DROP TABLE IF EXISTS $TABLE_CALL_LOGS")
+                    onCreate(db)
+                }
             }
-        }
-        if (oldVersion < 3) {
-            try {
-                db.execSQL(createActiveCallsTableSql())
-            } catch (e: Exception) {
-                // Table may already exist from a fresh install; ignore.
-                if (BuildConfig.DEBUG) Log.w(TAG, "active_calls table creation skipped", e)
+            if (oldVersion < 3) {
+                try {
+                    db.execSQL(createActiveCallsTableSql())
+                } catch (e: Exception) {
+                    // Table may already exist from a fresh install; ignore.
+                    if (BuildConfig.DEBUG) Log.w(TAG, "active_calls table creation skipped", e)
+                }
             }
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
         }
     }
 

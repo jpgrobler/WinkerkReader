@@ -1,6 +1,5 @@
 package za.co.jpsoft.winkerkreader.widget
 
-
 import java.time.LocalDate
 
 /**
@@ -12,9 +11,6 @@ object WidgetQueryBuilder {
 
     private const val LOOK_AHEAD_DAYS = 15
 
-    /**
-     * Builds the complete UNION query that returns all events ordered by month and day.
-     */
     fun buildCombinedQuery(): String {
         val today = LocalDate.now()
         val futureDate = today.plusDays(LOOK_AHEAD_DAYS.toLong())
@@ -40,89 +36,141 @@ object WidgetQueryBuilder {
     }
 
     /**
-     * Query for birthdays (Verjaar) from the Members table.
+     * Builds the day/month filter clause.
+     *
+     * When the 15-day window stays within ONE month (e.g. Jul 14→Jul 29, currentMonth ==
+     * futureMonth), OR would make every day in the month satisfy one branch — we'd get all
+     * 31 days instead of just 14–29. Use AND in that case.
+     *
+     * When the window CROSSES a month boundary (e.g. Jul 28→Aug 11) we need OR: either the
+     * tail of the current month or the head of the next month.
      */
+    private fun dayFilter(
+        dayCol: String, monthCol: String,
+        currentDay: Int, currentMonth: Int,
+        futureDay: Int, futureMonth: Int
+    ): String = if (currentMonth == futureMonth) {
+        "CAST($dayCol AS INTEGER) >= $currentDay " +
+                "AND CAST($monthCol AS INTEGER) = $currentMonth " +
+                "AND CAST($dayCol AS INTEGER) <= $futureDay"
+    } else {
+        "(CAST($dayCol AS INTEGER) >= $currentDay AND CAST($monthCol AS INTEGER) = $currentMonth) " +
+                "OR (CAST($dayCol AS INTEGER) <= $futureDay AND CAST($monthCol AS INTEGER) = $futureMonth)"
+    }
+
     fun buildBirthdayQuery(
         currentDay: Int,
         currentMonth: Int,
         futureDay: Int,
         futureMonth: Int
-    ): String = """
+    ): String {
+        val f = dayFilter(
+            "substr(Geboortedatum,1,2)",
+            "substr(Geboortedatum,4,2)",
+            currentDay,
+            currentMonth,
+            futureDay,
+            futureMonth
+        )
+        return """
         SELECT Members.Noemnaam, Members.Van, Members.Gemeente, 'Verjaar' AS Rede,
                substr(Members.Geboortedatum,1,2) AS Day, substr(Members.Geboortedatum,4,2) AS Month,
-               Members.Geboortedatum as Datum FROM Members
+               Members.Geboortedatum AS Datum FROM Members
         WHERE Members.Rekordstatus = '0' AND Members.Geboortedatum IS NOT NULL AND LENGTH(Members.Geboortedatum) >= 10
-          AND ((CAST(substr(Geboortedatum, 1, 2) AS INTEGER) >= $currentDay AND CAST(substr(Geboortedatum, 4, 2) AS INTEGER) = $currentMonth)
-            OR (CAST(substr(Geboortedatum, 1, 2) AS INTEGER) <= $futureDay AND CAST(substr(Geboortedatum, 4, 2) AS INTEGER) = $futureMonth))
-    """.trimIndent()
+          AND ($f)
+        """.trimIndent()
+    }
 
-    /**
-     * Query for baptisms (Doop) from the Members table.
-     */
     fun buildBaptismQuery(
         currentDay: Int,
         currentMonth: Int,
         futureDay: Int,
         futureMonth: Int
-    ): String = """
+    ): String {
+        val f = dayFilter(
+            "substr(Members.[Doop date],1,2)",
+            "substr(Members.[Doop date],4,2)",
+            currentDay,
+            currentMonth,
+            futureDay,
+            futureMonth
+        )
+        return """
         SELECT Members.Noemnaam, Members.Van, Members.Gemeente, 'Doop' AS Rede,
                substr(Members.[Doop date],1,2) AS Day, substr(Members.[Doop date],4,2) AS Month,
-               Members.[Doop date] as Datum FROM Members
+               Members.[Doop date] AS Datum FROM Members
         WHERE Members.Rekordstatus = '0' AND Members.[Doop date] IS NOT NULL AND LENGTH(Members.[Doop date]) >= 10
-          AND ((CAST(substr(Members.[Doop date], 1, 2) AS INTEGER) >= $currentDay AND CAST(substr(Members.[Doop date], 4, 2) AS INTEGER) = $currentMonth)
-            OR (CAST(substr(Members.[Doop date], 1, 2) AS INTEGER) <= $futureDay AND CAST(substr(Members.[Doop date], 4, 2) AS INTEGER) = $futureMonth))
-    """.trimIndent()
+          AND ($f)
+        """.trimIndent()
+    }
 
-    /**
-     * Query for weddings (Huwelik) from the Members table.
-     */
     fun buildMarriageQuery(
         currentDay: Int,
         currentMonth: Int,
         futureDay: Int,
         futureMonth: Int
-    ): String = """
+    ): String {
+        val f = dayFilter(
+            "substr(Members.[Huwelik date],1,2)",
+            "substr(Members.[Huwelik date],4,2)",
+            currentDay,
+            currentMonth,
+            futureDay,
+            futureMonth
+        )
+        return """
         SELECT Members.Noemnaam, Members.Van, Members.Gemeente, 'Huwelik' AS Rede,
                substr(Members.[Huwelik date],1,2) AS Day, substr(Members.[Huwelik date],4,2) AS Month,
-               Members.[Huwelik date] as Datum FROM Members
+               Members.[Huwelik date] AS Datum FROM Members
         WHERE Members.Rekordstatus = '0' AND Members.[Huwelik date] IS NOT NULL AND LENGTH(Members.[Huwelik date]) >= 10
-          AND ((CAST(substr(Members.[Huwelik date], 1, 2) AS INTEGER) >= $currentDay AND CAST(substr(Members.[Huwelik date], 4, 2) AS INTEGER) = $currentMonth)
-            OR (CAST(substr(Members.[Huwelik date], 1, 2) AS INTEGER) <= $futureDay AND CAST(substr(Members.[Huwelik date], 4, 2) AS INTEGER) = $futureMonth))
-    """.trimIndent()
+          AND ($f)
+        """.trimIndent()
+    }
 
-    /**
-     * Query for confessions (Belydenis) from the Members table.
-     */
     fun buildConfessionQuery(
         currentDay: Int,
         currentMonth: Int,
         futureDay: Int,
         futureMonth: Int
-    ): String = """
+    ): String {
+        val f = dayFilter(
+            "substr(Members.[Belydenisaflegging Date],1,2)",
+            "substr(Members.[Belydenisaflegging Date],4,2)",
+            currentDay,
+            currentMonth,
+            futureDay,
+            futureMonth
+        )
+        return """
         SELECT Members.Noemnaam, Members.Van, Members.Gemeente, 'Belydenis' AS Rede,
                substr(Members.[Belydenisaflegging Date],1,2) AS Day, substr(Members.[Belydenisaflegging Date],4,2) AS Month,
-               Members.[Belydenisaflegging Date] as Datum FROM Members
+               Members.[Belydenisaflegging Date] AS Datum FROM Members
         WHERE Members.[Belydenisaflegging Date] IS NOT NULL AND LENGTH(Members.[Belydenisaflegging Date]) >= 10
-          AND ((CAST(substr(Members.[Belydenisaflegging Date], 1, 2) AS INTEGER) >= $currentDay AND CAST(substr(Members.[Belydenisaflegging Date], 4, 2) AS INTEGER) = $currentMonth)
-            OR (CAST(substr(Members.[Belydenisaflegging Date], 1, 2) AS INTEGER) <= $futureDay AND CAST(substr(Members.[Belydenisaflegging Date], 4, 2) AS INTEGER) = $futureMonth))
-    """.trimIndent()
+          AND ($f)
+        """.trimIndent()
+    }
 
-    /**
-     * Query for recent deaths (Oorlede) from the Argief table.
-     * Includes only deaths within the last 2 years.
-     */
     fun buildDeathQuery(
         currentDay: Int,
         currentMonth: Int,
         futureDay: Int,
         futureMonth: Int
-    ): String = """
-        SELECT Argief.Name AS Noemnaam, Argief.Surname as Van, Argief.Gemeente, 'Oorlede' AS Rede,
+    ): String {
+        val f = dayFilter(
+            "substr(Argief.[DepartureDate],1,2)",
+            "substr(Argief.[DepartureDate],4,2)",
+            currentDay,
+            currentMonth,
+            futureDay,
+            futureMonth
+        )
+        return """
+        SELECT Argief.Name AS Noemnaam, Argief.Surname AS Van, Argief.Gemeente, 'Oorlede' AS Rede,
                substr(Argief.[DepartureDate],1,2) AS Day, substr(Argief.[DepartureDate],4,2) AS Month,
                Argief.[DepartureDate] AS Datum FROM Argief
         WHERE Argief.Reason = 'Oorlede' AND Argief.[DepartureDate] IS NOT NULL AND LENGTH(Argief.[DepartureDate]) >= 10
-          AND ((CAST(SUBSTR(Argief.[DepartureDate], 1, 2) AS INTEGER) >= $currentDay AND CAST(SUBSTR(Argief.[DepartureDate], 4, 2) AS INTEGER) = $currentMonth)
-            OR (CAST(SUBSTR(Argief.[DepartureDate], 1, 2) AS INTEGER) <= $futureDay AND CAST(SUBSTR(Argief.[DepartureDate], 4, 2) AS INTEGER) = $futureMonth))
+          AND ($f)
           AND (strftime('%Y', 'now') - CAST(SUBSTR(Argief.[DepartureDate], 7, 4) AS INTEGER)) <= 2
-    """.trimIndent()
+        """.trimIndent()
+    }
 }

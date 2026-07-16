@@ -4,7 +4,6 @@ package za.co.jpsoft.winkerkreader.services
 import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
@@ -12,9 +11,9 @@ import android.text.style.RelativeSizeSpan
 import android.util.Log
 import android.widget.RemoteViews
 import android.widget.RemoteViewsService
+import androidx.core.content.ContextCompat
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
-import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import za.co.jpsoft.winkerkreader.widget.WidgetDataRepository
 import za.co.jpsoft.winkerkreader.widget.WidgetRow
 import za.co.jpsoft.winkerkreader.widget.WinkerkReaderWidgetProvider
@@ -94,20 +93,23 @@ class WidgetViewsFactory(
         val day = row.day
         val month = row.month
         val name = row.displayText
-        val gemeente = row.gemeente
 
-        // Background color based on gemeente
-        var backgroundColor = Color.WHITE
-        if (gemeente.isNotEmpty()) {
-            val settings = SettingsManager.getInstance(context)
-            when (gemeente) {
-                settings.gemeenteNaam -> backgroundColor = settings.gemeenteKleur
-                settings.gemeente2Naam -> backgroundColor = settings.gemeente2Kleur
-                settings.gemeente3Naam -> backgroundColor = settings.gemeente3Kleur
-            }
+        // --- Determine if this row is today ---
+        val todayDay = today.toString().substring(8, 10)  // "dd"
+        val isToday = day == todayDay
+
+        // --- Choose background colour ---
+        // md_theme_surface = light in day mode, dark in night mode
+        // md_theme_primaryContainer = light tint in day, dark tint in night
+        val bgResId = if (isToday) {
+            R.color.md_theme_primaryContainer
+        } else {
+            R.color.md_theme_surface
         }
-        remoteViews.setInt(android.R.id.text1, "setBackgroundColor", backgroundColor)
+        val backgroundColor = ContextCompat.getColor(context, bgResId)
+        remoteViews.setInt(R.id.row_container, "setBackgroundColor", backgroundColor)
 
+        // --- Build the display text with spans (your existing logic, unchanged) ---
         val displayText = "$day/$month $name"
         val spannable = SpannableString(displayText)
         val textLength = spannable.length
@@ -120,43 +122,39 @@ class WidgetViewsFactory(
         // Gray out repeated dates
         if (position > 0 && allRows.isNotEmpty() && day == allRows[position - 1].day) {
             spannable.setSpan(
-                ForegroundColorSpan(Color.LTGRAY),
-                0,
-                5,
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                ForegroundColorSpan(
+                    ContextCompat.getColor(
+                        context,
+                        R.color.md_theme_onSurfaceVariant
+                    )
+                ),
+                0, 5, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
             )
         } else {
             spannable.setSpan(
-                ForegroundColorSpan(Color.BLACK),
-                0,
-                5,
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                ForegroundColorSpan(ContextCompat.getColor(context, R.color.md_theme_onSurface)),
+                0, 5, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
             )
         }
 
-        // Main text color (dark gray)
+        // Main text colour (dark/light grey depending on theme)
         if (textLength > 6) {
             spannable.setSpan(
-                ForegroundColorSpan(Color.argb(200, 50, 50, 50)),
-                6, textLength,
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                ForegroundColorSpan(ContextCompat.getColor(context, R.color.md_theme_onSurface)),
+                6, textLength, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
             )
         }
 
-        // Highlight today's date
-        val todayDay = today.toString().substring(8, 10)
-        if (day == todayDay) {
+        // Highlight today’s row (already primary)
+        if (isToday) {
             spannable.setSpan(
-                ForegroundColorSpan(Color.BLUE),
-                0,
-                5,
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                ForegroundColorSpan(ContextCompat.getColor(context, R.color.md_theme_primary)),
+                0, 5, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
             )
             if (textLength > 6) {
                 spannable.setSpan(
-                    ForegroundColorSpan(Color.argb(255, 0, 0, 220)),
-                    6, textLength,
-                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                    ForegroundColorSpan(ContextCompat.getColor(context, R.color.md_theme_primary)),
+                    6, textLength, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                 )
             }
         }
@@ -176,7 +174,7 @@ class WidgetViewsFactory(
 
         remoteViews.setTextViewText(android.R.id.text1, spannable)
 
-        // Set up click intent
+        // Set up click intent (unchanged)
         val fillInIntent = Intent().apply {
             putExtra(WinkerkReaderWidgetProvider.EXTRA_WORD, name)
         }
@@ -189,7 +187,10 @@ class WidgetViewsFactory(
         if (BuildConfig.DEBUG) Log.d(tag, "Creating empty row")
         val remoteViews = RemoteViews(context.packageName, R.layout.row)
         remoteViews.setTextViewText(android.R.id.text1, "Geen verjaarsdae")
-        remoteViews.setInt(android.R.id.text1, "setBackgroundColor", Color.LTGRAY)
+        remoteViews.setInt(
+            android.R.id.text1, "setBackgroundColor",
+            ContextCompat.getColor(context, R.color.md_theme_surfaceContainerHighest)
+        )
         return remoteViews
     }
 

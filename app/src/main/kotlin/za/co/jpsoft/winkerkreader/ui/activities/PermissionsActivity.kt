@@ -1,7 +1,6 @@
 package za.co.jpsoft.winkerkreader.ui.activities
 
 import android.Manifest
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -10,11 +9,9 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
-import androidx.core.net.toUri
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import za.co.jpsoft.winkerkreader.R
@@ -22,10 +19,13 @@ import za.co.jpsoft.winkerkreader.databinding.ActivityPermissionsBinding
 import za.co.jpsoft.winkerkreader.databinding.ItemPermissionBinding
 import za.co.jpsoft.winkerkreader.utils.BatteryOptimizationHelper
 import za.co.jpsoft.winkerkreader.utils.BatteryOptimizationHelper.showBatteryOptimizationDialog
+import za.co.jpsoft.winkerkreader.utils.MainNavigationController
 import za.co.jpsoft.winkerkreader.utils.PermissionManager
 import za.co.jpsoft.winkerkreader.utils.PermissionRationaleHelper
 
 class PermissionsActivity : AppCompatActivity() {
+    // ✅ Only ONE declaration - keep this one
+    private val navigationController by lazy { MainNavigationController(this) }
     private val permissionManager by lazy { PermissionManager(this) }
     private lateinit var binding: ActivityPermissionsBinding
     private lateinit var adapter: PermissionsAdapter
@@ -99,7 +99,6 @@ class PermissionsActivity : AppCompatActivity() {
             "🪫 ${getString(R.string.battery_optimization_enabled)}"
         }
     }
-
 
     private fun initializePermissionsList() {
         permissionsList = buildList {
@@ -267,72 +266,39 @@ class PermissionsActivity : AppCompatActivity() {
                 }
             }
 
-            PermissionType.OVERLAY -> requestOverlayPermission()
-            PermissionType.EXACT_ALARM -> requestExactAlarmPermission()
-            PermissionType.NOTIFICATION_POLICY -> requestNotificationPolicyAccess()
-            PermissionType.NOTIFICATION_LISTENER -> requestNotificationListenerAccess()
-        }
-    }
-
-    private fun requestOverlayPermission() {
-        if (!Settings.canDrawOverlays(this)) {
-            // Show rationale first
-            AlertDialog.Builder(this)
-                .setTitle(R.string.rationale_overlay_title)
-                .setMessage(R.string.rationale_overlay_message)
-                .setPositiveButton(R.string.rationale_ok) { _, _ ->
-                    val intent = Intent(
-                        Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                        "package:$packageName".toUri()
-                    )
-                    overlayPermissionLauncher.launch(intent)
+            // ✅ These now use the single navigationController instance
+            PermissionType.OVERLAY -> {
+                if (!Settings.canDrawOverlays(this)) {
+                    navigationController.navigateToOverlaySettings()
+                } else {
+                    Toast.makeText(this, "Toestemming reeds gegee", Toast.LENGTH_SHORT).show()
                 }
-                .setNegativeButton(R.string.rationale_deny, null)
-                .show()
-        } else {
-            Toast.makeText(this, "Toestemming reeds gegee", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun requestExactAlarmPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            // Show rationale first
-            AlertDialog.Builder(this)
-                .setTitle(R.string.rationale_exact_alarm_title)
-                .setMessage(R.string.rationale_exact_alarm_message)
-                .setPositiveButton(R.string.rationale_ok) { _, _ ->
-                    val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
-                        data = "package:$packageName".toUri()
-                    }
-                    startActivity(intent)
-                }
-                .setNegativeButton(R.string.rationale_deny, null)
-                .show()
-        }
-    }
-
-    private fun requestNotificationPolicyAccess() {
-        val notificationManager =
-            getSystemService(NOTIFICATION_SERVICE) as android.app.NotificationManager
-        if (!notificationManager.isNotificationPolicyAccessGranted) {
-            val intent = Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
-            notificationPolicyLauncher.launch(intent)
-        } else {
-            Toast.makeText(this, "Toestemming reeds gegee", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun requestNotificationListenerAccess() {
-        // Show rationale first
-        AlertDialog.Builder(this)
-            .setTitle(R.string.rationale_notification_listener_title)
-            .setMessage(R.string.rationale_notification_listener_message)
-            .setPositiveButton(R.string.rationale_ok) { _, _ ->
-                startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
             }
-            .setNegativeButton(R.string.rationale_deny, null)
-            .show()
+
+            PermissionType.EXACT_ALARM -> {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    navigationController.navigateToExactAlarmSettings()
+                }
+            }
+
+            PermissionType.NOTIFICATION_POLICY -> {
+                navigationController.navigateToNotificationPolicySettings()
+            }
+
+            PermissionType.NOTIFICATION_LISTENER -> {
+                navigationController.navigateToNotificationListenerSettings()
+            }
+        }
     }
+
+    // ❌ REMOVE this duplicate declaration - it's already at the top of the class
+    // private val navigationController by lazy { MainNavigationController(this) }
+
+    // ❌ REMOVE these duplicate methods - they're already defined above
+    // private fun requestOverlayPermission() { ... }
+    // private fun requestExactAlarmPermission() { ... }
+    // private fun requestNotificationPolicyAccess() { ... }
+    // private fun requestNotificationListenerAccess() { ... }
 
     override fun onResume() {
         super.onResume()

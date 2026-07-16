@@ -10,6 +10,7 @@ import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.databinding.ActivityMainBinding
 import za.co.jpsoft.winkerkreader.utils.AppInitializer
+import za.co.jpsoft.winkerkreader.utils.MainNavigationController
 import za.co.jpsoft.winkerkreader.utils.PermissionManager
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
 
@@ -23,7 +24,8 @@ interface StartupActions {
     fun setupAlarms()
     fun loadInitialData()
     fun ensureServicesAreRunning()
-    fun isNotificationAccessEnabled(): Boolean
+
+    // fun isNotificationAccessEnabled(): Boolean
     fun openNotificationSettings()
     fun showToast(message: String)
 }
@@ -34,7 +36,8 @@ class MainStartupCoordinator(
     private val settingsManager: SettingsManager,
     private val permissionManager: PermissionManager,
     private val binding: ActivityMainBinding,
-    private val actions: StartupActions
+    private val actions: StartupActions,
+    private val navigationController: MainNavigationController
 ) {
 
     companion object {
@@ -104,7 +107,7 @@ class MainStartupCoordinator(
                 if (BuildConfig.DEBUG) Log.d(TAG, "Notification listener access missing")
                 withContext(Dispatchers.Main) {
                     actions.showToast(NOTIFICATION_PERMISSION_MESSAGE)
-                    actions.openNotificationSettings()
+                    actions.openNotificationSettings()  // Now uses navigationController
                 }
             }
         }

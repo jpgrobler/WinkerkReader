@@ -9,8 +9,8 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.content.res.ColorStateList
 import android.database.sqlite.SQLiteDatabase
-import android.graphics.Color
 import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
@@ -39,8 +39,10 @@ import androidx.work.Data
 import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
+import com.google.android.material.color.MaterialColors
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.BuildConfig
@@ -135,41 +137,149 @@ class LaaiDatabasisActivity : AppCompatActivity() {
 
     private val pickFileLauncher =
         registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-            if (uri != null) {
-                val dbPath = File(applicationInfo.dataDir, "databases")
-                if (!dbPath.exists()) dbPath.mkdirs()
+            if (uri == null) {
+                Toast.makeText(this, "Geen lêer gekies nie", Toast.LENGTH_SHORT).show()
+                return@registerForActivityResult
+            }
 
-                val targetFile = File(dbPath, DB_NAME)
+            // ✅ STEP 1: Close ALL database connections BEFORE any file operations
+            lifecycleScope.launch {
                 try {
-                    // Close Room before overwriting
+                    // Close all database connections
+                    withContext(Dispatchers.IO) {
+                        WinkerkDbHelper.closeAllInstances()
                     WinkerkDatabase.closeInstance()
-
-                    contentResolver.openInputStream(uri)?.use { input ->
-                        FileOutputStream(targetFile).use { output ->
-                            input.copyTo(output)
-                        }
-                    } ?: run {
-                        Toast.makeText(this, "Kon nie lêer oopmaak nie", Toast.LENGTH_LONG).show()
-                        return@registerForActivityResult
+                        delay(200) // Now delay is available
+                        System.gc()
                     }
 
-                    if (!migrateDownloadedDatabase(targetFile)) {
-                        Toast.makeText(this, "Databasis omskakeling misluk", Toast.LENGTH_LONG)
-                            .show()
-                        return@registerForActivityResult
+                    // Show progress on main thread
+                    binding.laaiBoodskap.text = "Besig om databasis te laai..."
+                    binding.laaiIndeterminateBar.visibility = View.VISIBLE
+
+                    // Perform the copy on a background thread
+                    val result = withContext(Dispatchers.IO) {
+                        copyDatabaseFromUri(uri)
                     }
 
+                    // Handle result on main thread
+                    binding.laaiIndeterminateBar.visibility = View.GONE
+
+                    if (result) {
+                        Toast.makeText(
+                            this@LaaiDatabasisActivity,
+                            "Databasis suksesvol gelaai",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     reloadDatabaseAndFinish()
-                } catch (e: IOException) {
-                    if (BuildConfig.DEBUG) Log.e(TAG, "File copy failed", e)
+                    } else {
+                        Toast.makeText(
+                            this@LaaiDatabasisActivity,
+                            "Kon nie databasis laai nie",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        binding.laaiBoodskap.text = "Laai misluk"
+                    }
+                } catch (e: Exception) {
+                    binding.laaiIndeterminateBar.visibility = View.GONE
+                    if (BuildConfig.DEBUG) Log.e(TAG, "Error picking file", e)
                     Toast.makeText(
-                        this,
-                        "Kon nie lêer kopieer nie: ${e.message}",
+                        this@LaaiDatabasisActivity,
+                        "Fout: ${e.message}",
                         Toast.LENGTH_LONG
                     ).show()
+                    binding.laaiBoodskap.text = "Fout: ${e.message}"
                 }
             }
         }
+
+    /**
+     * Copy database from URI to app's database directory
+     * Returns true on success, false on failure
+     */
+    private suspend fun copyDatabaseFromUri(uri: Uri): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                val dbPath = File(applicationInfo.dataDir, "databases")
+                if (!dbPath.exists() && !dbPath.mkdirs()) {
+                    if (BuildConfig.DEBUG) Log.e(TAG, "Failed to create databases directory")
+                    return@withContext false
+                }
+
+                val targetFile = File(dbPath, DB_NAME)
+
+                // Delete existing database if it exists
+                if (targetFile.exists()) {
+                    if (!targetFile.delete()) {
+                        // Try to rename instead of delete
+                        val backupFile =
+                            File(dbPath, "${DB_NAME}.old_${System.currentTimeMillis()}")
+                        if (targetFile.renameTo(backupFile)) {
+                            if (BuildConfig.DEBUG) Log.d(
+                                TAG,
+                                "Renamed existing database to ${backupFile.name}"
+                            )
+                        } else {
+                            if (BuildConfig.DEBUG) Log.e(
+                                TAG,
+                                "Failed to delete or rename existing database"
+                            )
+                            return@withContext false
+                        }
+                    }
+                }
+
+                // Copy the file
+                val inputStream = contentResolver.openInputStream(uri)
+                if (inputStream == null) {
+                    if (BuildConfig.DEBUG) Log.e(TAG, "Failed to open input stream from URI")
+                    return@withContext false
+                }
+
+                val outputStream = FileOutputStream(targetFile)
+                try {
+                    inputStream.use { input ->
+                        outputStream.use { output ->
+                            input.copyTo(output)
+                            output.fd.sync()
+                        }
+                    }
+                } catch (e: Exception) {
+                    if (BuildConfig.DEBUG) Log.e(TAG, "Error copying file", e)
+                    targetFile.delete()
+                    return@withContext false
+                }
+
+                // Validate the copied file
+                if (!isValidDatabaseFile(targetFile, 5)) {
+                    if (BuildConfig.DEBUG) Log.e(TAG, "Copied file is not a valid database")
+                    targetFile.delete()
+                    return@withContext false
+                }
+
+                // ✅ STEP 2: Migrate the database schema
+                if (!migrateDownloadedDatabase(targetFile)) {
+                    if (BuildConfig.DEBUG) Log.e(TAG, "Migration failed")
+                    targetFile.delete()
+                    return@withContext false
+                }
+
+                // ✅ STEP 3: Set database date
+                try {
+                    WinkerkDbHelper.setDatabaseDate(this@LaaiDatabasisActivity)
+                } catch (e: Exception) {
+                    if (BuildConfig.DEBUG) Log.w(TAG, "Failed to set database date", e)
+                }
+
+                if (BuildConfig.DEBUG) Log.d(TAG, "Database copied and migrated successfully")
+                true
+
+            } catch (e: Exception) {
+                if (BuildConfig.DEBUG) Log.e(TAG, "Error copying database from URI", e)
+                false
+            }
+        }
+    }
 
     private fun cancelOngoingDownloads() {
         fileDownloadWorkId?.let { workId ->
@@ -369,7 +479,13 @@ class LaaiDatabasisActivity : AppCompatActivity() {
     }
 
     private fun handleDropboxDownload() {
-        binding.dbLinkButton.setBackgroundColor(Color.GREEN)
+        binding.dbLinkButton.backgroundTintList = ColorStateList.valueOf(
+            MaterialColors.getColor(
+                binding.dbLinkButton,
+                com.google.android.material.R.attr.colorPrimaryContainer,
+                0
+            )
+        )
         val downloadUrl = processDownloadUrl(binding.dbLink.text.toString())
         downloadFromDropBoxUrl(downloadUrl)
         settings.edit { putString("DropBox", downloadUrl) }
@@ -394,22 +510,82 @@ class LaaiDatabasisActivity : AppCompatActivity() {
             Toast.makeText(this, "Kies asseblief 'n databasis", Toast.LENGTH_SHORT).show()
             return
         }
+
         delete = binding.laaiWisuit.isChecked
         val filePath = fileList[radioButtonID]["Path"] ?: return
 
+        // Use the same copy logic but from a file path instead of URI
         lifecycleScope.launch {
-            withContext(Dispatchers.IO) {
-                PastoralDatabaseBackup.backupNow(applicationContext)
+            binding.laaiBoodskap.text = "Besig om databasis te laai..."
+            binding.laaiIndeterminateBar.visibility = View.VISIBLE
+
+            val result = withContext(Dispatchers.IO) {
+                // Close connections first
+                WinkerkDbHelper.closeAllInstances()
+                WinkerkDatabase.closeInstance()
+                delay(200) // Now delay is available
+                System.gc()
+
+                // Copy from file path
+                val sourceFile = File(filePath)
+                if (!sourceFile.exists()) {
+                    return@withContext false
+                }
+
+                val dbPath = File(applicationInfo.dataDir, "databases")
+                if (!dbPath.exists() && !dbPath.mkdirs()) {
+                    return@withContext false
+                }
+
+                val targetFile = File(dbPath, DB_NAME)
+
+                // Delete existing
+                if (targetFile.exists()) {
+                    targetFile.delete()
+                }
+
+                // Copy
+                try {
+                    sourceFile.inputStream().use { input ->
+                        targetFile.outputStream().use { output ->
+                            input.copyTo(output)
+                            output.fd.sync()
+                        }
+                    }
+                } catch (e: Exception) {
+                    if (BuildConfig.DEBUG) Log.e(TAG, "Error copying file", e)
+                    return@withContext false
+                }
+
+                // Validate
+                if (!isValidDatabaseFile(targetFile, 5)) {
+                    targetFile.delete()
+                    return@withContext false
+                }
+
+                // Migrate
+                if (!migrateDownloadedDatabase(targetFile)) {
+                    targetFile.delete()
+                    return@withContext false
+                }
+
+                true
             }
-            migrateDownloadedDatabase(File(filePath))
-            if (LaaiNuweData(filePath)) {
-                Toast.makeText(this@LaaiDatabasisActivity, "Suksesvol", Toast.LENGTH_SHORT).show()
-                resetGemeenteSettings()
+
+            binding.laaiIndeterminateBar.visibility = View.GONE
+
+            if (result) {
+                // Reload and finish
                 reloadDatabaseAndFinish()
             } else {
-                Toast.makeText(this@LaaiDatabasisActivity, "Onsuksesvol", Toast.LENGTH_SHORT).show()
-                navigateToMainActivity()
+                Toast.makeText(
+                    this@LaaiDatabasisActivity,
+                    "Kon nie databasis laai nie",
+                    Toast.LENGTH_LONG
+                ).show()
+                binding.laaiBoodskap.text = "Laai misluk"
             }
+
             binding.laaiWisuit.isChecked = false
             binding.laaiFilelist.clearCheck()
         }
@@ -433,7 +609,13 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                 "application/vnd.sqlite3"
             )
         )
-        binding.laaiPicker.setBackgroundColor(Color.GREEN)
+        binding.laaiPicker.backgroundTintList = ColorStateList.valueOf(
+            MaterialColors.getColor(
+                binding.laaiPicker,
+                com.google.android.material.R.attr.colorPrimaryContainer,
+                0
+            )
+        )
     }
 
     private fun handleNetworkTransfer() {
@@ -1214,11 +1396,96 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         }
     }
 
+    // Add to LaaiDatabasisActivity.kt
+
+    /**
+     * Load database from a file on the device (Downloads folder or other locations)
+     */
+    private fun loadDatabaseFromDevice(filePath: String) {
+        // First, close all database connections
+        WinkerkDbHelper.closeAllInstances()
+        WinkerkDatabase.closeInstance()
+
+        // Force garbage collection to release any lingering connections
+        System.gc()
+
+        val sourceFile = File(filePath)
+        if (!sourceFile.exists()) {
+            Toast.makeText(this, "Lêer nie gevind nie", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        // Validate the file is a valid SQLite database
+        if (!isValidDatabaseFile(sourceFile, 5)) {
+            Toast.makeText(this, "Lêer is nie 'n geldige databasis nie", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        val dbPath = File(applicationInfo.dataDir, "databases")
+        if (!dbPath.exists() && !dbPath.mkdirs()) {
+            Toast.makeText(this, "Kon nie databasis gids skep nie", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        val targetFile = File(dbPath, DB_NAME)
+
+        try {
+            // Close any existing connections to the target file
+            WinkerkDbHelper.closeInstance(DB_NAME)
+
+            // Wait a moment for any lingering connections to close
+            Thread.sleep(100)
+
+            // Delete existing database if it exists
+            if (targetFile.exists()) {
+                if (!targetFile.delete()) {
+                    // Try to rename instead of delete
+                    val backupFile = File(dbPath, "${DB_NAME}.old")
+                    targetFile.renameTo(backupFile)
+                    if (BuildConfig.DEBUG) Log.d(
+                        TAG,
+                        "Renamed existing database to ${backupFile.name}"
+                    )
+                }
+            }
+
+            // Copy the file
+            FileInputStream(sourceFile).use { input ->
+                FileOutputStream(targetFile).use { output ->
+                    input.copyTo(output)
+                    output.fd.sync()
+                }
+            }
+
+            // Verify the copied file
+            if (!isValidDatabaseFile(targetFile, 5)) {
+                targetFile.delete()
+                Toast.makeText(this, "Gekopieerde lêer is nie geldig nie", Toast.LENGTH_LONG).show()
+                return
+            }
+
+            // Migrate the database schema
+            val migrated = migrateDownloadedDatabase(targetFile)
+            if (!migrated) {
+                targetFile.delete()
+                Toast.makeText(this, "Databasis omskakeling misluk", Toast.LENGTH_LONG).show()
+                return
+            }
+
+            // Success
+            Toast.makeText(this, "Databasis suksesvol gelaai", Toast.LENGTH_SHORT).show()
+
+            // Reload database and finish
+            reloadDatabaseAndFinish()
+
+        } catch (e: Exception) {
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error loading database from device", e)
+            Toast.makeText(this, "Fout: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+
     /**
      * Validates that the given file is a genuine SQLite database with the correct schema.
-     * @param file The file to validate.
-     * @param minMemberCount Minimum number of rows expected in the Members table.
-     * @return true if the file is valid, false otherwise.
      */
     private fun isValidDatabaseFile(file: File, minMemberCount: Int = 10): Boolean {
         if (!file.exists() || file.length() < 512) {
@@ -1244,33 +1511,40 @@ class LaaiDatabasisActivity : AppCompatActivity() {
             return false
         }
 
-        // 2. Optional: ensure the Members table exists and has rows
+        // 2. Check if the file is a valid database with the required tables
         return try {
             SQLiteDatabase.openDatabase(file.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
                 .use { db ->
-                    // Check that the Members table exists and has at least minMemberCount rows
+                    // Check if Members table exists
                     val cursor = db.rawQuery(
-                        "SELECT COUNT(*) FROM Members",
+                        "SELECT name FROM sqlite_master WHERE type='table' AND name='Members'",
                         null
                     )
-                    cursor.use {
-                        if (it.moveToFirst()) {
-                            val count = it.getInt(0)
-                            if (count < minMemberCount) {
-                                if (BuildConfig.DEBUG) Log.e(
-                                    TAG,
-                                    "Members table has only $count rows (minimum $minMemberCount)"
-                                )
-                                return false
-                            }
-                            true
-                        } else {
-                            false
-                        }
+                    val hasMembersTable = cursor.use { it.moveToFirst() }
+
+                    if (!hasMembersTable) {
+                        if (BuildConfig.DEBUG) Log.e(TAG, "Members table not found in database")
+                        return false
                     }
+
+                    // Check row count
+                    val countCursor = db.rawQuery("SELECT COUNT(*) FROM Members", null)
+                    val count = countCursor.use {
+                        if (it.moveToFirst()) it.getInt(0) else 0
+                    }
+
+                    if (count < minMemberCount) {
+                        if (BuildConfig.DEBUG) Log.e(
+                            TAG,
+                            "Members table has only $count rows (minimum $minMemberCount)"
+                        )
+                        return false
+                    }
+
+                    true
                 }
         } catch (e: Exception) {
-            if (BuildConfig.DEBUG) Log.e(TAG, "Error querying Members table", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error validating database", e)
             false
         }
     }

@@ -34,14 +34,17 @@
 
     <color name="md_theme_surfaceTint">#B5C2FF</color>
 
-    <!-- Surface container tonal steps (DARK) -->
-    <color name="md_theme_surfaceContainerLowest">#11131F</color>
+    <!-- Surface container tonal steps (DARK)
+         FIX: surfaceContainerLowest must be the darkest step, one level below
+         surface (#11131F). Previously it was identical to surface, collapsing
+         the bottom rung of the tonal elevation ladder. -->
+    <color name="md_theme_surfaceContainerLowest">#0C0E1A</color>
     <color name="md_theme_surfaceContainerLow">#191C2A</color>
     <color name="md_theme_surfaceContainer">#212436</color>
     <color name="md_theme_surfaceContainerHigh">#282C41</color>
     <color name="md_theme_surfaceContainerHighest">#30344D</color>
 
-    <!-- Legacy colours - FIXED DARK THEME VALUES -->
+    <!-- Legacy colours - DARK THEME VALUES -->
     <color name="colorAccent">#F06292</color>
     <color name="background_light">#121212</color>
     <color name="surface_light">#1E1E1E</color>

@@ -3,8 +3,6 @@ package za.co.jpsoft.winkerkreader.utils
 /**
  * Represents the result of resolving a caller (phone number) against
  * the app's internal databases.
- *
- * Use this instead of parsing display strings to determine caller type.
  */
 sealed class CallerInfoResult {
 
@@ -19,6 +17,7 @@ sealed class CallerInfoResult {
      * @param firstName  (optional) First name
      * @param phone      (optional) Primary phone number
      * @param memberType (optional) e.g., "Lidmaat", "Kind", "Buite‑lid"
+     * @param gemeente   (optional) Congregation name
      */
     data class Member(
         val name: String,
@@ -27,10 +26,11 @@ sealed class CallerInfoResult {
         val firstName: String? = null,
         val phone: String? = null,
         val memberType: String? = null,
+        val gemeente: String? = null,
     ) : CallerInfoResult()
 
     /**
-     * A contact from the device's contacts list (or from the app's own contact store).
+     * A contact from the device's contacts list.
      * @param name        Display name of the contact
      * @param phoneNumber The phone number that was matched
      */

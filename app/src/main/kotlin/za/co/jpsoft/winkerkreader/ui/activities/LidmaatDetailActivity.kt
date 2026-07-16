@@ -251,6 +251,11 @@ class LidmaatDetailActivity : AppCompatActivity() {
     // ─── UI Initialisation ────────────────────────────────────────────────────
 
     private fun initializeViews() {
+        // ─── Toolbar ─────────────────────────────────────────────────────────────
+
+        binding.detailToolbar.setNavigationOnClickListener {
+            onBackPressedDispatcher.onBackPressed()
+        }
         val fieldsToDisable = listOf(
             binding.detailNoemnaam,
             binding.detailVan,

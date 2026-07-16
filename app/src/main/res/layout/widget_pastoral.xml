@@ -1,11 +1,10 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/widget_pastoral_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/borderwidget"
     android:orientation="vertical"
     android:padding="8dp">
-
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -13,18 +12,36 @@
         android:layout_gravity="center"
         android:orientation="horizontal">
 
-
-        <ImageView
-            android:id="@+id/widget_image"
+        <!-- Stacked icons: bediening (background) + launcher (top-left) -->
+        <FrameLayout
             android:layout_width="40dp"
             android:layout_height="30dp"
-            android:clickable="true"
-            android:contentDescription="WinkerkReader"
-            android:focusable="true"
-            android:paddingEnd="10dp"
-            android:scaleType="fitXY"
-            android:src="@drawable/ic_launcher_roundw" />
+            android:paddingEnd="10dp">
 
+            <!-- Bediening icon (background, larger) – original colours -->
+            <ImageView
+                android:id="@+id/widget_image_bediening"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clickable="true"
+                android:contentDescription="Bediening"
+                android:focusable="true"
+                android:scaleType="fitXY"
+                android:src="@drawable/ic_bediening" />
+
+            <!-- Launcher icon (overlay, top‑left) – original colours -->
+            <ImageView
+                android:id="@+id/widget_image_launcher"
+                android:layout_width="15dp"
+                android:layout_height="15dp"
+                android:layout_gravity="top|start"
+                android:clickable="true"
+                android:contentDescription="WinkerkReader"
+                android:focusable="true"
+                android:scaleType="fitXY"
+                android:src="@drawable/family_roof"
+                app:tint="?attr/colorBackgroundFloating" />
+        </FrameLayout>
 
         <TextView
             android:id="@+id/widget_pastoral_header"
@@ -38,10 +55,8 @@
             android:paddingEnd="10dp"
             android:paddingBottom="4dp"
             android:text="@string/widget_pastoral_title"
-            android:textColor="#000000"
             android:textSize="18sp"
             android:textStyle="bold" />
-
 
         <ImageView
             android:id="@+id/widget_image2"
@@ -49,20 +64,18 @@
             android:layout_height="30dp"
             android:clickable="true"
             android:contentDescription="Bediening"
-            android:src="@drawable/ic_bediening" />
-
-
+            android:src="@drawable/updatew" />
     </LinearLayout>
 
+    <!-- ListView – transparent background; rows handle their own -->
 
     <ListView
         android:id="@+id/widget_pastoral_list"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="2"
-        android:background="#FFFFFF"
+        android:background="@android:color/transparent"
         android:divider="@android:color/transparent" />
-
 
     <TextView
         android:id="@+id/widget_pastoral_empty"
@@ -72,10 +85,8 @@
         android:paddingTop="8dp"
         android:paddingBottom="8dp"
         android:text="@string/widget_pastoral_empty"
-        android:textColor="#666666"
         android:textSize="11sp"
         android:visibility="gone" />
-
 
     <TextView
         android:id="@+id/widget_pastoral_update_time"
@@ -84,8 +95,5 @@
         android:alpha="0.7"
         android:gravity="center"
         android:text="@string/widget_last_updated"
-        android:textColor="#666666"
         android:textSize="11sp" />
-
-
 </LinearLayout>

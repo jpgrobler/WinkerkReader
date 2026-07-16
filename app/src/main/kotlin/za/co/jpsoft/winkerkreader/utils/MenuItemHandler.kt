@@ -35,14 +35,14 @@ class MenuItemHandler(
 
             R.id.laai -> {
                 settings.fromMenu = true
-                navigationController.navigateToLaaiDatabasis()
+                navigationController.navigateToLaaiDatabasis(extras = null)
                 activity.finish()
                 true
             }
 
             R.id.sms_verjaar -> {
                 settings.fromMenu = true
-                navigationController.navigateToSmsVerjaar()
+                navigationController.navigateToVerjaarSms()
                 true
             }
             //R.id.filter_options -> handleFilterOptions()

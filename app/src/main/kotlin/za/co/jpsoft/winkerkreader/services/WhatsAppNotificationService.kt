@@ -6,16 +6,13 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.os.Build
-import android.os.Handler
-import android.os.IBinder
-import android.os.Looper
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import za.co.jpsoft.winkerkreader.BuildConfig
+import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.ui.activities.MainActivity
 
 class WhatsAppNotificationService : NotificationListenerService() {
@@ -34,17 +31,10 @@ class WhatsAppNotificationService : NotificationListenerService() {
         try {
             super.onCreate()
             isServiceRunning = true
-            if (BuildConfig.DEBUG) Log.d(TAG, "onCreate - Service created, isRunning=true")
+            if (BuildConfig.DEBUG) Log.d(TAG, "onCreate")
 
-            // Create notification channel for Android O+
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                createNotificationChannel()
-            }
-
-            // Start as foreground service to prevent being killed
+            createNotificationChannel()
             startForeground(NOTIFICATION_ID, createForegroundNotification())
-
-            if (BuildConfig.DEBUG) Log.d(TAG, "onCreate - Service started successfully")
 
         } catch (e: Exception) {
             Log.e(TAG, "Error in onCreate", e)
@@ -56,12 +46,10 @@ class WhatsAppNotificationService : NotificationListenerService() {
     override fun onListenerConnected() {
         try {
             super.onListenerConnected()
-            if (BuildConfig.DEBUG) Log.d(TAG, "onListenerConnected - Successfully connected")
+            if (BuildConfig.DEBUG) Log.d(TAG, "onListenerConnected")
 
-            // Verify we have permission to listen to notifications
             if (!NotificationManagerCompat.getEnabledListenerPackages(this).contains(packageName)) {
-                Log.w(TAG, "Notification listener permission not granted by user")
-                // Request permission - this will open settings
+                Log.w(TAG, "Notification listener permission not granted")
                 requestPermission()
             }
         } catch (e: Exception) {
@@ -69,18 +57,20 @@ class WhatsAppNotificationService : NotificationListenerService() {
         }
     }
 
+    override fun onListenerDisconnected() {
+        super.onListenerDisconnected()
+        if (BuildConfig.DEBUG) Log.d(TAG, "onListenerDisconnected")
+        // Don't stop — framework will reconnect
+    }
+
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
         try {
-            if (sbn == null) {
-                Log.w(TAG, "onNotificationPosted - null notification received")
-                return
-            }
+            if (sbn == null) return
 
             if (BuildConfig.DEBUG) {
-                Log.d(TAG, "onNotificationPosted - Package: ${sbn.packageName}, ID: ${sbn.id}")
+                Log.d(TAG, "onNotificationPosted — package: ${sbn.packageName}, id: ${sbn.id}")
             }
 
-            // Check if this is a WhatsApp notification
             if (sbn.packageName?.contains("whatsapp", ignoreCase = true) == true) {
                 processWhatsAppNotification(sbn)
             }
@@ -91,46 +81,40 @@ class WhatsAppNotificationService : NotificationListenerService() {
 
     override fun onNotificationRemoved(sbn: StatusBarNotification?) {
         try {
-            if (sbn == null) {
-                Log.w(TAG, "onNotificationRemoved - null notification received")
-                return
-            }
+            if (sbn == null) return
 
             if (BuildConfig.DEBUG) {
-                Log.d(TAG, "onNotificationRemoved - Package: ${sbn.packageName}, ID: ${sbn.id}")
+                Log.d(TAG, "onNotificationRemoved — package: ${sbn.packageName}, id: ${sbn.id}")
             }
-
-            // Handle notification removal if needed
         } catch (e: Exception) {
-            Log.e(TAG, "Error in onNotificationRemoved", e)
+            // DeadObjectException is expected during shutdown — swallow silently
+            if (BuildConfig.DEBUG) {
+                Log.d(TAG, "onNotificationRemoved — exception during shutdown: ${e.message}")
+            }
         }
     }
 
     override fun onDestroy() {
+        isServiceRunning = false
+
+        // FIX: call stopForeground directly — the previous Handler.postDelayed captured `this`
+        // in its lambda, keeping the destroyed service instance alive for an extra second and
+        // making LeakCanary's transient framework leak appear worse than it is.
         try {
-            super.onDestroy()
-            isServiceRunning = false
-
-            if (BuildConfig.DEBUG) Log.d(TAG, "onDestroy - Service destroyed, isRunning=false")
-
-            // Don't stop foreground service immediately - let it finish properly
-            Handler(Looper.getMainLooper()).postDelayed({
-                stopForeground(STOP_FOREGROUND_REMOVE)
-            }, 1000)
+            stopForeground(STOP_FOREGROUND_REMOVE)
         } catch (e: Exception) {
-            Log.e(TAG, "Error in onDestroy", e)
-            isServiceRunning = false
+            if (BuildConfig.DEBUG) Log.d(TAG, "stopForeground in onDestroy failed: ${e.message}")
         }
+
+        super.onDestroy()
+        if (BuildConfig.DEBUG) Log.d(TAG, "onDestroy")
     }
 
-    override fun onBind(intent: Intent?): IBinder? {
-        return try {
-            super.onBind(intent)
-        } catch (e: Exception) {
-            Log.e(TAG, "Error in onBind", e)
-            null
-        }
-    }
+    // FIX: do not override onBind on a NotificationListenerService.
+    // The framework depends on the IBinder returned by super.onBind() to manage the
+    // NotificationListenerWrapper binding. Wrapping it in a try/catch that can return null
+    // risks interfering with the system's ability to cleanly unbind (which worsens the leak).
+    // Removing the override lets the framework handle binding correctly.
 
     private fun processWhatsAppNotification(sbn: StatusBarNotification) {
         try {
@@ -139,12 +123,10 @@ class WhatsAppNotificationService : NotificationListenerService() {
             val text = extras.getString(Notification.EXTRA_TEXT, "")
 
             if (BuildConfig.DEBUG) {
-                Log.d(TAG, "WhatsApp Notification - Title: $title")
-                Log.d(TAG, "WhatsApp Notification - Text: $text")
+                Log.d(TAG, "WhatsApp notification — title: $title, text: $text")
             }
 
-            // Here you can process the WhatsApp notification
-            // Example: Extract sender name, message content, etc.
+            // Process the WhatsApp notification here as needed
 
         } catch (e: Exception) {
             Log.e(TAG, "Error processing WhatsApp notification", e)
@@ -152,30 +134,26 @@ class WhatsAppNotificationService : NotificationListenerService() {
     }
 
     private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            try {
-                val channel = NotificationChannel(
-                    NOTIFICATION_CHANNEL_ID,
-                    "WhatsApp Listener Service",
-                    NotificationManager.IMPORTANCE_LOW
-                ).apply {
-                    description = "Required to keep notification listener service running"
-                    setShowBadge(false)
-                }
-
-                val notificationManager =
-                    getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                notificationManager.createNotificationChannel(channel)
-
-                if (BuildConfig.DEBUG) Log.d(TAG, "Notification channel created")
-            } catch (e: Exception) {
-                Log.e(TAG, "Error creating notification channel", e)
+        try {
+            val channel = NotificationChannel(
+                NOTIFICATION_CHANNEL_ID,
+                "WhatsApp Listener Service",
+                NotificationManager.IMPORTANCE_LOW
+            ).apply {
+                description = "Required to keep notification listener service running"
+                setShowBadge(false)
             }
+            val notificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+
+            if (BuildConfig.DEBUG) Log.d(TAG, "Notification channel created")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error creating notification channel", e)
         }
     }
 
     private fun createForegroundNotification(): Notification {
-        // Create an intent to open the app when notification is tapped
         val intent = Intent(this, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(
             this,
@@ -187,7 +165,7 @@ class WhatsAppNotificationService : NotificationListenerService() {
         return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setContentTitle("WhatsApp Listener Active")
             .setContentText("Monitoring WhatsApp notifications")
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(R.drawable.img)
             .setContentIntent(pendingIntent)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
@@ -197,15 +175,16 @@ class WhatsAppNotificationService : NotificationListenerService() {
     private fun requestPermission() {
         try {
             val intent = Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             startActivity(intent)
         } catch (e: Exception) {
             Log.e(TAG, "Error opening notification settings", e)
-            // Fallback to app settings
             try {
                 val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                intent.data = android.net.Uri.parse("package:$packageName")
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    .apply {
+                        data = android.net.Uri.parse("package:$packageName")
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
                 startActivity(intent)
             } catch (e2: Exception) {
                 Log.e(TAG, "Error opening app settings", e2)

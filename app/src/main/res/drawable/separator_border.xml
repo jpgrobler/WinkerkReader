@@ -4,17 +4,23 @@
     <item>
         <shape>
             <solid android:color="?attr/colorPrimaryDark" />
-            <corners android:radius="5dp" />
-            <padding android:left="3dp" />
-            <padding android:right="3dp" />
+            <corners android:radius="6dp" />
+            <padding android:top="2dp" />
+            <padding android:bottom="2dp" />
+            <padding android:left="4dp" />
+            <padding android:right="4dp" />
         </shape>
     </item>
 
     <!-- Inner layer - the background surface color -->
-    <item android:left="1dp" android:top="1dp" android:right="1dp" android:bottom="1dp">
+    <item
+        android:bottom="2dp"
+        android:left="2dp"
+        android:right="2dp"
+        android:top="2dp">
         <shape>
             <solid android:color="?attr/colorSurfaceVariant" />
-            <corners android:radius="3dp" />
+            <corners android:radius="6dp" />
         </shape>
     </item>
 </layer-list>

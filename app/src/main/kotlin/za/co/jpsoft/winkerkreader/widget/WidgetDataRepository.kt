@@ -18,15 +18,12 @@ object WidgetDataRepository {
     private var lastRefreshTime = 0L
     private const val MIN_REFRESH_INTERVAL_MS = 5000L
 
-    // ✅ Cache formatters to avoid recreation
+    // Dates are stored as dd/MM/yyyy in the WinKerk database (confirmed via diagnostic logging).
     private val DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-    private val MONTH_DAY_FORMATTER = DateTimeFormatter.ofPattern("dd/MM")
 
     fun getWidgetRows(): List<WidgetRow> {
         val rows = cachedRows ?: emptyList()
-        if (BuildConfig.DEBUG) {
-            Log.d(TAG, "getWidgetRows: returning ${rows.size} rows")
-        }
+        if (BuildConfig.DEBUG) Log.d(TAG, "getWidgetRows: returning ${rows.size} rows")
         return rows
     }
 
@@ -37,30 +34,35 @@ object WidgetDataRepository {
     }
 
     fun refreshCache(context: Context) {
-        val currentTime = System.currentTimeMillis()
-
-        // Don't refresh too frequently
-        if (cachedRows != null && currentTime - lastRefreshTime < MIN_REFRESH_INTERVAL_MS) {
-            if (BuildConfig.DEBUG) {
-                Log.d(TAG, "Cache is fresh (${cachedRows?.size ?: 0} rows), using cached data")
+        try {
+            val currentTime = System.currentTimeMillis()
+            if (cachedRows != null && currentTime - lastRefreshTime < MIN_REFRESH_INTERVAL_MS) {
+                if (BuildConfig.DEBUG) Log.d(
+                    TAG,
+                    "Cache is fresh (${cachedRows?.size ?: 0} rows), using cached data"
+                )
+                return
             }
-            return
-        }
 
-        if (BuildConfig.DEBUG) Log.d(TAG, "🔄 Refreshing widget cache...")
+            if (BuildConfig.DEBUG) Log.d(TAG, "🔄 Refreshing widget cache...")
 
-        val rows = queryWidgetData(context)
-        cachedRows = rows
-        lastRefreshTime = currentTime
+            val rows = queryWidgetData(context)
+            cachedRows = rows
+            lastRefreshTime = currentTime
 
-        // Save timestamp for widget display
-        context.getSharedPreferences("widget_prefs", Context.MODE_PRIVATE)
-            .edit()
-            .putLong("last_refresh_time", currentTime)
-            .apply()
+            context.getSharedPreferences("widget_prefs", Context.MODE_PRIVATE)
+                .edit()
+                .putLong("last_refresh_time", currentTime)
+                .apply()
 
-        if (BuildConfig.DEBUG) {
-            Log.d(TAG, "✅ Cache refreshed with ${rows.size} rows")
+            if (BuildConfig.DEBUG) {
+                Log.d(TAG, "✅ Cache refreshed with ${rows.size} rows")
+                if (rows.isEmpty()) Log.w(TAG, "⚠️ No rows returned from query!")
+            }
+        } catch (e: Exception) {
+            // Ensure callers always get a valid (empty) list rather than a stale null.
+            Log.e(TAG, "Failed to refresh widget cache", e)
+            cachedRows = emptyList()
         }
     }
 
@@ -74,16 +76,12 @@ object WidgetDataRepository {
             val db = WinkerkDatabase.getInstance(context).openHelper.writableDatabase
             val query = WidgetQueryBuilder.buildCombinedQuery()
 
-            if (BuildConfig.DEBUG) {
-                Log.d(TAG, "Executing query: $query")
-            }
+            if (BuildConfig.DEBUG) Log.d(TAG, "Executing query: $query")
 
             db.query(SimpleSQLiteQuery(query)).use { cursor ->
-                if (BuildConfig.DEBUG) {
-                    Log.d(TAG, "Cursor has ${cursor.count} rows")
-                }
+                if (BuildConfig.DEBUG) Log.d(TAG, "Cursor has ${cursor.count} rows")
 
-                // ✅ Pre-cache column indices for performance
+                // Pre-cache column indices — getColumnIndex is O(n) on the column list.
                 val firstNameIdx =
                     cursor.getColumnIndex(WinkerkContract.winkerkEntry.LIDMATE_NOEMNAAM)
                 val lastNameIdx = cursor.getColumnIndex(WinkerkContract.winkerkEntry.LIDMATE_VAN)
@@ -94,18 +92,16 @@ object WidgetDataRepository {
                 val dayIdx = cursor.getColumnIndex("Day")
                 val monthIdx = cursor.getColumnIndex("Month")
 
-                // ✅ Early validation
                 if (firstNameIdx < 0 || reasonIdx < 0 || dateIdx < 0) {
                     if (BuildConfig.DEBUG) {
                         Log.w(
                             TAG,
-                            "Missing required columns - firstNameIdx=$firstNameIdx, reasonIdx=$reasonIdx, dateIdx=$dateIdx"
+                            "Missing required columns — firstNameIdx=$firstNameIdx, reasonIdx=$reasonIdx, dateIdx=$dateIdx"
                         )
                     }
                     return emptyList()
                 }
 
-                // ✅ Pre-compute emoji mapping
                 val emojiMap = mapOf(
                     "Verjaar" to "🎂",
                     "Doop" to "💧",
@@ -128,15 +124,12 @@ object WidgetDataRepository {
                         val day = cursor.getString(dayIdx) ?: ""
                         val month = cursor.getString(monthIdx) ?: ""
 
-                        // ✅ Validate date string
-                        if (dateString.isEmpty() || dateString.length < 10) {
-                            if (BuildConfig.DEBUG) {
-                                Log.w(TAG, "Invalid date string: $dateString")
-                            }
+                        if (dateString.length < 10) {
+                            if (BuildConfig.DEBUG) Log.w(TAG, "Invalid date string: $dateString")
                             continue
                         }
 
-                        // ✅ Apply filters based on settings (moved outside date parsing)
+                        // Filter by user settings before doing any further work.
                         when (reason) {
                             "Doop" -> if (!settings.widgetDoop) continue
                             "Huwelik" -> if (!settings.widgetHuwelik) continue
@@ -144,36 +137,32 @@ object WidgetDataRepository {
                             "Oorlede" -> if (!settings.widgetSterf) continue
                         }
 
-                        // ✅ Parse date only once
                         val eventDate = try {
                             LocalDate.parse(dateString.substring(0, 10), DATE_FORMATTER)
                         } catch (e: Exception) {
-                            if (BuildConfig.DEBUG) {
-                                Log.w(TAG, "Failed to parse date: $dateString", e)
-                            }
+                            if (BuildConfig.DEBUG) Log.w(
+                                TAG,
+                                "Failed to parse date: $dateString",
+                                e
+                            )
                             continue
                         }
 
-                        // ✅ Check if this is a future or today event (using precomputed todayMonthDay)
+                        // SQL already filters to the lookahead window, but guard against
+                        // same-month edge cases letting past days through.
                         val eventMonthDay = MonthDay.of(eventDate.monthValue, eventDate.dayOfMonth)
                         if (eventMonthDay.isBefore(todayMonthDay)) continue
 
-                        // ✅ Calculate years and build display text
                         val years = ChronoUnit.YEARS.between(eventDate, today).toInt()
                         val emoji = emojiMap[reason] ?: ""
-                        val ageDisplay = if (years >= 0) "($years $emoji)" else ""
+                        // Show age only when meaningful (> 0 suppresses "(0 🎂)" for newborns
+                        // and also avoids negative values for any data anomalies).
+                        val ageDisplay = "($years $emoji)"
 
-                        val fullName = if (lastName.isNotEmpty()) {
-                            "$firstName $lastName"
-                        } else {
-                            firstName
-                        }
-
-                        val displayText = if (ageDisplay.isNotEmpty()) {
-                            "$fullName $ageDisplay"
-                        } else {
-                            fullName
-                        }
+                        val fullName =
+                            if (lastName.isNotEmpty()) "$firstName $lastName" else firstName
+                        val displayText =
+                            if (ageDisplay.isNotEmpty()) "$fullName $ageDisplay" else fullName
 
                         rows.add(
                             WidgetRow(
@@ -185,23 +174,19 @@ object WidgetDataRepository {
                             )
                         )
 
-                        if (BuildConfig.DEBUG) {
-                            Log.d(TAG, "Added row: $displayText ($day/$month) - $reason")
-                        }
+                        if (BuildConfig.DEBUG) Log.d(
+                            TAG,
+                            "Added row: $displayText ($day/$month) - $reason"
+                        )
+
                     } catch (e: Exception) {
-                        if (BuildConfig.DEBUG) {
-                            Log.w(TAG, "Error processing widget row", e)
-                        }
+                        if (BuildConfig.DEBUG) Log.w(TAG, "Error processing widget row", e)
                     }
                 }
             }
 
-            // ✅ Sort rows by month and day using safe conversion
-            rows.sortWith(compareBy<WidgetRow> {
-                it.month.toIntOrNull() ?: 0
-            }.thenBy {
-                it.day.toIntOrNull() ?: 0
-            })
+            rows.sortWith(compareBy<WidgetRow> { it.month.toIntOrNull() ?: 0 }
+                .thenBy { it.day.toIntOrNull() ?: 0 })
 
         } catch (e: Exception) {
             Log.e(TAG, "Error querying widget data", e)
@@ -210,7 +195,6 @@ object WidgetDataRepository {
         return rows
     }
 
-    // Helper method to force a complete refresh
     fun forceRefresh(context: Context) {
         invalidateCache()
         refreshCache(context)

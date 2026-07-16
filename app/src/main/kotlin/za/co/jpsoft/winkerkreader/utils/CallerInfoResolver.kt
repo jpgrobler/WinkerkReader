@@ -1,187 +1,204 @@
 package za.co.jpsoft.winkerkreader.utils
 
 import android.content.ContentResolver
-import android.database.Cursor
 import android.provider.ContactsContract
+import android.util.Log
+import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
 
-/**
- * Resolves a phone number to a [CallerInfoResult] by checking:
- * 1. The congregation member database.
- * 2. The device's local contacts (if permission is granted).
- *
- * Replaces the old string-based parsing approach for robust, type-safe result handling.
- */
 object CallerInfoResolver {
 
-    /**
-     * Resolve the given phone number.
-     * @param phoneNumber The phone number to look up (as a string, e.g., "+27123456789")
-     * @return A [CallerInfoResult] indicating whether the number belongs to a member, a contact, or is unknown.
-     */
+    private const val TAG = "CallerInfoResolver"
+
     fun resolve(phoneNumber: String, contentResolver: ContentResolver): CallerInfoResult {
-        // Step 1: Try to find in the congregation database (members)
-        val memberResult = resolveMember(phoneNumber, contentResolver)
+        if (BuildConfig.DEBUG) Log.d(TAG, "Resolving phone number: $phoneNumber")
+
+        if (phoneNumber.isEmpty() || phoneNumber == "Unknown Number" || phoneNumber == "null") {
+            if (BuildConfig.DEBUG) Log.d(TAG, "Invalid phone number, skipping resolve")
+            return CallerInfoResult.Unknown
+        }
+
+        val normalized = normalizePhoneNumber(phoneNumber)
+        if (normalized.isEmpty() || normalized == "+") {
+            if (BuildConfig.DEBUG) Log.d(TAG, "Number empty after normalization")
+            return CallerInfoResult.Unknown
+        }
+
+        if (BuildConfig.DEBUG) Log.d(TAG, "Normalized number: $normalized")
+
+        val memberResult = resolveMember(normalized, contentResolver)
         if (memberResult != null) {
+            if (BuildConfig.DEBUG) Log.d(TAG, "Found member: ${memberResult.name}")
             return memberResult
         }
 
-        // Step 2: Try to find in the device contacts (if permission is granted)
-        val contactResult = resolveContact(phoneNumber, contentResolver)
+        val contactResult = resolveContact(normalized, contentResolver)
         if (contactResult != null) {
+            if (BuildConfig.DEBUG) Log.d(TAG, "Found contact: ${contactResult.name}")
             return contactResult
         }
 
-        // Step 3: Not found
+        if (BuildConfig.DEBUG) Log.d(TAG, "No match found for: $phoneNumber")
         return CallerInfoResult.Unknown
     }
 
-    /**
-     * Query the congregation database for a member with this phone number.
-     * Searches in the Selfoon, Landlyn, and Werk tel columns.
-     */
     private fun resolveMember(
         phoneNumber: String,
         contentResolver: ContentResolver
     ): CallerInfoResult.Member? {
-        // Normalize the phone number for matching (strip spaces, dashes, etc.)
-        val normalized = normalizePhoneNumber(phoneNumber)
+        try {
+            val formats = buildList {
+                add(phoneNumber)                                        // +27810000008
 
-        // Build query: search in multiple columns (Selfoon, Landlyn, Werk tel)
-        // Use a selection that ORs the columns with LIKE or exact match.
-        // We'll use a selection with placeholders and parameterise the value.
-        val selection = """
-            ${winkerkEntry.LIDMATE_SELFOON} = ? OR 
-            ${winkerkEntry.ADRESSE_LANDLYN} = ? OR 
-            ${winkerkEntry.LIDMATE_WERKFOON} = ?
-        """.trimIndent()
+                val digitsOnly = phoneNumber.replace(Regex("[^0-9]"), "")
+                if (digitsOnly.isNotEmpty()) {
+                    add(digitsOnly)                                     // 27810000008
 
-        val selectionArgs = arrayOf(normalized, normalized, normalized)
+                    // Strip SA country code to get local subscriber number
+                    val local = if (digitsOnly.startsWith("27") && digitsOnly.length > 2)
+                        digitsOnly.substring(2)                         // 810000008
+                    else
+                        digitsOnly
 
-        // Projection: we need the member's name and GUID (and optionally other fields)
-        val projection = arrayOf(
-            winkerkEntry.LIDMATE_VAN,
-            winkerkEntry.LIDMATE_NOEMNAAM,
-            winkerkEntry.LIDMATE_VOORNAME,
-            winkerkEntry.LIDMATE_LIDMAATGUID,
-            winkerkEntry.LIDMATE_SELFOON
-        )
+                    add(local)                                          // 810000008
+                    add("0$local")                                      // 0810000008
+                }
+            }.distinct()
 
-        var cursor: Cursor? = null
-        return try {
-            cursor = contentResolver.query(
+            if (BuildConfig.DEBUG) Log.d(TAG, "Trying formats: $formats")
+            if (formats.isEmpty()) return null
+
+            val conditions = mutableListOf<String>()
+            val args = mutableListOf<String>()
+
+            for (format in formats) {
+                if (format.isNotEmpty()) {
+                    conditions.add("[${winkerkEntry.LIDMATE_SELFOON}] LIKE ?")
+                    args.add("%$format%")
+                    conditions.add("[${winkerkEntry.LIDMATE_LANDLYN}] LIKE ?")
+                    args.add("%$format%")
+                    conditions.add("[${winkerkEntry.LIDMATE_WERKFOON}] LIKE ?")
+                    args.add("%$format%")
+                }
+            }
+
+            if (conditions.isEmpty()) return null
+
+            // Build a complete SELECT statement because the provider expects a full SQL query.
+            val whereClause = conditions.joinToString(" OR ")
+            val fullQuery = "SELECT * FROM Members WHERE $whereClause"
+
+            if (BuildConfig.DEBUG) {
+                Log.d(TAG, "Full query: $fullQuery")
+                Log.d(TAG, "Args: ${args.joinToString()}")
+            }
+
+            val projection = arrayOf(
+                winkerkEntry.LIDMATE_VAN,
+                winkerkEntry.LIDMATE_NOEMNAAM,
+                winkerkEntry.LIDMATE_VOORNAME,
+                winkerkEntry.LIDMATE_LIDMAATGUID,
+                winkerkEntry.LIDMATE_SELFOON,
+                winkerkEntry.LIDMATE_GEMEENTE
+            )
+
+            val cursor = contentResolver.query(
                 winkerkEntry.CONTENT_URI,
                 projection,
-                selection,
-                selectionArgs,
+                fullQuery,
+                args.toTypedArray(),
                 null
             )
-            if (cursor != null && cursor.moveToFirst()) {
-                val surname =
-                    cursor.getString(cursor.getColumnIndexOrThrow(winkerkEntry.LIDMATE_VAN))
-                val noemnaam =
-                    cursor.getString(cursor.getColumnIndexOrThrow(winkerkEntry.LIDMATE_NOEMNAAM))
-                val voorname =
-                    cursor.getString(cursor.getColumnIndexOrThrow(winkerkEntry.LIDMATE_VOORNAME))
-                val guid =
-                    cursor.getString(cursor.getColumnIndexOrThrow(winkerkEntry.LIDMATE_LIDMAATGUID))
-                val phone =
-                    cursor.getString(cursor.getColumnIndexOrThrow(winkerkEntry.LIDMATE_SELFOON))
 
-                // Build a display name (e.g., "Jan Botha" or "Botha, Jan")
-                val displayName = buildMemberDisplayName(surname, voorname, noemnaam)
+            cursor?.use {
+                if (it.moveToFirst()) {
+                    val surname =
+                        it.getString(it.getColumnIndexOrThrow(winkerkEntry.LIDMATE_VAN)) ?: ""
+                    val noemnaam =
+                        it.getString(it.getColumnIndexOrThrow(winkerkEntry.LIDMATE_NOEMNAAM)) ?: ""
+                    val voorname =
+                        it.getString(it.getColumnIndexOrThrow(winkerkEntry.LIDMATE_VOORNAME)) ?: ""
+                    val guid =
+                        it.getString(it.getColumnIndexOrThrow(winkerkEntry.LIDMATE_LIDMAATGUID))
+                            ?: ""
+                    val phone =
+                        it.getString(it.getColumnIndexOrThrow(winkerkEntry.LIDMATE_SELFOON)) ?: ""
+                    val gemeente =
+                        it.getString(it.getColumnIndexOrThrow(winkerkEntry.LIDMATE_GEMEENTE)) ?: ""
 
-                CallerInfoResult.Member(
-                    name = displayName,
-                    guid = guid,
-                    surname = surname,
-                    firstName = voorname,
-                    phone = phone,
-                    memberType = "Lidmaat" // Or you could determine type from other fields
-                )
-            } else {
-                null
+                    val displayName = buildMemberDisplayName(noemnaam, surname)
+
+                    return CallerInfoResult.Member(
+                        name = displayName,
+                        guid = guid,
+                        surname = surname,
+                        firstName = noemnaam,
+                        phone = phone,
+                        memberType = "Lidmaat",
+                        gemeente = gemeente
+                    )
+                }
             }
+            return null
         } catch (e: Exception) {
-            // Log error if needed
-            null
-        } finally {
-            cursor?.close()
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error resolving member", e)
+            return null
         }
     }
 
-    /**
-     * Query the device contacts for a contact with this phone number.
-     * Requires READ_CONTACTS permission.
-     */
     private fun resolveContact(
         phoneNumber: String,
         contentResolver: ContentResolver
     ): CallerInfoResult.Contact? {
-        // Check if we have permission? The caller should ensure permission.
-        // For simplicity, assume we have permission or the query will return nothing.
+        try {
+            // Build URI correctly with the phone number
+            val uri = ContactsContract.PhoneLookup.CONTENT_FILTER_URI.buildUpon()
+                .appendPath(phoneNumber)
+                .build()
 
-        val normalized = normalizePhoneNumber(phoneNumber)
+            if (BuildConfig.DEBUG) Log.d(TAG, "Contact lookup URI: $uri")
 
-        // Query the ContactsContract provider for a number match.
-        val uri = ContactsContract.PhoneLookup.CONTENT_FILTER_URI.buildUpon()
-            .appendPath(normalized)
-            .build()
+            val projection = arrayOf(
+                ContactsContract.PhoneLookup.DISPLAY_NAME,
+                ContactsContract.PhoneLookup.NUMBER
+            )
 
-        val projection = arrayOf(
-            ContactsContract.PhoneLookup.DISPLAY_NAME,
-            ContactsContract.PhoneLookup.NUMBER
-        )
+            val cursor = contentResolver.query(uri, projection, null, null, null)
 
-        var cursor: Cursor? = null
-        return try {
-            cursor = contentResolver.query(uri, projection, null, null, null)
-            if (cursor != null && cursor.moveToFirst()) {
-                val name =
-                    cursor.getString(cursor.getColumnIndexOrThrow(ContactsContract.PhoneLookup.DISPLAY_NAME))
-                val number =
-                    cursor.getString(cursor.getColumnIndexOrThrow(ContactsContract.PhoneLookup.NUMBER))
-                CallerInfoResult.Contact(name = name, phoneNumber = number)
-            } else {
-                null
+            cursor?.use {
+                if (it.moveToFirst()) {
+                    val name =
+                        it.getString(it.getColumnIndexOrThrow(ContactsContract.PhoneLookup.DISPLAY_NAME))
+                            ?: ""
+                    val number =
+                        it.getString(it.getColumnIndexOrThrow(ContactsContract.PhoneLookup.NUMBER))
+                            ?: ""
+                    if (name.isNotEmpty()) {
+                        return CallerInfoResult.Contact(name = name, phoneNumber = number)
+                    }
+                }
             }
+            return null
         } catch (e: Exception) {
-            // Permission denied or other error
-            null
-        } finally {
-            cursor?.close()
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error resolving contact", e)
+            return null
         }
     }
 
-    /**
-     * Normalize a phone number: remove spaces, dashes, parentheses, and leading zeros.
-     * Also ensure the number starts with a plus for international format, but keep as-is.
-     */
     private fun normalizePhoneNumber(number: String): String {
-        // Remove all non-digit characters except leading '+'
-        val cleaned = number.replace(Regex("[^\\d+]"), "")
-        // If it starts with '0' and length > 1, replace with '+27' for South Africa? Not generic.
-        // For simplicity, just return the cleaned string.
+        var cleaned = number.replace(Regex("[\\s\\-()\\.]"), "")
+        if (!cleaned.startsWith("+")) {
+            cleaned = cleaned.replace(Regex("^0+"), "")
+        }
         return cleaned
     }
 
-    /**
-     * Build a display name from surname, first name, and nickname.
-     */
-    private fun buildMemberDisplayName(
-        surname: String?,
-        voorname: String?,
-        noemnaam: String?
-    ): String {
+    private fun buildMemberDisplayName(noemnaam: String, surname: String): String {
         return when {
-            !surname.isNullOrEmpty() && !voorname.isNullOrEmpty() -> "$voorname $surname"
-            !surname.isNullOrEmpty() -> surname
-            !voorname.isNullOrEmpty() -> voorname
+            noemnaam.isNotEmpty() && surname.isNotEmpty() -> "$noemnaam $surname"
+            noemnaam.isNotEmpty() -> noemnaam
+            surname.isNotEmpty() -> surname
             else -> "Lidmaat"
         }
     }
-
-    // DEPRECATED – remove old isKnownCaller method
-    // @Deprecated("Use resolve() and check the result type")
-    // fun isKnownCaller(formatted: String): Boolean = false
 }

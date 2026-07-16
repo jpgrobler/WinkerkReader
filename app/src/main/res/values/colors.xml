@@ -34,14 +34,17 @@
 
     <color name="md_theme_surfaceTint">#3F51B5</color>
 
-    <!-- Surface container tonal steps (LIGHT) -->
-    <color name="md_theme_surfaceContainerLowest">#F8F9FE</color>
+    <!-- Surface container tonal steps (LIGHT)
+         FIX: surfaceContainerLowest must be the brightest step (#FFFFFF),
+         not a duplicate of surface (#F8F9FE). Previously both were #F8F9FE,
+         which collapsed the lowest elevation rung and defeated tonal elevation. -->
+    <color name="md_theme_surfaceContainerLowest">#FFFFFF</color>
     <color name="md_theme_surfaceContainerLow">#F2F3FD</color>
     <color name="md_theme_surfaceContainer">#ECEEFC</color>
     <color name="md_theme_surfaceContainerHigh">#E6E9FB</color>
     <color name="md_theme_surfaceContainerHighest">#E0E4FA</color>
 
-    <!-- Legacy colours - FIXED LIGHT THEME VALUES -->
+    <!-- Legacy colours - LIGHT THEME VALUES -->
     <color name="colorAccent">#FF4081</color>
     <color name="background_light">#FAFAFA</color>
     <color name="surface_light">#FFFFFF</color>

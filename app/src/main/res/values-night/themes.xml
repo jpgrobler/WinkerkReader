@@ -54,4 +54,18 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
+
+    <!-- Dialog variant - DARK (same window attributes; colours come from dark colors.xml) -->
+    <style name="Theme.WinkerkReader.Dialog" parent="Theme.WinkerkReader">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:backgroundDimAmount">0.4</item>
+        <item name="android:windowElevation">8dp</item>
+        <item name="colorSurface">@color/md_theme_surface</item>
+    </style>
+
 </resources>

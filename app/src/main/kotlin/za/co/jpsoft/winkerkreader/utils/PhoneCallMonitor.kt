@@ -8,6 +8,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.provider.CallLog
+import android.provider.ContactsContract
 import android.telephony.PhoneStateListener
 import android.telephony.TelephonyCallback
 import android.telephony.TelephonyManager
@@ -98,7 +99,10 @@ class PhoneCallMonitor(
         )
         when (state) {
             TelephonyManager.CALL_STATE_RINGING -> handleRingingState(phoneNumber)
-            TelephonyManager.CALL_STATE_OFFHOOK -> handleOffHookState(phoneNumber)
+            TelephonyManager.CALL_STATE_OFFHOOK -> {
+                OproepDetailService.dismissOnAnswered()
+                handleOffHookState(phoneNumber)
+            }
             TelephonyManager.CALL_STATE_IDLE -> handleIdleState()
         }
     }
@@ -154,11 +158,15 @@ class PhoneCallMonitor(
             val displayName = if (number.isNullOrBlank()) {
                 null
             } else {
+                // Try to resolve from member database first
                 val result = CallerInfoResolver.resolve(number, context.contentResolver)
                 when (result) {
                     is CallerInfoResult.Member -> result.name
                     is CallerInfoResult.Contact -> result.name
-                    CallerInfoResult.Unknown -> null
+                    CallerInfoResult.Unknown -> {
+                        // If not found in app database, try system contacts
+                        getContactNameFromSystem(number)
+                    }
                 }
             }
             unifiedMonitor?.onCallDetected(
@@ -197,7 +205,9 @@ class PhoneCallMonitor(
                     when (result) {
                         is CallerInfoResult.Member -> result.name
                         is CallerInfoResult.Contact -> result.name
-                        CallerInfoResult.Unknown -> null
+                        CallerInfoResult.Unknown -> {
+                            getContactNameFromSystem(phoneNumber)
+                        }
                     }
                 }
                 unifiedMonitor?.onCallDetected(
@@ -238,7 +248,9 @@ class PhoneCallMonitor(
                             val displayName = when (result) {
                                 is CallerInfoResult.Member -> result.name
                                 is CallerInfoResult.Contact -> result.name
-                                CallerInfoResult.Unknown -> null
+                                CallerInfoResult.Unknown -> {
+                                    getContactNameFromSystem(recovered.first)
+                                }
                             }
                             unifiedMonitor?.onCallDetected(
                                 callId = callId,
@@ -264,6 +276,62 @@ class PhoneCallMonitor(
             scheduleServiceStop(context)
         }
         resetCallState()
+    }
+
+    /**
+     * Get contact name from system contacts using PhoneLookup.
+     * Uses the correct URI format: PhoneLookup.CONTENT_FILTER_URI with the phone number appended.
+     */
+    private fun getContactNameFromSystem(phoneNumber: String): String? {
+        if (phoneNumber.isEmpty() || phoneNumber == "Unknown Number") return null
+
+        // Check for READ_CONTACTS permission
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            if (BuildConfig.DEBUG) Log.d(
+                TAG,
+                "READ_CONTACTS permission missing, skipping contact lookup"
+            )
+            return null
+        }
+
+        try {
+            // ✅ FIX: Build URI correctly with the phone number
+            val uri = ContactsContract.PhoneLookup.CONTENT_FILTER_URI.buildUpon()
+                .appendPath(phoneNumber)
+                .build()
+
+            if (BuildConfig.DEBUG) Log.d(TAG, "Querying contacts with URI: $uri")
+
+            val projection = arrayOf(
+                ContactsContract.PhoneLookup.DISPLAY_NAME,
+                ContactsContract.PhoneLookup.NUMBER
+            )
+
+            val cursor = context.contentResolver.query(
+                uri,
+                projection,
+                null,
+                null,
+                null
+            )
+
+            return cursor?.use {
+                if (it.moveToFirst()) {
+                    val nameIndex = it.getColumnIndex(ContactsContract.PhoneLookup.DISPLAY_NAME)
+                    if (nameIndex >= 0) {
+                        it.getString(nameIndex)
+                    } else null
+                } else null
+            }
+        } catch (e: SecurityException) {
+            if (BuildConfig.DEBUG) Log.e(TAG, "Security exception accessing contacts", e)
+            return null
+        } catch (e: Exception) {
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error getting contact name from system", e)
+            return null
+        }
     }
 
     /**

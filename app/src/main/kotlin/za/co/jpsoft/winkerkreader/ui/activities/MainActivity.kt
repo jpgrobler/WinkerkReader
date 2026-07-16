@@ -11,7 +11,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
-import android.provider.Settings
 import android.text.Spannable
 import android.text.SpannableString
 import android.util.Log
@@ -351,6 +350,7 @@ class MainActivity : AppCompatActivity() {
             settingsManager = settingsManager,
             permissionManager = permissionManager,
             binding = binding,
+            navigationController = navigationController,
             actions = object : StartupActions {
                 override fun checkAndRequestPermissions() {
                     permissionManager.requestPhonePermissions(this@MainActivity)
@@ -394,12 +394,12 @@ class MainActivity : AppCompatActivity() {
                     this@MainActivity.ensureServicesAreRunning()
                 }
 
-                override fun isNotificationAccessEnabled(): Boolean {
-                    return permissionManager.isNotificationListenerEnabled()
-                }
+//                override fun isNotificationAccessEnabled(): Boolean {
+//                    return permissionManager.isNotificationListenerEnabled()
+//                }
 
                 override fun openNotificationSettings() {
-                    startActivity(permissionManager.getNotificationListenerIntent())
+                    navigationController.navigateToNotificationListenerSettings()
                 }
 
                 override fun showToast(message: String) {
@@ -805,18 +805,6 @@ class MainActivity : AppCompatActivity() {
             if (BuildConfig.DEBUG) Log.d(TAG, "CallMonitoring service was killed, restarting…")
             startMonitoringServiceIfEnabled()
         }
-    }
-
-    private fun openNotificationSettings() {
-        Toast.makeText(this, "Please enable notification access for this app", Toast.LENGTH_LONG)
-            .show()
-        startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
-    }
-
-    private fun isNotificationAccessEnabled(): Boolean {
-        val notificationEnabled =
-            Settings.Secure.getString(contentResolver, "enabled_notification_listeners")
-        return notificationEnabled != null && notificationEnabled.contains(packageName)
     }
 
     private fun syncSortOrderWithSettings() {
@@ -1482,10 +1470,14 @@ class MainActivity : AppCompatActivity() {
                     "Rugsteun van $dateStr gevind. Wil jy herstel?",
                     Snackbar.LENGTH_LONG
                 ).setAction("Herstel") {
-                    startActivity(
-                        Intent(this@MainActivity, LaaiDatabasisActivity::class.java)
-                            .putExtra(LaaiDatabasisActivity.EXTRA_PROMPT_RESTORE, true)
-                    )
+                    val extras = Bundle().apply {
+                        putBoolean(LaaiDatabasisActivity.EXTRA_PROMPT_RESTORE, true)
+                    }
+                    navigationController.navigateToLaaiDatabasis(extras)
+//                    startActivity(
+//                        Intent(this@MainActivity, LaaiDatabasisActivity::class.java)
+//                            .putExtra(LaaiDatabasisActivity.EXTRA_PROMPT_RESTORE, true)
+//                    )
                 }.show()
                 if (candidate.absolutePath.startsWith(cacheDir.absolutePath)) {
                     candidate.delete()

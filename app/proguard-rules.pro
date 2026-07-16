@@ -24,67 +24,89 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
-# Please add these rules to your existing keep rules in order to suppress warnings.
-# This is generated automatically by the Android Gradle plugin.
--dontwarn org.joda.convert.FromString
--dontwarn org.joda.convert.ToString
+# ============================================================
+# PopupMenu Reflection (CRITICAL - prevents crash)
+# ============================================================
+-keepclassmembers class androidx.appcompat.widget.PopupMenu { *; }
 
 # ============================================================
-# Room — entities, DAOs, database, relations
+# SQLiteStatementValidator
 # ============================================================
+-keepclassmembers class za.co.jpsoft.winkerkreader.utils.SQLiteStatementValidator { *; }
 
-# Keep all Room entity classes (annotated with @Entity)
+# ============================================================
+# Room
+# ============================================================
 -keep @androidx.room.Entity class * { *; }
-
-# Keep all Room DAO interfaces (annotated with @Dao)
 -keep @androidx.room.Dao class * { *; }
-
-# Keep the Room database class
 -keep class za.co.jpsoft.winkerkreader.data.pastoral.PastoralDatabase { *; }
-
-# Keep pastoral entity classes explicitly (belt-and-braces)
 -keep class za.co.jpsoft.winkerkreader.data.pastoral.entities.** { *; }
-
-# Keep pastoral DAO interfaces
 -keep class za.co.jpsoft.winkerkreader.data.pastoral.dao.** { *; }
-
-# Keep pastoral model classes used in @Relation and @Embedded
 -keep class za.co.jpsoft.winkerkreader.data.pastoral.model.** { *; }
-
-# Keep PastoralMetaEntity — single-row config table; field names must survive
--keepclassmembers class za.co.jpsoft.winkerkreader.data.pastoral.entities.PastoralMetaEntity {
-    <fields>;
-}
-
-# Room uses reflection to read/write @ColumnInfo fields;
-# prevent shrinking of any field used as a Room column
 -keepclassmembers class * extends androidx.room.RoomDatabase {
     abstract !static <methods>;
 }
-
-# Keep generated Room _Impl classes (generated at compile time)
 -keep class **_Impl { *; }
 -keep class **_Impl$* { *; }
 
 # ============================================================
-# Coroutines — required for CoroutineWorker and suspend DAOs
+# Glide (required for photo loading)
 # ============================================================
+-keep public class * implements com.bumptech.glide.module.GlideModule
+-keep public enum com.bumptech.glide.load.ImageHeaderParser$** {
+  **[] $VALUES;
+  public *;
+}
+-keep class com.bumptech.glide.load.data.ParcelFileDescriptorRewinder$** {
+  <init>(...);
+}
+
+# ============================================================
+# Parcelable
+# ============================================================
+-keep class * implements android.os.Parcelable {
+    public static final android.os.Parcelable$Creator *;
+}
+
+# ============================================================
+# Gson (if used)
+# ============================================================
+-keep class za.co.jpsoft.winkerkreader.ui.components.SearchCheckBox { *; }
+-keep class za.co.jpsoft.winkerkreader.data.models.FilterBox { *; }
+
+# ============================================================
+# AndroidX Lifecycle / ViewModel
+# ============================================================
+-keep class * extends androidx.lifecycle.ViewModel {
+    <init>(...);
+}
+-keep class * extends androidx.lifecycle.AndroidViewModel {
+    <init>(android.app.Application);
+}
+
+# ============================================================
+# Kotlin / Coroutines
+# ============================================================
+-keep class kotlin.Metadata { *; }
+-keepclassmembers class kotlin.Metadata {
+    public *;
+}
 -keepclassmembernames class kotlinx.** {
     volatile <fields>;
 }
 
 # ============================================================
-# WorkManager — FollowUpReminderWorker must survive shrinking
+# WorkManager
 # ============================================================
 -keep class za.co.jpsoft.winkerkreader.workers.FollowUpReminderWorker { *; }
 
 # ============================================================
-# BroadcastReceiver — action receiver must survive shrinking
+# BroadcastReceiver
 # ============================================================
 -keep class za.co.jpsoft.winkerkreader.receivers.PastoralReminderActionReceiver { *; }
 
 # ============================================================
-# Enum classes — ReminderStatus, ScheduleType stored as strings
+# Enums (stored as strings in DB)
 # ============================================================
 -keepclassmembers enum za.co.jpsoft.winkerkreader.data.pastoral.model.ReminderStatus {
     public static **[] values();
@@ -94,3 +116,9 @@
     public static **[] values();
     public static ** valueOf(java.lang.String);
 }
+
+# ============================================================
+# Suppress warnings
+# ============================================================
+-dontwarn org.joda.convert.FromString
+-dontwarn org.joda.convert.ToString

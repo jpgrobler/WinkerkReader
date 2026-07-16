@@ -1,54 +1,96 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:ns1="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:ns2="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:paddingBottom="2dp">
 
-
     <LinearLayout
         android:id="@+id/list_seperatorBlok"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/separator_border"
-        android:clickable="true"
-        android:focusable="true"
-        android:foreground="?attr/selectableItemBackground"
         android:orientation="horizontal"
-        android:padding="6dp"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:visibility="gone">
+        android:visibility="visible">
 
-
-        <TextView
-            android:id="@+id/list_separator"
-            android:layout_width="0dp"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/separator_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="7"
-            android:text="@string/list_separator_placeholder"
-            android:textColor="?attr/colorOnPrimaryFixedVariant"
-            android:textSize="14sp"
-            android:textStyle="bold" />
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:background="@drawable/separator_border"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground"
+            android:minHeight="36dp"
+            android:padding="6dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="8dp">
 
+            <TextView
+                android:id="@+id/list_separator"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="3"
+                android:text="@string/list_separator_placeholder"
+                android:textColor="?attr/colorAccent"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/list_separatorwyk"
+                app:layout_constraintHorizontal_weight="1"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView
-            android:id="@+id/list_separatorwyk"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="3"
-            android:text=""
-            android:textAlignment="viewEnd"
-            android:textColor="?attr/colorSecondary"
-            android:textSize="14sp"
-            android:textStyle="bold" />
+            <TextView
+                android:id="@+id/list_separatorwyk"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:text=""
+                android:textAlignment="viewEnd"
+                android:textColor="?attr/colorSecondary"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/updown_container"
+                app:layout_constraintHorizontal_weight="2"
+                app:layout_constraintStart_toEndOf="@id/list_separator"
+                app:layout_constraintTop_toTopOf="parent" />
 
+            <LinearLayout
+                android:id="@+id/updown_container"
+                android:layout_width="32dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="4dp"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:minWidth="32dp"
+                android:orientation="horizontal"
+                android:paddingStart="4dp"
+                android:paddingEnd="1dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
 
+                <ImageView
+                    android:id="@+id/updown"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:contentDescription="Collapse/Expand group"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/ic_chevron_up"
+                    app:tint="?attr/colorOnSurfaceVariant" />
+            </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
     </LinearLayout>
 
-
     <com.google.android.material.card.MaterialCardView
+        android:id="@+id/list_card_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
@@ -56,10 +98,9 @@
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="2dp"
         android:foreground="?attr/selectableItemBackground"
-        ns1:cardBackgroundColor="?attr/colorSurface"
-        ns1:cardCornerRadius="8dp"
-        ns1:cardElevation="2dp">
-
+        app:cardBackgroundColor="?attr/colorSurface"
+        app:cardCornerRadius="8dp"
+        app:cardElevation="2dp">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/item_content"
@@ -67,26 +108,22 @@
             android:layout_height="wrap_content"
             android:padding="8dp">
 
-
             <FrameLayout
                 android:id="@+id/kontak_frame"
                 android:layout_width="50dp"
                 android:layout_height="50dp"
-                ns1:layout_constraintBottom_toBottomOf="parent"
-                ns1:layout_constraintStart_toStartOf="parent"
-                ns1:layout_constraintTop_toTopOf="parent">
-
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
 
                 <com.google.android.material.imageview.ShapeableImageView
                     android:id="@+id/list_kontak_foto"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:src="@drawable/kontak"
-                    ns1:shapeAppearanceOverlay="@style/CircleImageStyle" />
-
+                    app:shapeAppearanceOverlay="@style/CircleImageStyle" />
 
             </FrameLayout>
-
 
             <TextView
                 android:id="@+id/list_name"
@@ -97,10 +134,9 @@
                 android:paddingEnd="4dp"
                 android:textAppearance="?android:textAppearanceMedium"
                 android:textColor="?attr/colorPrimary"
-                ns1:layout_constraintStart_toEndOf="@id/kontak_frame"
-                ns1:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toEndOf="@id/kontak_frame"
+                app:layout_constraintTop_toTopOf="parent"
                 ns2:text="@string/list_naam" />
-
 
             <TextView
                 android:id="@+id/list_van"
@@ -111,20 +147,18 @@
                 android:fontFamily="sans-serif-medium"
                 android:textAppearance="?android:textAppearanceLarge"
                 android:textColor="?attr/colorOnSurface"
-                ns1:layout_constraintEnd_toStartOf="@id/list_ouderdom_blok"
-                ns1:layout_constraintStart_toEndOf="@id/list_name"
-                ns1:layout_constraintTop_toTopOf="@id/list_name"
+                app:layout_constraintEnd_toStartOf="@id/list_ouderdom_blok"
+                app:layout_constraintStart_toEndOf="@id/list_name"
+                app:layout_constraintTop_toTopOf="@id/list_name"
                 ns2:text="@string/list_van" />
-
 
             <LinearLayout
                 android:id="@+id/list_ouderdom_blok"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                ns1:layout_constraintEnd_toEndOf="parent"
-                ns1:layout_constraintTop_toTopOf="parent">
-
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
 
                 <ImageView
                     android:id="@+id/list_bday"
@@ -134,7 +168,6 @@
                     android:contentDescription="Verjaarsag"
                     android:scaleType="centerInside"
                     android:src="@drawable/bday" />
-
 
                 <TextView
                     android:id="@+id/list_verjaar"
@@ -147,7 +180,6 @@
                     android:textColor="?attr/colorOnSurface"
                     ns2:text="@string/list_verjaar" />
 
-
                 <TextView
                     android:id="@+id/list_ouderdom"
                     android:layout_width="wrap_content"
@@ -158,9 +190,7 @@
                     android:textColor="?attr/colorAccent"
                     ns2:text="0" />
 
-
             </LinearLayout>
-
 
             <LinearLayout
                 android:id="@+id/list_cellBlock"
@@ -168,9 +198,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:orientation="horizontal"
-                ns1:layout_constraintStart_toStartOf="@id/list_name"
-                ns1:layout_constraintTop_toBottomOf="@id/list_van">
-
+                app:layout_constraintStart_toStartOf="@id/list_name"
+                app:layout_constraintTop_toBottomOf="@id/list_van">
 
                 <ImageView
                     android:id="@+id/cellimage"
@@ -179,8 +208,7 @@
                     android:contentDescription="Selfoon"
                     android:scaleType="centerInside"
                     android:src="@drawable/cell3"
-                    ns1:tint="?attr/colorOnSurface" />
-
+                    app:tint="?attr/colorOnSurface" />
 
                 <TextView
                     android:id="@+id/list_cellnumber"
@@ -194,18 +222,15 @@
                     android:textColor="?attr/colorPrimary"
                     ns2:text="@string/list_selfoon" />
 
-
             </LinearLayout>
-
 
             <LinearLayout
                 android:id="@+id/list_telBlock"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                ns1:layout_constraintStart_toStartOf="@id/list_name"
-                ns1:layout_constraintTop_toBottomOf="@id/list_cellBlock">
-
+                app:layout_constraintStart_toStartOf="@id/list_name"
+                app:layout_constraintTop_toBottomOf="@id/list_cellBlock">
 
                 <ImageView
                     android:id="@+id/list_telefoonicon"
@@ -214,8 +239,7 @@
                     android:contentDescription="Landlyn"
                     android:scaleType="centerInside"
                     android:src="@drawable/oldphone"
-                    ns1:tint="?attr/colorOnSurface" />
-
+                    app:tint="?attr/colorOnSurface" />
 
                 <TextView
                     android:id="@+id/list_landlyn"
@@ -228,19 +252,16 @@
                     android:textColor="?attr/colorOnSurface"
                     ns2:text="@string/list_telefoon" />
 
-
             </LinearLayout>
-
 
             <LinearLayout
                 android:id="@+id/list_huwelikblok"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                ns1:layout_constraintBottom_toBottomOf="@id/list_cellBlock"
-                ns1:layout_constraintEnd_toEndOf="parent"
-                ns1:layout_constraintTop_toTopOf="@id/list_cellBlock">
-
+                app:layout_constraintBottom_toBottomOf="@id/list_cellBlock"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@id/list_cellBlock">
 
                 <ImageView
                     android:id="@+id/list_ring"
@@ -248,7 +269,6 @@
                     android:layout_height="18dp"
                     android:contentDescription="Getroud"
                     android:src="@drawable/married" />
-
 
                 <TextView
                     android:id="@+id/list_huwelik"
@@ -259,9 +279,7 @@
                     android:textColor="?attr/colorOnSurface"
                     ns2:text="0" />
 
-
             </LinearLayout>
-
 
             <LinearLayout
                 android:id="@+id/list_wykblok"
@@ -269,10 +287,9 @@
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                ns1:layout_constraintBottom_toBottomOf="@id/list_telBlock"
-                ns1:layout_constraintEnd_toEndOf="parent"
-                ns1:layout_constraintTop_toTopOf="@id/list_telBlock">
-
+                app:layout_constraintBottom_toBottomOf="@id/list_telBlock"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@id/list_telBlock">
 
                 <ImageView
                     android:id="@+id/list_bediening"
@@ -282,7 +299,6 @@
                     android:contentDescription="Bediening"
                     android:src="@drawable/ic_bediening" />
 
-
                 <ImageView
                     android:id="@+id/list_whatsapp"
                     android:layout_width="20dp"
@@ -291,7 +307,6 @@
                     android:contentDescription="Whatsapp"
                     android:src="@drawable/whatsapp" />
 
-
                 <ImageView
                     android:id="@+id/list_epos"
                     android:layout_width="20dp"
@@ -299,8 +314,7 @@
                     android:layout_marginEnd="8dp"
                     android:contentDescription="E-pos"
                     android:src="@drawable/email2"
-                    ns1:tint="?attr/colorOnSurface" />
-
+                    app:tint="?attr/colorOnSurface" />
 
                 <TextView
                     android:id="@+id/list_wyk"
@@ -311,14 +325,10 @@
                     android:textAppearance="?android:textAppearanceSmallInverse"
                     android:textColor="?attr/colorOnTertiary" />
 
-
             </LinearLayout>
-
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-
     </com.google.android.material.card.MaterialCardView>
-
 
 </LinearLayout>

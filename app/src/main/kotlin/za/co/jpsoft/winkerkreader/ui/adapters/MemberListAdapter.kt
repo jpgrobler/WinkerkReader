@@ -45,6 +45,16 @@ class MemberListAdapter(
 
     private var pendingReminderGuids: Set<String> = emptySet()
 
+    // Collapse state: key = "$sortOrder:$groupValue" -> true = collapsed
+    private val collapsedGroups = mutableSetOf<String>()
+
+    // Spannable cache with LRU-like behavior (limit size)
+    private val spannableCache = object : LinkedHashMap<String, CharSequence>(16, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, CharSequence>): Boolean {
+            return size > 100
+        }
+    }
+
     companion object {
         private const val TAG = "MemberListAdapter"
         const val VIEW_TYPE_COMPACT = 1
@@ -62,10 +72,117 @@ class MemberListAdapter(
             .centerCrop()
             .skipMemoryCache(false)
             .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
-            .timeout(5000)  // 5 second timeout
+            .timeout(5000)
     }
 
-    // Renamed to avoid conflict with superclass
+    // ================================================================
+    // Collapse API
+    // ================================================================
+
+    /**
+     * Toggle collapse state for a group.
+     * @param sortOrder Current sort order (e.g., "VAN", "WYK")
+     * @param groupValue The value of the group (e.g., surname first letter, ward name)
+     * @param headerPosition The position of the separator header in the list
+     */
+    fun toggleGroupCollapsed(sortOrder: String, groupValue: String, headerPosition: Int) {
+        val key = "$sortOrder:$groupValue"
+        val isNowCollapsed = if (!collapsedGroups.add(key)) {
+            collapsedGroups.remove(key)
+            false
+        } else {
+            true
+        }
+
+        // Find the range of items this separator controls
+        val items = getAllItems()
+        var end = headerPosition
+
+        // Move forward until we hit the next separator or the end of the list
+        while (end + 1 < items.size) {
+            val nextItem = items[end + 1]
+            // Stop when we reach another separator (the next section header)
+            if (nextItem.showSeparator) {
+                break
+            }
+            end++
+        }
+
+        // Update the chevron icon for the header
+        notifyItemChanged(headerPosition)
+
+        // Hide/show items from header+1 to end (the items in this section)
+        // This includes the card views for all items in this section
+        if (end > headerPosition) {
+            notifyItemRangeChanged(headerPosition + 1, end - headerPosition)
+        }
+
+        if (BuildConfig.DEBUG) {
+            Log.d(
+                TAG,
+                "toggleGroupCollapsed: $key -> ${if (isNowCollapsed) "collapsed" else "expanded"}, range ${headerPosition + 1}-$end"
+            )
+        }
+    }
+
+    /**
+     * Get the group value for an item based on the current sort order.
+     * Must match the separator logic in MemberItemSeparator.
+     */
+    private fun getGroupValueFor(item: MemberItem, sortOrder: String): String {
+        return when (sortOrder) {
+            "WYK" -> item.ward
+            "GESINNE" -> item.familyHead
+            "VAN" -> if (item.surname.isNotEmpty()) item.surname.substring(0, 1) else ""
+            "ADRES" -> item.address
+            "VERJAAR" -> if (item.birthday.length >= 5) item.birthday.substring(3, 5) else ""
+            "HUWELIK" -> if (item.weddingDate.length >= 5) item.weddingDate.substring(3, 5) else ""
+            "OUDERDOM" -> item.age
+            else -> item.surname
+        }
+    }
+
+    /**
+     * Check if an item should be hidden because its group is collapsed.
+     * The separator itself is never hidden.
+     */
+    private fun isItemCollapsed(item: MemberItem, position: Int): Boolean {
+        // Separators are never collapsed (they're the header)
+        if (item.showSeparator) return false
+
+        val groupValue = getGroupValueFor(item, sortOrder)
+        if (groupValue.isEmpty()) return false
+
+        val key = "$sortOrder:$groupValue"
+        return collapsedGroups.contains(key)
+    }
+
+    /**
+     * Clear all collapse state when sort order changes.
+     */
+    private fun clearCollapseState() {
+        if (collapsedGroups.isNotEmpty()) {
+            collapsedGroups.clear()
+            if (BuildConfig.DEBUG) Log.d(TAG, "Cleared collapse state due to sort change")
+        }
+    }
+
+    /**
+     * Get all currently loaded items as a List.
+     * Renamed from snapshot() to avoid conflict with PagingDataAdapter.snapshot()
+     */
+    fun getAllItems(): List<MemberItem> {
+        val list = mutableListOf<MemberItem>()
+        for (i in 0 until itemCount) {
+            getItem(i)?.let { list.add(it) }
+        }
+        return list
+    }
+
+    // ================================================================
+    // Force refresh
+    // ================================================================
+
     fun forceRefresh() {
         if (BuildConfig.DEBUG) Log.d(TAG, "🔄 Adapter forceRefresh called - itemCount: $itemCount")
         notifyDataSetChanged()
@@ -75,10 +192,7 @@ class MemberListAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MemberViewHolder {
         if (BuildConfig.DEBUG) {
-            Log.d(
-                TAG,
-                "🔄 onCreateViewHolder called! viewType=$viewType, parent.width=${parent.width}"
-            )
+            Log.d(TAG, "🔄 onCreateViewHolder called! viewType=$viewType")
         }
         val inflater = LayoutInflater.from(parent.context)
         return if (viewType == VIEW_TYPE_COMPACT) {
@@ -102,11 +216,19 @@ class MemberListAdapter(
             TAG,
             "🔔 Item ${item.name} ${item.surname} GUID=${item.guid} hasPending=$hasPending"
         )
-        holder.bind(item, hasPending)
+        holder.bind(item, hasPending, position)
     }
 
-    // Cannot override getItem - it's final in PagingDataAdapter
-    // Use a helper method instead
+    override fun onViewRecycled(holder: MemberViewHolder) {
+        super.onViewRecycled(holder)
+        Glide.with(holder.itemView).clear(holder.fotoImageView)
+    }
+
+    override fun onViewDetachedFromWindow(holder: MemberViewHolder) {
+        super.onViewDetachedFromWindow(holder)
+        Glide.with(holder.itemView).clear(holder.fotoImageView)
+    }
+
     fun getItemAt(position: Int): MemberItem? {
         val item = getItem(position)
         if (item == null && position < itemCount) {
@@ -125,6 +247,7 @@ class MemberListAdapter(
         }
         return count
     }
+
     // -------------------------------------------------------------------------
     // Public methods to update display settings
     // -------------------------------------------------------------------------
@@ -141,6 +264,18 @@ class MemberListAdapter(
             "updateState called: sortOrder=$sortOrder, listView=$listView"
         )
 
+        // Clear highlight cache when search changes
+        if (this.soek != soek) {
+            synchronized(spannableCache) {
+                spannableCache.clear()
+            }
+        }
+
+        // Clear collapse state when sort order changes
+        if (this.sortOrder != sortOrder) {
+            clearCollapseState()
+        }
+
         this.sortOrder = sortOrder
         this.soekList = soekList
         this.soek = soek
@@ -156,12 +291,9 @@ class MemberListAdapter(
         if (BuildConfig.DEBUG) Log.d(TAG, "📢 Adapter updating GUIDs: $guids")
         if (pendingReminderGuids != guids) {
             pendingReminderGuids = guids
-            // Do not notify the full list — PagingDataAdapter scroll state is lost.
-            // MainActivity rebinds visible items after this call.
         }
     }
 
-    /** Rebind only on-screen rows (e.g. after pending-reminder icons change). */
     fun rebindVisibleItems(recyclerView: RecyclerView) {
         val layoutManager =
             recyclerView.layoutManager as? androidx.recyclerview.widget.LinearLayoutManager
@@ -174,10 +306,6 @@ class MemberListAdapter(
         }
     }
 
-    /**
-     * Returns a list of all currently loaded items (paged data).
-     * Used for group counts in [MemberListInteractionController].
-     */
     fun getCurrentItems(): List<MemberItem> {
         val list = mutableListOf<MemberItem>()
         for (i in 0 until itemCount) {
@@ -212,10 +340,10 @@ class MemberListAdapter(
         abstract val ringImageView: ImageView
         abstract val listBediening: ImageView
         abstract val contentView: View
+        abstract val updownContainer: View
+        abstract val updownIcon: ImageView
+        abstract val cardView: com.google.android.material.card.MaterialCardView
 
-        // --------------------------------------------------------------------
-        // Helper: get contrasting text color for a given background color
-        // --------------------------------------------------------------------
         private fun getContrastColorForBg(bgColor: Int): Int {
             if (bgColor == Color.TRANSPARENT) {
                 val typedValue = android.util.TypedValue()
@@ -238,12 +366,53 @@ class MemberListAdapter(
             contentView.setBackgroundColor(color)
         }
 
-        fun bind(item: MemberItem, hasPending: Boolean) {
+        fun bind(item: MemberItem, hasPending: Boolean, position: Int) {
             val context = itemView.context
             val settings = SettingsManager.getInstance(context)
 
+            // ============================================================
+            // COLLAPSE CHECK - Determine if this section is collapsed
+            // ============================================================
+            val groupValue = getGroupValueFor(item, sortOrder)
+            val key = "$sortOrder:$groupValue"
+            val isSectionCollapsed = collapsedGroups.contains(key)
+
+            // ============================================================
+            // Handle visibility based on collapse state
+            // ============================================================
+            if (item.showSeparator) {
+                // This is a separator row - show the separator, hide the card if collapsed
+                // Reset the item view to visible (separator should always be visible)
+                itemView.layoutParams = itemView.layoutParams.apply {
+                    height = ViewGroup.LayoutParams.WRAP_CONTENT
+                }
+                itemView.visibility = View.VISIBLE
+
+                // Debug logging for WYK sort
+                if (sortOrder == "WYK") {
+                    Log.d(
+                        TAG,
+                        "WYK separator at position $position: ward=${item.ward}, showSeparator=${item.showSeparator}, showSeparator2=${item.showSeparator2}"
+                    )
+                }
+            } else {
+                // This is a regular item - hide it if its section is collapsed
+                if (isSectionCollapsed) {
+                    itemView.layoutParams = itemView.layoutParams.apply {
+                        height = 0
+                    }
+                    itemView.visibility = View.GONE
+                    return
+                } else {
+                    itemView.layoutParams = itemView.layoutParams.apply {
+                        height = ViewGroup.LayoutParams.WRAP_CONTENT
+                    }
+                    itemView.visibility = View.VISIBLE
+                }
+            }
+
             // ------------------------------------------------------------
-            // BACKGROUND – fully integrated
+            // BACKGROUND
             // ------------------------------------------------------------
             var finalBgColor = Color.TRANSPARENT
 
@@ -251,7 +420,6 @@ class MemberListAdapter(
                 finalBgColor = Color.LTGRAY
                 setItemBackgroundColor(finalBgColor)
             } else {
-                // 1. Congregation colour
                 val congregationColor = when (item.congregation) {
                     settings.gemeenteNaam -> settings.gemeenteKleur
                     settings.gemeente2Naam -> settings.gemeente2Kleur
@@ -262,13 +430,11 @@ class MemberListAdapter(
                     if (congregationColor != Int.MIN_VALUE) congregationColor else Color.TRANSPARENT
                 setItemBackgroundColor(finalBgColor)
 
-                // 2. Override for tagged or inactive
                 when {
                     item.tag == 1 -> {
                         finalBgColor = ContextCompat.getColor(context, R.color.selected_view)
                         setItemBackgroundColor(finalBgColor)
                     }
-
                     item.recordstatus == "2" -> {
                         val inactiveColor = settings.inactiveBackgroundColor
                         finalBgColor =
@@ -279,7 +445,7 @@ class MemberListAdapter(
             }
 
             // ------------------------------------------------------------
-            // TEXT COLOR – dynamic contrast based on finalBgColor
+            // TEXT COLOR
             // ------------------------------------------------------------
             val textColor = getContrastColorForBg(finalBgColor)
             nameTextView.setTextColor(textColor)
@@ -291,7 +457,6 @@ class MemberListAdapter(
             verjaarTextView.setTextColor(textColor)
             huwelikTextView.setTextColor(textColor)
 
-            // Apply visibility settings (may hide some fields, but that's fine)
             applyVisibilitySettings(settings)
             resetViewState()
 
@@ -302,6 +467,9 @@ class MemberListAdapter(
             bindWeddingInfo(item, settings)
             bindEmailIndicator(item, settings)
 
+            // ------------------------------------------------------------
+            // SEARCH HIGHLIGHTING with caching
+            // ------------------------------------------------------------
             if (soekList && soek.isNotEmpty()) {
                 val searchTerm = soek
                 val originalVan = item.surname
@@ -326,9 +494,22 @@ class MemberListAdapter(
                     ?: item.landline else ""
             }
 
-            // Bind separator (visibility and text)
             bindSeparator(item)
 
+            // ------------------------------------------------------------
+            // CARD VISIBILITY - Hide card content when section is collapsed
+            // ------------------------------------------------------------
+            if (item.showSeparator && isSectionCollapsed) {
+                contentView.visibility = View.GONE
+                cardView.visibility = View.GONE
+            } else {
+                contentView.visibility = View.VISIBLE
+                cardView.visibility = View.VISIBLE
+            }
+
+            // ------------------------------------------------------------
+            // ADDRESS MAP CLICK
+            // ------------------------------------------------------------
             val isAddressSort = sortOrder == "ADRES" || sortOrder == "GESINNE" || sortOrder == "WYK"
             if (isAddressSort && (item.showSeparator || item.showSeparator2) && item.address.isNotEmpty()) {
                 separatorBlock.setOnClickListener { view ->
@@ -355,6 +536,36 @@ class MemberListAdapter(
                 }
             } else {
                 separatorBlock.setOnClickListener(null)
+            }
+
+            // ============================================================
+            // COLLAPSE BUTTON - ALWAYS show on separator rows
+            // regardless of collapse state
+            // ============================================================
+            if (item.showSeparator) {
+                // The button should ALWAYS be visible on separator rows
+                updownContainer.visibility = View.VISIBLE
+
+                // Set the icon based on collapse state
+                val isGroupCollapsed = collapsedGroups.contains(key)
+                updownIcon.setImageResource(
+                    if (isGroupCollapsed) R.drawable.ic_chevron_down else R.drawable.ic_chevron_up
+                )
+                // Force tint to be visible
+                updownIcon.setColorFilter(
+                    ContextCompat.getColor(context, R.color.text_secondary_light),
+                    android.graphics.PorterDuff.Mode.SRC_IN
+                )
+
+                updownContainer.setOnClickListener {
+                    if (BuildConfig.DEBUG) {
+                        Log.d(TAG, "Toggle collapse for group: $key at position $position")
+                    }
+                    toggleGroupCollapsed(sortOrder, groupValue, position)
+                }
+            } else {
+                updownContainer.visibility = View.GONE
+                updownContainer.setOnClickListener(null)
             }
 
             itemView.setOnClickListener { onItemClick(it, item, bindingAdapterPosition) }
@@ -406,16 +617,19 @@ class MemberListAdapter(
 
             val photoFile = PhotoHelper.getSyncedPhotoFile(view.context, item.guid)
 
-            // ✅ FIX: Use view as the lifecycle parameter
-            Glide.with(view)  // View is lifecycle-aware (cancels on detach)
-                .load(photoFile)
-                .apply(PHOTO_OPTIONS)
-                .placeholder(defaultDrawable)
-                .error(defaultDrawable)
-                .override(pixels, pixels)
-                .centerCrop()
-                .skipMemoryCache(false)  // Cache images for performance
-                .into(fotoImageView)
+            // Only try to load if the file exists
+            if (photoFile != null && photoFile.exists()) {
+                Glide.with(view)
+                    .load(photoFile)
+                    .apply(PHOTO_OPTIONS)
+                    .placeholder(defaultDrawable)
+                    .error(defaultDrawable)
+                    .override(pixels, pixels)
+                    .into(fotoImageView)
+            } else {
+                // Use default drawable immediately
+                fotoImageView.setImageDrawable(defaultDrawable)
+            }
         }
 
         private fun bindBasicInfo(item: MemberItem) {
@@ -501,12 +715,61 @@ class MemberListAdapter(
             val hasSeparator = item.showSeparator || item.showSeparator2
             val hasText =
                 !item.separatorLabel.isNullOrBlank() || !item.separatorWykLabel.isNullOrBlank()
+
             if (hasSeparator && hasText) {
                 separatorTextView.text = item.separatorLabel
                 separatorWykTextView.text = item.separatorWykLabel
+
+                // For WYK view, we show "Wyk: [ward]" in the left text
+                // Hide the right text completely in WYK view
+                if (sortOrder == "WYK") {
+                    separatorWykTextView.visibility = View.GONE
+                } else {
+                    separatorWykTextView.visibility = View.VISIBLE
+                }
+
                 separatorBlock.visibility = View.VISIBLE
+
+                // Only set address click for ADRES and GESINNE sorts (not WYK)
+                val isAddressSort = sortOrder == "ADRES" || sortOrder == "GESINNE"
+                if (isAddressSort && item.address.isNotEmpty()) {
+                    separatorTextView.setOnClickListener { view ->
+                        openMaps(view, item.address)
+                    }
+                    separatorWykTextView.setOnClickListener { view ->
+                        openMaps(view, item.address)
+                    }
+                } else {
+                    separatorTextView.setOnClickListener(null)
+                    separatorWykTextView.setOnClickListener(null)
+                }
             } else {
                 separatorBlock.visibility = View.GONE
+                separatorTextView.setOnClickListener(null)
+                separatorWykTextView.setOnClickListener(null)
+            }
+        }
+
+        private fun openMaps(view: View, address: String) {
+            try {
+                val encodedAddress = Uri.encode(address)
+                val uri = Uri.parse("geo:0,0?q=$encodedAddress")
+                val intent = Intent(Intent.ACTION_VIEW, uri)
+                view.context.startActivity(intent)
+            } catch (e: Exception) {
+                try {
+                    val intent = Intent(
+                        Intent.ACTION_VIEW,
+                        Uri.parse("https://maps.google.com/maps?q=" + Uri.encode(address))
+                    )
+                    view.context.startActivity(intent)
+                } catch (e2: Exception) {
+                    Toast.makeText(
+                        view.context,
+                        "Geen kaarttoepassing gevind",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
             }
         }
 
@@ -514,6 +777,11 @@ class MemberListAdapter(
 
         private fun highlight(search: String, originalText: String): CharSequence {
             if (search.isEmpty() || originalText.isEmpty()) return originalText
+
+            val cacheKey = "$search|$originalText"
+            synchronized(spannableCache) {
+                spannableCache[cacheKey]?.let { return it }
+            }
 
             val searchLower = search.lowercase(Locale.ROOT)
             val originalLower = originalText.lowercase(Locale.ROOT)
@@ -536,6 +804,11 @@ class MemberListAdapter(
                 )
                 startIndex = endIndex
             }
+
+            synchronized(spannableCache) {
+                spannableCache[cacheKey] = highlighted
+            }
+
             return highlighted
         }
 
@@ -572,6 +845,10 @@ class MemberListAdapter(
         override val ringImageView: ImageView = binding.listRing
         override val listBediening: ImageView = binding.listBediening
         override val contentView: View = binding.itemContent
+        override val updownContainer: View = binding.updownContainer
+        override val updownIcon: ImageView = binding.updown
+        override val cardView: com.google.android.material.card.MaterialCardView =
+            binding.listCardView
     }
 
     private inner class DetailedViewHolder(val binding: ListItem2Binding) :
@@ -597,5 +874,9 @@ class MemberListAdapter(
         override val ringImageView: ImageView = binding.listRing
         override val listBediening: ImageView = binding.listBediening
         override val contentView: View = binding.itemContent
+        override val updownContainer: View = binding.updownContainer
+        override val updownIcon: ImageView = binding.updown
+        override val cardView: com.google.android.material.card.MaterialCardView =
+            binding.listCardView
     }
 }
