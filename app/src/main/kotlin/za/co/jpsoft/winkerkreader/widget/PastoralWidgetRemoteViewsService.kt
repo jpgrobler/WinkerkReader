@@ -15,8 +15,10 @@ import android.widget.RemoteViewsService
 import androidx.core.content.ContextCompat
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
+import za.co.jpsoft.winkerkreader.data.WinkerkContract
 import za.co.jpsoft.winkerkreader.data.pastoral.PastoralDatabase
 import za.co.jpsoft.winkerkreader.data.pastoral.entities.FollowUpReminderEntity
+import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import za.co.jpsoft.winkerkreader.utils.Utils.toLocalDateSafe
 import java.time.LocalDate
 import java.time.ZoneId
@@ -36,14 +38,15 @@ class PastoralWidgetRemoteViewsService : RemoteViewsService() {
         private val zoneId = ZoneId.systemDefault()
         private val dateFormatter = DateTimeFormatter.ofPattern("dd/MM", Locale.getDefault())
         private var dataLoaded = false
+        private val congregationCache = mutableMapOf<String, String?>()
 
         override fun onCreate() {
             if (BuildConfig.DEBUG) Log.d(TAG, "onCreate")
-            // ✅ Force load data immediately
-            loadData()
+            // ✅ Do NOT load data here – onDataSetChanged() will be called next.
         }
 
         override fun onDataSetChanged() {
+            congregationCache.clear()
             if (BuildConfig.DEBUG) Log.d(TAG, "🔄 onDataSetChanged - loading pastoral reminders")
             loadData()
         }
@@ -63,7 +66,6 @@ class PastoralWidgetRemoteViewsService : RemoteViewsService() {
                     if (reminders.isEmpty()) {
                         Log.w(TAG, "⚠️ No pastoral reminders found - widget will show empty state")
                     } else {
-                        // Log first few reminders for debugging
                         reminders.take(3).forEach { reminder ->
                             Log.d(TAG, "  Reminder: ${reminder.title} due ${reminder.dueDateUtc}")
                         }
@@ -77,6 +79,7 @@ class PastoralWidgetRemoteViewsService : RemoteViewsService() {
         }
 
         override fun onDestroy() {
+            congregationCache.clear()
             if (BuildConfig.DEBUG) Log.d(TAG, "onDestroy")
             reminders = emptyList()
             dataLoaded = false
@@ -131,7 +134,20 @@ class PastoralWidgetRemoteViewsService : RemoteViewsService() {
             // Set row background: primary container for today, otherwise surface
             val bgColor = if (isToday) primaryContainerColor else surfaceColor
             views.setInt(R.id.widget_pastoral_item_root, "setBackgroundColor", bgColor)
-
+            // --- Congregation colour indicator ---
+            val congregationName = getMemberCongregationCached(reminder.memberGuid, context)
+            val settingsManager = SettingsManager.getInstance(context)
+            val congregationColor = when (congregationName) {
+                settingsManager.gemeenteNaam -> settingsManager.gemeenteKleur
+                settingsManager.gemeente2Naam -> settingsManager.gemeente2Kleur
+                settingsManager.gemeente3Naam -> settingsManager.gemeente3Kleur
+                else -> ContextCompat.getColor(context, R.color.md_theme_onSurfaceVariant)
+            }
+            views.setInt(
+                R.id.widget_pastoral_congregation_indicator,
+                "setColorFilter",
+                congregationColor
+            )
             // Build display text
             val displayName =
                 reminder.memberDisplayNameCache?.takeIf { it.isNotBlank() } ?: "Lidmaat"
@@ -242,6 +258,28 @@ class PastoralWidgetRemoteViewsService : RemoteViewsService() {
             )
         }
 
+        private fun getMemberCongregation(memberGuid: String?, context: Context): String? {
+            if (memberGuid.isNullOrEmpty()) return null
+            return try {
+                val projection = arrayOf(WinkerkContract.winkerkEntry.LIDMATE_GEMEENTE)
+                val selection = "${WinkerkContract.winkerkEntry.LIDMATE_LIDMAATGUID} = ?"
+                context.contentResolver.query(
+                    WinkerkContract.winkerkEntry.CONTENT_URI,
+                    projection,
+                    selection,
+                    arrayOf(memberGuid),
+                    null
+                )?.use { cursor ->
+                    if (cursor.moveToFirst()) {
+                        cursor.getString(cursor.getColumnIndexOrThrow(WinkerkContract.winkerkEntry.LIDMATE_GEMEENTE))
+                    } else null
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error fetching congregation for $memberGuid", e)
+                null
+            }
+        }
+
         private fun createEmptyView(): RemoteViews {
             val views = RemoteViews(context.packageName, R.layout.widget_pastoral_item)
             views.setTextViewText(
@@ -249,6 +287,7 @@ class PastoralWidgetRemoteViewsService : RemoteViewsService() {
                 context.getString(R.string.widget_pastoral_empty)
             )
             views.setViewVisibility(R.id.widget_pastoral_item_overdue, View.GONE)
+            views.setViewVisibility(R.id.widget_pastoral_congregation_indicator, View.GONE)
             // Set background to surface (or surfaceContainerHighest)
             views.setInt(
                 R.id.widget_pastoral_item_root, "setBackgroundColor",
@@ -257,6 +296,12 @@ class PastoralWidgetRemoteViewsService : RemoteViewsService() {
             return views
         }
 
+        private fun getMemberCongregationCached(memberGuid: String?, context: Context): String? {
+            if (memberGuid.isNullOrEmpty()) return null
+            return congregationCache.getOrPut(memberGuid) {
+                getMemberCongregation(memberGuid, context)
+            }
+        }
         override fun getLoadingView(): RemoteViews? = null
         override fun getViewTypeCount(): Int = 1
         override fun getItemId(position: Int): Long =

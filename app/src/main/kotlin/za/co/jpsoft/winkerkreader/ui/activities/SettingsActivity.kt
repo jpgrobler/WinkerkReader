@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
-import androidx.appcompat.app.AppCompatActivity
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.WinkerkContract
 import za.co.jpsoft.winkerkreader.databinding.SubMenuBinding
@@ -16,7 +15,7 @@ import za.co.jpsoft.winkerkreader.utils.SearchCheckBoxPreferences
 /**
  * Created by Pieter Grobler on 06/09/2017.
  */
-class SettingsActivity : AppCompatActivity() {
+class SettingsActivity : BaseActivity() {
 
     private lateinit var binding: SubMenuBinding
 

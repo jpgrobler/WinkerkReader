@@ -9,17 +9,10 @@ import android.os.Build
 import android.util.Log
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.services.BootForegroundServiceStarter
-import za.co.jpsoft.winkerkreader.services.CallMonitoringService
-import za.co.jpsoft.winkerkreader.services.ServiceKeepAlive
-import za.co.jpsoft.winkerkreader.services.WhatsAppNotificationService
 import za.co.jpsoft.winkerkreader.utils.ServiceUtils
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import java.util.Calendar
 
-/**
- * Combined boot receiver that handles device startup, package replacement,
- * and sets up necessary services and alarms.
- */
 class DeviceBootReceiver : BroadcastReceiver() {
 
     companion object {
@@ -35,65 +28,31 @@ class DeviceBootReceiver : BroadcastReceiver() {
         if (BuildConfig.DEBUG) Log.d(TAG, "Boot receiver triggered with action: $action")
 
         try {
-            // Handle different boot/restart scenarios
             when (action) {
                 Intent.ACTION_BOOT_COMPLETED,
                 Intent.ACTION_MY_PACKAGE_REPLACED,
                 "android.intent.action.QUICKBOOT_POWERON" -> {
 
-                    // Log running services for debugging
-                    ServiceUtils.logRunningServices(context)
+                    if (BuildConfig.DEBUG) Log.d(TAG, "Boot/restart received")
 
-                    val settings = SettingsManager.getInstance(context)
+                    val settings = SettingsManager.getInstance(context) ?: return
 
-                    if (settings == null) {
-                        Log.e(TAG, "SettingsManager is null, cannot continue")
-                        return
-                    }
-
-                    // Start monitoring services only if enabled
                     if (settings.autoStartEnabled) {
-                        if (BuildConfig.DEBUG) {
-                            Log.d(TAG, "Auto-start enabled, checking services...")
-                        }
-
-                        // Start WhatsApp Notification Listener (if not already running)
-                        ServiceUtils.startServiceIfNotRunning(
-                            context,
-                            WhatsAppNotificationService::class.java
-                        )
-
-                        // Start Call Monitoring Service (if not already running)
-                        ServiceUtils.startServiceIfNotRunning(
-                            context,
-                            CallMonitoringService::class.java
-                        )
-
-                        // Start Keep Alive Service (if not already running)
-                        ServiceUtils.startServiceIfNotRunning(
-                            context,
-                            ServiceKeepAlive::class.java
-                        )
-
-                        // Start the bridge service if needed (it will stop itself)
+                        // ✅ SINGLE ENTRY POINT: the bridge starts everything
                         ServiceUtils.startServiceIfNotRunning(
                             context,
                             BootForegroundServiceStarter::class.java
                         )
 
-                        if (BuildConfig.DEBUG) {
-                            Log.d(TAG, "✅ All services started (or already running)")
-                            // Log services after starting
-                            ServiceUtils.logRunningServices(context)
-                        }
-
+                        if (BuildConfig.DEBUG) Log.d(
+                            TAG,
+                            "Bridge service started – it will handle all service starts"
+                        )
                     } else {
-                        if (BuildConfig.DEBUG) {
-                            Log.d(TAG, "Auto-start disabled, not starting services")
-                        }
+                        if (BuildConfig.DEBUG) Log.d(TAG, "Auto‑start disabled, skipping")
                     }
 
-                    // Setup birthday alarm if enabled
+                    // Birthday alarm setup remains unchanged
                     setupBirthdayAlarmIfEnabled(context, settings)
                 }
             }
@@ -102,6 +61,7 @@ class DeviceBootReceiver : BroadcastReceiver() {
         }
     }
 
+    // ---------- Birthday alarm (unchanged) ----------
 
     private fun setupBirthdayAlarmIfEnabled(context: Context, settings: SettingsManager) {
         try {
@@ -147,7 +107,6 @@ class DeviceBootReceiver : BroadcastReceiver() {
 
             val now = Calendar.getInstance()
 
-            // Clear the time update flag
             try {
                 settings.smsTimeUpdate = false
                 settings.fromMenu = false
@@ -155,13 +114,11 @@ class DeviceBootReceiver : BroadcastReceiver() {
                 Log.e(TAG, "Error clearing settings flags", e)
             }
 
-            // Create alarm intent with unique request code
             val alarmIntent = Intent(context, AlarmReceiver::class.java).apply {
                 action = "VerjaarSMS"
                 putExtra("alarm_time", System.currentTimeMillis())
             }
 
-            // Use FLAG_IMMUTABLE for Android 12+ and FLAG_UPDATE_CURRENT
             val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
             } else {
@@ -170,7 +127,7 @@ class DeviceBootReceiver : BroadcastReceiver() {
 
             val pendingIntent = PendingIntent.getBroadcast(
                 context,
-                1001, // Use constant request code
+                1001,
                 alarmIntent,
                 flags
             )
@@ -181,20 +138,17 @@ class DeviceBootReceiver : BroadcastReceiver() {
                 return
             }
 
-            // Cancel any existing alarm
             try {
                 alarmManager.cancel(pendingIntent)
             } catch (e: Exception) {
                 Log.e(TAG, "Error canceling existing alarm", e)
             }
 
-            // Calculate trigger time
             var triggerTime = alarmTime.timeInMillis
             if (triggerTime <= now.timeInMillis) {
                 triggerTime += AlarmManager.INTERVAL_DAY
             }
 
-            // Schedule the alarm based on Android version
             scheduleAlarm(alarmManager, triggerTime, pendingIntent)
 
             if (BuildConfig.DEBUG) Log.d(
@@ -215,7 +169,6 @@ class DeviceBootReceiver : BroadcastReceiver() {
         try {
             when {
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-                    // Android 12+ - Check if we can schedule exact alarms
                     try {
                         if (alarmManager.canScheduleExactAlarms()) {
                             alarmManager.setExactAndAllowWhileIdle(

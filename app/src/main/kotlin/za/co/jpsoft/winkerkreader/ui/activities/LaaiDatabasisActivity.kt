@@ -683,6 +683,8 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                     if (workInfo.state == WorkInfo.State.SUCCEEDED) {
                         val dbFile = File(applicationInfo.dataDir, "databases/$DB_NAME")
                         if (dbFile.exists()) {
+                            WinkerkDatabase.closeInstance()
+                            WinkerkDbHelper.closeInstance(DB_NAME)
                             migrateDownloadedDatabase(dbFile)
                         }
                         binding.laaiBoodskap.setText(R.string.download_completed)
@@ -944,6 +946,8 @@ class LaaiDatabasisActivity : AppCompatActivity() {
 
     private fun LaaiNuweData(nfile: String): Boolean {
         WinkerkDatabase.closeInstance()
+
+        WinkerkDbHelper.closeInstance(DB_NAME)
         //WinkerkDbHelper.closeInstance(WinkerkContract.winkerkEntry.INFO_DB)
         val dbPath = applicationInfo.dataDir + "/databases/"
         var result = false
@@ -1064,7 +1068,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
 
                         // 5. Close Room to release any locks on the target file
                         WinkerkDatabase.closeInstance()
-
+                        WinkerkDbHelper.closeInstance(DB_NAME)
                         // 6. Rename temp file to the real database file
                         val dbFile = File(dbDir, DB_NAME)
                         if (dbFile.exists() && !dbFile.delete()) {

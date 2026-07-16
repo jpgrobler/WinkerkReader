@@ -7,7 +7,6 @@ import com.readystatesoftware.sqliteasset.SQLiteAssetHelper
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.AtomicBoolean
 
 class WinkerkDbHelper private constructor(context: Context, dbName: String) :
     SQLiteAssetHelper(context, dbName, null, WinkerkContract.DATABASE_VERSION) {
@@ -111,54 +110,46 @@ class WinkerkDbHelper private constructor(context: Context, dbName: String) :
 
     companion object {
         private val instances = ConcurrentHashMap<String, WinkerkDbHelper>()
-        private val isClosing = AtomicBoolean(false)
 
         /**
-         * Get a singleton instance for the given database name. Uses application context to avoid
-         * leaks.
+         * Get a singleton instance for the given database name.
+         * Uses application context to avoid leaks.
          */
         @JvmStatic
         fun getInstance(context: Context, dbName: String): WinkerkDbHelper {
-            // Wait if we're in the middle of closing
-            var attempts = 0
-            while (isClosing.get() && attempts < 20) {
-                Thread.sleep(50)
-                attempts++
-            }
+            // Quick path: check existing instance without locking
+            instances[dbName]?.let { return it }
 
-            return instances.getOrPut(dbName) {
-                if (BuildConfig.DEBUG) Log.d(
-                    "WinkerkDbHelper",
-                    "Creating new instance for: $dbName"
-                )
-                WinkerkDbHelper(context.applicationContext, dbName)
+            // Synchronize creation to avoid race conditions
+            return synchronized(instances) {
+                // Double-check after acquiring lock
+                instances[dbName] ?: WinkerkDbHelper(context.applicationContext, dbName).also {
+                    instances[dbName] = it
+                    if (BuildConfig.DEBUG) Log.d(
+                        "WinkerkDbHelper",
+                        "Created new instance for: $dbName"
+                    )
+                }
             }
         }
 
         /** Close a specific database instance and remove it from the map. */
         @JvmStatic
         fun closeInstance(dbName: String) {
-            isClosing.set(true)
-            try {
-                if (BuildConfig.DEBUG) Log.d("WinkerkDbHelper", "closeInstance called for: $dbName")
+            synchronized(instances) {
                 instances.remove(dbName)?.close()
-                if (BuildConfig.DEBUG) Log.d("WinkerkDbHelper", "Closed helper for: $dbName")
-            } finally {
-                isClosing.set(false)
             }
+            if (BuildConfig.DEBUG) Log.d("WinkerkDbHelper", "Closed helper for: $dbName")
         }
 
         /** Close all database instances. */
         @JvmStatic
         fun closeAllInstances() {
-            isClosing.set(true)
-            try {
-                if (BuildConfig.DEBUG) Log.d("WinkerkDbHelper", "Closing all database instances")
+            synchronized(instances) {
                 instances.values.forEach { it.close() }
                 instances.clear()
-            } finally {
-                isClosing.set(false)
             }
+            if (BuildConfig.DEBUG) Log.d("WinkerkDbHelper", "Closed all database instances")
         }
 
         fun setDatabaseDate(context: Context) {

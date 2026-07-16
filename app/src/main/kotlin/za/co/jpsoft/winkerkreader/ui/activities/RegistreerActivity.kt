@@ -3,7 +3,6 @@ package za.co.jpsoft.winkerkreader.ui.activities
 import android.os.Bundle
 import android.view.View
 import androidx.activity.OnBackPressedCallback
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
 import com.google.android.material.snackbar.Snackbar
 import za.co.jpsoft.winkerkreader.R
@@ -12,7 +11,7 @@ import za.co.jpsoft.winkerkreader.databinding.RegistreerBinding
 import za.co.jpsoft.winkerkreader.utils.EdgeToEdgeHelper
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
 
-class RegistreerActivity : AppCompatActivity() {
+class RegistreerActivity : BaseActivity() {
 
     private lateinit var binding: RegistreerBinding
     private var isDataChanged = false

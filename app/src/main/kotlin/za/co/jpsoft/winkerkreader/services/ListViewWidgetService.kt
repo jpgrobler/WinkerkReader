@@ -14,6 +14,7 @@ import android.widget.RemoteViewsService
 import androidx.core.content.ContextCompat
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
+import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import za.co.jpsoft.winkerkreader.widget.WidgetDataRepository
 import za.co.jpsoft.winkerkreader.widget.WidgetRow
 import za.co.jpsoft.winkerkreader.widget.WinkerkReaderWidgetProvider
@@ -93,10 +94,20 @@ class WidgetViewsFactory(
         val day = row.day
         val month = row.month
         val name = row.displayText
+        val congregationName = row.gemeente
 
         // --- Determine if this row is today ---
         val todayDay = today.toString().substring(8, 10)  // "dd"
         val isToday = day == todayDay
+        val settingsManager = SettingsManager.getInstance(context)
+        val congregationColor = when (congregationName) {
+            settingsManager.gemeenteNaam -> settingsManager.gemeenteKleur
+            settingsManager.gemeente2Naam -> settingsManager.gemeente2Kleur
+            settingsManager.gemeente3Naam -> settingsManager.gemeente3Kleur
+            else -> ContextCompat.getColor(context, R.color.md_theme_surface)
+        }
+        //remoteViews.setImageViewResource(R.id.congregation_indicator, R.drawable.ic_circle)
+        remoteViews.setInt(R.id.congregation_indicator, "setColorFilter", congregationColor)
 
         // --- Choose background colour ---
         // md_theme_surface = light in day mode, dark in night mode

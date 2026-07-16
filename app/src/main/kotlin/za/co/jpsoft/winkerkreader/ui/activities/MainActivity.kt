@@ -21,7 +21,6 @@ import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
@@ -67,7 +66,6 @@ import za.co.jpsoft.winkerkreader.ui.controllers.StartupActions
 import za.co.jpsoft.winkerkreader.ui.helpers.MemberListScrollHelper
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MainViewModel
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel
-import za.co.jpsoft.winkerkreader.utils.AppAuthGuard
 import za.co.jpsoft.winkerkreader.utils.BackPressHandler
 import za.co.jpsoft.winkerkreader.utils.BatteryOptimizationHelper
 import za.co.jpsoft.winkerkreader.utils.DeviceIdManager
@@ -86,7 +84,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : BaseActivity() {
 
     lateinit var binding: ActivityMainBinding
     lateinit var memberListAdapter: MemberListAdapter
@@ -106,7 +104,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var activityResultCoordinator: ActivityResultCoordinator
 
     private lateinit var backPressHandler: BackPressHandler
-    private lateinit var authGuard: AppAuthGuard
+
     private lateinit var pastoralBadgeController: PastoralReminderBadgeController
     private lateinit var swipeGestureController: MainSwipeGestureController
     private var workInfoObserver: Observer<WorkInfo?> = Observer { }
@@ -312,15 +310,42 @@ class MainActivity : AppCompatActivity() {
         setupFilterChips()
 
         // ---------- 4. Authentication guard ----------
-        authGuard = AppAuthGuard(this, settingsManager)
-        authGuard.guardIfNeeded(
+        appAuthGuard.guardIfNeeded(
             onAuthenticated = {
                 loadDataAndFinalize(savedInstanceState)
             }
         )
-
     }
 
+    /**
+     * Called after every onResume, but only when the app is authenticated
+     * (or when biometric lock is disabled). This is the place for all
+     * resume‑time housekeeping.
+     */
+    override fun onResumeAfterAuth() {
+        // This logic was previously inside the checkOnResume callback.
+        if (isAppInitialized) {
+            startupCoordinator.runOnResume()
+            pastoralBadgeController.refresh()
+            updateFilterSummary()
+
+            // Check if we need to scroll to birthday
+            val currentSort = settingsManager.defLayout
+            if (currentSort == "VERJAAR" || currentSort == "VERJAARSDAG") {
+                scrollToCurrentBirthday()
+            }
+
+            // Load initial data if not already done (but this may be redundant,
+            // keep it to be safe)
+            if (!initialLoadDone) {
+                initialLoadDone = true
+                loadInitialData()
+            }
+
+            syncSortOrderWithSettings()
+            binding.lidmaatList.post { restoreListScrollIfNeeded() }
+        }
+    }
     /**
      * Called only after successful authentication.
      * Loads data, sets up remaining controllers, and marks the app as initialized.
@@ -1060,52 +1085,6 @@ class MainActivity : AppCompatActivity() {
                 MemberListScrollHelper.saveScrollState(binding.lidmaatList, memberListAdapter)
         }
         super.onPause()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        if (BuildConfig.DEBUG) Log.d(TAG, "onResume called")
-
-        if (isAppInitialized && ::authGuard.isInitialized) {
-            authGuard.checkOnResume(
-                onAuthenticated = {
-                    if (BuildConfig.DEBUG) Log.d(TAG, "Auth callback invoked")
-                    startupCoordinator.runOnResume()
-                    pastoralBadgeController.refresh()
-                    // Update filter summary if filters are active
-                    updateFilterSummary()
-                    // ✅ Check if we need to scroll to birthday
-                    val currentSort = settingsManager.defLayout
-                    if (currentSort == "VERJAAR" || currentSort == "VERJAARSDAG") {
-                        scrollToCurrentBirthday()
-                    }
-                }
-            )
-        } else {
-            if (isAppInitialized) {
-                startupCoordinator.runOnResume()
-                pastoralBadgeController.refresh()
-                // Update filter summary if filters are active
-                updateFilterSummary()
-                // ✅ Check if we need to scroll to birthday
-                val currentSort = settingsManager.defLayout
-                if (currentSort == "VERJAAR" || currentSort == "VERJAARSDAG") {
-                    scrollToCurrentBirthday()
-                }
-            }
-        }
-
-        // ✅ Only load data once, and only when Activity is resumed
-        if (!initialLoadDone && isAppInitialized) {
-            initialLoadDone = true
-            loadInitialData()
-        }
-
-        if (isAppInitialized) {
-            syncSortOrderWithSettings()
-
-            binding.lidmaatList.post { restoreListScrollIfNeeded() }
-        }
     }
 
     override fun onDestroy() {

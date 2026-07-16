@@ -116,11 +116,16 @@ class MainMenuController(
                         tag,
                         "Filter changed to: ${viewModel.recordStatus}"
                     )
+
                     viewModel.clearCache()
-                    viewModel.refresh()//observeDataset()
+                    viewModel.refresh()
+
                     // ✅ Also update the row count via the legacy loadData path
                     val mode = searchFilterCoordinator.resolveQueryMode(viewModel.getEventType())
                     viewModel.loadData(mode)
+
+                    // ✅ Resync UI elements (banner, sort icon, birthday offset) immediately after filter change
+                    observeDataset()
                 }
                 isUpdating = false
             }

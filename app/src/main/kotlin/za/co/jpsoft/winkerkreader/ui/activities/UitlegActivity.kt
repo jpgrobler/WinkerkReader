@@ -23,7 +23,7 @@ import za.co.jpsoft.winkerkreader.ui.fragments.UitlegWidgetFragment
 import za.co.jpsoft.winkerkreader.utils.CalendarManager
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
 
-class UitlegActivity : AppCompatActivity(), UitlegCalendarSelectionListener {
+class UitlegActivity : BaseActivity(), UitlegCalendarSelectionListener {
 
     private lateinit var binding: ActivityUitlegBinding
     private lateinit var settingsManager: SettingsManager

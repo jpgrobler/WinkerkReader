@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayoutMediator
@@ -21,7 +20,7 @@ import za.co.jpsoft.winkerkreader.ui.viewmodels.BedieningViewModelFactory
 import za.co.jpsoft.winkerkreader.utils.MainNavigationController
 import za.co.jpsoft.winkerkreader.utils.PastoralDatabaseBackup
 
-class BedieningActivity : AppCompatActivity() {
+class BedieningActivity : BaseActivity() {
 
     private val navigationController by lazy { MainNavigationController(this) }
     private lateinit var binding: ActivityBedieningBinding

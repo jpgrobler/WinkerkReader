@@ -7,6 +7,8 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
 import za.co.jpsoft.winkerkreader.data.pastoral.dao.FollowUpReminderDao
@@ -45,10 +47,15 @@ abstract class PastoralDatabase : RoomDatabase() {
         @Volatile
         private var instance: PastoralDatabase? = null
 
+        // Flag to avoid double-seeding
+        private var seedingStarted = false
+
         fun getInstance(context: Context): PastoralDatabase =
             instance ?: synchronized(this) {
                 instance ?: buildDatabase(context.applicationContext).also { db ->
                     instance = db
+                    // Start seeding asynchronously after DB is built
+                    seedDatabaseAsync(context.applicationContext, db)
                 }
             }
 
@@ -58,7 +65,34 @@ abstract class PastoralDatabase : RoomDatabase() {
                     if (db.isOpen) db.close()
                 }
                 instance = null
+                seedingStarted = false
                 if (BuildConfig.DEBUG) Log.d(TAG, "Pastoral database instance closed")
+            }
+        }
+
+        // ── Asynchronous seeding ──────────────────────────────────────────────
+
+        private fun seedDatabaseAsync(context: Context, db: PastoralDatabase) {
+            if (seedingStarted) return
+            synchronized(this) {
+                if (seedingStarted) return
+                seedingStarted = true
+            }
+
+            // Use a background coroutine – you may use a dedicated application scope
+            // or simply GlobalScope (less ideal). Replace with your own scope if available.
+            kotlinx.coroutines.GlobalScope.launch(Dispatchers.IO) {
+                try {
+                    // seedIfEmpty is a suspend function on the instance
+                    PastoralDatabaseInitializer(context).seedIfEmpty(db)
+                    if (BuildConfig.DEBUG) Log.d(TAG, "Pastoral database seeding completed")
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to seed pastoral database", e)
+                    // Optionally: post a warning, set a flag to retry later, etc.
+                } finally {
+                    // If you want to allow retry on next open, set seedingStarted = false here.
+                    // Usually we seed only once, so leave it true.
+                }
             }
         }
 
@@ -140,14 +174,10 @@ abstract class PastoralDatabase : RoomDatabase() {
                     MIGRATION_4_5,
                     MIGRATION_5_6
                 )
-                .addCallback(PastoralDatabaseInitializer.callback(context.applicationContext))
+                // Remove the synchronous callback – seeding is done separately
+                // .addCallback(...)  // ← REMOVE this line
                 .build()
-                .also { db ->
-                    PastoralDatabaseInitializer.seedIfEmptyBlocking(context.applicationContext, db)
-                }
+            // Do NOT call seedIfEmptyBlocking here – it's moved to async
         }
     }
-
-    // Note: importBackup logic lives in PastoralDatabaseBackup (importBackup / importFromUri).
-    // Do not add file-manipulation logic here — Room abstracts away the underlying files.
 }

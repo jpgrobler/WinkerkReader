@@ -18,6 +18,9 @@ object CallerInfoResolver {
             return CallerInfoResult.Unknown
         }
 
+        // Keep the original cleaned number (spaces/punctuation removed, but leading zeros preserved)
+        val cleanedOriginal = phoneNumber.replace(Regex("[\\s\\-()\\.]"), "")
+
         val normalized = normalizePhoneNumber(phoneNumber)
         if (normalized.isEmpty() || normalized == "+") {
             if (BuildConfig.DEBUG) Log.d(TAG, "Number empty after normalization")
@@ -26,13 +29,15 @@ object CallerInfoResolver {
 
         if (BuildConfig.DEBUG) Log.d(TAG, "Normalized number: $normalized")
 
+        // Member lookup uses the normalized number (and multiple formats)
         val memberResult = resolveMember(normalized, contentResolver)
         if (memberResult != null) {
             if (BuildConfig.DEBUG) Log.d(TAG, "Found member: ${memberResult.name}")
             return memberResult
         }
 
-        val contactResult = resolveContact(normalized, contentResolver)
+        // Contact lookup now tries both the original cleaned number and the normalized one
+        val contactResult = resolveContact(cleanedOriginal, normalized, contentResolver)
         if (contactResult != null) {
             if (BuildConfig.DEBUG) Log.d(TAG, "Found contact: ${contactResult.name}")
             return contactResult
@@ -146,35 +151,49 @@ object CallerInfoResolver {
         }
     }
 
+    /**
+     * Looks up the phone number in the device's Contacts.
+     * Tries both the original cleaned number (with leading zeros) and the normalized version.
+     */
     private fun resolveContact(
-        phoneNumber: String,
+        cleanedOriginal: String,
+        normalized: String,
         contentResolver: ContentResolver
     ): CallerInfoResult.Contact? {
         try {
-            // Build URI correctly with the phone number
-            val uri = ContactsContract.PhoneLookup.CONTENT_FILTER_URI.buildUpon()
-                .appendPath(phoneNumber)
-                .build()
+            val candidates = mutableListOf<String>()
+            if (cleanedOriginal.isNotEmpty()) {
+                candidates.add(cleanedOriginal)
+            }
+            if (normalized.isNotEmpty() && normalized != cleanedOriginal) {
+                candidates.add(normalized)
+            }
 
-            if (BuildConfig.DEBUG) Log.d(TAG, "Contact lookup URI: $uri")
+            for (candidate in candidates.distinct()) {
+                val uri = ContactsContract.PhoneLookup.CONTENT_FILTER_URI.buildUpon()
+                    .appendPath(candidate)
+                    .build()
 
-            val projection = arrayOf(
-                ContactsContract.PhoneLookup.DISPLAY_NAME,
-                ContactsContract.PhoneLookup.NUMBER
-            )
+                if (BuildConfig.DEBUG) Log.d(TAG, "Contact lookup URI: $uri")
 
-            val cursor = contentResolver.query(uri, projection, null, null, null)
+                val projection = arrayOf(
+                    ContactsContract.PhoneLookup.DISPLAY_NAME,
+                    ContactsContract.PhoneLookup.NUMBER
+                )
 
-            cursor?.use {
-                if (it.moveToFirst()) {
-                    val name =
-                        it.getString(it.getColumnIndexOrThrow(ContactsContract.PhoneLookup.DISPLAY_NAME))
-                            ?: ""
-                    val number =
-                        it.getString(it.getColumnIndexOrThrow(ContactsContract.PhoneLookup.NUMBER))
-                            ?: ""
-                    if (name.isNotEmpty()) {
-                        return CallerInfoResult.Contact(name = name, phoneNumber = number)
+                val cursor = contentResolver.query(uri, projection, null, null, null)
+
+                cursor?.use {
+                    if (it.moveToFirst()) {
+                        val name =
+                            it.getString(it.getColumnIndexOrThrow(ContactsContract.PhoneLookup.DISPLAY_NAME))
+                                ?: ""
+                        val number =
+                            it.getString(it.getColumnIndexOrThrow(ContactsContract.PhoneLookup.NUMBER))
+                                ?: ""
+                        if (name.isNotEmpty()) {
+                            return CallerInfoResult.Contact(name = name, phoneNumber = number)
+                        }
                     }
                 }
             }

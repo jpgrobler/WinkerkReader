@@ -10,17 +10,39 @@ import androidx.fragment.app.FragmentActivity
 import za.co.jpsoft.winkerkreader.R
 
 /**
- * Manages the full-screen authentication overlay shown at app startup.
+ * Manages the full-screen authentication overlay shown at app startup and after a
+ * background timeout.
  *
- * Usage in MainActivity.onCreate(), BEFORE startupCoordinator.runOnCreate():
+ * ## Startup (called from MainActivity.onCreate)
  *
- *   authGuard = AppAuthGuard(this, settingsManager)
- *   authGuard.guardIfNeeded(
+ *   appAuthGuard.guardIfNeeded(
  *       onAuthenticated = { startupCoordinator.runOnCreate() }
  *   )
  *
- * If biometric auth is disabled in settings, or the user has already
- * authenticated this session, [onAuthenticated] is called immediately.
+ * ## Timeout re-auth (called automatically from BaseActivity.onResume)
+ *
+ * [BaseActivity] holds an instance of this class and calls [checkOnResume] on every
+ * `onResume`.  Nothing needs to be wired manually in subclasses.
+ *
+ * If biometric auth is disabled in settings, or the user has already authenticated
+ * within the configured timeout, both entry points are no-ops.
+ *
+ * ## AppAuthState contract (what AppAuthState must provide)
+ *
+ *   var backgroundTimeoutMs: Long          — writable, set before each check
+ *   val isAuthenticated: Boolean           — true while session is valid
+ *   val sessionStarted: Boolean            — true once markAuthenticated() has ever
+ *                                            been called; never resets to false.
+ *                                            Used to distinguish "fresh process, no
+ *                                            auth yet" from "was authenticated but
+ *                                            timed out".
+ *   fun markAuthenticated()                — sets isAuthenticated = true,
+ *                                            sessionStarted = true, resets the
+ *                                            background timer
+ *   fun checkBackgroundTimeout(): Boolean  — returns true if the session is still
+ *                                            within the timeout window; sets
+ *                                            isAuthenticated = false and returns false
+ *                                            when the timeout has elapsed
  */
 class AppAuthGuard(
     private val activity: FragmentActivity,
@@ -63,22 +85,51 @@ class AppAuthGuard(
     }
 
     /**
-     * Call from [Activity.onResume] to enforce the background timeout.
-     * If the timeout has elapsed, the overlay is re-shown.
+     * Enforces the background timeout on every [Activity.onResume].
      *
-     * @param onAuthenticated Called if re-auth succeeds or is not needed.
+     * Called by [BaseActivity.onResume] — do not call this directly from individual
+     * Activities.
+     *
+     * Two early-exit guards prevent spurious double-prompts:
+     *
+     * 1. **Initial auth in progress** — if [guardIfNeeded]'s overlay is already
+     *    visible (`overlayView != null`), the biometric prompt is already running.
+     *    Adding a second prompt on top would create a confusing stack.
+     *
+     * 2. **Fresh process start** — [AppAuthState.checkBackgroundTimeout] returns
+     *    `false` for a brand-new session that has never been authenticated, which
+     *    would trigger a second overlay before [guardIfNeeded] has run.  The
+     *    [AppAuthState.sessionStarted] flag distinguishes "never authenticated"
+     *    from "was authenticated but timed out", so timeout re-auth is only
+     *    attempted after the first successful [guardIfNeeded] call.
+     *
+     * @param onAuthenticated Called when re-auth succeeds.  For non-MainActivity
+     *                        Activities this is typically `{}` — the overlay is
+     *                        dismissed and the Activity content is already loaded.
      */
+    // AppAuthGuard.kt
     fun checkOnResume(onAuthenticated: () -> Unit) {
         AppAuthState.backgroundTimeoutMs = settingsManager.appBiometricTimeoutMs
 
-        if (!settingsManager.appBiometricEnabled) return
+        // If lock is off, auth is not required – run the callback immediately.
+        if (!settingsManager.appBiometricEnabled) {
+            onAuthenticated()
+            return
+        }
 
-        // Only check timeout if the app was actually backgrounded
+        // Guard 1: don't add a second prompt while guardIfNeeded is still running.
+        if (overlayView != null) return   // still pending, don't call callback
+
+        // Guard 2: don't enforce a timeout before the first successful auth.
+        if (!AppAuthState.sessionStarted) return   // initial auth not done yet
+
         val stillValid = AppAuthState.checkBackgroundTimeout()
-
         if (!stillValid) {
             showOverlay()
-            promptAuth(onAuthenticated)
+            promptAuth(onAuthenticated)   // callback runs after successful re‑auth
+        } else {
+            // Session is still valid – run the callback immediately.
+            onAuthenticated()
         }
     }
 

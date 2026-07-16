@@ -8,7 +8,6 @@ import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -27,7 +26,7 @@ import za.co.jpsoft.winkerkreader.ui.adapters.CallLogAdapter
 import za.co.jpsoft.winkerkreader.utils.CallLogExporter
 import za.co.jpsoft.winkerkreader.utils.UnifiedCallMonitor
 
-class CallLogActivity : AppCompatActivity() {
+class CallLogActivity : BaseActivity() {
 
     private lateinit var binding: ActivityCallLogBinding
     private lateinit var callLogAdapter: CallLogAdapter

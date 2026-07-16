@@ -20,7 +20,6 @@ import android.view.MenuItem
 import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.app.ActivityCompat
 import androidx.core.content.edit
@@ -57,7 +56,7 @@ import za.co.jpsoft.winkerkreader.utils.forceShowIcons
 import java.util.Calendar
 import java.util.Locale
 
-class VerjaarSmsActivity : AppCompatActivity() {
+class VerjaarSmsActivity : BaseActivity() {
 
     companion object {
         private const val TAG = "VerjaarSmsActivity"

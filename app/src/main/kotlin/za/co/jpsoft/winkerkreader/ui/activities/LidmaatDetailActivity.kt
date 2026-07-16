@@ -28,7 +28,6 @@ import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.toColorInt
 import androidx.core.net.toUri
@@ -56,7 +55,7 @@ import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import java.io.File
 
 
-class LidmaatDetailActivity : AppCompatActivity() {
+class LidmaatDetailActivity : BaseActivity() {
 
     companion object {
         private const val TAG = "LidmaatDetailActivity"

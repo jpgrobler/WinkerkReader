@@ -5,7 +5,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -19,7 +18,7 @@ import za.co.jpsoft.winkerkreader.ui.adapters.TemplateManagerAdapter
 import za.co.jpsoft.winkerkreader.ui.viewmodels.TemplateManagerViewModel
 import za.co.jpsoft.winkerkreader.utils.MainNavigationController
 
-class TemplateManagerActivity : AppCompatActivity() {
+class TemplateManagerActivity : BaseActivity() {
 
     private lateinit var binding: ActivityTemplateManagerBinding
     private lateinit var adapter: TemplateManagerAdapter

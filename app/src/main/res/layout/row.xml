@@ -1,19 +1,25 @@
-<?xml version="1.0" encoding="utf-8"?>
+<!-- row.xml -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/row_container"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:padding="1dp">
+    android:gravity="center_vertical"
+    android:padding="2dp">
+
+    <ImageView
+        android:id="@+id/congregation_indicator"
+        android:layout_width="12dp"
+        android:layout_height="12dp"
+        android:layout_marginEnd="4dp"
+        android:src="@drawable/ic_circle" />
 
     <TextView
         android:id="@android:id/text1"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="2"
-        android:gravity="center_vertical"
-        android:paddingLeft="6dip"
-        android:text=""
-        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:layout_weight="1"
+        android:textSize="18sp"
         android:textColor="@color/md_theme_onSurface" />
+
 </LinearLayout>

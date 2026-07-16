@@ -10,7 +10,6 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.cursoradapter.widget.CursorAdapter
 import androidx.lifecycle.Observer
@@ -22,7 +21,7 @@ import za.co.jpsoft.winkerkreader.ui.viewmodels.ArgiefViewModel
 import za.co.jpsoft.winkerkreader.utils.getStringOrEmpty
 import za.co.jpsoft.winkerkreader.utils.getStringOrNull
 
-class ArgiefListActivity : AppCompatActivity() {
+class ArgiefListActivity : BaseActivity() {
 
     private lateinit var binding: ArgiefBinding
     private lateinit var mCursorAdapter: ArgiefLysAdapter

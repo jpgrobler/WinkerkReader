@@ -67,15 +67,14 @@ class NoteAuthManager(private val activity: FragmentActivity) {
 
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
                     super.onAuthenticationError(errorCode, errString)
-                    // User cancelled or no auth method available — treat as silent failure
-                    if (errorCode != BiometricPrompt.ERROR_USER_CANCELED &&
-                        errorCode != BiometricPrompt.ERROR_NEGATIVE_BUTTON &&
-                        errorCode != BiometricPrompt.ERROR_CANCELED
-                    ) {
-                        onFailure(errString.toString())
+                    val message = when (errorCode) {
+                        BiometricPrompt.ERROR_USER_CANCELED -> "Verifikasie gekanselleer"
+                        BiometricPrompt.ERROR_NEGATIVE_BUTTON -> "Verifikasie gekanselleer"
+                        BiometricPrompt.ERROR_CANCELED -> "Verifikasie gekanselleer"
+                        else -> errString.toString()
                     }
+                    onFailure(message)
                 }
-
             }
         )
 
