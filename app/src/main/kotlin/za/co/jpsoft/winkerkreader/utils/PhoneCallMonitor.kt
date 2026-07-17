@@ -1,6 +1,7 @@
 package za.co.jpsoft.winkerkreader.utils
 
 import android.Manifest
+import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -147,39 +148,42 @@ class PhoneCallMonitor(
         currentCallId = callId
 
         currentIncomingNumber = if (!number.isNullOrBlank()) number else "Unknown Number"
-        currentCallType = CallType.INCOMING
-
-        val settings = context.getSharedPreferences(PREFS_USER_INFO, 0)
-        settings.edit { putString("CallerNumber", number) }
-        if (BuildConfig.DEBUG) Log.d(TAG, "INCOMING call detected: $currentIncomingNumber")
-
-        // Launch coroutine to resolve name and log
-        monitorScope.launch {
-            val displayName = if (number.isNullOrBlank()) {
-                null
-            } else {
-                // Try to resolve from member database first
-                val result = CallerInfoResolver.resolve(number, context.contentResolver)
-                when (result) {
-                    is CallerInfoResult.Member -> result.name
-                    is CallerInfoResult.Contact -> result.name
-                    CallerInfoResult.Unknown -> {
-                        // If not found in app database, try system contacts
-                        getContactNameFromSystem(number)
-                    }
-                }
-            }
-            unifiedMonitor?.onCallDetected(
-                callId = callId,
-                number = number ?: "Unknown Number",
-                direction = "incoming",
-                source = "Phone Call",
-                timestamp = callStartTime,
-                displayName = displayName ?: "Unknown Contact"
-            )
-            startCallerIdentificationService(context, number)
-        }
     }
+//        currentCallType = CallType.INCOMING
+//
+//        val settings = context.getSharedPreferences(PREFS_USER_INFO, 0)
+//        settings.edit { putString("CallerNumber", number) }
+//        if (BuildConfig.DEBUG) Log.d(TAG, "INCOMING call detected: $currentIncomingNumber")
+//
+//        // Launch coroutine to resolve name and log
+//        monitorScope.launch {
+//            val displayName = if (number.isNullOrBlank()) {
+//                null
+//            } else {
+//                // Try to resolve from member database first
+//                val result = CallerInfoResolver.resolve(number, context.contentResolver)
+//                when (result) {
+//                    is CallerInfoResult.Member -> result.name
+//                    is CallerInfoResult.Contact -> result.name
+//                    CallerInfoResult.Unknown -> {
+//                        // If not found in app database, try system contacts
+//                        getContactNameFromSystem(number)
+//                    }
+//
+//                    else -> {getContactNameFromSystem(number)}
+//                }
+//            }
+//            unifiedMonitor?.onCallDetected(
+//                callId = callId,
+//                number = number ?: "Unknown Number",
+//                direction = "incoming",
+//                source = "Phone Call",
+//                timestamp = callStartTime,
+//                displayName = displayName ?: "Unknown Contact"
+//            )
+//            startCallerIdentificationService(context, number)
+//        }
+//    }
 
     private fun handleOffHookState(phoneNumber: String?) {
         if (currentIncomingNumber != null) {
@@ -208,6 +212,9 @@ class PhoneCallMonitor(
                         CallerInfoResult.Unknown -> {
                             getContactNameFromSystem(phoneNumber)
                         }
+                        else -> {
+                            getContactNameFromSystem(phoneNumber)
+                        }
                     }
                 }
                 unifiedMonitor?.onCallDetected(
@@ -224,59 +231,112 @@ class PhoneCallMonitor(
 
     private fun handleIdleState() {
         val callId = currentCallId
+        val startTime = callStartTime
 
         when {
             isCallActive && callId != null -> {
-                val callEndTime = System.currentTimeMillis()
+                // Answered call – log as INCOMING or OUTGOING
+                val direction = if (currentIncomingNumber != null) "incoming" else "outgoing"
+                val number = currentIncomingNumber ?: currentOutgoingNumber ?: "Unknown Number"
                 monitorScope.launch {
-                    unifiedMonitor?.onCallEnded(callId, callEndTime)
+                    val displayName = resolveName(number, context.contentResolver)
+                    unifiedMonitor?.onCallDetected(
+                        callId = callId,
+                        number = number,
+                        direction = direction,
+                        source = "Phone Call",
+                        timestamp = startTime,
+                        displayName = displayName ?: "Unknown Contact"
+                    )
+                    unifiedMonitor?.onCallEnded(callId, System.currentTimeMillis())
                 }
             }
 
             currentIncomingNumber != null && callId != null -> {
-                if (currentIncomingNumber == "Unknown Number") {
-                    // Try to recover missed call number asynchronously
-                    monitorScope.launch {
-                        val recovered = queryLatestCallFromLog()
-                        if (recovered != null) {
-                            if (BuildConfig.DEBUG) Log.d(
-                                TAG,
-                                "Recovered missed call number from CallLog: ${recovered.first}"
-                            )
-                            val result =
-                                CallerInfoResolver.resolve(recovered.first, context.contentResolver)
-                            val displayName = when (result) {
-                                is CallerInfoResult.Member -> result.name
-                                is CallerInfoResult.Contact -> result.name
-                                CallerInfoResult.Unknown -> {
-                                    getContactNameFromSystem(recovered.first)
-                                }
-                            }
-                            unifiedMonitor?.onCallDetected(
-                                callId = callId,
-                                number = recovered.first,
-                                direction = "missed",
-                                source = "Phone Call",
-                                timestamp = recovered.second,
-                                displayName = displayName ?: "Unknown Contact"
-                            )
-                        }
-                        // Regardless, end the call
-                        unifiedMonitor?.onCallEnded(callId, System.currentTimeMillis())
-                    }
+                // Missed call – log as MISSED
+                val number = if (currentIncomingNumber == "Unknown Number") {
+                    // Try to recover from call log if number unknown
+                    queryLatestCallFromLog()?.first ?: "Unknown Number"
                 } else {
-                    monitorScope.launch {
-                        unifiedMonitor?.onCallEnded(callId, System.currentTimeMillis())
-                    }
+                    currentIncomingNumber!!
+                }
+                monitorScope.launch {
+                    val displayName = resolveName(number, context.contentResolver)
+                    unifiedMonitor?.onCallDetected(
+                        callId = callId,
+                        number = number,
+                        direction = "missed",
+                        source = "Phone Call",
+                        timestamp = startTime,
+                        displayName = displayName ?: "Unknown Contact"
+                    )
+                    unifiedMonitor?.onCallEnded(callId, System.currentTimeMillis())
                 }
             }
-        }
 
-        if (OproepDetailService.isOn) {
-            scheduleServiceStop(context)
+            // ... other handling (outgoing already covered)
         }
         resetCallState()
     }
+
+//    private fun handleIdleState() {
+//        val callId = currentCallId
+//        val startTime = callStartTime
+//
+//        when {
+//            isCallActive && callId != null -> {
+//                val callEndTime = System.currentTimeMillis()
+//                monitorScope.launch {
+//                    unifiedMonitor?.onCallEnded(callId, callEndTime)
+//                }
+//            }
+//
+//            currentIncomingNumber != null && callId != null -> {
+//                if (currentIncomingNumber == "Unknown Number") {
+//                    // Try to recover missed call number asynchronously
+//                    monitorScope.launch {
+//                        val recovered = queryLatestCallFromLog()
+//                        if (recovered != null) {
+//                            if (BuildConfig.DEBUG) Log.d(
+//                                TAG,
+//                                "Recovered missed call number from CallLog: ${recovered.first}"
+//                            )
+//                            val result =
+//                                CallerInfoResolver.resolve(recovered.first, context.contentResolver)
+//                            val displayName = when (result) {
+//                                is CallerInfoResult.Member -> result.name
+//                                is CallerInfoResult.Contact -> result.name
+//                                CallerInfoResult.Unknown -> {
+//                                    getContactNameFromSystem(recovered.first)
+//                                }
+//
+//                                else -> {getContactNameFromSystem(recovered.first)}
+//                            }
+//                            unifiedMonitor?.onCallDetected(
+//                                callId = callId,
+//                                number = recovered.first,
+//                                direction = "missed",
+//                                source = "Phone Call",
+//                                timestamp = recovered.second,
+//                                displayName = displayName ?: "Unknown Contact"
+//                            )
+//                        }
+//                        // Regardless, end the call
+//                        unifiedMonitor?.onCallEnded(callId, System.currentTimeMillis())
+//                    }
+//                } else {
+//                    monitorScope.launch {
+//                        unifiedMonitor?.onCallEnded(callId, System.currentTimeMillis())
+//                    }
+//                }
+//            }
+//        }
+//
+//        if (OproepDetailService.isOn) {
+//            scheduleServiceStop(context)
+//        }
+//        resetCallState()
+//    }
 
     /**
      * Get contact name from system contacts using PhoneLookup.
@@ -432,6 +492,42 @@ class PhoneCallMonitor(
         }
     }
 
+    fun resolveName(number: String, contentResolver: ContentResolver): String? {
+        if (number.isBlank() || number == "Unknown Number") return null
+
+        // 1. Try app's member database
+        val result = CallerInfoResolver.resolve(number, contentResolver)
+        when (result) {
+            is CallerInfoResult.Member -> return result.name
+            is CallerInfoResult.Contact -> return result.name
+            is CallerInfoResult.MultipleMembers -> {
+                // If multiple members match, return a concatenated name (optional)
+                return result.members.joinToString(", ") { it.name }
+            }
+
+            CallerInfoResult.Unknown -> { /* fall through to system contacts */
+            }
+        }
+
+        // 2. Fallback to system contacts
+        return resolveFromSystemContacts(number, contentResolver)
+    }
+
+    private fun resolveFromSystemContacts(
+        number: String,
+        contentResolver: ContentResolver
+    ): String? {
+        val uri = ContactsContract.PhoneLookup.CONTENT_FILTER_URI.buildUpon()
+            .appendPath(number)
+            .build()
+        val projection = arrayOf(ContactsContract.PhoneLookup.DISPLAY_NAME)
+        contentResolver.query(uri, projection, null, null, null)?.use { cursor ->
+            if (cursor.moveToFirst()) {
+                return cursor.getString(0)
+            }
+        }
+        return null
+    }
     companion object {
         private const val TAG = "PhoneCallMonitor"
         private const val PLACEHOLDER_NUMBER = "XXXXXXXXXX"

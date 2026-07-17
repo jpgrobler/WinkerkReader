@@ -448,8 +448,8 @@
     <string name="laai_usb">🔌 USB</string>
     <string name="laai_ip_van_pc">🌐 IP van PC:  </string>
     <string name="laai_ip_hint">###.###.###.###</string>
-    <string name="laai_force_sync_all_photos">🔄 Sinkroniseer\n📸 fotos</string>
-    <string name="laai_sync_photos_after_database">🔄 Sinkroniseer 📸 fotos\nna databasis</string>
+    <string name="laai_force_sync_all_photos">🔄 Sinkroniseer\nALLE 📸 fotos</string>
+    <string name="laai_sync_photos_after_database">🔄 Sinkroniseer 📸 fotos saam databasis</string>
     <string name="laai_sync_photos_now">🔄 Sinkroniseer\n📸 fotos</string>
     <string name="laai_syncing_photos">🔄 Sinkroniseer 📸 fotos…</string>
     <string name="call_log_header">📋 Volledige oproep geskiedenis</string>
@@ -831,4 +831,6 @@
     <string name="_0">(0)</string>
     <string name="sortorder_prefix">⇵</string>
     <string name="geen_verjaarsdae_vir_vandag_nie">Geen verjaarsdae vir vandag nie</string>
+    <string name="winkerkreader_pc_v2_x">WinkerkReader-PC v2.x</string>
+    <string name="winkerkreader_pc_v3_x">WinkerkReader-PC v3.x</string>
 </resources>

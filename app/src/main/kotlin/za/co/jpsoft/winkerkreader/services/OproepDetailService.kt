@@ -45,8 +45,9 @@ class OproepDetailService : Service() {
     companion object {
         private const val TAG = "OproepDetailService"
         const val EXTRA_CALLER_ID = "caller_id"
+        const val EXTRA_DISPLAY_NAME = "display_name"
 
-        // FIX #3: action sent when the call transitions to OFFHOOK (answered)
+        // Action sent when the call transitions to OFFHOOK (answered)
         const val ACTION_CALL_ANSWERED = "za.co.jpsoft.winkerkreader.ACTION_CALL_ANSWERED"
 
         private var serviceInstance: WeakReference<OproepDetailService>? = null
@@ -82,7 +83,7 @@ class OproepDetailService : Service() {
             }
         }
 
-        // FIX #3: called from PhoneCallMonitor on OFFHOOK — dismisses overlay immediately
+        // Called from PhoneCallMonitor on OFFHOOK — dismisses overlay immediately
         fun dismissOnAnswered() {
             serviceInstance?.get()?.stopSelf()
         }
@@ -104,7 +105,7 @@ class OproepDetailService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        // FIX #3: dismiss immediately when the call is answered
+        // Dismiss immediately when the call is answered
         if (intent?.action == ACTION_CALL_ANSWERED) {
             if (BuildConfig.DEBUG) Log.d(TAG, "Call answered — dismissing overlay")
             stopSelf()
@@ -112,33 +113,51 @@ class OproepDetailService : Service() {
         }
 
         val callerId = intent?.getStringExtra(EXTRA_CALLER_ID) ?: ""
+        val displayNameExtra = intent?.getStringExtra(EXTRA_DISPLAY_NAME) ?: ""
 
-        if (!isValidPhoneNumber(callerId)) {
-            if (BuildConfig.DEBUG) Log.d(TAG, "No valid caller id, ignoring start command")
+        // Allow the service to start if we have either a valid phone number OR a display name
+        if (!isValidPhoneNumber(callerId) && displayNameExtra.isEmpty()) {
+            if (BuildConfig.DEBUG) Log.d(
+                TAG,
+                "No valid caller id or display name, ignoring start command"
+            )
             return START_NOT_STICKY
         }
 
-        if (!canProcessCall(callerId)) {
+        // Only enforce the duplicate check if we have a phone number
+        if (callerId.isNotEmpty() && !canProcessCall(callerId)) {
             return START_NOT_STICKY
         }
 
         serviceScope.launch {
-            val result = CallerInfoResolver.resolve(callerId, contentResolver)
-
-            val shouldShow = when (result) {
-                is CallerInfoResult.Member -> true
-                is CallerInfoResult.Contact -> true
-                CallerInfoResult.Unknown -> false
+            val result = if (callerId.isNotEmpty()) {
+                CallerInfoResolver.resolve(callerId, contentResolver)
+            } else {
+                CallerInfoResult.Unknown
             }
 
-            if (!shouldShow) {
-                if (BuildConfig.DEBUG) Log.d(TAG, "Caller not found in data")
+            val finalName = when (result) {
+                is CallerInfoResult.Member -> result.name
+                is CallerInfoResult.Contact -> result.name
+                is CallerInfoResult.MultipleMembers -> {
+                    // Concatenate all member names, e.g., "Jan Botha, Piet Botha"
+                    result.members.joinToString(", ") { it.name }
+                }
+
+                CallerInfoResult.Unknown -> {
+                    // If we have an explicit name from the notification, use it
+                    if (displayNameExtra.isNotEmpty()) displayNameExtra else null
+                }
+            }
+
+            if (finalName == null) {
+                if (BuildConfig.DEBUG) Log.d(TAG, "No name to display")
                 withContext(Dispatchers.Main) { stopSelf() }
                 return@launch
             }
 
             withContext(Dispatchers.Main) {
-                showCaller(callerId, result)
+                showCaller(callerId, finalName)
             }
         }
 
@@ -200,15 +219,9 @@ class OproepDetailService : Service() {
         return phoneNumber.isNotEmpty() && phoneNumber != "XXXXXXXXXX" && phoneNumber != "Unknown"
     }
 
-    private fun showCaller(callerId: String, result: CallerInfoResult) {
+    private fun showCaller(callerId: String, displayName: String) {
         getSharedPreferences(PREFS_USER_INFO, MODE_PRIVATE).edit {
             putString("CallerNumber", callerId)
-        }
-
-        val displayName = when (result) {
-            is CallerInfoResult.Member -> result.name
-            is CallerInfoResult.Contact -> result.name
-            CallerInfoResult.Unknown -> return // should never reach here
         }
 
         if (::floatingView.isInitialized && viewAdded) {
@@ -238,7 +251,7 @@ class OproepDetailService : Service() {
     }
 
     private fun createFloatingWindow() {
-        // FIX #2: anchor to top-centre so the overlay never covers answer/decline buttons
+        // Anchor to top-centre so the overlay never covers answer/decline buttons
         val params = createWindowLayoutParams().apply {
             gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
             x = 0

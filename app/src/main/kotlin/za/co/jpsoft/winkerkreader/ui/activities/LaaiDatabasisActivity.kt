@@ -24,6 +24,7 @@ import android.view.View
 import android.widget.Button
 import android.widget.RadioButton
 import android.widget.RadioGroup
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
@@ -59,7 +60,9 @@ import za.co.jpsoft.winkerkreader.utils.PastoralDatabaseBackup
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import za.co.jpsoft.winkerkreader.widget.WidgetDataRepository
 import za.co.jpsoft.winkerkreader.workers.FileDownloadWorker
+import za.co.jpsoft.winkerkreader.workers.FileDownloadWorkerOld
 import za.co.jpsoft.winkerkreader.workers.PhotoDownloadWorker
+import za.co.jpsoft.winkerkreader.workers.PhotoDownloadWorkerOld
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -129,6 +132,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
     private var delete: Boolean = false
     private var syncPhotosAfterDb: Boolean = false
     private var fromMenu: Boolean = true
+    private var pcProtocolVersion: String = "v2"   // default = old protocol
 
     private val notificationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -343,6 +347,8 @@ class LaaiDatabasisActivity : AppCompatActivity() {
 
         binding.serverIp.setText(settings.getString("IP", ""))
         initializeButtons()
+        initializeVersionToggle()
+        initializeCollapsibleCards()
         initializeProgressBars()
         initializeDataInfo()
         scanForDatabaseFiles()
@@ -382,8 +388,19 @@ class LaaiDatabasisActivity : AppCompatActivity() {
 
     private fun initializeSettings() {
         AutoDL = settings.getBoolean("AUTO_DL", false)
+        pcProtocolVersion = settings.getString("PC_PROTOCOL_VERSION", "v2") ?: "v2"
     }
 
+    private fun initializeVersionToggle() {
+        val group = binding.pcVersionGroup
+        // Restore saved choice
+        group.check(if (pcProtocolVersion == "v3") R.id.btnV3 else R.id.btnV2)
+
+        group.setOnCheckedChangeListener { _, checkedId ->
+            pcProtocolVersion = if (checkedId == R.id.btnV3) "v3" else "v2"
+            settings.edit { putString("PC_PROTOCOL_VERSION", pcProtocolVersion) }
+        }
+    }
 
     private fun initializeButtons() {
         binding.dbLinkButton.setOnClickListener { handleDropboxDownload() }
@@ -392,6 +409,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         binding.laaiSocket.setOnClickListener { handleNetworkTransfer() }
         binding.laaiUSB.setOnClickListener { handleUSBTransfer() }
     }
+
 
     private fun startPhotoSync() {
         val forceSync = binding.forceSyncCheck.isChecked
@@ -415,7 +433,13 @@ class LaaiDatabasisActivity : AppCompatActivity() {
             .putBoolean("FORCE_SYNC", forceSync)
             .build()
 
-        val photoWorkRequest = OneTimeWorkRequest.Builder(PhotoDownloadWorker::class.java)
+        // Choose worker based on the selected server protocol version
+        val workerClass = if (pcProtocolVersion == "v3")
+            PhotoDownloadWorker::class.java
+        else
+            PhotoDownloadWorkerOld::class.java
+
+        val photoWorkRequest = OneTimeWorkRequest.Builder(workerClass)
             .setInputData(inputData)
             .addTag("photo_sync")
             .build()
@@ -425,6 +449,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         currentWorkInfoLiveData?.removeObserver(workInfoObserver)
         currentWorkInfoLiveData =
             WorkManager.getInstance(this).getWorkInfoByIdLiveData(photoWorkRequest.id)
+
         workInfoObserver = Observer { workInfo ->
             if (workInfo != null) {
                 if (workInfo.state.isFinished) {
@@ -658,18 +683,29 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         }
     }
 
+
     private fun startFileDownload(serverIp: String, port: Int, button: Button, isWiFi: Boolean) {
         binding.laaiBoodskap.setText(R.string.download_starting)
+
         val inputData = Data.Builder()
             .putString(FileDownloadWorker.KEY_SERVER_IP, serverIp)
             .putInt(FileDownloadWorker.KEY_SERVER_PORT, port)
             .build()
-        val workRequest = OneTimeWorkRequest.Builder(FileDownloadWorker::class.java)
+
+        // Choose worker based on the selected server protocol version
+        val workerClass = if (pcProtocolVersion == "v3")
+            FileDownloadWorker::class.java
+        else
+            FileDownloadWorkerOld::class.java
+
+        val workRequest = OneTimeWorkRequest.Builder(workerClass)
             .setInputData(inputData)
             .addTag("file_download")
             .build()
+
         WorkManager.getInstance(this).enqueue(workRequest)
         fileDownloadWorkId = workRequest.id
+
         WorkManager.getInstance(this).getWorkInfoByIdLiveData(workRequest.id)
             .observe(this) { workInfo ->
                 if (workInfo == null) return@observe
@@ -1552,4 +1588,72 @@ class LaaiDatabasisActivity : AppCompatActivity() {
             false
         }
     }
+
+
+    /**
+     * Wires up a collapsible card section.
+     *
+     * @param headerView   The clickable header LinearLayout
+     * @param contentView  The content LinearLayout to show/hide
+     * @param arrowView    The TextView showing ▼ (open) or ▶ (closed)
+     * @param prefKey      SharedPreferences key for persisting the state
+     * @param defaultOpen  Whether the section starts expanded on first launch
+     */
+    private fun setupCollapsibleCard(
+        headerView: View,
+        contentView: View,
+        arrowView: TextView,
+        prefKey: String,
+        defaultOpen: Boolean
+    ) {
+        // Restore saved state (or use default)
+        var isOpen = settings.getBoolean(prefKey, defaultOpen)
+
+        fun applyState() {
+            contentView.visibility = if (isOpen) View.VISIBLE else View.GONE
+            arrowView.text = if (isOpen) "▼" else "▶"
+        }
+
+        applyState()
+
+        headerView.setOnClickListener {
+            isOpen = !isOpen
+            applyState()
+            settings.edit { putBoolean(prefKey, isOpen) }
+        }
+    }
+
+    private fun initializeCollapsibleCards() {
+        setupCollapsibleCard(
+            headerView = binding.headerLocal,
+            contentView = binding.contentLocal,
+            arrowView = binding.arrowLocal,
+            prefKey = "CARD_LOCAL_EXPANDED",
+            defaultOpen = false          // rarely used — starts closed
+        )
+        setupCollapsibleCard(
+            headerView = binding.headerDropbox,
+            contentView = binding.contentDropbox,
+            arrowView = binding.arrowDropbox,
+            prefKey = "CARD_DROPBOX_EXPANDED",
+            defaultOpen = false          // rarely used — starts closed
+        )
+        setupCollapsibleCard(
+            headerView = binding.headerWifi,
+            contentView = binding.contentWifi,
+            arrowView = binding.arrowWifi,
+            prefKey = "CARD_WIFI_EXPANDED",
+            defaultOpen = true           // used regularly — starts open
+        )
+        setupCollapsibleCard(
+            headerView = binding.headerPhoto,
+            contentView = binding.contentPhoto,
+            arrowView = binding.arrowPhoto,
+            prefKey = "CARD_PHOTO_EXPANDED",
+            defaultOpen = true           // used regularly — starts open
+        )
+    }
+
+
+
 }

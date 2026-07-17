@@ -5,43 +5,40 @@
     android:layout_height="match_parent"
     android:fitsSystemWindows="true">
 
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="?attr/colorSurface"
         android:orientation="vertical">
 
-
+        <!-- ── Scrollable content ──────────────────────────────────────── -->
         <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
             android:clipToPadding="false"
-            android:paddingBottom="16dp">
-
+            android:paddingBottom="8dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="8dp">
 
-
+                <!-- ── Current data date ─────────────────────────────── -->
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
+                    android:layout_marginBottom="8dp"
                     ns1:cardBackgroundColor="?attr/colorSurfaceContainerLow"
                     ns1:cardCornerRadius="12dp"
                     ns1:cardElevation="0dp">
-
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:padding="16dp">
-
+                        android:padding="8dp">
 
                         <TextView
                             android:id="@+id/datadate"
@@ -52,7 +49,6 @@
                             android:textSize="14sp"
                             android:textStyle="bold" />
 
-
                         <com.google.android.material.progressindicator.LinearProgressIndicator
                             android:id="@+id/laai_indeterminateBar"
                             android:layout_width="match_parent"
@@ -61,7 +57,6 @@
                             android:visibility="gone"
                             ns1:indicatorColor="?attr/colorPrimary"
                             ns1:trackCornerRadius="2dp" />
-
 
                         <com.google.android.material.progressindicator.LinearProgressIndicator
                             android:id="@+id/laai_indeterminateBar2"
@@ -72,7 +67,6 @@
                             ns1:indicatorColor="?attr/colorPrimary"
                             ns1:trackCornerRadius="2dp" />
 
-
                         <com.google.android.material.progressindicator.LinearProgressIndicator
                             android:id="@+id/laai_indeterminateBar3"
                             android:layout_width="match_parent"
@@ -82,447 +76,580 @@
                             ns1:indicatorColor="?attr/colorPrimary"
                             ns1:trackCornerRadius="2dp" />
 
-
                     </LinearLayout>
-
 
                 </com.google.android.material.card.MaterialCardView>
 
-
+                <!-- ── Local file card (collapsible, default CLOSED) ──── -->
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/laai_local"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
+                    android:layout_marginBottom="8dp"
                     ns1:cardBackgroundColor="?attr/colorSurfaceContainerLow"
                     ns1:cardCornerRadius="12dp"
                     ns1:cardElevation="0dp">
-
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:padding="16dp">
+                        android:padding="8dp">
 
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginBottom="12dp"
-                            android:text="@string/nuwe_databasis_reeds_op_foon"
-                            android:textColor="?attr/colorOnSurfaceVariant"
-                            android:textSize="16sp"
-                            android:textStyle="bold" />
-
-
+                        <!-- Clickable header -->
                         <LinearLayout
+                            android:id="@+id/headerLocal"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginBottom="12dp"
+                            android:background="?attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true"
                             android:gravity="center_vertical"
-                            android:orientation="horizontal">
+                            android:orientation="horizontal"
+                            android:paddingTop="4dp"
+                            android:paddingBottom="4dp">
 
-
-                            <Button
-                                android:id="@+id/laai_laai"
-                                style="@style/Widget.Material3.Button"
+                            <TextView
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
-                                android:layout_marginEnd="8dp"
                                 android:layout_weight="1"
-                                android:text="@string/laai_button"
-                                ns2:visibility="gone" />
+                                android:text="@string/nuwe_databasis_reeds_op_foon"
+                                android:textColor="?attr/colorOnSurfaceVariant"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
 
-
-                            <Button
-                                android:id="@+id/laai_picker"
-                                style="@style/Widget.Material3.Button"
+                            <TextView
+                                android:id="@+id/arrowLocal"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="@string/laai_kies_self" />
-
+                                android:layout_marginStart="8dp"
+                                android:text="▶"
+                                android:textColor="?attr/colorOnSurfaceVariant"
+                                android:textSize="14sp" />
 
                         </LinearLayout>
 
-
-                        <com.google.android.material.checkbox.MaterialCheckBox
-                            android:id="@+id/laai_wisuit"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginBottom="12dp"
-                            android:text="@string/laai_radio"
-                            android:textColor="?attr/colorOnSurfaceVariant" />
-
-
-                        <com.google.android.material.progressindicator.LinearProgressIndicator
-                            android:id="@+id/laai_indeterminateBar5"
-                            android:layout_width="match_parent"
-                            android:layout_height="4dp"
-                            android:visibility="visible"
-                            ns1:indicatorColor="?attr/colorPrimary"
-                            ns1:trackCornerRadius="2dp" />
-
-
-                        <ScrollView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:maxHeight="200dp">
-
-
-                            <RadioGroup
-                                android:id="@+id/laai_filelist"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:orientation="vertical" />
-
-
-                        </ScrollView>
-
-
-                    </LinearLayout>
-
-
-                </com.google.android.material.card.MaterialCardView>
-
-
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
-                    ns1:cardBackgroundColor="?attr/colorSurfaceContainerLow"
-                    ns1:cardCornerRadius="12dp"
-                    ns1:cardElevation="0dp">
-
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="16dp">
-
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginBottom="8dp"
-                            android:text="@string/dropbox_title"
-                            android:textColor="?attr/colorOnSurfaceVariant"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
-
-
+                        <!-- Collapsible content (starts GONE) -->
                         <LinearLayout
+                            android:id="@+id/contentLocal"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal">
-
-
-                            <com.google.android.material.textfield.TextInputLayout
-                                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_marginEnd="8dp"
-                                android:layout_weight="1"
-                                ns1:boxStrokeColor="?attr/colorPrimary"
-                                ns1:hintTextColor="?attr/colorPrimary">
-
-                                <com.google.android.material.textfield.TextInputEditText
-                                    android:id="@+id/db_link"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:autofillHints="Edit Db Link"
-                                    android:gravity="start|center_vertical"
-                                    android:importantForAutofill="no"
-                                    android:inputType="textUri"
-                                    android:minHeight="48dp"
-                                    android:paddingStart="16dp"
-                                    android:paddingEnd="16dp"
-                                    android:selectAllOnFocus="true"
-                                    android:text="@string/dbLink"
-                                    android:textColor="?attr/colorOnSurface"
-                                    android:textSize="14sp" />
-                            </com.google.android.material.textfield.TextInputLayout>
-
-
-                            <Button
-                                android:id="@+id/dbLinkButton"
-                                style="@style/Widget.Material3.Button"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/dbLinkButtonText" />
-
-
-                        </LinearLayout>
-
-
-                        <com.google.android.material.progressindicator.LinearProgressIndicator
-                            android:id="@+id/laai_indeterminateBar4"
-                            android:layout_width="match_parent"
-                            android:layout_height="4dp"
-                            android:layout_marginTop="8dp"
-                            android:visibility="visible"
-                            ns1:indicatorColor="?attr/colorPrimary"
-                            ns1:trackCornerRadius="2dp" />
-
-
-                    </LinearLayout>
-
-
-                </com.google.android.material.card.MaterialCardView>
-
-
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
-                    ns1:cardBackgroundColor="?attr/colorSurfaceContainerLow"
-                    ns1:cardCornerRadius="12dp"
-                    ns1:cardElevation="0dp">
-
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="16dp">
-
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginBottom="8dp"
-                            android:text="@string/server_connection_title"
-                            android:textColor="?attr/colorOnSurfaceVariant"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
-
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:baselineAligned="false"
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal">
-
+                            android:layout_marginTop="12dp"
+                            android:orientation="vertical"
+                            android:visibility="gone">
 
                             <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="12dp"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <Button
+                                    android:id="@+id/laai_laai"
+                                    style="@style/Widget.Material3.Button"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginEnd="8dp"
+                                    android:layout_weight="1"
+                                    android:text="@string/laai_button"
+                                    ns2:visibility="gone" />
+
+                                <Button
+                                    android:id="@+id/laai_picker"
+                                    style="@style/Widget.Material3.Button"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/laai_kies_self" />
+
+                            </LinearLayout>
+
+                            <com.google.android.material.checkbox.MaterialCheckBox
+                                android:id="@+id/laai_wisuit"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="12dp"
+                                android:text="@string/laai_radio"
+                                android:textColor="?attr/colorOnSurfaceVariant" />
+
+                            <com.google.android.material.progressindicator.LinearProgressIndicator
+                                android:id="@+id/laai_indeterminateBar5"
+                                android:layout_width="match_parent"
+                                android:layout_height="4dp"
+                                android:visibility="visible"
+                                ns1:indicatorColor="?attr/colorPrimary"
+                                ns1:trackCornerRadius="2dp" />
+
+                            <ScrollView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:maxHeight="200dp">
+
+                                <RadioGroup
+                                    android:id="@+id/laai_filelist"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="vertical" />
+
+                            </ScrollView>
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- ── Dropbox card (collapsible, default CLOSED) ──────── -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    ns1:cardBackgroundColor="?attr/colorSurfaceContainerLow"
+                    ns1:cardCornerRadius="12dp"
+                    ns1:cardElevation="0dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="8dp">
+
+                        <!-- Clickable header -->
+                        <LinearLayout
+                            android:id="@+id/headerDropbox"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="?attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:paddingTop="4dp"
+                            android:paddingBottom="4dp">
+
+                            <TextView
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:orientation="vertical">
+                                android:text="@string/dropbox_title"
+                                android:textColor="?attr/colorOnSurfaceVariant"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
 
+                            <TextView
+                                android:id="@+id/arrowDropbox"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:text="▶"
+                                android:textColor="?attr/colorOnSurfaceVariant"
+                                android:textSize="14sp" />
 
-                                <TextView
-                                    android:id="@+id/ip_text"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="@string/laai_ip_van_pc"
-                                    android:textColor="?attr/colorOnSurfaceVariant"
-                                    android:textSize="14sp" />
+                        </LinearLayout>
 
+                        <!-- Collapsible content (starts GONE) -->
+                        <LinearLayout
+                            android:id="@+id/contentDropbox"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:orientation="vertical"
+                            android:visibility="gone">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
 
                                 <com.google.android.material.textfield.TextInputLayout
                                     style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-                                    android:layout_width="match_parent"
+                                    android:layout_width="0dp"
                                     android:layout_height="wrap_content"
+                                    android:layout_marginEnd="8dp"
+                                    android:layout_weight="1"
                                     ns1:boxStrokeColor="?attr/colorPrimary"
                                     ns1:hintTextColor="?attr/colorPrimary">
 
                                     <com.google.android.material.textfield.TextInputEditText
-                                        android:id="@+id/server_ip"
+                                        android:id="@+id/db_link"
                                         android:layout_width="match_parent"
                                         android:layout_height="wrap_content"
-                                        android:autofillHints="Edit Server Ip"
+                                        android:autofillHints="Edit Db Link"
                                         android:gravity="start|center_vertical"
                                         android:importantForAutofill="no"
-                                        android:inputType="phone"
+                                        android:inputType="textUri"
                                         android:minHeight="48dp"
-                                        android:paddingStart="16dp"
-                                        android:paddingEnd="16dp"
+                                        android:paddingStart="8dp"
+                                        android:paddingEnd="8dp"
                                         android:selectAllOnFocus="true"
-                                        android:text="@string/IP"
+                                        android:text="@string/dbLink"
                                         android:textColor="?attr/colorOnSurface"
-                                        android:textSize="18sp" />
+                                        android:textSize="14sp" />
                                 </com.google.android.material.textfield.TextInputLayout>
 
-
-                            </LinearLayout>
-
-
-                            <LinearLayout
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:orientation="vertical">
-
-
                                 <Button
-                                    android:id="@+id/laai_socket"
+                                    android:id="@+id/dbLinkButton"
                                     style="@style/Widget.Material3.Button"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginBottom="4dp"
-                                    android:text="@string/laai_wifi" />
-
-
-                                <Button
-                                    android:id="@+id/laai_USB"
-                                    style="@style/Widget.Material3.Button"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="@string/laai_usb" />
-
+                                    android:text="@string/dbLinkButtonText" />
 
                             </LinearLayout>
 
+                            <com.google.android.material.progressindicator.LinearProgressIndicator
+                                android:id="@+id/laai_indeterminateBar4"
+                                android:layout_width="match_parent"
+                                android:layout_height="4dp"
+                                android:layout_marginTop="8dp"
+                                android:visibility="visible"
+                                ns1:indicatorColor="?attr/colorPrimary"
+                                ns1:trackCornerRadius="2dp" />
 
                         </LinearLayout>
 
-
-                        <com.google.android.material.progressindicator.LinearProgressIndicator
-                            android:id="@+id/laai_indeterminateBar10"
-                            android:layout_width="match_parent"
-                            android:layout_height="4dp"
-                            android:layout_marginTop="8dp"
-                            android:visibility="visible"
-                            ns1:indicatorColor="?attr/colorPrimary"
-                            ns1:trackCornerRadius="2dp" />
-
-
                     </LinearLayout>
-
 
                 </com.google.android.material.card.MaterialCardView>
 
-
+                <!-- ── Server / WiFi card (collapsible, default OPEN) ─── -->
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
+                    android:layout_marginBottom="8dp"
                     ns1:cardBackgroundColor="?attr/colorSurfaceContainerLow"
                     ns1:cardCornerRadius="12dp"
                     ns1:cardElevation="0dp">
-
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:padding="16dp">
+                        android:padding="8dp">
 
-
-                        <TextView
+                        <!-- Clickable header -->
+                        <LinearLayout
+                            android:id="@+id/headerWifi"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginBottom="8dp"
-                            android:text="@string/photo_sync_title"
-                            android:textColor="?attr/colorOnSurfaceVariant"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
+                            android:background="?attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:paddingTop="4dp"
+                            android:paddingBottom="4dp">
 
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/server_connection_title"
+                                android:textColor="?attr/colorOnSurfaceVariant"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
 
-                        <com.google.android.material.checkbox.MaterialCheckBox
-                            android:id="@+id/force_sync_check"
-                            android:layout_width="wrap_content"
+                            <TextView
+                                android:id="@+id/arrowWifi"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:text="▼"
+                                android:textColor="?attr/colorOnSurfaceVariant"
+                                android:textSize="14sp" />
+
+                        </LinearLayout>
+
+                        <!-- Collapsible content (starts VISIBLE) -->
+                        <LinearLayout
+                            android:id="@+id/contentWifi"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="@string/laai_force_sync_all_photos"
-                            android:textColor="?attr/colorOnSurfaceVariant" />
+                            android:layout_marginTop="8dp"
+                            android:orientation="vertical"
+                            android:visibility="visible">
 
+                            <!-- Version toggle -->
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="4dp"
+                                android:text="Bediener-weergawe"
+                                android:textColor="?attr/colorOnSurfaceVariant"
+                                android:textSize="12sp" />
 
-                        <com.google.android.material.checkbox.MaterialCheckBox
-                            android:id="@+id/sync_photos"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginBottom="12dp"
-                            android:text="@string/laai_sync_photos_after_database"
-                            android:textColor="?attr/colorOnSurfaceVariant" />
+                            <RadioGroup
+                                android:id="@+id/pcVersionGroup"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal">
 
+                                <RadioButton
+                                    android:id="@+id/btnV2"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:ellipsize="none"
+                                    android:maxLines="2"
+                                    android:minLines="2"
+                                    android:text="WinkerkReader-PC\nv2.x"
+                                    android:textSize="12sp" />
 
-                        <Button
-                            android:id="@+id/start_photo_sync"
-                            style="@style/Widget.Material3.Button"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/laai_sync_photos_now"
-                            android:visibility="visible" />
+                                <RadioButton
+                                    android:id="@+id/btnV3"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:ellipsize="none"
+                                    android:maxLines="2"
+                                    android:minLines="2"
+                                    android:text="WinkerkReader-PC\nv3.x"
+                                    android:textSize="12sp" />
 
+                            </RadioGroup>
+                            <!-- IP + WiFi/USB buttons -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:baselineAligned="false"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:orientation="vertical">
+
+                                    <TextView
+                                        android:id="@+id/ip_text"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/laai_ip_van_pc"
+                                        android:textColor="?attr/colorOnSurfaceVariant"
+                                        android:textSize="14sp" />
+
+                                    <com.google.android.material.textfield.TextInputLayout
+                                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        ns1:boxStrokeColor="?attr/colorPrimary"
+                                        ns1:hintTextColor="?attr/colorPrimary">
+
+                                        <com.google.android.material.textfield.TextInputEditText
+                                            android:id="@+id/server_ip"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:autofillHints="Edit Server Ip"
+                                            android:gravity="start|center_vertical"
+                                            android:importantForAutofill="no"
+                                            android:inputType="phone"
+                                            android:minHeight="48dp"
+                                            android:paddingStart="8dp"
+                                            android:paddingEnd="8dp"
+                                            android:selectAllOnFocus="true"
+                                            android:text="@string/IP"
+                                            android:textColor="?attr/colorOnSurface"
+                                            android:textSize="18sp" />
+                                    </com.google.android.material.textfield.TextInputLayout>
+
+                                </LinearLayout>
+
+                                <LinearLayout
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="vertical"
+                                    android:paddingLeft="8dp">
+
+                                    <Button
+                                        android:id="@+id/laai_socket"
+                                        style="@style/Widget.Material3.Button"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginBottom="4dp"
+                                        android:text="@string/laai_wifi" />
+
+                                    <Button
+                                        android:id="@+id/laai_USB"
+                                        style="@style/Widget.Material3.Button"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/laai_usb" />
+
+                                </LinearLayout>
+
+                            </LinearLayout>
+
+                            <com.google.android.material.progressindicator.LinearProgressIndicator
+                                android:id="@+id/laai_indeterminateBar10"
+                                android:layout_width="match_parent"
+                                android:layout_height="4dp"
+                                android:layout_marginTop="8dp"
+                                android:visibility="visible"
+                                ns1:indicatorColor="?attr/colorPrimary"
+                                ns1:trackCornerRadius="2dp" />
+
+                        </LinearLayout>
 
                     </LinearLayout>
 
-
                 </com.google.android.material.card.MaterialCardView>
 
-
+                <!-- ── Photo sync card (collapsible, default OPEN) ──────── -->
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
                     ns1:cardBackgroundColor="?attr/colorSurfaceContainerLow"
                     ns1:cardCornerRadius="12dp"
                     ns1:cardElevation="0dp">
-
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:padding="16dp">
+                        android:padding="8dp">
 
-
-                        <com.google.android.material.progressindicator.LinearProgressIndicator
-                            android:id="@+id/laai_status"
+                        <!-- Clickable header -->
+                        <LinearLayout
+                            android:id="@+id/headerPhoto"
                             android:layout_width="match_parent"
-                            android:layout_height="4dp"
-                            android:visibility="visible"
-                            ns1:indicatorColor="?attr/colorPrimary"
-                            ns1:trackCornerRadius="2dp" />
+                            android:layout_height="wrap_content"
+                            android:background="?attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:paddingTop="4dp"
+                            android:paddingBottom="4dp">
 
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/photo_sync_title"
+                                android:textColor="?attr/colorOnSurfaceVariant"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
 
-                        <TextView
-                            android:id="@+id/laai_boodskap"
+                            <TextView
+                                android:id="@+id/arrowPhoto"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:text="▼"
+                                android:textColor="?attr/colorOnSurfaceVariant"
+                                android:textSize="14sp" />
+
+                        </LinearLayout>
+
+                        <!-- Collapsible content (starts VISIBLE) -->
+                        <LinearLayout
+                            android:id="@+id/contentPhoto"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
-                            android:textAlignment="center"
-                            android:textColor="?attr/colorSecondary"
-                            android:textSize="18sp" />
+                            android:orientation="vertical"
+                            android:visibility="visible">
 
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal">
 
-                        <com.google.android.material.progressindicator.LinearProgressIndicator
-                            android:id="@+id/photo_sync_progress"
-                            android:layout_width="match_parent"
-                            android:layout_height="4dp"
-                            android:layout_marginTop="8dp"
-                            android:visibility="gone"
-                            ns1:indicatorColor="?attr/colorPrimary"
-                            ns1:trackCornerRadius="2dp" />
+                                <com.google.android.material.checkbox.MaterialCheckBox
+                                    android:id="@+id/force_sync_check"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:text="@string/laai_force_sync_all_photos"
+                                    android:textColor="?attr/colorOnSurfaceVariant" />
 
+                                <com.google.android.material.checkbox.MaterialCheckBox
+                                    android:id="@+id/sync_photos"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginBottom="12dp"
+                                    android:layout_weight="1"
+                                    android:text="@string/laai_sync_photos_after_database"
+                                    android:textColor="?attr/colorOnSurfaceVariant" />
+                            </LinearLayout>
 
-                        <TextView
-                            android:id="@+id/photo_sync_status"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:text="@string/laai_syncing_photos"
-                            android:textColor="?attr/colorOnSurfaceVariant"
-                            android:textSize="14sp"
-                            android:visibility="gone" />
+                            <Button
+                                android:id="@+id/start_photo_sync"
+                                style="@style/Widget.Material3.Button"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="right"
+                                android:text="@string/laai_sync_photos_now"
+                                android:visibility="visible" />
 
+                        </LinearLayout>
 
                     </LinearLayout>
 
-
                 </com.google.android.material.card.MaterialCardView>
-
 
             </LinearLayout>
 
-
         </ScrollView>
 
+        <!-- ── Fixed status bar — always visible at the bottom ─────────── -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            ns1:cardBackgroundColor="?attr/colorSurfaceContainerLow"
+            ns1:cardCornerRadius="12dp"
+            ns1:cardElevation="2dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="12dp">
+
+                <com.google.android.material.progressindicator.LinearProgressIndicator
+                    android:id="@+id/laai_status"
+                    android:layout_width="match_parent"
+                    android:layout_height="4dp"
+                    android:visibility="visible"
+                    ns1:indicatorColor="?attr/colorPrimary"
+                    ns1:trackCornerRadius="2dp" />
+
+                <TextView
+                    android:id="@+id/laai_boodskap"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:textAlignment="center"
+                    android:textColor="?attr/colorSecondary"
+                    android:textSize="16sp" />
+
+                <com.google.android.material.progressindicator.LinearProgressIndicator
+                    android:id="@+id/photo_sync_progress"
+                    android:layout_width="match_parent"
+                    android:layout_height="4dp"
+                    android:layout_marginTop="6dp"
+                    android:visibility="gone"
+                    ns1:indicatorColor="?attr/colorPrimary"
+                    ns1:trackCornerRadius="2dp" />
+
+                <TextView
+                    android:id="@+id/photo_sync_status"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="@string/laai_syncing_photos"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textSize="14sp"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
 
     </LinearLayout>
-
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

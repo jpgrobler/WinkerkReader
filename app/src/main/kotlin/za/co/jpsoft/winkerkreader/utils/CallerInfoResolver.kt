@@ -29,11 +29,21 @@ object CallerInfoResolver {
 
         if (BuildConfig.DEBUG) Log.d(TAG, "Normalized number: $normalized")
 
-        // Member lookup uses the normalized number (and multiple formats)
-        val memberResult = resolveMember(normalized, contentResolver)
-        if (memberResult != null) {
-            if (BuildConfig.DEBUG) Log.d(TAG, "Found member: ${memberResult.name}")
-            return memberResult
+        // Member lookup returns a list of all matching members
+        val memberList = resolveMember(normalized, contentResolver)
+        if (memberList != null) {
+            return when (memberList.size) {
+                1 -> {
+                    val member = memberList.first()
+                    if (BuildConfig.DEBUG) Log.d(TAG, "Found single member: ${member.name}")
+                    member
+                }
+
+                else -> {
+                    if (BuildConfig.DEBUG) Log.d(TAG, "Found ${memberList.size} members")
+                    CallerInfoResult.MultipleMembers(memberList)
+                }
+            }
         }
 
         // Contact lookup now tries both the original cleaned number and the normalized one
@@ -47,26 +57,37 @@ object CallerInfoResolver {
         return CallerInfoResult.Unknown
     }
 
+    /**
+     * Searches all member phone columns for any format of the given number.
+     * Returns a list of all matching members, or null if none found.
+     */
     private fun resolveMember(
         phoneNumber: String,
         contentResolver: ContentResolver
-    ): CallerInfoResult.Member? {
+    ): List<CallerInfoResult.Member>? {
         try {
             val formats = buildList {
-                add(phoneNumber)                                        // +27810000008
+                add(phoneNumber) // e.g., +27810000008
 
                 val digitsOnly = phoneNumber.replace(Regex("[^0-9]"), "")
                 if (digitsOnly.isNotEmpty()) {
-                    add(digitsOnly)                                     // 27810000008
+                    add(digitsOnly) // 27810000008
 
-                    // Strip SA country code to get local subscriber number
-                    val local = if (digitsOnly.startsWith("27") && digitsOnly.length > 2)
-                        digitsOnly.substring(2)                         // 810000008
-                    else
+                    // Determine local subscriber number (strip leading 27 if present)
+                    val localSubscriber =
+                        if (digitsOnly.startsWith("27") && digitsOnly.length > 2) {
+                            digitsOnly.substring(2)
+                        } else {
                         digitsOnly
+                        }
+                    add(localSubscriber) // 810000008
+                    add("0$localSubscriber") // 0810000008
 
-                    add(local)                                          // 810000008
-                    add("0$local")                                      // 0810000008
+                    // If the original number does NOT start with '+', add the international SA format
+                    if (!phoneNumber.startsWith("+")) {
+                        val withCountryCode = "+27$localSubscriber"
+                        add(withCountryCode) // +27810000008
+                    }
                 }
             }.distinct()
 
@@ -115,8 +136,9 @@ object CallerInfoResolver {
                 null
             )
 
+            val members = mutableListOf<CallerInfoResult.Member>()
             cursor?.use {
-                if (it.moveToFirst()) {
+                while (it.moveToNext()) {
                     val surname =
                         it.getString(it.getColumnIndexOrThrow(winkerkEntry.LIDMATE_VAN)) ?: ""
                     val noemnaam =
@@ -130,21 +152,21 @@ object CallerInfoResolver {
                         it.getString(it.getColumnIndexOrThrow(winkerkEntry.LIDMATE_SELFOON)) ?: ""
                     val gemeente =
                         it.getString(it.getColumnIndexOrThrow(winkerkEntry.LIDMATE_GEMEENTE)) ?: ""
-
                     val displayName = buildMemberDisplayName(noemnaam, surname)
-
-                    return CallerInfoResult.Member(
-                        name = displayName,
-                        guid = guid,
-                        surname = surname,
-                        firstName = noemnaam,
-                        phone = phone,
-                        memberType = "Lidmaat",
-                        gemeente = gemeente
+                    members.add(
+                        CallerInfoResult.Member(
+                            name = displayName,
+                            guid = guid,
+                            surname = surname,
+                            firstName = noemnaam,
+                            phone = phone,
+                            memberType = "Lidmaat",
+                            gemeente = gemeente
+                        )
                     )
                 }
             }
-            return null
+            return if (members.isNotEmpty()) members else null
         } catch (e: Exception) {
             if (BuildConfig.DEBUG) Log.e(TAG, "Error resolving member", e)
             return null
@@ -185,12 +207,12 @@ object CallerInfoResolver {
 
                 cursor?.use {
                     if (it.moveToFirst()) {
-                        val name =
-                            it.getString(it.getColumnIndexOrThrow(ContactsContract.PhoneLookup.DISPLAY_NAME))
-                                ?: ""
-                        val number =
-                            it.getString(it.getColumnIndexOrThrow(ContactsContract.PhoneLookup.NUMBER))
-                                ?: ""
+                        val name = it.getString(
+                            it.getColumnIndexOrThrow(ContactsContract.PhoneLookup.DISPLAY_NAME)
+                        ) ?: ""
+                        val number = it.getString(
+                            it.getColumnIndexOrThrow(ContactsContract.PhoneLookup.NUMBER)
+                        ) ?: ""
                         if (name.isNotEmpty()) {
                             return CallerInfoResult.Contact(name = name, phoneNumber = number)
                         }

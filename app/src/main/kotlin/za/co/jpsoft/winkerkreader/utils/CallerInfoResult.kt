@@ -38,4 +38,5 @@ sealed class CallerInfoResult {
         val name: String,
         val phoneNumber: String,
     ) : CallerInfoResult()
+    data class MultipleMembers(val members: List<Member>) : CallerInfoResult()
 }
