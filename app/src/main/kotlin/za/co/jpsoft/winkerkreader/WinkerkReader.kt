@@ -85,7 +85,11 @@ class WinkerkReader : Application() {
                     Log.d("WinkerkReader", "✅ Widgets refreshed on startup (attempt 1)")
                 }
             } catch (e: Exception) {
-                Log.e("WinkerkReader", "Failed to refresh widgets on startup", e)
+                if (BuildConfig.DEBUG) Log.e(
+                    "WinkerkReader",
+                    "Failed to refresh widgets on startup",
+                    e
+                )
             }
         }, 1000) // First attempt after 1 second
 
@@ -101,7 +105,11 @@ class WinkerkReader : Application() {
                     Log.d("WinkerkReader", "✅ Widgets refreshed on startup (attempt 2)")
                 }
             } catch (e: Exception) {
-                Log.e("WinkerkReader", "Failed second widget refresh attempt", e)
+                if (BuildConfig.DEBUG) Log.e(
+                    "WinkerkReader",
+                    "Failed second widget refresh attempt",
+                    e
+                )
             }
         }, 3000) // Second attempt after 3 seconds
     }

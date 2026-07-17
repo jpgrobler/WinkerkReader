@@ -613,7 +613,6 @@ class MainActivity : BaseActivity() {
     fun observeDataset() {
         if (BuildConfig.DEBUG) Log.d(TAG, "observeDataset called")
 
-        // Check if we have an active filter
         val filterList = viewModel.getCurrentFilterList()
         val hasFilter = filterList != null && filterList.any { it.checked }
         val hasSearch = viewModel.soekList && viewModel.soek.isNotEmpty()
@@ -621,13 +620,8 @@ class MainActivity : BaseActivity() {
             viewModel.sortOrder == "VERJAAR" || viewModel.sortOrder == "VERJAARSDAG"
 
         when {
-            hasFilter -> {
-                // Show filter summary
-                updateFilterSummary()
-            }
-
+            hasFilter -> updateFilterSummary()
             hasSearch -> {
-                // Show search text
                 binding.searchItemBlock.visibility = View.VISIBLE
                 binding.searchText.text = viewModel.soek
                 binding.mainSearchTextClose.visibility = View.VISIBLE
@@ -635,34 +629,30 @@ class MainActivity : BaseActivity() {
                     searchFilterCoordinator.onSearchClosed()
                 }
             }
-
             else -> {
-                // Hide everything
                 binding.searchItemBlock.visibility = View.GONE
                 binding.searchText.text = ""
                 binding.mainSearchTextClose.visibility = View.GONE
             }
         }
 
-        // Update sort order display
         binding.sortorder.text = getSortIcon(viewModel.sortOrder)
 
-        // Update adapter state
+        // ✅ FIXED: use memberListAdapter and viewModel.sortOrder
         memberListAdapter.updateState(
             listView = settingsManager.listView,
             soekList = viewModel.soekList,
             soek = viewModel.soek,
             recordStatus = viewModel.recordStatus,
-            sortOrder = viewModel.sortOrder
+            sortOrder = viewModel.sortOrder,
+            useCongregationIndicator = settingsManager.useCongregationIndicator
         )
 
-        // If birthday sort, ensure we trigger the scroll
         if (isBirthdaySort && pendingBirthdayOffset == null) {
             lifecycleScope.launch {
                 val offset = viewModel.getBirthdayOffset(viewModel.sortOrder)
                 if (offset > 0) {
                     pendingBirthdayOffset = offset
-                    // Wait for data to load then scroll
                     memberListAdapter.loadStateFlow.collect { loadStates ->
                         if (loadStates.refresh is LoadState.NotLoading) {
                             val itemCount = memberListAdapter.itemCount
@@ -990,17 +980,16 @@ class MainActivity : BaseActivity() {
             "updateSortOrder: newSort=$newSort, currentSort=$currentSortOrder"
         )
 
-        // If same sort order, just update UI and don't trigger a refresh
         if (newSort == currentSortOrder) {
             memberListAdapter.updateState(
                 listView = settingsManager.listView,
                 soekList = viewModel.soekList,
                 soek = viewModel.soek,
                 recordStatus = viewModel.recordStatus,
-                sortOrder = newSort
+                sortOrder = newSort,
+                useCongregationIndicator = settingsManager.useCongregationIndicator
             )
             binding.sortorder.text = getSortIcon(newSort)
-            // ✅ Don't call viewModel.refresh() here
             return
         }
 
@@ -1008,23 +997,20 @@ class MainActivity : BaseActivity() {
         settingsManager.defLayout = newSort
         mainViewModel.setSortOrder(newSort)
 
-        // ✅ Update ViewModel - this triggers the paging flow
         viewModel.updateSortOrder(newSort)
 
-        // Update adapter state
         memberListAdapter.updateState(
             listView = settingsManager.listView,
             soekList = viewModel.soekList,
             soek = viewModel.soek,
             recordStatus = viewModel.recordStatus,
-            sortOrder = newSort
+            sortOrder = newSort,
+            useCongregationIndicator = settingsManager.useCongregationIndicator
         )
 
-        // Update UI
         binding.sortorder.text = getSortIcon(newSort)
         invalidateOptionsMenu()
 
-        // ✅ If sorting by birthday, compute offset and scroll to current birthday
         if (newSort == "VERJAAR" || newSort == "VERJAARSDAG") {
             scrollToCurrentBirthday()
         }
@@ -1298,13 +1284,13 @@ class MainActivity : BaseActivity() {
             soekList = viewModel.soekList,
             soek = viewModel.soek,
             recordStatus = viewModel.recordStatus,
-            sortOrder = restoreSort
+            sortOrder = restoreSort,
+            useCongregationIndicator = settingsManager.useCongregationIndicator
         )
 
         binding.sortorder.text = getSortIcon(restoreSort)
 
         viewModel.refresh()
-
         recomputeBirthdayOffset()
 
         if (BuildConfig.DEBUG) Log.d(TAG, "clearFilter completed, sort order: $restoreSort")

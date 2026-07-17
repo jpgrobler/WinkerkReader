@@ -33,7 +33,7 @@ class ServiceKeepAlive : Service() {
                 }
                 if (BuildConfig.DEBUG) Log.d(TAG, "ServiceKeepAlive started")
             } catch (e: Exception) {
-                Log.e(TAG, "Error starting ServiceKeepAlive", e)
+                if (BuildConfig.DEBUG) Log.e(TAG, "Error starting ServiceKeepAlive", e)
             }
         }
 
@@ -43,7 +43,7 @@ class ServiceKeepAlive : Service() {
                 context.stopService(intent)
                 if (BuildConfig.DEBUG) Log.d(TAG, "ServiceKeepAlive stopped")
             } catch (e: Exception) {
-                Log.e(TAG, "Error stopping ServiceKeepAlive", e)
+                if (BuildConfig.DEBUG) Log.e(TAG, "Error stopping ServiceKeepAlive", e)
             }
         }
     }
@@ -68,7 +68,7 @@ class ServiceKeepAlive : Service() {
             // Start checking the listener
             handler.post(checkRunnable)
         } catch (e: Exception) {
-            Log.e(TAG, "Error in onCreate", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error in onCreate", e)
             stopSelf()
         }
     }
@@ -108,11 +108,11 @@ class ServiceKeepAlive : Service() {
                     // Show restart notification
                     showRestartNotification()
                 } catch (e: Exception) {
-                    Log.e(TAG, "Error restarting listener service", e)
+                    if (BuildConfig.DEBUG) Log.e(TAG, "Error restarting listener service", e)
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error checking listener status", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error checking listener status", e)
         }
     }
 
@@ -134,7 +134,7 @@ class ServiceKeepAlive : Service() {
 
                 if (BuildConfig.DEBUG) Log.d(TAG, "Keep alive notification channel created")
             } catch (e: Exception) {
-                Log.e(TAG, "Error creating keep alive channel", e)
+                if (BuildConfig.DEBUG) Log.e(TAG, "Error creating keep alive channel", e)
             }
         }
     }
@@ -173,7 +173,7 @@ class ServiceKeepAlive : Service() {
 
             notificationManager.notify(1111, notification)
         } catch (e: Exception) {
-            Log.e(TAG, "Error showing restart notification", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error showing restart notification", e)
         }
     }
 }

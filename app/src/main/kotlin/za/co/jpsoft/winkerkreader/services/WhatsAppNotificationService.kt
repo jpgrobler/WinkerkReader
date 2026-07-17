@@ -99,7 +99,7 @@ class WhatsAppNotificationService : NotificationListenerService() {
             pruneHandler.post(pruneRunnable)
 
         } catch (e: Exception) {
-            Log.e(TAG, "Error in onCreate", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error in onCreate", e)
             isServiceRunning = false
             stopSelf()
         }
@@ -122,13 +122,13 @@ class WhatsAppNotificationService : NotificationListenerService() {
             if (BuildConfig.DEBUG) Log.d(TAG, "onListenerConnected")
 
             if (!NotificationManagerCompat.getEnabledListenerPackages(this).contains(packageName)) {
-                Log.w(TAG, "Notification listener permission not granted")
+                if (BuildConfig.DEBUG) Log.w(TAG, "Notification listener permission not granted")
                 requestPermission()
             }
 
             reconcileStaleActiveCalls()
         } catch (e: Exception) {
-            Log.e(TAG, "Error in onListenerConnected", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error in onListenerConnected", e)
         }
     }
 
@@ -183,7 +183,7 @@ class WhatsAppNotificationService : NotificationListenerService() {
             processVoIPNotification(sbn, appName)
 
         } catch (e: Exception) {
-            Log.e(TAG, "Error in onNotificationPosted", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error in onNotificationPosted", e)
         }
     }
 
@@ -1160,7 +1160,7 @@ class WhatsAppNotificationService : NotificationListenerService() {
             nm.createNotificationChannel(channel)
             if (BuildConfig.DEBUG) Log.d(TAG, "Notification channel created")
         } catch (e: Exception) {
-            Log.e(TAG, "Error creating notification channel", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error creating notification channel", e)
         }
     }
 
@@ -1186,7 +1186,7 @@ class WhatsAppNotificationService : NotificationListenerService() {
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             startActivity(intent)
         } catch (e: Exception) {
-            Log.e(TAG, "Error opening notification settings", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error opening notification settings", e)
             try {
                 val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
                     .apply {
@@ -1195,7 +1195,7 @@ class WhatsAppNotificationService : NotificationListenerService() {
                     }
                 startActivity(intent)
             } catch (e2: Exception) {
-                Log.e(TAG, "Error opening app settings", e2)
+                if (BuildConfig.DEBUG) Log.e(TAG, "Error opening app settings", e2)
             }
         }
     }
@@ -1223,9 +1223,9 @@ class WhatsAppNotificationService : NotificationListenerService() {
             }
             writer.append("---\n")
             writer.close()
-            Log.e(TAG, "Dumped notification to file")
+            if (BuildConfig.DEBUG) Log.e(TAG, "Dumped notification to file")
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to dump notification to file", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Failed to dump notification to file", e)
         }
     }
 

@@ -8,9 +8,7 @@ import androidx.work.workDataOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.WINKERK_DB
-import za.co.jpsoft.winkerkreader.data.WinkerkDbHelper
-import za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase
+import za.co.jpsoft.winkerkreader.BuildConfig
 import java.io.BufferedInputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -40,7 +38,7 @@ class FileDownloadWorker(context: Context, params: WorkerParameters) :
         val sharedSecret = TRANSFER_SECRET
 
         if (serverIp.isNullOrEmpty()) {
-            Log.e(TAG, "No server IP")
+            if (BuildConfig.DEBUG) Log.e(TAG, "No server IP")
             return@withContext Result.failure(
                 workDataOf(
                     KEY_SUCCESS to false,
@@ -54,11 +52,11 @@ class FileDownloadWorker(context: Context, params: WorkerParameters) :
         while (attempt < 5 && !isStopped) {
             try {
                 socket = Socket(serverIp, serverPort).apply { soTimeout = 120000 }
-                Log.d(TAG, "Connected to $serverIp:$serverPort")
+                if (BuildConfig.DEBUG) Log.d(TAG, "Connected to $serverIp:$serverPort")
                 break
             } catch (e: Exception) {
                 attempt++
-                Log.w(TAG, "Connection attempt $attempt failed", e)
+                if (BuildConfig.DEBUG) Log.w(TAG, "Connection attempt $attempt failed", e)
                 if (attempt < 5) delay(2000)
             }
         }
@@ -73,10 +71,10 @@ class FileDownloadWorker(context: Context, params: WorkerParameters) :
         socket!!.close()
 
         if (result.first) {
-            Log.d(TAG, "Download successful, file saved to ${result.second}")
+            if (BuildConfig.DEBUG) Log.d(TAG, "Download successful, file saved to ${result.second}")
             Result.success(workDataOf(KEY_SUCCESS to true, KEY_FILE_PATH to result.second))
         } else {
-            Log.e(TAG, "Download failed: ${result.third}")
+            if (BuildConfig.DEBUG) Log.e(TAG, "Download failed: ${result.third}")
             Result.failure(workDataOf(KEY_SUCCESS to false, KEY_ERROR to result.third))
         }
     }
@@ -93,11 +91,11 @@ class FileDownloadWorker(context: Context, params: WorkerParameters) :
                 // Send token with command
                 outputStream.write("GET_DB $sharedSecret\n".toByteArray(Charsets.US_ASCII))
                 outputStream.flush()
-                Log.d(TAG, "Sent GET_DB")
+                if (BuildConfig.DEBUG) Log.d(TAG, "Sent GET_DB")
 
                 val statusLine = bis.readLine()
                 if (statusLine == null) return@withContext Triple(false, "", "No response")
-                Log.d(TAG, "Status: $statusLine")
+                if (BuildConfig.DEBUG) Log.d(TAG, "Status: $statusLine")
 
                 val parts = statusLine.split(' ')
                 if (parts[0] == "ERROR") {
@@ -114,7 +112,7 @@ class FileDownloadWorker(context: Context, params: WorkerParameters) :
                 val bufferSize = parts[2].toIntOrNull()
                     ?: return@withContext Triple(false, "", "Invalid buffer size")
                 val ivHex = parts[3]
-                Log.d(TAG, "Encrypted size: $encryptedSize, IV: $ivHex")
+                if (BuildConfig.DEBUG) Log.d(TAG, "Encrypted size: $encryptedSize, IV: $ivHex")
 
                 // ── Receive encrypted bytes ───────────────────────────────
                 val encryptedBytes = ByteArray(encryptedSize.toInt())
@@ -144,7 +142,7 @@ class FileDownloadWorker(context: Context, params: WorkerParameters) :
                         "Size mismatch: got $received expected $encryptedSize"
                     )
                 }
-                Log.d(TAG, "Encrypted bytes received: $received")
+                if (BuildConfig.DEBUG) Log.d(TAG, "Encrypted bytes received: $received")
 
                 // ── Verify checksum of encrypted bytes ───────────────────
                 val serverChecksum = bis.readLine()
@@ -152,7 +150,10 @@ class FileDownloadWorker(context: Context, params: WorkerParameters) :
                     return@withContext Triple(false, "", "No checksum")
                 }
                 val localChecksum = encryptedBytes.sha256Hex()
-                Log.d(TAG, "Checksum match: ${serverChecksum == localChecksum}")
+                if (BuildConfig.DEBUG) Log.d(
+                    TAG,
+                    "Checksum match: ${serverChecksum == localChecksum}"
+                )
 
                 if (serverChecksum != localChecksum) {
                     outputStream.write("ERROR\n".toByteArray(Charsets.US_ASCII))
@@ -167,22 +168,22 @@ class FileDownloadWorker(context: Context, params: WorkerParameters) :
                 val plainBytes = try {
                     decryptAes(encryptedBytes, deriveKey(sharedSecret), parseHex(ivHex))
                 } catch (e: Exception) {
-                    Log.e(TAG, "Decryption failed", e)
+                    if (BuildConfig.DEBUG) Log.e(TAG, "Decryption failed", e)
                     return@withContext Triple(false, "", "Decryption failed: ${e.message}")
                 }
-                Log.d(TAG, "Decrypted DB size: ${plainBytes.size} bytes")
+                if (BuildConfig.DEBUG) Log.d(TAG, "Decrypted DB size: ${plainBytes.size} bytes")
 
                 // ── Write DB to disk ──────────────────────────────────────
                 val dbPath = File(applicationContext.applicationInfo.dataDir, "databases")
                 if (!dbPath.exists()) dbPath.mkdirs()
-                val destFile = File(dbPath, WINKERK_DB)
+                val destFile = File(dbPath, "Winkerk.db.new")
 
-                withContext(Dispatchers.Main) {
-                    WinkerkDatabase.closeInstance()
-                    WinkerkDbHelper.closeInstance(WINKERK_DB)
-                    delay(200)
-                    System.gc()
-                }
+//                withContext(Dispatchers.Main) {
+//                    WinkerkDatabase.closeInstance()
+//                    WinkerkDbHelper.closeInstance(WINKERK_DB)
+//                    delay(200)
+//                    System.gc()
+//                }
                 destFile.delete()
 
                 FileOutputStream(destFile).use { it.write(plainBytes) }
@@ -191,7 +192,7 @@ class FileDownloadWorker(context: Context, params: WorkerParameters) :
                 Triple(true, destFile.absolutePath, null)
 
             } catch (e: Exception) {
-                Log.e(TAG, "Download failed", e)
+                if (BuildConfig.DEBUG) Log.e(TAG, "Download failed", e)
                 Triple(false, "", e.message)
             }
         }

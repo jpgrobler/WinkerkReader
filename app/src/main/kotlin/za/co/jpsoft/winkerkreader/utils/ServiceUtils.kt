@@ -42,7 +42,7 @@ object ServiceUtils {
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error checking if service is running", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error checking if service is running", e)
             false
         }
     }
@@ -52,7 +52,7 @@ object ServiceUtils {
             val activityManager =
                 context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
             if (activityManager == null) {
-                Log.e(TAG, "ActivityManager is null")
+                if (BuildConfig.DEBUG) Log.e(TAG, "ActivityManager is null")
                 return false
             }
 
@@ -63,7 +63,7 @@ object ServiceUtils {
             } ?: false
 
         } catch (e: Exception) {
-            Log.e(TAG, "Error checking service with ActivityManager", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error checking service with ActivityManager", e)
             return false
         }
     }
@@ -104,7 +104,11 @@ object ServiceUtils {
             }
 
         } catch (e: Exception) {
-            Log.e(TAG, "Error starting service ${serviceClass.simpleName}", e)
+            if (BuildConfig.DEBUG) Log.e(
+                TAG,
+                "Error starting service ${serviceClass.simpleName}",
+                e
+            )
         }
     }
 
@@ -121,7 +125,11 @@ object ServiceUtils {
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error stopping service ${serviceClass.simpleName}", e)
+            if (BuildConfig.DEBUG) Log.e(
+                TAG,
+                "Error stopping service ${serviceClass.simpleName}",
+                e
+            )
         }
     }
 
@@ -140,7 +148,7 @@ object ServiceUtils {
             } ?: emptyList()
 
         } catch (e: Exception) {
-            Log.e(TAG, "Error getting running services", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error getting running services", e)
             emptyList()
         }
     }
@@ -164,10 +172,10 @@ object ServiceUtils {
     fun logRunningServices(context: Context) {
         if (BuildConfig.DEBUG) {
             val services = getRunningServiceNames(context)
-            Log.d(TAG, "📋 Running services (${services.size}):")
+            if (BuildConfig.DEBUG) Log.d(TAG, "📋 Running services (${services.size}):")
             services.forEach { serviceName ->
                 if (serviceName.contains("winkerkreader", ignoreCase = true)) {
-                    Log.d(TAG, "  - $serviceName ✅")
+                    if (BuildConfig.DEBUG) Log.d(TAG, "  - $serviceName ✅")
                 }
             }
         }

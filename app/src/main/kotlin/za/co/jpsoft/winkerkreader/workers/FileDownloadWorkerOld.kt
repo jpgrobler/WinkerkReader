@@ -9,8 +9,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.BuildConfig
-import za.co.jpsoft.winkerkreader.data.WinkerkContract
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.WINKERK_DB
+import za.co.jpsoft.winkerkreader.data.WinkerkDbHelper
 import za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase
 import java.io.BufferedOutputStream
 import java.io.BufferedReader
@@ -107,17 +107,7 @@ class FileDownloadWorkerOld(
                 "FileDownloadWorker",
                 "Download successful, file saved to ${result.second}"
             )
-            // Force close any open database helpers to release the file
-            WinkerkDatabase.closeInstance()
-            // Keep info_db close if needed
-            //WinkerkDbHelper.closeInstance(WinkerkContract.winkerkEntry.INFO_DB)
-            // Trigger database reload via ContentProvider
-            applicationContext.contentResolver.call(
-                WinkerkContract.winkerkEntry.CONTENT_URI,
-                "reloadDatabase",
-                null,
-                null
-            )
+            // Do NOT reload database here — let the activity handle migration and reload.
             Result.success(workDataOf(KEY_SUCCESS to true, KEY_FILE_PATH to result.second))
         } else {
             val error = result.third ?: "Download failed"
@@ -170,13 +160,18 @@ class FileDownloadWorkerOld(
             if (!dbPath.exists() && !dbPath.mkdirs()) {
                 return@withContext Triple(false, "", "Cannot create databases directory")
             }
-            val destFile = File(dbPath, WINKERK_DB)
+            val destFile = File(dbPath, "Winkerk.db.new")
+
+            // Close all DB connections before touching the file on disk,
+            // otherwise SQLite reports "file unlinked while open" / fileHasMoved errors.
+            WinkerkDatabase.closeInstance()
+            WinkerkDbHelper.closeInstance(WINKERK_DB)
+            delay(200)
+            System.gc()
+
             // Delete existing file to ensure clean write
             if (destFile.exists() && !destFile.delete()) {
-                if (BuildConfig.DEBUG) Log.w(
-                    "FileDownloadWorker",
-                    "Could not delete existing database file"
-                )
+                if (BuildConfig.DEBUG) Log.w("FileDownloadWorker", "Could not delete old temp file")
             }
             outputStream = BufferedOutputStream(FileOutputStream(destFile))
 

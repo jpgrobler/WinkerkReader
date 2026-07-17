@@ -36,4 +36,8 @@ interface MemberDao {
 
     @Query("UPDATE Members SET Tag = :tag WHERE _id = :id")
     fun updateTag(id: Long, tag: String)
+
+    @Query("SELECT COUNT(*) FROM Members")
+    fun getCount(): Int
+
 }

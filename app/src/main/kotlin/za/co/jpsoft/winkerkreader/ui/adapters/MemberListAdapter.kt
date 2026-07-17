@@ -10,9 +10,11 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
@@ -54,12 +56,13 @@ class MemberListAdapter(
             return size > 100
         }
     }
+    private var useCongregationIndicator: Boolean = false
 
     companion object {
         private const val TAG = "MemberListAdapter"
         const val VIEW_TYPE_COMPACT = 1
         const val VIEW_TYPE_DETAILED = 2
-
+        private const val RING_STROKE_WIDTH_DP = 4
         private val DIFF = object : DiffUtil.ItemCallback<MemberItem>() {
             override fun areItemsTheSame(oldItem: MemberItem, newItem: MemberItem) =
                 oldItem.id == newItem.id
@@ -257,7 +260,8 @@ class MemberListAdapter(
         soekList: Boolean,
         soek: String,
         recordStatus: String,
-        sortOrder: String
+        sortOrder: String,
+        useCongregationIndicator: Boolean
     ) {
         if (BuildConfig.DEBUG) Log.d(
             TAG,
@@ -284,6 +288,12 @@ class MemberListAdapter(
         if (this.listView != listView) {
             this.listView = listView
             if (itemCount > 0) notifyItemRangeChanged(0, itemCount)
+        }
+        if (this.useCongregationIndicator != useCongregationIndicator) {
+            this.useCongregationIndicator = useCongregationIndicator
+            if (itemCount > 0) notifyItemRangeChanged(0, itemCount)
+        } else {
+            this.useCongregationIndicator = useCongregationIndicator
         }
     }
 
@@ -330,7 +340,7 @@ class MemberListAdapter(
         abstract val koekImageView: ImageView
         abstract val eposImageView: ImageView
         abstract val whatsappImageView: ImageView
-        abstract val fotoImageView: ImageView
+        abstract val fotoImageView: com.google.android.material.imageview.ShapeableImageView
         abstract val selBlock: View
         abstract val telBlock: View
         abstract val fotoFrame: View
@@ -352,7 +362,15 @@ class MemberListAdapter(
                     typedValue,
                     true
                 )
-                return typedValue.data
+                // If it's a resource reference, resolve it to an actual color
+                return if (typedValue.resourceId != 0) {
+                    androidx.core.content.ContextCompat.getColor(
+                        itemView.context,
+                        typedValue.resourceId
+                    )
+                } else {
+                    typedValue.data
+                }
             }
             val darkness = 1 - (
                     0.299 * Color.red(bgColor) +
@@ -369,6 +387,15 @@ class MemberListAdapter(
         fun bind(item: MemberItem, hasPending: Boolean, position: Int) {
             val context = itemView.context
             val settings = SettingsManager.getInstance(context)
+            var congregationColor = Int.MIN_VALUE
+            if (!soekList) {
+                congregationColor = when (item.congregation) {
+                    settings.gemeenteNaam -> settings.gemeenteKleur
+                    settings.gemeente2Naam -> settings.gemeente2Kleur
+                    settings.gemeente3Naam -> settings.gemeente3Kleur
+                    else -> Int.MIN_VALUE
+                }
+            }
 
             // ============================================================
             // COLLAPSE CHECK - Determine if this section is collapsed
@@ -390,10 +417,12 @@ class MemberListAdapter(
 
                 // Debug logging for WYK sort
                 if (sortOrder == "WYK") {
-                    Log.d(
-                        TAG,
-                        "WYK separator at position $position: ward=${item.ward}, showSeparator=${item.showSeparator}, showSeparator2=${item.showSeparator2}"
-                    )
+                    if (BuildConfig.DEBUG) {
+                        Log.d(
+                            TAG,
+                            "WYK separator at position $position: ward=${item.ward}, showSeparator=${item.showSeparator}, showSeparator2=${item.showSeparator2}"
+                        )
+                    }
                 }
             } else {
                 // This is a regular item - hide it if its section is collapsed
@@ -418,31 +447,25 @@ class MemberListAdapter(
 
             if (soekList) {
                 finalBgColor = Color.LTGRAY
-                setItemBackgroundColor(finalBgColor)
             } else {
-                val congregationColor = when (item.congregation) {
-                    settings.gemeenteNaam -> settings.gemeenteKleur
-                    settings.gemeente2Naam -> settings.gemeente2Kleur
-                    settings.gemeente3Naam -> settings.gemeente3Kleur
-                    else -> Int.MIN_VALUE
+                // Only apply congregation background if indicator is OFF
+                if (!useCongregationIndicator && congregationColor != Int.MIN_VALUE) {
+                    finalBgColor = congregationColor
                 }
-                finalBgColor =
-                    if (congregationColor != Int.MIN_VALUE) congregationColor else Color.TRANSPARENT
-                setItemBackgroundColor(finalBgColor)
 
+                // Override for tag / recordstatus (these take precedence)
                 when {
                     item.tag == 1 -> {
                         finalBgColor = ContextCompat.getColor(context, R.color.selected_view)
-                        setItemBackgroundColor(finalBgColor)
                     }
                     item.recordstatus == "2" -> {
                         val inactiveColor = settings.inactiveBackgroundColor
-                        finalBgColor =
-                            if (inactiveColor != Int.MIN_VALUE) inactiveColor else Color.TRANSPARENT
-                        setItemBackgroundColor(finalBgColor)
+                        if (inactiveColor != Int.MIN_VALUE) finalBgColor = inactiveColor
                     }
                 }
             }
+            // Apply the final background once
+            setItemBackgroundColor(finalBgColor)
 
             // ------------------------------------------------------------
             // TEXT COLOR
@@ -460,7 +483,8 @@ class MemberListAdapter(
             applyVisibilitySettings(settings)
             resetViewState()
 
-            bindPhotoData(item, itemView)
+            val useRing = useCongregationIndicator && congregationColor != Int.MIN_VALUE
+            bindPhotoData(item, itemView, useRing, congregationColor)
             bindBasicInfo(item)
             bindContactInfo(item, settings)
             bindAgeInfo(item, settings)
@@ -572,6 +596,20 @@ class MemberListAdapter(
             itemView.setOnLongClickListener { onItemLongClick(item, bindingAdapterPosition) }
 
             listBediening.visibility = if (hasPending) View.VISIBLE else View.GONE
+
+            // ---- Ring on photo ----
+            if (useCongregationIndicator && congregationColor != Int.MIN_VALUE) {
+                // Set stroke width (e.g. 4dp)
+                val strokeWidthPx = (4 * context.resources.displayMetrics.density + 0.5f).toInt()
+                fotoImageView.strokeWidth = strokeWidthPx.toFloat()
+                fotoImageView.strokeColor =
+                    android.content.res.ColorStateList.valueOf(congregationColor)
+            } else {
+                // Remove any existing ring
+                fotoImageView.strokeWidth = 0f
+                fotoImageView.strokeColor =
+                    android.content.res.ColorStateList.valueOf(Color.TRANSPARENT)
+            }
         }
 
         // -------- Helper methods --------
@@ -602,33 +640,49 @@ class MemberListAdapter(
             wykTextView.visibility = View.GONE
         }
 
-        private fun bindPhotoData(item: MemberItem, view: View) {
+        private fun bindPhotoData(item: MemberItem, view: View, useRing: Boolean, textColor: Int) {
             val density = view.context.resources.displayMetrics.density
             val sizeDp = if (listView == VIEW_TYPE_DETAILED) 50 else 30
-            val pixels = (sizeDp * density + 0.5f).toInt()
-            fotoImageView.layoutParams.width = pixels
-            fotoImageView.layoutParams.height = pixels
+            val imageSizePx = (sizeDp * density + 0.5f).toInt()
+            val strokeWidthPx = (RING_STROKE_WIDTH_DP * density + 0.5f).toInt()
+            val totalSizePx = if (useRing) imageSizePx + strokeWidthPx else imageSizePx
+
+            // ---- Set ShapeableImageView size ----
+            val imageParams = FrameLayout.LayoutParams(totalSizePx, totalSizePx)
+            imageParams.gravity = android.view.Gravity.CENTER
+            fotoImageView.layoutParams = imageParams
             fotoImageView.requestLayout()
 
+            // ---- Set FrameLayout (kontak_frame) size ----
+            val frameParams = fotoFrame.layoutParams as? ConstraintLayout.LayoutParams
+            frameParams?.let {
+                it.width = totalSizePx
+                it.height = totalSizePx
+                fotoFrame.requestLayout()
+            }
+
+            // ---- Choose placeholder drawable based on gender ----
             val defaultDrawable = when (item.gender) {
-                "Manlik" -> ContextCompat.getDrawable(view.context, R.drawable.kman)
-                else -> ContextCompat.getDrawable(view.context, R.drawable.kvrou)
-            } ?: ContextCompat.getDrawable(view.context, R.drawable.kontak)
+                "Manlik" -> ContextCompat.getDrawable(view.context, R.drawable.gender_male)
+                else -> ContextCompat.getDrawable(view.context, R.drawable.gender_female)
+            } ?: ContextCompat.getDrawable(view.context, R.drawable.gender_male)
 
             val photoFile = PhotoHelper.getSyncedPhotoFile(view.context, item.guid)
 
-            // Only try to load if the file exists
             if (photoFile != null && photoFile.exists()) {
+                // Load actual photo – clear any tint
+                fotoImageView.clearColorFilter()
                 Glide.with(view)
                     .load(photoFile)
                     .apply(PHOTO_OPTIONS)
                     .placeholder(defaultDrawable)
                     .error(defaultDrawable)
-                    .override(pixels, pixels)
+                    .override(totalSizePx, totalSizePx)
                     .into(fotoImageView)
             } else {
-                // Use default drawable immediately
+                // Use placeholder with text-colour tint
                 fotoImageView.setImageDrawable(defaultDrawable)
+                fotoImageView.setColorFilter(textColor, android.graphics.PorterDuff.Mode.SRC_IN)
             }
         }
 
@@ -835,7 +889,8 @@ class MemberListAdapter(
         override val koekImageView: ImageView = binding.listBday
         override val eposImageView: ImageView = binding.listEpos
         override val whatsappImageView: ImageView = binding.listWhatsapp
-        override val fotoImageView: ImageView = binding.listKontakFoto
+        override val fotoImageView: com.google.android.material.imageview.ShapeableImageView =
+            binding.listKontakFoto
         override val selBlock: View = binding.listCellBlock
         override val telBlock: View = binding.listTelBlock
         override val fotoFrame: View = binding.kontakFrame
@@ -864,7 +919,8 @@ class MemberListAdapter(
         override val koekImageView: ImageView = binding.listBday
         override val eposImageView: ImageView = binding.listEpos
         override val whatsappImageView: ImageView = binding.listWhatsapp
-        override val fotoImageView: ImageView = binding.listKontakFoto
+        override val fotoImageView: com.google.android.material.imageview.ShapeableImageView =
+            binding.listKontakFoto
         override val selBlock: View = binding.listCellBlock
         override val telBlock: View = binding.listTelBlock
         override val fotoFrame: View = binding.kontakFrame

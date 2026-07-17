@@ -233,7 +233,8 @@ class VerjaarSmsActivity : BaseActivity() {
             soekList = false,
             soek = "",
             recordStatus = "0",
-            sortOrder = "VERJAAR"
+            sortOrder = "VERJAAR",
+            useCongregationIndicator = settingsManager.useCongregationIndicator
         )
 
         // ✅ Observe data - submit to adapter

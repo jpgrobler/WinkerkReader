@@ -116,7 +116,7 @@ object CallerInfoResolver {
 
             if (BuildConfig.DEBUG) {
                 Log.d(TAG, "Full query: $fullQuery")
-                Log.d(TAG, "Args: ${args.joinToString()}")
+                if (BuildConfig.DEBUG) Log.d(TAG, "Args: ${args.joinToString()}")
             }
 
             val projection = arrayOf(

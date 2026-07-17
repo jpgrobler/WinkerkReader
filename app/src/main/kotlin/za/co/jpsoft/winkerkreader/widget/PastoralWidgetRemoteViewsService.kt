@@ -64,15 +64,21 @@ class PastoralWidgetRemoteViewsService : RemoteViewsService() {
                 if (BuildConfig.DEBUG) {
                     Log.d(TAG, "✅ Loaded ${reminders.size} pastoral reminders")
                     if (reminders.isEmpty()) {
-                        Log.w(TAG, "⚠️ No pastoral reminders found - widget will show empty state")
+                        if (BuildConfig.DEBUG) Log.w(
+                            TAG,
+                            "⚠️ No pastoral reminders found - widget will show empty state"
+                        )
                     } else {
                         reminders.take(3).forEach { reminder ->
-                            Log.d(TAG, "  Reminder: ${reminder.title} due ${reminder.dueDateUtc}")
+                            if (BuildConfig.DEBUG) Log.d(
+                                TAG,
+                                "  Reminder: ${reminder.title} due ${reminder.dueDateUtc}"
+                            )
                         }
                     }
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Error loading pastoral reminders", e)
+                if (BuildConfig.DEBUG) Log.e(TAG, "Error loading pastoral reminders", e)
                 reminders = emptyList()
                 dataLoaded = false
             }
@@ -108,7 +114,7 @@ class PastoralWidgetRemoteViewsService : RemoteViewsService() {
             try {
                 bindReminderToViews(views, reminder)
             } catch (e: Exception) {
-                Log.e(TAG, "Error binding view at position $position", e)
+                if (BuildConfig.DEBUG) Log.e(TAG, "Error binding view at position $position", e)
                 views.setTextViewText(R.id.widget_pastoral_item_text, "Fout")
             }
 
@@ -275,7 +281,7 @@ class PastoralWidgetRemoteViewsService : RemoteViewsService() {
                     } else null
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Error fetching congregation for $memberGuid", e)
+                if (BuildConfig.DEBUG) Log.e(TAG, "Error fetching congregation for $memberGuid", e)
                 null
             }
         }

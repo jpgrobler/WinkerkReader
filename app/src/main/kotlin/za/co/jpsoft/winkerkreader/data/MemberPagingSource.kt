@@ -72,8 +72,8 @@ class MemberPagingSource(
                 // ✅ MOVED logging here - after items is defined
                 if (BuildConfig.DEBUG && sortOrder == "WYK") {
                     val wards = items.map { it.ward }.distinct().sorted()
-                    Log.d(TAG, "📊 Wards found: $wards")
-                    Log.d(TAG, "📊 Total items: ${items.size}")
+                    if (BuildConfig.DEBUG) Log.d(TAG, "📊 Wards found: $wards")
+                    if (BuildConfig.DEBUG) Log.d(TAG, "📊 Total items: ${items.size}")
                 }
 
                 // Apply separators

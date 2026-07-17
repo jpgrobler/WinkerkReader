@@ -61,7 +61,10 @@ class WidgetViewsFactory(
         if (BuildConfig.DEBUG) {
             Log.d(tag, "Rows loaded: ${rows.size}")
             if (rows.isEmpty()) {
-                Log.w(tag, "⚠️ No widget rows loaded! Check database access.")
+                if (BuildConfig.DEBUG) Log.w(
+                    tag,
+                    "⚠️ No widget rows loaded! Check database access."
+                )
             }
         }
     }

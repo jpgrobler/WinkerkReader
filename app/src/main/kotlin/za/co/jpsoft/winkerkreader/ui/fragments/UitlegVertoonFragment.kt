@@ -32,7 +32,7 @@ class UitlegVertoonFragment : Fragment() {
     private val initialColors = mutableListOf(
         Int.MIN_VALUE, Int.MIN_VALUE, Int.MIN_VALUE, Int.MIN_VALUE
     ) // gem1, gem2, gem3, inactive
-
+    private var initialCongregationIndicator = false
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -101,7 +101,8 @@ class UitlegVertoonFragment : Fragment() {
             binding.uitlegHuweliksdag to settingsManager.isListHuwelikBlok,
             binding.uitlegWyk to settingsManager.isListWyk,
             binding.uitlegSelfoon to settingsManager.isListSelfoon,
-            binding.uitlegTelefoon to settingsManager.isListTelefoon
+            binding.uitlegTelefoon to settingsManager.isListTelefoon,
+            binding.congregationIndicatorSwitch to settingsManager.useCongregationIndicator
         )
         checkboxes.forEach { (cb, value) ->
             cb.isChecked = value
@@ -141,6 +142,8 @@ class UitlegVertoonFragment : Fragment() {
         if (settingsManager.gemeente3Naam.isNotBlank()) {
             binding.gem3.text = settingsManager.gemeente3Naam
         }
+        initialCongregationIndicator = settingsManager.useCongregationIndicator
+        binding.congregationIndicatorSwitch.isChecked = initialCongregationIndicator
     }
 
     private fun setupListeners() {
@@ -148,6 +151,7 @@ class UitlegVertoonFragment : Fragment() {
         initialCheckboxes.keys.forEach { id ->
             val cb = binding.root.findViewById<android.widget.CheckBox>(id)
             cb.setOnCheckedChangeListener { _, _ -> onUserChanged() }
+            binding.congregationIndicatorSwitch
         }
 
         // Layout spinner
@@ -197,7 +201,7 @@ class UitlegVertoonFragment : Fragment() {
             val cb = binding.root.findViewById<android.widget.CheckBox>(id)
             if (cb.isChecked != initialValue) return true
         }
-
+        if (binding.congregationIndicatorSwitch.isChecked != initialCongregationIndicator) return true
         // Layout
         val currentLayout = binding.layoutOpsies.selectedItem?.toString() ?: "GESINNE"
         if (currentLayout != initialLayout) return true
@@ -233,14 +237,14 @@ class UitlegVertoonFragment : Fragment() {
             }
         }
         settingsManager.defLayout = binding.layoutOpsies.selectedItem?.toString() ?: "GESINNE"
-
+        settingsManager.useCongregationIndicator = binding.congregationIndicatorSwitch.isChecked
         // Update initial values
         initialCheckboxes.forEach { (id, _) ->
             val cb = binding.root.findViewById<android.widget.CheckBox>(id)
             initialCheckboxes[id] = cb.isChecked
         }
         initialLayout = settingsManager.defLayout
-
+        initialCongregationIndicator = binding.congregationIndicatorSwitch.isChecked
         isDirty = false
         updateSaveButtonState()
         Toast.makeText(requireContext(), "Vertoon-instellings gestoor", Toast.LENGTH_SHORT).show()

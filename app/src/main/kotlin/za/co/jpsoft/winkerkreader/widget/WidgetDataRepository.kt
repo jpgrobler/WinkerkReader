@@ -61,7 +61,7 @@ object WidgetDataRepository {
             }
         } catch (e: Exception) {
             // Ensure callers always get a valid (empty) list rather than a stale null.
-            Log.e(TAG, "Failed to refresh widget cache", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Failed to refresh widget cache", e)
             cachedRows = emptyList()
         }
     }
@@ -189,7 +189,7 @@ object WidgetDataRepository {
                 .thenBy { it.day.toIntOrNull() ?: 0 })
 
         } catch (e: Exception) {
-            Log.e(TAG, "Error querying widget data", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error querying widget data", e)
         }
 
         return rows

@@ -36,7 +36,7 @@ class BootForegroundServiceStarter : Service() {
             startForeground(NOTIFICATION_ID, notification)
 
         } catch (e: Exception) {
-            Log.e(TAG, "Error in onCreate", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error in onCreate", e)
             stopSelf()
         }
     }
@@ -81,7 +81,7 @@ class BootForegroundServiceStarter : Service() {
             return START_NOT_STICKY
 
         } catch (e: Exception) {
-            Log.e(TAG, "Error in onStartCommand", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error in onStartCommand", e)
             stopSelf()
             return START_NOT_STICKY
         }
@@ -115,7 +115,7 @@ class BootForegroundServiceStarter : Service() {
 
                 if (BuildConfig.DEBUG) Log.d(TAG, "Notification channel created")
             } catch (e: Exception) {
-                Log.e(TAG, "Error creating notification channel", e)
+                if (BuildConfig.DEBUG) Log.e(TAG, "Error creating notification channel", e)
             }
         }
     }

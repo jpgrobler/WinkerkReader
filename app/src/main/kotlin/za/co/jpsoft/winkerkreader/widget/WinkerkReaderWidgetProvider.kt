@@ -95,7 +95,7 @@ class WinkerkReaderWidgetProvider : AppWidgetProvider() {
                     )
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Error in updateAllWidgets", e)
+                if (BuildConfig.DEBUG) Log.e(TAG, "Error in updateAllWidgets", e)
             }
         }
 
@@ -364,7 +364,7 @@ class WinkerkReaderWidgetProvider : AppWidgetProvider() {
             }
 
         } catch (e: Exception) {
-            Log.e(TAG, "Error scheduling debounced refresh", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error scheduling debounced refresh", e)
         }
     }
 
@@ -395,7 +395,11 @@ class WinkerkReaderWidgetProvider : AppWidgetProvider() {
                     @Suppress("DEPRECATION")
                     appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.words)
                 } catch (e: Exception) {
-                    Log.e(TAG, "Error in force update for widget $appWidgetId", e)
+                    if (BuildConfig.DEBUG) Log.e(
+                        TAG,
+                        "Error in force update for widget $appWidgetId",
+                        e
+                    )
                 }
             }
 
@@ -404,7 +408,7 @@ class WinkerkReaderWidgetProvider : AppWidgetProvider() {
             }
 
         } catch (e: Exception) {
-            Log.e(TAG, "Error force refreshing widgets", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error force refreshing widgets", e)
         }
     }
 

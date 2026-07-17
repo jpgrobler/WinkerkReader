@@ -8,6 +8,7 @@ import androidx.work.workDataOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.WinkerkContract
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.WINKERK_DB
 import za.co.jpsoft.winkerkreader.data.WinkerkDbHelper
@@ -35,28 +36,31 @@ class PhotoDownloadWorker(context: Context, params: WorkerParameters) :
         val sharedSecret = TRANSFER_SECRET
 
         if (serverIp.isNullOrEmpty()) {
-            Log.e(TAG, "No server IP")
+            if (BuildConfig.DEBUG) Log.e(TAG, "No server IP")
             return@withContext Result.failure(workDataOf("ERROR" to "No server IP"))
         }
 
         val availableGuids = requestPhotoList(serverIp, port, sharedSecret)
         if (availableGuids == null) {
-            Log.e(TAG, "Failed to get photo list")
+            if (BuildConfig.DEBUG) Log.e(TAG, "Failed to get photo list")
             return@withContext Result.failure(workDataOf("ERROR" to "Failed to get photo list"))
         }
-        Log.d(TAG, "📁 Server has ${availableGuids.size} photos")
+        if (BuildConfig.DEBUG) Log.d(TAG, "📁 Server has ${availableGuids.size} photos")
 
         val dbGuids = getAllMemberGuids()
-        Log.d(TAG, "📋 DB has ${dbGuids.size} member GUIDs")
+        if (BuildConfig.DEBUG) Log.d(TAG, "📋 DB has ${dbGuids.size} member GUIDs")
 
         val toDownload = dbGuids.intersect(availableGuids).filter { guid ->
             val photoFile =
                 File(WinkerkContract.winkerkEntry.getFotoDir(applicationContext), "$guid.jpg")
             forceSync || !photoFile.exists()
         }
-        Log.d(TAG, "📌 Intersection (to download): ${toDownload.size}")
+        if (BuildConfig.DEBUG) Log.d(TAG, "📌 Intersection (to download): ${toDownload.size}")
         if (toDownload.isNotEmpty()) {
-            Log.d(TAG, "📌 First 5 GUIDs: ${toDownload.take(5).joinToString()}")
+            if (BuildConfig.DEBUG) Log.d(
+                TAG,
+                "📌 First 5 GUIDs: ${toDownload.take(5).joinToString()}"
+            )
         }
 
         notifyPhotoCount(serverIp, port, toDownload.size)
@@ -65,7 +69,7 @@ class PhotoDownloadWorker(context: Context, params: WorkerParameters) :
         var failed = 0
         toDownload.forEachIndexed { index, guid ->
             if (isStopped) {
-                Log.w(TAG, "Worker stopped"); return@forEachIndexed
+                if (BuildConfig.DEBUG) Log.w(TAG, "Worker stopped"); return@forEachIndexed
             }
 
             setProgress(
@@ -82,13 +86,19 @@ class PhotoDownloadWorker(context: Context, params: WorkerParameters) :
             var downloaded = false
             for (attempt in 1..MAX_RETRIES) {
                 if (isStopped) break
-                Log.d(TAG, "⬇️ Downloading $guid (attempt $attempt/$MAX_RETRIES)")
+                if (BuildConfig.DEBUG) Log.d(
+                    TAG,
+                    "⬇️ Downloading $guid (attempt $attempt/$MAX_RETRIES)"
+                )
                 if (downloadPhoto(serverIp, port, guid, dest, sharedSecret)) {
                     downloaded = true
                     break
                 }
                 if (attempt < MAX_RETRIES) {
-                    Log.w(TAG, "Retrying $guid (${MAX_RETRIES - attempt} attempts left)")
+                    if (BuildConfig.DEBUG) Log.w(
+                        TAG,
+                        "Retrying $guid (${MAX_RETRIES - attempt} attempts left)"
+                    )
                     delay(1000)
                 }
             }
@@ -97,7 +107,10 @@ class PhotoDownloadWorker(context: Context, params: WorkerParameters) :
             if (index < toDownload.size - 1) delay(200)
         }
 
-        Log.d(TAG, "✅ Photo sync complete: $success downloaded, $failed failed")
+        if (BuildConfig.DEBUG) Log.d(
+            TAG,
+            "✅ Photo sync complete: $success downloaded, $failed failed"
+        )
         Result.success(workDataOf("SUCCESS_COUNT" to success, "FAIL_COUNT" to failed))
     }
 
@@ -119,7 +132,7 @@ class PhotoDownloadWorker(context: Context, params: WorkerParameters) :
 
                     val firstLine = bis.readLine()
                     if (firstLine?.startsWith("ERROR") == true) {
-                        Log.e(TAG, "Server rejected LIST_PHOTOS: $firstLine")
+                        if (BuildConfig.DEBUG) Log.e(TAG, "Server rejected LIST_PHOTOS: $firstLine")
                         return@use null
                     }
 
@@ -133,7 +146,7 @@ class PhotoDownloadWorker(context: Context, params: WorkerParameters) :
                     guids
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to get photo list", e)
+                if (BuildConfig.DEBUG) Log.e(TAG, "Failed to get photo list", e)
                 null
             }
         }
@@ -153,27 +166,30 @@ class PhotoDownloadWorker(context: Context, params: WorkerParameters) :
                 // Token appended: GET_PHOTO <guid> <token>
                 outputStream.write("GET_PHOTO $guid $secret\n".toByteArray(Charsets.US_ASCII))
                 outputStream.flush()
-                Log.d(TAG, "📤 Sent GET_PHOTO $guid")
+                if (BuildConfig.DEBUG) Log.d(TAG, "📤 Sent GET_PHOTO $guid")
 
                 val statusLine = bis.readLine()
                 if (statusLine == null) {
-                    Log.w(TAG, "No status for $guid"); return@withContext false
+                    if (BuildConfig.DEBUG) Log.w(
+                        TAG,
+                        "No status for $guid"
+                    ); return@withContext false
                 }
-                Log.d(TAG, "📨 Status: $statusLine")
+                if (BuildConfig.DEBUG) Log.d(TAG, "📨 Status: $statusLine")
 
                 val parts = statusLine.split(' ')
                 if (parts[0] == "ERROR") {
-                    Log.w(TAG, "Server error for $guid: ${parts.drop(1)}")
+                    if (BuildConfig.DEBUG) Log.w(TAG, "Server error for $guid: ${parts.drop(1)}")
                     return@withContext false
                 }
                 if (parts[0] != "OK" || parts.size < 3) {
-                    Log.w(TAG, "Invalid status for $guid: $statusLine")
+                    if (BuildConfig.DEBUG) Log.w(TAG, "Invalid status for $guid: $statusLine")
                     return@withContext false
                 }
 
                 val fileSize = parts[1].toLongOrNull() ?: return@withContext false
                 val bufferSize = parts[2].toIntOrNull() ?: return@withContext false
-                Log.d(TAG, "📦 File size: $fileSize, buffer: $bufferSize")
+                if (BuildConfig.DEBUG) Log.d(TAG, "📦 File size: $fileSize, buffer: $bufferSize")
 
                 destFile.parentFile?.mkdirs()
                 var success = false
@@ -181,7 +197,7 @@ class PhotoDownloadWorker(context: Context, params: WorkerParameters) :
                 destFile.outputStream().use { fos ->
                     val buffer = ByteArray(bufferSize)
                     var received = 0L
-                    Log.d(TAG, "⬇️ Starting to receive file data...")
+                    if (BuildConfig.DEBUG) Log.d(TAG, "⬇️ Starting to receive file data...")
 
                     while (received < fileSize) {
                         val toRead = minOf(buffer.size.toLong(), fileSize - received).toInt()
@@ -192,7 +208,10 @@ class PhotoDownloadWorker(context: Context, params: WorkerParameters) :
                             bytesRead += read
                         }
                         if (bytesRead == 0) {
-                            Log.w(TAG, "Connection closed mid-transfer for $guid"); break
+                            if (BuildConfig.DEBUG) Log.w(
+                                TAG,
+                                "Connection closed mid-transfer for $guid"
+                            ); break
                         }
                         fos.write(buffer, 0, bytesRead)
                         received += bytesRead
@@ -202,9 +221,12 @@ class PhotoDownloadWorker(context: Context, params: WorkerParameters) :
                     }
                     if (received == fileSize) {
                         success = true
-                        Log.d(TAG, "✅ $guid: received $received bytes")
+                        if (BuildConfig.DEBUG) Log.d(TAG, "✅ $guid: received $received bytes")
                     } else {
-                        Log.w(TAG, "Size mismatch for $guid: got $received expected $fileSize")
+                        if (BuildConfig.DEBUG) Log.w(
+                            TAG,
+                            "Size mismatch for $guid: got $received expected $fileSize"
+                        )
                     }
                 }
 
@@ -212,33 +234,36 @@ class PhotoDownloadWorker(context: Context, params: WorkerParameters) :
                     destFile.delete(); return@withContext false
                 }
 
-                Log.d(TAG, "🔐 Reading checksum...")
+                if (BuildConfig.DEBUG) Log.d(TAG, "🔐 Reading checksum...")
                 val serverChecksum = bis.readLine()
                 if (serverChecksum == null) {
-                    Log.w(TAG, "No checksum for $guid"); destFile.delete(); return@withContext false
+                    if (BuildConfig.DEBUG) Log.w(
+                        TAG,
+                        "No checksum for $guid"
+                    ); destFile.delete(); return@withContext false
                 }
 
                 val localChecksum = destFile.inputStream().use { it.sha256Hex() }
-                Log.d(TAG, "🔐 Match: ${serverChecksum == localChecksum}")
+                if (BuildConfig.DEBUG) Log.d(TAG, "🔐 Match: ${serverChecksum == localChecksum}")
 
                 if (serverChecksum != localChecksum) {
                     outputStream.write("ERROR\n".toByteArray(Charsets.US_ASCII))
                     outputStream.flush()
                     destFile.delete()
-                    Log.w(TAG, "Checksum mismatch for $guid")
+                    if (BuildConfig.DEBUG) Log.w(TAG, "Checksum mismatch for $guid")
                     return@withContext false
                 }
 
                 outputStream.write("ACK\n".toByteArray(Charsets.US_ASCII))
                 outputStream.flush()
-                Log.d(TAG, "✅ Photo downloaded: $guid")
+                if (BuildConfig.DEBUG) Log.d(TAG, "✅ Photo downloaded: $guid")
                 true
 
             } catch (e: SocketTimeoutException) {
-                Log.e(TAG, "⏰ Timeout for $guid", e)
+                if (BuildConfig.DEBUG) Log.e(TAG, "⏰ Timeout for $guid", e)
                 destFile.delete(); false
             } catch (e: Exception) {
-                Log.e(TAG, "Download failed for $guid", e)
+                if (BuildConfig.DEBUG) Log.e(TAG, "Download failed for $guid", e)
                 destFile.delete(); false
             } finally {
                 try {
@@ -261,9 +286,9 @@ class PhotoDownloadWorker(context: Context, params: WorkerParameters) :
                     cursor.getString(0)?.takeIf { it.isNotEmpty() }?.let { guids.add(it) }
                 }
             }
-            Log.d(TAG, "✅ Retrieved ${guids.size} member GUIDs from DB")
+            if (BuildConfig.DEBUG) Log.d(TAG, "✅ Retrieved ${guids.size} member GUIDs from DB")
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to query member GUIDs", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Failed to query member GUIDs", e)
         }
         return guids
     }

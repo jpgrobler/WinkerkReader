@@ -444,7 +444,8 @@ class FilterBottomSheet : BottomSheetDialogFragment() {
                     soekList = viewModel.soekList,
                     soek = viewModel.soek,
                     recordStatus = viewModel.recordStatus,
-                    sortOrder = restoreSort
+                    sortOrder = restoreSort,
+                    useCongregationIndicator = activity.settingsManager.useCongregationIndicator
                 )
             }
 
@@ -645,7 +646,8 @@ class FilterBottomSheet : BottomSheetDialogFragment() {
             soekList = viewModel.soekList,
             soek = viewModel.soek,
             recordStatus = viewModel.recordStatus,
-            sortOrder = restoreSort
+            sortOrder = restoreSort,
+            useCongregationIndicator = activity.settingsManager.useCongregationIndicator
         )
 
         // ✅ Step 7: Refresh the data

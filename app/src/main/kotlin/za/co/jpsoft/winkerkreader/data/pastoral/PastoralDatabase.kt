@@ -87,7 +87,7 @@ abstract class PastoralDatabase : RoomDatabase() {
                     PastoralDatabaseInitializer(context).seedIfEmpty(db)
                     if (BuildConfig.DEBUG) Log.d(TAG, "Pastoral database seeding completed")
                 } catch (e: Exception) {
-                    Log.e(TAG, "Failed to seed pastoral database", e)
+                    if (BuildConfig.DEBUG) Log.e(TAG, "Failed to seed pastoral database", e)
                     // Optionally: post a warning, set a flag to retry later, etc.
                 } finally {
                     // If you want to allow retry on next open, set seedingStarted = false here.

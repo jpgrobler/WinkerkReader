@@ -57,7 +57,7 @@ class DeviceBootReceiver : BroadcastReceiver() {
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error in DeviceBootReceiver", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error in DeviceBootReceiver", e)
         }
     }
 
@@ -68,14 +68,14 @@ class DeviceBootReceiver : BroadcastReceiver() {
             val reminderEnabled = try {
                 settings.herinner
             } catch (e: Exception) {
-                Log.e(TAG, "Error reading herinner", e)
+                if (BuildConfig.DEBUG) Log.e(TAG, "Error reading herinner", e)
                 false
             }
 
             val timeUpdate = try {
                 settings.smsTimeUpdate
             } catch (e: Exception) {
-                Log.e(TAG, "Error reading smsTimeUpdate", e)
+                if (BuildConfig.DEBUG) Log.e(TAG, "Error reading smsTimeUpdate", e)
                 false
             }
 
@@ -87,14 +87,14 @@ class DeviceBootReceiver : BroadcastReceiver() {
             val hour = try {
                 settings.smsHour?.toIntOrNull() ?: 8
             } catch (e: Exception) {
-                Log.e(TAG, "Error reading smsHour", e)
+                if (BuildConfig.DEBUG) Log.e(TAG, "Error reading smsHour", e)
                 8
             }
 
             val minute = try {
                 settings.smsMinute?.toIntOrNull() ?: 0
             } catch (e: Exception) {
-                Log.e(TAG, "Error reading smsMinute", e)
+                if (BuildConfig.DEBUG) Log.e(TAG, "Error reading smsMinute", e)
                 0
             }
 
@@ -111,7 +111,7 @@ class DeviceBootReceiver : BroadcastReceiver() {
                 settings.smsTimeUpdate = false
                 settings.fromMenu = false
             } catch (e: Exception) {
-                Log.e(TAG, "Error clearing settings flags", e)
+                if (BuildConfig.DEBUG) Log.e(TAG, "Error clearing settings flags", e)
             }
 
             val alarmIntent = Intent(context, AlarmReceiver::class.java).apply {
@@ -134,14 +134,14 @@ class DeviceBootReceiver : BroadcastReceiver() {
 
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager
             if (alarmManager == null) {
-                Log.e(TAG, "AlarmManager is null")
+                if (BuildConfig.DEBUG) Log.e(TAG, "AlarmManager is null")
                 return
             }
 
             try {
                 alarmManager.cancel(pendingIntent)
             } catch (e: Exception) {
-                Log.e(TAG, "Error canceling existing alarm", e)
+                if (BuildConfig.DEBUG) Log.e(TAG, "Error canceling existing alarm", e)
             }
 
             var triggerTime = alarmTime.timeInMillis
@@ -157,7 +157,7 @@ class DeviceBootReceiver : BroadcastReceiver() {
             )
 
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to setup birthday alarm", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Failed to setup birthday alarm", e)
         }
     }
 
@@ -192,13 +192,20 @@ class DeviceBootReceiver : BroadcastReceiver() {
                             )
                         }
                     } catch (e: SecurityException) {
-                        Log.e(TAG, "SecurityException scheduling exact alarm", e)
+                        if (BuildConfig.DEBUG) Log.e(
+                            TAG,
+                            "SecurityException scheduling exact alarm",
+                            e
+                        )
                         alarmManager.setAndAllowWhileIdle(
                             AlarmManager.RTC_WAKEUP,
                             triggerTime,
                             pendingIntent
                         )
-                        Log.w(TAG, "Fallback to inexact alarm due to security exception")
+                        if (BuildConfig.DEBUG) Log.w(
+                            TAG,
+                            "Fallback to inexact alarm due to security exception"
+                        )
                     }
                 }
 
@@ -212,12 +219,16 @@ class DeviceBootReceiver : BroadcastReceiver() {
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to schedule alarm", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Failed to schedule alarm", e)
             try {
                 alarmManager.set(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
-                Log.w(TAG, "Fallback to basic alarm scheduling")
+                if (BuildConfig.DEBUG) Log.w(TAG, "Fallback to basic alarm scheduling")
             } catch (fallbackException: Exception) {
-                Log.e(TAG, "All alarm scheduling methods failed", fallbackException)
+                if (BuildConfig.DEBUG) Log.e(
+                    TAG,
+                    "All alarm scheduling methods failed",
+                    fallbackException
+                )
             }
         }
     }

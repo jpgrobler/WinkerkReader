@@ -43,7 +43,6 @@ import androidx.work.WorkManager
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.BuildConfig
@@ -66,9 +65,6 @@ import za.co.jpsoft.winkerkreader.workers.PhotoDownloadWorkerOld
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import java.io.IOException
-import java.io.InputStream
-import java.io.OutputStream
 import java.util.Date
 import java.util.Locale
 import java.util.UUID
@@ -76,27 +72,13 @@ import java.util.regex.Pattern
 
 class LaaiDatabasisActivity : AppCompatActivity() {
 
-
     companion object {
         private const val TAG = "LaaiDatabasisActivity"
         const val DB_NAME = WINKERK_DB
         const val EXTRA_PROMPT_RESTORE = "pastoral_prompt_restore"
-        private const val PICKFILE_RESULT_CODE = 1
         private val CURRENT_PASTORAL_SCHEMA_VERSION
             get() = PastoralDatabaseBackup.CURRENT_PASTORAL_SCHEMA_VERSION
-        private val RECEIVER_EXPORTED =
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) Context.RECEIVER_EXPORTED else 0
         private var privateDownloadFile: File? = null
-        private fun writeExtractedFileToDisk(`in`: InputStream, outs: OutputStream) {
-            val buffer = ByteArray(1024)
-            var length: Int
-            while (`in`.read(buffer).also { length = it } > 0) {
-                outs.write(buffer, 0, length)
-            }
-            outs.flush()
-            outs.close()
-            `in`.close()
-        }
 
         fun isDownloadManagerAvailable(): Boolean = true
 
@@ -134,6 +116,11 @@ class LaaiDatabasisActivity : AppCompatActivity() {
     private var fromMenu: Boolean = true
     private var pcProtocolVersion: String = "v2"   // default = old protocol
 
+    // Polling
+    private val pollingHandler = Handler(Looper.getMainLooper())
+    private var pollingRunnable: Runnable? = null
+    private var isPolling = false
+
     private val notificationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) Log.d("LaaiDatabasis", "Notification permission granted")
@@ -146,146 +133,197 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                 return@registerForActivityResult
             }
 
-            // ✅ STEP 1: Close ALL database connections BEFORE any file operations
             lifecycleScope.launch {
-                try {
-                    // Close all database connections
-                    withContext(Dispatchers.IO) {
-                        WinkerkDbHelper.closeAllInstances()
-                    WinkerkDatabase.closeInstance()
-                        delay(200) // Now delay is available
-                        System.gc()
-                    }
-
-                    // Show progress on main thread
-                    binding.laaiBoodskap.text = "Besig om databasis te laai..."
-                    binding.laaiIndeterminateBar.visibility = View.VISIBLE
-
-                    // Perform the copy on a background thread
-                    val result = withContext(Dispatchers.IO) {
-                        copyDatabaseFromUri(uri)
-                    }
-
-                    // Handle result on main thread
-                    binding.laaiIndeterminateBar.visibility = View.GONE
-
-                    if (result) {
-                        Toast.makeText(
-                            this@LaaiDatabasisActivity,
-                            "Databasis suksesvol gelaai",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    reloadDatabaseAndFinish()
-                    } else {
-                        Toast.makeText(
-                            this@LaaiDatabasisActivity,
-                            "Kon nie databasis laai nie",
-                            Toast.LENGTH_LONG
-                        ).show()
-                        binding.laaiBoodskap.text = "Laai misluk"
-                    }
-                } catch (e: Exception) {
-                    binding.laaiIndeterminateBar.visibility = View.GONE
-                    if (BuildConfig.DEBUG) Log.e(TAG, "Error picking file", e)
+                binding.laaiBoodskap.text = "Besig om databasis te laai..."
+                binding.laaiIndeterminateBar.visibility = View.VISIBLE
+                val success = importDatabaseFromUri(uri)
+                binding.laaiIndeterminateBar.visibility = View.GONE
+                if (success) {
                     Toast.makeText(
                         this@LaaiDatabasisActivity,
-                        "Fout: ${e.message}",
+                        "Databasis suksesvol gelaai",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    reloadDatabaseAndFinish()
+                } else {
+                    Toast.makeText(
+                        this@LaaiDatabasisActivity,
+                        "Kon nie databasis laai nie",
                         Toast.LENGTH_LONG
                     ).show()
-                    binding.laaiBoodskap.text = "Fout: ${e.message}"
+                    binding.laaiBoodskap.text = "Laai misluk"
                 }
             }
         }
+
+    // ================================================================
+    // COMMON DATABASE IMPORT HELPERS (ALL IO ON BACKGROUND)
+    // ================================================================
 
     /**
-     * Copy database from URI to app's database directory
-     * Returns true on success, false on failure
+     * Imports a database from a local file.
+     * All IO runs on Dispatchers.IO.
      */
-    private suspend fun copyDatabaseFromUri(uri: Uri): Boolean {
-        return withContext(Dispatchers.IO) {
+    private suspend fun importDatabaseFromFile(
+        sourceFile: File,
+        deleteSource: Boolean = false
+    ): Boolean = withContext(Dispatchers.IO) {
+        if (!sourceFile.exists()) {
+            withContext(Dispatchers.Main) { showError("Lêer nie gevind nie") }
+            return@withContext false
+        }
+
+        // 1. Close all DB connections (on main for safe UI updates)
+        withContext(Dispatchers.Main) {
+            WinkerkDbHelper.closeAllInstances()
+            WinkerkDatabase.closeInstance()
+        }
+
+        // 2. Ensure databases directory exists
+        val dbPath = File(applicationInfo.dataDir, "databases")
+        if (!dbPath.exists() && !dbPath.mkdirs()) {
+            withContext(Dispatchers.Main) { showError("Kon nie databasisgids skep nie") }
+            return@withContext false
+        }
+
+        // 3. Write to temp file
+        val tempFile = File(dbPath, "Winkerk.db.new")
+        tempFile.delete()
+        try {
+            sourceFile.inputStream().use { input ->
+                FileOutputStream(tempFile).use { output ->
+                    input.copyTo(output)
+                    output.fd.sync()
+                }
+            }
+        } catch (e: Exception) {
+            if (BuildConfig.DEBUG) Log.e(TAG, "Failed to copy to temp file", e)
+            withContext(Dispatchers.Main) {
+                showError("Kon nie databasis kopieer nie: ${e.message}")
+            }
+            tempFile.delete()
+            return@withContext false
+        }
+
+        // 4. Validate, migrate, verify, replace (common logic)
+        val success = processTempDatabase(tempFile)   // processTempDatabase also runs on IO
+
+        // 5. Delete source if requested
+        if (success && deleteSource) {
             try {
-                val dbPath = File(applicationInfo.dataDir, "databases")
-                if (!dbPath.exists() && !dbPath.mkdirs()) {
-                    if (BuildConfig.DEBUG) Log.e(TAG, "Failed to create databases directory")
-                    return@withContext false
-                }
-
-                val targetFile = File(dbPath, DB_NAME)
-
-                // Delete existing database if it exists
-                if (targetFile.exists()) {
-                    if (!targetFile.delete()) {
-                        // Try to rename instead of delete
-                        val backupFile =
-                            File(dbPath, "${DB_NAME}.old_${System.currentTimeMillis()}")
-                        if (targetFile.renameTo(backupFile)) {
-                            if (BuildConfig.DEBUG) Log.d(
-                                TAG,
-                                "Renamed existing database to ${backupFile.name}"
-                            )
-                        } else {
-                            if (BuildConfig.DEBUG) Log.e(
-                                TAG,
-                                "Failed to delete or rename existing database"
-                            )
-                            return@withContext false
-                        }
-                    }
-                }
-
-                // Copy the file
-                val inputStream = contentResolver.openInputStream(uri)
-                if (inputStream == null) {
-                    if (BuildConfig.DEBUG) Log.e(TAG, "Failed to open input stream from URI")
-                    return@withContext false
-                }
-
-                val outputStream = FileOutputStream(targetFile)
-                try {
-                    inputStream.use { input ->
-                        outputStream.use { output ->
-                            input.copyTo(output)
-                            output.fd.sync()
-                        }
-                    }
-                } catch (e: Exception) {
-                    if (BuildConfig.DEBUG) Log.e(TAG, "Error copying file", e)
-                    targetFile.delete()
-                    return@withContext false
-                }
-
-                // Validate the copied file
-                if (!isValidDatabaseFile(targetFile, 5)) {
-                    if (BuildConfig.DEBUG) Log.e(TAG, "Copied file is not a valid database")
-                    targetFile.delete()
-                    return@withContext false
-                }
-
-                // ✅ STEP 2: Migrate the database schema
-                if (!migrateDownloadedDatabase(targetFile)) {
-                    if (BuildConfig.DEBUG) Log.e(TAG, "Migration failed")
-                    targetFile.delete()
-                    return@withContext false
-                }
-
-                // ✅ STEP 3: Set database date
-                try {
-                    WinkerkDbHelper.setDatabaseDate(this@LaaiDatabasisActivity)
-                } catch (e: Exception) {
-                    if (BuildConfig.DEBUG) Log.w(TAG, "Failed to set database date", e)
-                }
-
-                if (BuildConfig.DEBUG) Log.d(TAG, "Database copied and migrated successfully")
-                true
-
+                sourceFile.delete()
+                MediaScannerConnection.scanFile(
+                    this@LaaiDatabasisActivity,
+                    arrayOf(sourceFile.absolutePath),
+                    null,
+                    null
+                )
             } catch (e: Exception) {
-                if (BuildConfig.DEBUG) Log.e(TAG, "Error copying database from URI", e)
-                false
+                if (BuildConfig.DEBUG) Log.w(TAG, "Could not delete source file", e)
             }
         }
+
+        return@withContext success
     }
 
+    /**
+     * Imports a database from a content URI (SAF file picker).
+     * All IO runs on Dispatchers.IO.
+     */
+    private suspend fun importDatabaseFromUri(uri: Uri): Boolean = withContext(Dispatchers.IO) {
+        // 1. Close DB connections
+        withContext(Dispatchers.Main) {
+            WinkerkDbHelper.closeAllInstances()
+            WinkerkDatabase.closeInstance()
+        }
+
+        // 2. Ensure databases directory exists
+        val dbPath = File(applicationInfo.dataDir, "databases")
+        if (!dbPath.exists() && !dbPath.mkdirs()) {
+            withContext(Dispatchers.Main) { showError("Kon nie databasisgids skep nie") }
+            return@withContext false
+        }
+
+        // 3. Write to temp from URI
+        val tempFile = File(dbPath, "Winkerk.db.new")
+        tempFile.delete()
+        try {
+            contentResolver.openInputStream(uri)?.use { input ->
+                FileOutputStream(tempFile).use { output ->
+                    input.copyTo(output)
+                    output.fd.sync()
+                }
+            } ?: run {
+                withContext(Dispatchers.Main) { showError("Kon nie lêer oopmaak nie") }
+                tempFile.delete()
+                return@withContext false
+            }
+        } catch (e: Exception) {
+            if (BuildConfig.DEBUG) Log.e(TAG, "Failed to copy from URI to temp", e)
+            withContext(Dispatchers.Main) {
+                showError("Kon nie databasis lees nie: ${e.message}")
+            }
+            tempFile.delete()
+            return@withContext false
+        }
+
+        return@withContext processTempDatabase(tempFile)
+    }
+
+    /**
+     * Processes an existing temp database file.
+     * All IO runs on Dispatchers.IO.
+     */
+    private suspend fun processTempDatabase(tempFile: File): Boolean = withContext(Dispatchers.IO) {
+        // 1. Validate
+        if (!isValidDatabaseFile(tempFile, 5)) {
+            withContext(Dispatchers.Main) {
+                showError("Aflaailêer is nie 'n geldige databasis nie")
+            }
+            tempFile.delete()
+            return@withContext false
+        }
+
+        // 2. Migrate & verify (migrateAndVerifyDatabase runs on IO internally)
+        if (!migrateAndVerifyDatabase(tempFile)) {
+            withContext(Dispatchers.Main) {
+                showError("Databasis is ongeldig – kontak ondersteuning")
+            }
+            tempFile.delete()
+            return@withContext false
+        }
+
+        // 3. Close DB connections before replacing
+        withContext(Dispatchers.Main) {
+            WinkerkDatabase.closeInstance()
+            WinkerkDbHelper.closeInstance(DB_NAME)
+        }
+
+        // 4. Replace active DB
+        val dbPath = File(applicationInfo.dataDir, "databases")
+        val dbFile = File(dbPath, DB_NAME)
+        if (dbFile.exists() && !dbFile.delete()) {
+            withContext(Dispatchers.Main) {
+                showError("Kon bestaande databasis nie verwyder nie")
+            }
+            tempFile.delete()
+            return@withContext false
+        }
+        if (!tempFile.renameTo(dbFile)) {
+            tempFile.copyTo(dbFile, overwrite = true)
+            tempFile.delete()
+        }
+
+        // 5. Success – temp is already gone (renamed)
+        return@withContext true
+    }
+
+    // ================================================================
+    // ORIGINAL METHODS (now using helpers)
+    // ================================================================
+
     private fun cancelOngoingDownloads() {
+        stopPolling()
         fileDownloadWorkId?.let { workId ->
             WorkManager.getInstance(this).cancelWorkById(workId)
             fileDownloadWorkId = null
@@ -298,6 +336,8 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         }
         try {
             recieverDownloadComplete?.let { unregisterReceiver(it) }
+            isDownloadReceiverRegistered = false
+            recieverDownloadComplete = null
         } catch (_: Exception) {
         }
     }
@@ -370,6 +410,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        stopPolling()
         fileDownloadWorkId?.let { workId ->
             WorkManager.getInstance(this).cancelWorkById(workId)
             fileDownloadWorkId = null
@@ -393,7 +434,6 @@ class LaaiDatabasisActivity : AppCompatActivity() {
 
     private fun initializeVersionToggle() {
         val group = binding.pcVersionGroup
-        // Restore saved choice
         group.check(if (pcProtocolVersion == "v3") R.id.btnV3 else R.id.btnV2)
 
         group.setOnCheckedChangeListener { _, checkedId ->
@@ -409,7 +449,6 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         binding.laaiSocket.setOnClickListener { handleNetworkTransfer() }
         binding.laaiUSB.setOnClickListener { handleUSBTransfer() }
     }
-
 
     private fun startPhotoSync() {
         val forceSync = binding.forceSyncCheck.isChecked
@@ -433,7 +472,6 @@ class LaaiDatabasisActivity : AppCompatActivity() {
             .putBoolean("FORCE_SYNC", forceSync)
             .build()
 
-        // Choose worker based on the selected server protocol version
         val workerClass = if (pcProtocolVersion == "v3")
             PhotoDownloadWorker::class.java
         else
@@ -539,68 +577,17 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         delete = binding.laaiWisuit.isChecked
         val filePath = fileList[radioButtonID]["Path"] ?: return
 
-        // Use the same copy logic but from a file path instead of URI
         lifecycleScope.launch {
             binding.laaiBoodskap.text = "Besig om databasis te laai..."
             binding.laaiIndeterminateBar.visibility = View.VISIBLE
-
-            val result = withContext(Dispatchers.IO) {
-                // Close connections first
-                WinkerkDbHelper.closeAllInstances()
-                WinkerkDatabase.closeInstance()
-                delay(200) // Now delay is available
-                System.gc()
-
-                // Copy from file path
-                val sourceFile = File(filePath)
-                if (!sourceFile.exists()) {
-                    return@withContext false
-                }
-
-                val dbPath = File(applicationInfo.dataDir, "databases")
-                if (!dbPath.exists() && !dbPath.mkdirs()) {
-                    return@withContext false
-                }
-
-                val targetFile = File(dbPath, DB_NAME)
-
-                // Delete existing
-                if (targetFile.exists()) {
-                    targetFile.delete()
-                }
-
-                // Copy
-                try {
-                    sourceFile.inputStream().use { input ->
-                        targetFile.outputStream().use { output ->
-                            input.copyTo(output)
-                            output.fd.sync()
-                        }
-                    }
-                } catch (e: Exception) {
-                    if (BuildConfig.DEBUG) Log.e(TAG, "Error copying file", e)
-                    return@withContext false
-                }
-
-                // Validate
-                if (!isValidDatabaseFile(targetFile, 5)) {
-                    targetFile.delete()
-                    return@withContext false
-                }
-
-                // Migrate
-                if (!migrateDownloadedDatabase(targetFile)) {
-                    targetFile.delete()
-                    return@withContext false
-                }
-
-                true
-            }
-
+            val success = importDatabaseFromFile(File(filePath), delete)
             binding.laaiIndeterminateBar.visibility = View.GONE
-
-            if (result) {
-                // Reload and finish
+            if (success) {
+                Toast.makeText(
+                    this@LaaiDatabasisActivity,
+                    "Databasis suksesvol gelaai",
+                    Toast.LENGTH_SHORT
+                ).show()
                 reloadDatabaseAndFinish()
             } else {
                 Toast.makeText(
@@ -610,7 +597,6 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                 ).show()
                 binding.laaiBoodskap.text = "Laai misluk"
             }
-
             binding.laaiWisuit.isChecked = false
             binding.laaiFilelist.clearCheck()
         }
@@ -683,7 +669,6 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         }
     }
 
-
     private fun startFileDownload(serverIp: String, port: Int, button: Button, isWiFi: Boolean) {
         binding.laaiBoodskap.setText(R.string.download_starting)
 
@@ -692,7 +677,6 @@ class LaaiDatabasisActivity : AppCompatActivity() {
             .putInt(FileDownloadWorker.KEY_SERVER_PORT, port)
             .build()
 
-        // Choose worker based on the selected server protocol version
         val workerClass = if (pcProtocolVersion == "v3")
             FileDownloadWorker::class.java
         else
@@ -714,23 +698,49 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                     binding.laaiBoodskap.text =
                         getString(R.string.download_received_percent, progress)
                 }
-                if (workInfo.state.isFinished) {
-                    button.background.clearColorFilter()
-                    if (workInfo.state == WorkInfo.State.SUCCEEDED) {
-                        val dbFile = File(applicationInfo.dataDir, "databases/$DB_NAME")
-                        if (dbFile.exists()) {
-                            WinkerkDatabase.closeInstance()
-                            WinkerkDbHelper.closeInstance(DB_NAME)
-                            migrateDownloadedDatabase(dbFile)
-                        }
-                        binding.laaiBoodskap.setText(R.string.download_completed)
-                        Toast.makeText(this, R.string.db_received_success, Toast.LENGTH_SHORT)
-                            .show()
-                        Handler(Looper.getMainLooper()).postDelayed({ navigateBackToMain() }, 1500)
-                    } else {
-                        binding.laaiBoodskap.setText(R.string.download_failed)
-                        Toast.makeText(this, R.string.db_download_failed, Toast.LENGTH_LONG).show()
+                if (workInfo.state == WorkInfo.State.SUCCEEDED) {
+                    val tempFilePath =
+                        workInfo.outputData.getString(FileDownloadWorker.KEY_FILE_PATH)
+                    if (tempFilePath.isNullOrEmpty()) {
+                        Toast.makeText(this, "Geen lêerpad ontvang", Toast.LENGTH_LONG).show()
+                        if (isWiFi) FlagCancelledWiFi = false else FlagCancelledUSB = false
+                        fileDownloadWorkId = null
+                        return@observe
                     }
+                    val tempFile = File(tempFilePath)
+                    if (!tempFile.exists()) {
+                        Toast.makeText(this, "Aflaaileer nie gevind nie", Toast.LENGTH_LONG).show()
+                        if (isWiFi) FlagCancelledWiFi = false else FlagCancelledUSB = false
+                        fileDownloadWorkId = null
+                        return@observe
+                    }
+
+                    lifecycleScope.launch {
+                        try {
+                            val success = processTempDatabase(tempFile)   // runs on IO internally
+                            if (success) {
+                                withContext(Dispatchers.Main) {
+                                    binding.laaiBoodskap.setText(R.string.download_completed)
+                                    Toast.makeText(
+                                        this@LaaiDatabasisActivity,
+                                        R.string.db_received_success,
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    Handler(Looper.getMainLooper()).postDelayed({
+                                        navigateBackToMain()
+                                    }, 1500)
+                                }
+                            } else {
+                                // Error already shown by processTempDatabase
+                            }
+                        } finally {
+                            if (isWiFi) FlagCancelledWiFi = false else FlagCancelledUSB = false
+                            fileDownloadWorkId = null
+                        }
+                    }
+                } else if (workInfo.state == WorkInfo.State.FAILED) {
+                    binding.laaiBoodskap.setText(R.string.download_failed)
+                    Toast.makeText(this, R.string.db_download_failed, Toast.LENGTH_LONG).show()
                     if (isWiFi) FlagCancelledWiFi = false else FlagCancelledUSB = false
                     fileDownloadWorkId = null
                 }
@@ -748,7 +758,6 @@ class LaaiDatabasisActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        // ✅ FIX: Refresh date when returning to activity
         refreshDatabaseDate()
         updateDateDisplay()
     }
@@ -773,7 +782,6 @@ class LaaiDatabasisActivity : AppCompatActivity() {
     private fun refreshDatabaseDate() {
         try {
             WinkerkDbHelper.closeInstance(WinkerkContract.winkerkEntry.WINKERK_DB)
-            // Force a fresh read from the database
             val db = WinkerkDbHelper.getInstance(
                 this,
                 WinkerkContract.winkerkEntry.WINKERK_DB
@@ -801,7 +809,6 @@ class LaaiDatabasisActivity : AppCompatActivity() {
     private fun refreshDatabaseDateAsync() {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                // Close existing helper
                 withContext(Dispatchers.Main) {
                     WinkerkDbHelper.closeInstance(WinkerkContract.winkerkEntry.WINKERK_DB)
                 }
@@ -835,6 +842,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
             }
         }
     }
+
     private fun scanForDatabaseFiles() {
         try {
             getFileList(winkerkEntry.getWkrDir(this))
@@ -916,13 +924,11 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         val intentMain = intent
         if (intentMain.extras == null) return
 
-        // Pastoral restore request from BedieningActivity / MainActivity snackbar
         if (intentMain.getBooleanExtra(EXTRA_PROMPT_RESTORE, false)) {
-            openFilePicker()       // launches the SAF OpenDocument picker
+            openFilePicker()
             return
         }
 
-        // Existing congregation DB auto-update path
         val extra = intentMain.getStringExtra("DataBase_Update")
         if (extra.isNullOrEmpty()) return
         processAutomaticDatabaseUpdate(extra)
@@ -936,12 +942,21 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         Toast.makeText(this, "WKR - DROPBOX Databasis $fileSizeKB KB", Toast.LENGTH_LONG).show()
         if (fileSizeMB >= 1) {
             Toast.makeText(this, "WKR - Probeer Dropbox databasis laai", Toast.LENGTH_LONG).show()
-            if (LaaiNuweData(filePath)) {
-                val appDbFile = File(applicationInfo.dataDir, "databases/$DB_NAME")
-                if (migrateDownloadedDatabase(appDbFile)) {
+            lifecycleScope.launch {
+                val success = importDatabaseFromFile(file)
+                if (success) {
+                    Toast.makeText(
+                        this@LaaiDatabasisActivity,
+                        "Databasis suksesvol gelaai",
+                        Toast.LENGTH_SHORT
+                    ).show()
                     reloadDatabaseAndFinish()
                 } else {
-                    Toast.makeText(this, "Databasis omskakeling misluk", Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        this@LaaiDatabasisActivity,
+                        "Databasis laai misluk",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
             }
         } else {
@@ -980,41 +995,9 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         }
     }
 
-    private fun LaaiNuweData(nfile: String): Boolean {
-        WinkerkDatabase.closeInstance()
-
-        WinkerkDbHelper.closeInstance(DB_NAME)
-        //WinkerkDbHelper.closeInstance(WinkerkContract.winkerkEntry.INFO_DB)
-        val dbPath = applicationInfo.dataDir + "/databases/"
-        var result = false
-        val sourceFile = File(nfile)
-        var inputStream: InputStream? = null
-        var outputStream: OutputStream? = null
-        try {
-            inputStream = FileInputStream(sourceFile)
-            outputStream = FileOutputStream("$dbPath/$WINKERK_DB")
-            writeExtractedFileToDisk(inputStream, outputStream)
-            result = true
-        } catch (e: Exception) {
-            if (BuildConfig.DEBUG) Log.e(TAG, "Laai Nuwe Data failed", e)
-            showError("Kon nie databasis laai nie")
-            result = false
-        } finally {
-            inputStream?.close()
-            outputStream?.close()
-        }
-        if (delete) {
-            try {
-                val absolutePath = sourceFile.absolutePath
-                sourceFile.delete()
-                MediaScannerConnection.scanFile(this, arrayOf(absolutePath), null, null)
-            } catch (e: IOException) {
-                Log.e(TAG, "File Delete failed", e)
-            }
-        }
-        if (syncPhotosAfterDb) startPhotoSync()
-        return result
-    }
+    // ================================================================
+    // DROPBOX DOWNLOAD WITH SAFE TEMP FILE PROCESSING
+    // ================================================================
 
     private fun downloadFromDropBoxUrl(url: String) {
         if (isFinishing || isDestroyed) {
@@ -1022,18 +1005,25 @@ class LaaiDatabasisActivity : AppCompatActivity() {
             return
         }
 
-        val dbPath = applicationInfo.dataDir + "/databases/"
         val intentFilter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
 
-        // Create a private file – no public exposure
-        privateDownloadFile = File(getExternalFilesDir(null), "WinkerkReader_temp.db")
+        // Check external dir
+        val externalDir = getExternalFilesDir(null)
+        if (externalDir == null) {
+            showError("Geen eksterne berging beskikbaar nie")
+            return
+        }
+        privateDownloadFile = File(externalDir, "WinkerkReader_temp.db")
         privateDownloadFile?.parentFile?.mkdirs()
 
         recieverDownloadComplete = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
+                if (BuildConfig.DEBUG) Log.d("Dropbox", "BroadcastReceiver triggered!")
                 val manager = getSystemService(DOWNLOAD_SERVICE) as? DownloadManager ?: return
                 val reference = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
                 if (myDownloadReference != reference) return
+
+                stopPolling()
 
                 val query = DownloadManager.Query().setFilterById(reference)
                 manager.query(query).use { cursor ->
@@ -1043,16 +1033,26 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                         privateDownloadFile = null
                         return
                     }
-                    val statusIdx = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)
-                    if (statusIdx < 0) {
-                        showError("Aflaaistatus onbekend")
-                        privateDownloadFile?.delete()
-                        privateDownloadFile = null
-                        return
-                    }
-                    val status = cursor.getInt(statusIdx)
+                    val status = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS))
+                    val reasonIdx = cursor.getColumnIndex(DownloadManager.COLUMN_REASON)
+                    val reason = if (reasonIdx >= 0) cursor.getInt(reasonIdx) else -1
+                    val bytesSoFar =
+                        cursor.getLong(cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
+                    val totalBytes =
+                        cursor.getLong(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
+
+                    if (BuildConfig.DEBUG) Log.d(
+                        "Dropbox",
+                        "Receiver: status=$status, reason=$reason, bytes=$bytesSoFar/$totalBytes"
+                    )
+
                     if (status != DownloadManager.STATUS_SUCCESSFUL) {
-                        showError("Aflaai misluk (status $status)")
+                        val errorMsg = when (status) {
+                            DownloadManager.STATUS_FAILED -> "Misluk (rede $reason)"
+                            DownloadManager.STATUS_PAUSED -> "Gepauseer (rede $reason)"
+                            else -> "Onbekende status $status"
+                        }
+                        showError("Aflaai $errorMsg")
                         privateDownloadFile?.delete()
                         privateDownloadFile = null
                         return
@@ -1066,90 +1066,9 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                         return
                     }
 
-                    try {
-                        // 1. Ensure databases directory exists
-                        val dbDir = File(dbPath)
-                        if (!dbDir.exists() && !dbDir.mkdirs()) {
-                            showError("Kon nie databasisgids skep nie")
-                            privateDownloadFile?.delete()
-                            privateDownloadFile = null
-                            return
-                        }
-
-                        // 2. Create a temporary file in the same directory
-                        val tempFile = File(dbDir, "WinkerkReader_temp.db")
-                        if (tempFile.exists()) tempFile.delete()
-
-                        // 3. Write the downloaded content to the temp file
-                        contentResolver.openInputStream(downloadUri)?.use { input ->
-                            FileOutputStream(tempFile).use { output ->
-                                input.copyTo(output)
-                                output.fd.sync()
-                            }
-                        } ?: run {
-                            showError("Kon nie lêer oopmaak nie")
-                            privateDownloadFile?.delete()
-                            privateDownloadFile = null
-                            return
-                        }
-
-                        // 4. Validate database file (SQLite header + minimum rows)
-                        if (!isValidDatabaseFile(tempFile, 5)) {
-                            showError("Aflaailêer is nie 'n geldige databasis nie")
-                            tempFile.delete()
-                            privateDownloadFile?.delete()
-                            privateDownloadFile = null
-                            return
-                        }
-
-                        // 5. Close Room to release any locks on the target file
-                        WinkerkDatabase.closeInstance()
-                        WinkerkDbHelper.closeInstance(DB_NAME)
-                        // 6. Rename temp file to the real database file
-                        val dbFile = File(dbDir, DB_NAME)
-                        if (dbFile.exists() && !dbFile.delete()) {
-                            showError("Kon bestaande databasis nie verwyder nie")
-                            tempFile.delete()
-                            privateDownloadFile?.delete()
-                            privateDownloadFile = null
-                            return
-                        }
-                        if (!tempFile.renameTo(dbFile)) {
-                            tempFile.copyTo(dbFile, overwrite = true)
-                            tempFile.delete()
-                        }
-
-                        // 7. Migrate the new database to Room schema
-                        val migrated = migrateDownloadedDatabase(dbFile)
-                        if (!migrated) {
-                            showError("Databasis omskakeling misluk – kontak ondersteuning")
-                            privateDownloadFile?.delete()
-                            privateDownloadFile = null
-                            return
-                        }
-
-                        // ✅ Success – delete the private downloaded file
-                        privateDownloadFile?.delete()
-                        privateDownloadFile = null
-
-                        // 8. Reload and finish with a small delay
-                        Handler(Looper.getMainLooper()).postDelayed({
-                            reloadDatabaseAndFinish()
-                        }, 300)
-
-                    } catch (e: Exception) {
-                        if (BuildConfig.DEBUG) Log.e(TAG, "Download processing failed", e)
-                        showError("Fout met verwerking: ${e.message}")
-                        privateDownloadFile?.delete()
-                        privateDownloadFile = null
-                    } finally {
-                        try {
-                            unregisterReceiver(this)
-                            isDownloadReceiverRegistered = false
-                            recieverDownloadComplete = null
-                        } catch (_: Exception) {
-                            // ignore
-                        }
+                    // Launch coroutine to process the file
+                    lifecycleScope.launch {
+                        processDownloadedFile(downloadUri)
                     }
                 }
             }
@@ -1167,10 +1086,172 @@ class LaaiDatabasisActivity : AppCompatActivity() {
             setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
             setTitle(WINKERK_DB)
             setMimeType("application/vnd.sqlite3")
-            setDestinationUri(Uri.fromFile(privateDownloadFile))  // 🔒 private
+            setDestinationUri(Uri.fromFile(privateDownloadFile))
+            addRequestHeader(
+                "User-Agent",
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            )
+            setAllowedOverMetered(true)
+            setAllowedOverRoaming(true)
         }
         val manager = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
         myDownloadReference = manager.enqueue(request)
+        if (BuildConfig.DEBUG) Log.d("Dropbox", "Download enqueued with ID: $myDownloadReference")
+        if (myDownloadReference < 0) {
+            showError("Aflaai kon nie begin nie (ID=$myDownloadReference)")
+            return
+        }
+
+        startProgressPolling(myDownloadReference)
+    }
+
+    /**
+     * Process a downloaded file from a given Uri.
+     * - Copies to a temp file (Winkerk.db.new) in the databases dir.
+     * - Validates, migrates, and verifies with Room on the temp file.
+     * - If successful, replaces the active database.
+     * - All database operations run on IO thread.
+     */
+    private suspend fun processDownloadedFile(downloadUri: Uri) {
+        if (isFinishing || isDestroyed) return
+
+        withContext(Dispatchers.IO) {
+            try {
+                val dbPath = applicationInfo.dataDir + "/databases/"
+                val dbDir = File(dbPath)
+                if (!dbDir.exists() && !dbDir.mkdirs()) {
+                    withContext(Dispatchers.Main) { showError("Kon nie databasisgids skep nie") }
+                    return@withContext
+                }
+
+                val tempFile = File(dbDir, "Winkerk.db.new")
+                if (tempFile.exists()) tempFile.delete()
+
+                // Copy downloaded content to temp file
+                contentResolver.openInputStream(downloadUri)?.use { input ->
+                    FileOutputStream(tempFile).use { output ->
+                        input.copyTo(output)
+                        output.fd.sync()
+                    }
+                } ?: run {
+                    withContext(Dispatchers.Main) { showError("Kon nie lêer oopmaak nie") }
+                    return@withContext
+                }
+
+                // Use the common helper (already wrapped in IO)
+                val success = processTempDatabase(tempFile)
+
+                // Cleanup and finalize
+                withContext(Dispatchers.Main) {
+                    privateDownloadFile?.delete()
+                    privateDownloadFile = null
+                    if (success) {
+                        try {
+                            recieverDownloadComplete?.let { unregisterReceiver(it) }
+                            isDownloadReceiverRegistered = false
+                            recieverDownloadComplete = null
+                        } catch (_: Exception) {
+                        }
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            reloadDatabaseAndFinish()
+                        }, 300)
+                    }
+                }
+
+            } catch (e: Exception) {
+                if (BuildConfig.DEBUG) Log.e(TAG, "Download processing failed", e)
+                withContext(Dispatchers.Main) {
+                    showError("Fout met verwerking: ${e.message}")
+                }
+                privateDownloadFile?.delete()
+                privateDownloadFile = null
+            }
+        }
+    }
+
+    // ================================================================
+    // POLLING
+    // ================================================================
+
+    private fun startProgressPolling(downloadId: Long) {
+        stopPolling()
+        isPolling = true
+        val runnable = object : Runnable {
+            override fun run() {
+                if (!isPolling) return
+                checkDownloadStatus(downloadId)
+
+                val query = DownloadManager.Query().setFilterById(downloadId)
+                val manager = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
+                manager.query(query).use { cursor ->
+                    if (cursor.moveToFirst()) {
+                        val status =
+                            cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS))
+                        if (status == DownloadManager.STATUS_SUCCESSFUL) {
+                            isPolling = false
+                            val uri = manager.getUriForDownloadedFile(downloadId)
+                            if (uri != null) {
+                                lifecycleScope.launch {
+                                    processDownloadedFile(uri)
+                                }
+                            } else {
+                                showError("Kon nie aflaaileer vind nie")
+                            }
+                            return
+                        }
+                        if (status == DownloadManager.STATUS_FAILED) {
+                            isPolling = false
+                            showError("Aflaai misluk")
+                            return
+                        }
+                    } else {
+                        isPolling = false
+                        return
+                    }
+                }
+                pollingHandler.postDelayed(this, 2000)
+            }
+        }
+        pollingRunnable = runnable
+        pollingHandler.post(runnable)
+    }
+
+    private fun stopPolling() {
+        isPolling = false
+        pollingRunnable?.let { pollingHandler.removeCallbacks(it) }
+        pollingRunnable = null
+    }
+
+    fun checkDownloadStatus(downloadId: Long) {
+        val query = DownloadManager.Query().setFilterById(downloadId)
+        val manager = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
+        manager.query(query).use { cursor ->
+            if (cursor.moveToFirst()) {
+                val statusIdx = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)
+                val status = cursor.getInt(statusIdx)
+                val reasonIdx = cursor.getColumnIndex(DownloadManager.COLUMN_REASON)
+                val reason = if (reasonIdx >= 0) cursor.getInt(reasonIdx) else -1
+                val bytesSoFar =
+                    cursor.getLong(cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
+                val totalBytes =
+                    cursor.getLong(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
+
+                val statusText = when (status) {
+                    DownloadManager.STATUS_PENDING -> "Pending"
+                    DownloadManager.STATUS_RUNNING -> "Running"
+                    DownloadManager.STATUS_PAUSED -> "Paused (reason=$reason)"
+                    DownloadManager.STATUS_SUCCESSFUL -> "Successful"
+                    DownloadManager.STATUS_FAILED -> "Failed (reason=$reason)"
+                    else -> "Unknown ($status)"
+                }
+                if (BuildConfig.DEBUG) Log.d(
+                    "Dropbox",
+                    "Poll: $statusText, Downloaded: $bytesSoFar/$totalBytes"
+                )
+            } else {
+                if (BuildConfig.DEBUG) Log.e("Dropbox", "No download found with ID $downloadId")
+            }
+        }
     }
 
     private fun showError(message: String) {
@@ -1179,6 +1260,10 @@ class LaaiDatabasisActivity : AppCompatActivity() {
             binding.laaiBoodskap.text = message
         }
     }
+
+    // ================================================================
+    // URL converters
+    // ================================================================
 
     private fun conv2(text: String): String {
         var encodedUrl = text
@@ -1203,24 +1288,29 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         return "https://api.onedrive.com/v1.0/shares/$encodedUrl/root/content"
     }
 
+    // ================================================================
+    // Database reload & migration
+    // ================================================================
+
     private fun reloadDatabaseAndFinish() {
         try {
             contentResolver.call(winkerkEntry.CONTENT_URI, "reloadDatabase", null, null)
-            // Old: WidgetViewsFactory.invalidateCache()
             WidgetDataRepository.invalidateCache()
             Handler(Looper.getMainLooper()).postDelayed({
                 navigateBackToMain()
             }, 200)
+        } catch (e: IllegalStateException) {
+            if (BuildConfig.DEBUG) Log.e(TAG, "Room schema error during reload", e)
+            val dbFile = File(applicationInfo.dataDir, "databases/$DB_NAME")
+            if (dbFile.exists()) dbFile.delete()
+            showError("Databasis fout – kontak ondersteuning")
+            navigateBackToMain()
         } catch (e: Exception) {
             if (BuildConfig.DEBUG) Log.e(TAG, "Error during database reload", e)
             navigateBackToMain()
         }
     }
 
-    /**
-     * Checks for a pastoral DB backup in the WKR directory and offers import if found.
-     * Call this from onResume() or after the congregation DB scan completes.
-     */
     private fun checkForPastoralBackup() {
         val backupFile = PastoralDatabaseBackup.findBackupFile(this)
             ?: return
@@ -1303,10 +1393,42 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         }
     }
 
+    // ================================================================
+    // MIGRATION & ROOM VERIFICATION
+    // ================================================================
+
     /**
-     * Migrates VARCHAR columns to TEXT in a newly downloaded/copied database file
-     * BEFORE Room opens it. Uses plain SQLiteDatabase (not Room) to avoid
-     * Room's schema validation triggering first.
+     * Tries to migrate the database (normal + forced) and then verifies with Room.
+     * All database operations run on IO.
+     */
+    private suspend fun migrateAndVerifyDatabase(dbFile: File): Boolean {
+        if (!dbFile.exists()) return false
+
+        // 1. Migrate (on IO)
+        val migrated = withContext(Dispatchers.IO) {
+            var migrated = migrateDownloadedDatabase(dbFile)
+            if (!migrated) {
+                if (BuildConfig.DEBUG) Log.w(
+                    TAG,
+                    "Normal migration failed, attempting forced migration"
+                )
+                migrated = forceMigrateDatabase(dbFile)
+            }
+            migrated
+        }
+        if (!migrated) {
+            if (BuildConfig.DEBUG) Log.e(TAG, "All migration attempts failed")
+            return false
+        }
+
+        // 2. Verify with Room (on IO)
+        return withContext(Dispatchers.IO) {
+            verifyRoomDatabaseOnFile(dbFile)
+        }
+    }
+
+    /**
+     * Normal migration: only runs if version < 4.
      */
     private fun migrateDownloadedDatabase(dbFile: File): Boolean {
         if (!dbFile.exists()) {
@@ -1315,14 +1437,19 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         }
         return try {
             SQLiteDatabase.openDatabase(
-                dbFile.absolutePath,
-                null,
-                SQLiteDatabase.OPEN_READWRITE
+                dbFile.absolutePath, null, SQLiteDatabase.OPEN_READWRITE
             ).use { db ->
+                if (db.version >= 4) {
+                    if (BuildConfig.DEBUG) Log.i(
+                        TAG,
+                        "DB already at v${db.version}, skipping migration"
+                    )
+                    return@use
+                }
                 listOf("Members", "Argief", "Datum").forEach { tableName ->
                     migrateTableVarcharToText(db, tableName)
                 }
-                db.execSQL("PRAGMA user_version = 1")
+                db.execSQL("PRAGMA user_version = 4")
                 if (BuildConfig.DEBUG) Log.i(TAG, "Migration successful on ${dbFile.name}")
             }
             true
@@ -1333,27 +1460,73 @@ class LaaiDatabasisActivity : AppCompatActivity() {
     }
 
     /**
-     * Migrates a table to ensure all columns (except _id) are TEXT, and that _id
-     * is correctly defined as INTEGER PRIMARY KEY AUTOINCREMENT.
-     * If the old table does NOT have an _id column, it is omitted from the INSERT,
-     * allowing the new AUTOINCREMENT to generate _id values automatically.
+     * Force migration: applies VARCHAR→TEXT conversion and stamps version 4,
+     * regardless of current version.
      */
+    private fun forceMigrateDatabase(dbFile: File): Boolean {
+        return try {
+            SQLiteDatabase.openDatabase(dbFile.absolutePath, null, SQLiteDatabase.OPEN_READWRITE)
+                .use { db ->
+                    listOf("Members", "Argief", "Datum").forEach { tableName ->
+                        migrateTableVarcharToText(db, tableName)
+                    }
+                    db.execSQL("PRAGMA user_version = 4")
+                    if (BuildConfig.DEBUG) Log.i(
+                        TAG,
+                        "Forced migration successful on ${dbFile.name}"
+                    )
+                    true
+                }
+        } catch (e: Exception) {
+            if (BuildConfig.DEBUG) Log.e(TAG, "Forced migration failed on ${dbFile.name}", e)
+            false
+        }
+    }
+
     /**
-     * Migrates a table to ensure all columns (except _id) are TEXT, and that _id
-     * is correctly defined as INTEGER PRIMARY KEY AUTOINCREMENT with or without
-     * NOT NULL depending on the table (Members requires NOT NULL).
-     *
-     * Handles the case where the old table does NOT have an _id column – in that
-     * case, we let Room auto‑generate the _id values.
+     * Verifies that Room can open the given database file without throwing IllegalStateException.
+     * Opens a temporary Room instance and runs a simple query.
+     * This should be called on a background thread.
      */
+    private fun verifyRoomDatabaseOnFile(dbFile: File): Boolean {
+        return try {
+            val db = androidx.room.Room.databaseBuilder(
+                applicationContext,
+                WinkerkDatabase::class.java,
+                dbFile.name
+            ).build()
+            // Run a quick query – adjust to your actual DAO method
+            val count = db.memberDao().getCount()
+            if (BuildConfig.DEBUG) Log.d(
+                TAG,
+                "Room verification passed on ${dbFile.name}, count=$count"
+            )
+            db.close()
+            true
+        } catch (e: IllegalStateException) {
+            if (BuildConfig.DEBUG) Log.e(
+                TAG,
+                "Room verification failed with IllegalStateException",
+                e
+            )
+            false
+        } catch (e: Exception) {
+            if (BuildConfig.DEBUG) Log.e(TAG, "Room verification failed with other exception", e)
+            false
+        } finally {
+            try {
+                WinkerkDatabase.closeInstance()
+            } catch (_: Exception) {
+            }
+        }
+    }
+
     private fun migrateTableVarcharToText(db: SQLiteDatabase, tableName: String) {
-        // Check if table exists
         db.rawQuery(
             "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
             arrayOf(tableName)
         ).use { if (!it.moveToFirst()) return }
 
-        // Read existing columns from the old table
         val oldColumns = mutableListOf<String>()
         db.rawQuery("PRAGMA table_info('$tableName')", null).use { cursor ->
             while (cursor.moveToNext()) {
@@ -1366,7 +1539,6 @@ class LaaiDatabasisActivity : AppCompatActivity() {
 
         val withNotNull = tableName == "Members"
 
-        // Build new table definition: _id first, then all other columns as TEXT
         val newColumnDefs = mutableListOf<String>()
         newColumnDefs.add(
             if (withNotNull) "[_id] INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL"
@@ -1382,7 +1554,6 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         db.execSQL("DROP TABLE IF EXISTS $temp")
         db.execSQL("CREATE TABLE $temp ($createTableColumns)")
 
-        // Prepare INSERT – handle presence/absence of _id
         val columnsToInsert = if (oldColumns.contains("_id")) {
             oldColumns
         } else {
@@ -1409,7 +1580,6 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         }
 
     private fun openFilePicker() {
-        // SQLite has no standard MIME type; offer both options so pickers show .db files
         pickBackupFile.launch(arrayOf("application/octet-stream", "*/*"))
     }
 
@@ -1430,110 +1600,41 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         }
         Snackbar.make(binding.root, msg, Snackbar.LENGTH_LONG).show()
         if (result is PastoralDatabaseBackup.ImportResult.Success) {
-            // Re-init Room and reload UI
-            PastoralDatabase.getInstance(this) // triggers migration if needed
+            PastoralDatabase.getInstance(this)
             finish()
         }
     }
 
-    // Add to LaaiDatabasisActivity.kt
-
-    /**
-     * Load database from a file on the device (Downloads folder or other locations)
-     */
     private fun loadDatabaseFromDevice(filePath: String) {
-        // First, close all database connections
-        WinkerkDbHelper.closeAllInstances()
-        WinkerkDatabase.closeInstance()
-
-        // Force garbage collection to release any lingering connections
-        System.gc()
-
         val sourceFile = File(filePath)
         if (!sourceFile.exists()) {
             Toast.makeText(this, "Lêer nie gevind nie", Toast.LENGTH_LONG).show()
             return
         }
-
-        // Validate the file is a valid SQLite database
-        if (!isValidDatabaseFile(sourceFile, 5)) {
-            Toast.makeText(this, "Lêer is nie 'n geldige databasis nie", Toast.LENGTH_LONG).show()
-            return
-        }
-
-        val dbPath = File(applicationInfo.dataDir, "databases")
-        if (!dbPath.exists() && !dbPath.mkdirs()) {
-            Toast.makeText(this, "Kon nie databasis gids skep nie", Toast.LENGTH_LONG).show()
-            return
-        }
-
-        val targetFile = File(dbPath, DB_NAME)
-
-        try {
-            // Close any existing connections to the target file
-            WinkerkDbHelper.closeInstance(DB_NAME)
-
-            // Wait a moment for any lingering connections to close
-            Thread.sleep(100)
-
-            // Delete existing database if it exists
-            if (targetFile.exists()) {
-                if (!targetFile.delete()) {
-                    // Try to rename instead of delete
-                    val backupFile = File(dbPath, "${DB_NAME}.old")
-                    targetFile.renameTo(backupFile)
-                    if (BuildConfig.DEBUG) Log.d(
-                        TAG,
-                        "Renamed existing database to ${backupFile.name}"
-                    )
-                }
+        lifecycleScope.launch {
+            if (importDatabaseFromFile(sourceFile)) {
+                Toast.makeText(
+                    this@LaaiDatabasisActivity,
+                    "Databasis suksesvol gelaai",
+                    Toast.LENGTH_SHORT
+                ).show()
+                reloadDatabaseAndFinish()
+            } else {
+                Toast.makeText(
+                    this@LaaiDatabasisActivity,
+                    "Databasis laai misluk",
+                    Toast.LENGTH_LONG
+                ).show()
             }
-
-            // Copy the file
-            FileInputStream(sourceFile).use { input ->
-                FileOutputStream(targetFile).use { output ->
-                    input.copyTo(output)
-                    output.fd.sync()
-                }
-            }
-
-            // Verify the copied file
-            if (!isValidDatabaseFile(targetFile, 5)) {
-                targetFile.delete()
-                Toast.makeText(this, "Gekopieerde lêer is nie geldig nie", Toast.LENGTH_LONG).show()
-                return
-            }
-
-            // Migrate the database schema
-            val migrated = migrateDownloadedDatabase(targetFile)
-            if (!migrated) {
-                targetFile.delete()
-                Toast.makeText(this, "Databasis omskakeling misluk", Toast.LENGTH_LONG).show()
-                return
-            }
-
-            // Success
-            Toast.makeText(this, "Databasis suksesvol gelaai", Toast.LENGTH_SHORT).show()
-
-            // Reload database and finish
-            reloadDatabaseAndFinish()
-
-        } catch (e: Exception) {
-            if (BuildConfig.DEBUG) Log.e(TAG, "Error loading database from device", e)
-            Toast.makeText(this, "Fout: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
 
-    /**
-     * Validates that the given file is a genuine SQLite database with the correct schema.
-     */
     private fun isValidDatabaseFile(file: File, minMemberCount: Int = 10): Boolean {
         if (!file.exists() || file.length() < 512) {
             if (BuildConfig.DEBUG) Log.e(TAG, "File too small or missing: ${file.absolutePath}")
             return false
         }
 
-        // 1. Check SQLite header (first 16 bytes)
         val header = try {
             FileInputStream(file).use { input ->
                 val buffer = ByteArray(16)
@@ -1551,11 +1652,9 @@ class LaaiDatabasisActivity : AppCompatActivity() {
             return false
         }
 
-        // 2. Check if the file is a valid database with the required tables
         return try {
             SQLiteDatabase.openDatabase(file.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
                 .use { db ->
-                    // Check if Members table exists
                     val cursor = db.rawQuery(
                         "SELECT name FROM sqlite_master WHERE type='table' AND name='Members'",
                         null
@@ -1567,7 +1666,6 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                         return false
                     }
 
-                    // Check row count
                     val countCursor = db.rawQuery("SELECT COUNT(*) FROM Members", null)
                     val count = countCursor.use {
                         if (it.moveToFirst()) it.getInt(0) else 0
@@ -1589,16 +1687,10 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         }
     }
 
+    // ================================================================
+    // Collapsible Cards
+    // ================================================================
 
-    /**
-     * Wires up a collapsible card section.
-     *
-     * @param headerView   The clickable header LinearLayout
-     * @param contentView  The content LinearLayout to show/hide
-     * @param arrowView    The TextView showing ▼ (open) or ▶ (closed)
-     * @param prefKey      SharedPreferences key for persisting the state
-     * @param defaultOpen  Whether the section starts expanded on first launch
-     */
     private fun setupCollapsibleCard(
         headerView: View,
         contentView: View,
@@ -1606,7 +1698,6 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         prefKey: String,
         defaultOpen: Boolean
     ) {
-        // Restore saved state (or use default)
         var isOpen = settings.getBoolean(prefKey, defaultOpen)
 
         fun applyState() {
@@ -1629,31 +1720,28 @@ class LaaiDatabasisActivity : AppCompatActivity() {
             contentView = binding.contentLocal,
             arrowView = binding.arrowLocal,
             prefKey = "CARD_LOCAL_EXPANDED",
-            defaultOpen = false          // rarely used — starts closed
+            defaultOpen = false
         )
         setupCollapsibleCard(
             headerView = binding.headerDropbox,
             contentView = binding.contentDropbox,
             arrowView = binding.arrowDropbox,
             prefKey = "CARD_DROPBOX_EXPANDED",
-            defaultOpen = false          // rarely used — starts closed
+            defaultOpen = false
         )
         setupCollapsibleCard(
             headerView = binding.headerWifi,
             contentView = binding.contentWifi,
             arrowView = binding.arrowWifi,
             prefKey = "CARD_WIFI_EXPANDED",
-            defaultOpen = true           // used regularly — starts open
+            defaultOpen = true
         )
         setupCollapsibleCard(
             headerView = binding.headerPhoto,
             contentView = binding.contentPhoto,
             arrowView = binding.arrowPhoto,
             prefKey = "CARD_PHOTO_EXPANDED",
-            defaultOpen = true           // used regularly — starts open
+            defaultOpen = true
         )
     }
-
-
-
 }

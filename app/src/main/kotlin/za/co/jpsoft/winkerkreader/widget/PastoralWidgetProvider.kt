@@ -146,7 +146,7 @@ class PastoralWidgetProvider : AppWidgetProvider() {
 
                 if (BuildConfig.DEBUG) Log.d(TAG, "✅ Widget $appWidgetId updated successfully")
             } catch (e: Exception) {
-                Log.e(TAG, "Error updating widget $appWidgetId", e)
+                if (BuildConfig.DEBUG) Log.e(TAG, "Error updating widget $appWidgetId", e)
             }
         }
 
@@ -198,7 +198,7 @@ class PastoralWidgetProvider : AppWidgetProvider() {
                         .build()
                 )
             } catch (e: Exception) {
-                Log.e(TAG, "Error scheduling debounced refresh", e)
+                if (BuildConfig.DEBUG) Log.e(TAG, "Error scheduling debounced refresh", e)
             }
         }
 
@@ -222,7 +222,7 @@ class PastoralWidgetProvider : AppWidgetProvider() {
                 )
                 scheduleDebouncedRefresh(context)
             } catch (e: Exception) {
-                Log.e(TAG, "Error forcing widget refresh", e)
+                if (BuildConfig.DEBUG) Log.e(TAG, "Error forcing widget refresh", e)
             }
         }
 

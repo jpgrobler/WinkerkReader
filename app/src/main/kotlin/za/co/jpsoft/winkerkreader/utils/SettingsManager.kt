@@ -29,6 +29,12 @@ class SettingsManager(private val context: Context) {
         }
     }
 
+    private val KEY_USE_CONGREGATION_INDICATOR = "use_congregation_indicator"
+
+    var useCongregationIndicator: Boolean
+        get() = prefs.getBoolean(KEY_USE_CONGREGATION_INDICATOR, false)
+        set(value) = prefs.edit().putBoolean(KEY_USE_CONGREGATION_INDICATOR, value).apply()
+
     fun isDatabaseInitialized(): Boolean {
         return prefs.getBoolean(PREF_DB_INITIALIZED, false)
     }

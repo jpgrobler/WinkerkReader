@@ -34,7 +34,7 @@ class CongregationMemberGuidResolver(context: Context) : MemberGuidResolver {
 
         if (BuildConfig.DEBUG) {
             Log.d(TAG, "resolve: original GUID = '$memberGuid'")
-            Log.d(TAG, "resolve: cleaned GUID = '$cleanedGuid'")
+            if (BuildConfig.DEBUG) Log.d(TAG, "resolve: cleaned GUID = '$cleanedGuid'")
         }
 
         if (cleanedGuid.isBlank()) {

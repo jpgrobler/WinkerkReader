@@ -77,7 +77,7 @@ class WidgetRefreshWorker(
             }
 
         } catch (e: Exception) {
-            Log.e(TAG, "Error refreshing widgets", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error refreshing widgets", e)
             isRefreshing = false
             forceRefresh = false
             Result.retry()
@@ -90,7 +90,7 @@ class WidgetRefreshWorker(
             WinkerkReaderWidgetProvider.updateAllWidgets(applicationContext)
             if (BuildConfig.DEBUG) Log.d(TAG, "📅 Birthday widget refreshed")
         } catch (e: Exception) {
-            Log.e(TAG, "Error refreshing birthday widget", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error refreshing birthday widget", e)
         }
     }
 
@@ -116,7 +116,7 @@ class WidgetRefreshWorker(
             }
             if (BuildConfig.DEBUG) Log.d(TAG, "📋 Pastoral widget refreshed")
         } catch (e: Exception) {
-            Log.e(TAG, "Error refreshing pastoral widget", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error refreshing pastoral widget", e)
         }
     }
 
@@ -132,7 +132,7 @@ class WidgetRefreshWorker(
                 .enqueueUniqueWork(WORK_NAME, androidx.work.ExistingWorkPolicy.REPLACE, workRequest)
             if (BuildConfig.DEBUG) Log.d(TAG, "⚡ Force refresh requested")
         } catch (e: Exception) {
-            Log.e(TAG, "Error forcing widget refresh", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error forcing widget refresh", e)
         }
     }
 }

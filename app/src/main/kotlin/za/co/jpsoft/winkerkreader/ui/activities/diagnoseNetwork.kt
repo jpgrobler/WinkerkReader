@@ -7,6 +7,7 @@ import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import za.co.jpsoft.winkerkreader.BuildConfig
 import java.net.Socket
 
 // Add this method to your activity or fragment
@@ -21,20 +22,20 @@ private suspend fun diagnoseNetwork(serverIp: String) {
                     Socket(serverIp, port).use { socket ->
                         socket.soTimeout = 3000
                         results[port] = true
-                        Log.d("Diagnose", "Port $port is OPEN")
+                        if (BuildConfig.DEBUG) Log.d("Diagnose", "Port $port is OPEN")
                     }
                 }
             } catch (e: Exception) {
                 results[port] = false
-                Log.d("Diagnose", "Port $port is CLOSED: ${e.message}")
+                if (BuildConfig.DEBUG) Log.d("Diagnose", "Port $port is CLOSED: ${e.message}")
             }
         }
 
         // Log summary
         val openPorts = results.filter { it.value }.keys
         val closedPorts = results.filter { !it.value }.keys
-        Log.d("Diagnose", "Open ports: $openPorts")
-        Log.d("Diagnose", "Closed ports: $closedPorts")
+        if (BuildConfig.DEBUG) Log.d("Diagnose", "Open ports: $openPorts")
+        if (BuildConfig.DEBUG) Log.d("Diagnose", "Closed ports: $closedPorts")
     }
 }
 

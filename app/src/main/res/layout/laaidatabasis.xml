@@ -279,14 +279,16 @@
                                         android:autofillHints="Edit Db Link"
                                         android:gravity="start|center_vertical"
                                         android:importantForAutofill="no"
-                                        android:inputType="textUri"
+                                        android:inputType="textUri|textMultiLine"
+                                        android:maxLines="5"
+                                        android:minLines="1"
                                         android:minHeight="48dp"
-                                        android:paddingStart="8dp"
-                                        android:paddingEnd="8dp"
+                                        android:paddingStart="4dp"
+                                        android:paddingEnd="4dp"
                                         android:selectAllOnFocus="true"
                                         android:text="@string/dbLink"
                                         android:textColor="?attr/colorOnSurface"
-                                        android:textSize="14sp" />
+                                        android:textSize="13sp" />
                                 </com.google.android.material.textfield.TextInputLayout>
 
                                 <Button
