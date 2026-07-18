@@ -24,7 +24,8 @@ class UitlegVertoonFragment : Fragment() {
     private lateinit var settingsManager: SettingsManager
 
     private var isInitializing = true
-    private var isDirty = false
+    private var isDisplayDirty = false
+    private var isColorsDirty = false
 
     // Initial values: [gem1, gem2, gem3, inactive]
     private var initialCheckboxes = mutableMapOf<Int, Boolean>()
@@ -49,7 +50,8 @@ class UitlegVertoonFragment : Fragment() {
         loadPreferences()
         setupListeners()
         isInitializing = false
-        isDirty = false
+        isDisplayDirty = false
+        isColorsDirty = false
 
         when (settingsManager.themeMode) {
             SettingsManager.ThemeMode.LIGHT -> binding.themeModeLight.isChecked = true
@@ -150,7 +152,7 @@ class UitlegVertoonFragment : Fragment() {
         // CheckBox listeners
         initialCheckboxes.keys.forEach { id ->
             val cb = binding.root.findViewById<android.widget.CheckBox>(id)
-            cb.setOnCheckedChangeListener { _, _ -> onUserChanged() }
+            cb.setOnCheckedChangeListener { _, _ -> onDisplayChanged() }
             binding.congregationIndicatorSwitch
         }
 
@@ -163,55 +165,79 @@ class UitlegVertoonFragment : Fragment() {
                 id: Long
             ) {
                 val selected = parent?.getItemAtPosition(position)?.toString() ?: return
-                if (selected != initialLayout) onUserChanged()
+                if (selected != initialLayout) onDisplayChanged()
             }
 
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
 
-        // Color pickers
+        // ---- Color pickers ----
         binding.gem1.setOnClickListener { openColorPickerDialog(it, 1) }
         binding.gem2.setOnClickListener { openColorPickerDialog(it, 2) }
         binding.gem3.setOnClickListener { openColorPickerDialog(it, 3) }
         binding.inactiveColorPreview.setOnClickListener { openColorPickerDialog(it, 4) }
 
-        // Save buttons
+        // ---- Save buttons ----
         binding.uitlegStoor.setOnClickListener { saveDisplaySettings() }
         binding.saveColor.setOnClickListener { saveColorSettings() }
     }
 
-    private fun onUserChanged() {
+    private fun onDisplayChanged() {
         if (!isInitializing) {
-            isDirty = true
+            isDisplayDirty = true
+            updateSaveButtonState()
+        }
+    }
+
+    private fun onColorChanged() {
+        if (!isInitializing) {
+            isColorsDirty = true
             updateSaveButtonState()
         }
     }
 
     private fun updateSaveButtonState() {
-        val enabled = isDirty || isAnySettingChanged()
-        binding.uitlegStoor.isEnabled = enabled
-        binding.saveColor.isEnabled = enabled
-        binding.uitlegStoor.alpha = if (enabled) 1.0f else 0.4f
-        binding.saveColor.alpha = if (enabled) 1.0f else 0.4f
+        val displayEnabled = isDisplayDirty || isDisplaySettingChanged()
+        val colorsEnabled = isColorsDirty || isColorSettingChanged()
+
+        binding.uitlegStoor.isEnabled = displayEnabled
+        binding.uitlegStoor.alpha = if (displayEnabled) 1.0f else 0.4f
+
+        binding.saveColor.isEnabled = colorsEnabled
+        binding.saveColor.alpha = if (colorsEnabled) 1.0f else 0.4f
     }
 
-    private fun isAnySettingChanged(): Boolean {
-        // Check checkboxes
-        initialCheckboxes.forEach { (id, initialValue) ->
+    private fun isDisplaySettingChanged(): Boolean {
+        // Check checkboxes (display only) – exclude colors
+        val displayCheckboxIds = listOf(
+            R.id.uitleg_foto,
+            R.id.uitleg_epos,
+            R.id.uitleg_whatsap,
+            R.id.uitleg_verjaarsdag,
+            R.id.uitleg_ouderdom,
+            R.id.uitleg_Huweliksdag,
+            R.id.uitleg_wyk,
+            R.id.uitleg_selfoon,
+            R.id.uitleg_telefoon,
+            R.id.congregation_indicator_switch
+        )
+        displayCheckboxIds.forEach { id ->
             val cb = binding.root.findViewById<android.widget.CheckBox>(id)
-            if (cb.isChecked != initialValue) return true
+            if (cb.isChecked != initialCheckboxes[id]) return true
         }
-        if (binding.congregationIndicatorSwitch.isChecked != initialCongregationIndicator) return true
+
         // Layout
         val currentLayout = binding.layoutOpsies.selectedItem?.toString() ?: "GESINNE"
         if (currentLayout != initialLayout) return true
 
-        // Colors: gem1, gem2, gem3, inactive
+        return false
+    }
+
+    private fun isColorSettingChanged(): Boolean {
         if (getCurrentColor(R.id.gem1) != initialColors[0]) return true
         if (getCurrentColor(R.id.gem2) != initialColors[1]) return true
         if (getCurrentColor(R.id.gem3) != initialColors[2]) return true
         if (getCurrentColor(R.id.inactive_color_preview) != initialColors[3]) return true
-
         return false
     }
 
@@ -245,7 +271,7 @@ class UitlegVertoonFragment : Fragment() {
         }
         initialLayout = settingsManager.defLayout
         initialCongregationIndicator = binding.congregationIndicatorSwitch.isChecked
-        isDirty = false
+        isDisplayDirty = false
         updateSaveButtonState()
         Toast.makeText(requireContext(), "Vertoon-instellings gestoor", Toast.LENGTH_SHORT).show()
     }
@@ -262,7 +288,7 @@ class UitlegVertoonFragment : Fragment() {
         settingsManager.gemeente3Kleur = initialColors[2]
         settingsManager.inactiveBackgroundColor = initialColors[3]
 
-        isDirty = false
+        isColorsDirty = false
         updateSaveButtonState()
         Toast.makeText(requireContext(), "Kleure gestoor", Toast.LENGTH_SHORT).show()
     }
@@ -294,7 +320,7 @@ class UitlegVertoonFragment : Fragment() {
         } else {
             view.setBackgroundColor(color)
         }
-        onUserChanged()
+        onColorChanged()
     }
 
     private fun updateTextViewBackground(textView: TextView, color: Int) {

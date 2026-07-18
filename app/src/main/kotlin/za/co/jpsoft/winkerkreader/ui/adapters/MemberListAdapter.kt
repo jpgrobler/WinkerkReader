@@ -484,7 +484,8 @@ class MemberListAdapter(
             resetViewState()
 
             val useRing = useCongregationIndicator && congregationColor != Int.MIN_VALUE
-            bindPhotoData(item, itemView, useRing, congregationColor)
+            if (useRing) bindPhotoData(item, itemView, useRing, congregationColor)
+            else bindPhotoData(item, itemView, useRing, textColor)
             bindBasicInfo(item)
             bindContactInfo(item, settings)
             bindAgeInfo(item, settings)
@@ -672,6 +673,7 @@ class MemberListAdapter(
             if (photoFile != null && photoFile.exists()) {
                 // Load actual photo – clear any tint
                 fotoImageView.clearColorFilter()
+                fotoImageView.imageTintList = null
                 Glide.with(view)
                     .load(photoFile)
                     .apply(PHOTO_OPTIONS)
@@ -682,7 +684,7 @@ class MemberListAdapter(
             } else {
                 // Use placeholder with text-colour tint
                 fotoImageView.setImageDrawable(defaultDrawable)
-                fotoImageView.setColorFilter(textColor, android.graphics.PorterDuff.Mode.SRC_IN)
+                fotoImageView.imageTintList = android.content.res.ColorStateList.valueOf(textColor)
             }
         }
 

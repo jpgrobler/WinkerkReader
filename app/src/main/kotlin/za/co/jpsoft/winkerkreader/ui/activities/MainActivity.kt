@@ -38,12 +38,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.work.WorkInfo
 import com.google.android.material.chip.Chip
-import com.google.android.material.snackbar.Snackbar
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
@@ -71,7 +68,6 @@ import za.co.jpsoft.winkerkreader.utils.BatteryOptimizationHelper
 import za.co.jpsoft.winkerkreader.utils.DeviceIdManager
 import za.co.jpsoft.winkerkreader.utils.MainNavigationController
 import za.co.jpsoft.winkerkreader.utils.MenuItemHandler
-import za.co.jpsoft.winkerkreader.utils.PastoralDatabaseBackup
 import za.co.jpsoft.winkerkreader.utils.PastoralNotificationHelper
 import za.co.jpsoft.winkerkreader.utils.PermissionManager
 import za.co.jpsoft.winkerkreader.utils.SearchCheckBoxPreferences
@@ -80,9 +76,6 @@ import za.co.jpsoft.winkerkreader.utils.WhatsAppContactLoader
 import za.co.jpsoft.winkerkreader.utils.WorkScheduler
 import za.co.jpsoft.winkerkreader.workers.PastoralBackupWorker
 import java.io.File
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 class MainActivity : BaseActivity() {
 
@@ -1407,48 +1400,48 @@ class MainActivity : BaseActivity() {
     // ------------------------------------------------------------
 
     private fun checkForNewerBackup() {
-        lifecycleScope.launch(Dispatchers.IO) {
-            val candidate = PastoralDatabaseBackup.findBackupFile(this@MainActivity)
-                ?: findDownloadsBackup()
-                ?: return@launch
-
-            val liveModified = getDatabasePath(winkerkEntry.PASTORAL_DB).lastModified()
-            val backupModified = candidate.lastModified()
-            if (backupModified <= liveModified) {
-                if (candidate.absolutePath.startsWith(cacheDir.absolutePath)) {
-                    candidate.delete()
-                }
-                return@launch
-            }
-
-            val version = PastoralDatabaseBackup.readSchemaVersion(candidate)
-            if (version < 1 || version > PastoralDatabaseBackup.CURRENT_PASTORAL_SCHEMA_VERSION) {
-                candidate.delete()
-                return@launch
-            }
-
-            withContext(Dispatchers.Main) {
-                val dateStr = SimpleDateFormat("d MMM HH:mm", Locale.getDefault())
-                    .format(Date(backupModified))
-                Snackbar.make(
-                    binding.root,
-                    "Rugsteun van $dateStr gevind. Wil jy herstel?",
-                    Snackbar.LENGTH_LONG
-                ).setAction("Herstel") {
-                    val extras = Bundle().apply {
-                        putBoolean(LaaiDatabasisActivity.EXTRA_PROMPT_RESTORE, true)
-                    }
-                    navigationController.navigateToLaaiDatabasis(extras)
-//                    startActivity(
-//                        Intent(this@MainActivity, LaaiDatabasisActivity::class.java)
-//                            .putExtra(LaaiDatabasisActivity.EXTRA_PROMPT_RESTORE, true)
-//                    )
-                }.show()
-                if (candidate.absolutePath.startsWith(cacheDir.absolutePath)) {
-                    candidate.delete()
-                }
-            }
-        }
+//        lifecycleScope.launch(Dispatchers.IO) {
+//            val candidate = PastoralDatabaseBackup.findBackupFile(this@MainActivity)
+//                ?: findDownloadsBackup()
+//                ?: return@launch
+//
+//            val liveModified = getDatabasePath(winkerkEntry.PASTORAL_DB).lastModified()
+//            val backupModified = candidate.lastModified()
+//            if (backupModified <= liveModified) {
+//                if (candidate.absolutePath.startsWith(cacheDir.absolutePath)) {
+//                    candidate.delete()
+//                }
+//                return@launch
+//            }
+//
+//            val version = PastoralDatabaseBackup.readSchemaVersion(candidate)
+//            if (version < 1 || version > PastoralDatabaseBackup.CURRENT_PASTORAL_SCHEMA_VERSION) {
+//                candidate.delete()
+//                return@launch
+//            }
+//
+//            withContext(Dispatchers.Main) {
+//                val dateStr = SimpleDateFormat("d MMM HH:mm", Locale.getDefault())
+//                    .format(Date(backupModified))
+//                Snackbar.make(
+//                    binding.root,
+//                    "Rugsteun van $dateStr gevind. Wil jy herstel?",
+//                    Snackbar.LENGTH_LONG
+//                ).setAction("Herstel") {
+//                    val extras = Bundle().apply {
+//                        putBoolean(LaaiDatabasisActivity.EXTRA_PROMPT_RESTORE, true)
+//                    }
+//                    navigationController.navigateToLaaiDatabasis(extras)
+////                    startActivity(
+////                        Intent(this@MainActivity, LaaiDatabasisActivity::class.java)
+////                            .putExtra(LaaiDatabasisActivity.EXTRA_PROMPT_RESTORE, true)
+////                    )
+//                }.show()
+//                if (candidate.absolutePath.startsWith(cacheDir.absolutePath)) {
+//                    candidate.delete()
+//                }
+//            }
+//        }
     }
 
     private fun findDownloadsBackup(): File? {

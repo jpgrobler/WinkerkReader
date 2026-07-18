@@ -139,14 +139,13 @@ class OproepDetailService : Service() {
             val finalName = when (result) {
                 is CallerInfoResult.Member -> result.name
                 is CallerInfoResult.Contact -> result.name
-                is CallerInfoResult.MultipleMembers -> {
-                    // Concatenate all member names, e.g., "Jan Botha, Piet Botha"
-                    result.members.joinToString(", ") { it.name }
-                }
-
+                is CallerInfoResult.MultipleMembers -> result.members.joinToString(", ") { it.name }
                 CallerInfoResult.Unknown -> {
                     // If we have an explicit name from the notification, use it
-                    if (displayNameExtra.isNotEmpty()) displayNameExtra else null
+                    if (displayNameExtra.isNotEmpty()) displayNameExtra
+                    // FALLBACK: use the raw number if available
+                    else if (callerId.isNotEmpty()) callerId
+                    else null
                 }
             }
 
