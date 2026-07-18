@@ -98,24 +98,18 @@ class BedieningActivity : BaseActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_deel_rugsteun -> {
-                sharePastoralDb()
+                sharePastoralDb()  // bestaande funksie
                 true
             }
-
             R.id.action_bestuur_sjablone -> {
-                //TemplateManagerActivity.launch(this)
                 navigationController.navigateToTemplateManager()
                 true
             }
-
-            R.id.action_herstel_rugsteun -> {
-                startActivity(
-                    Intent(this, LaaiDatabasisActivity::class.java)
-                        .putExtra(LaaiDatabasisActivity.EXTRA_PROMPT_RESTORE, true)
-                )
+            R.id.action_backup_restore -> {
+                // Open die nuwe aktiwiteit
+                startActivity(Intent(this, PastoralBackupActivity::class.java))
                 true
             }
-
             else -> super.onOptionsItemSelected(item)
         }
     }

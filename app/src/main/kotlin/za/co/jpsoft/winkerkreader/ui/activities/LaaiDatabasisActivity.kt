@@ -1,7 +1,6 @@
 package za.co.jpsoft.winkerkreader.ui.activities
 
 import android.Manifest
-import android.app.AlertDialog
 import android.app.DownloadManager
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -43,6 +42,7 @@ import androidx.work.WorkManager
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.BuildConfig
@@ -65,8 +65,6 @@ import za.co.jpsoft.winkerkreader.workers.PhotoDownloadWorkerOld
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import java.util.Date
-import java.util.Locale
 import java.util.UUID
 import java.util.regex.Pattern
 
@@ -293,10 +291,15 @@ class LaaiDatabasisActivity : AppCompatActivity() {
             return@withContext false
         }
 
-        // 3. Close DB connections before replacing
+        // 3. Close global DB connections immediately before replacing the file.
+        //    delay + gc gives SQLite time to release all file handles on older devices.
         withContext(Dispatchers.Main) {
             WinkerkDatabase.closeInstance()
             WinkerkDbHelper.closeInstance(DB_NAME)
+        }
+        withContext(Dispatchers.IO) {
+            delay(200)
+            System.gc()
         }
 
         // 4. Replace active DB
@@ -405,7 +408,6 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         binding.startPhotoSync.setOnClickListener { startPhotoSync() }
 
         handleAutomaticDownload()
-        checkForPastoralBackup()
     }
 
     override fun onDestroy() {
@@ -1033,13 +1035,17 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                         privateDownloadFile = null
                         return
                     }
-                    val status = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS))
-                    val reasonIdx = cursor.getColumnIndex(DownloadManager.COLUMN_REASON)
-                    val reason = if (reasonIdx >= 0) cursor.getInt(reasonIdx) else -1
+                    val status =
+                        cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS))
+                    val reason = try {
+                        cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON))
+                    } catch (_: IllegalArgumentException) {
+                        -1
+                    }
                     val bytesSoFar =
-                        cursor.getLong(cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
+                        cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
                     val totalBytes =
-                        cursor.getLong(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
+                        cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
 
                     if (BuildConfig.DEBUG) Log.d(
                         "Dropbox",
@@ -1186,7 +1192,7 @@ class LaaiDatabasisActivity : AppCompatActivity() {
                 manager.query(query).use { cursor ->
                     if (cursor.moveToFirst()) {
                         val status =
-                            cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS))
+                            cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS))
                         if (status == DownloadManager.STATUS_SUCCESSFUL) {
                             isPolling = false
                             val uri = manager.getUriForDownloadedFile(downloadId)
@@ -1227,15 +1233,17 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         val manager = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
         manager.query(query).use { cursor ->
             if (cursor.moveToFirst()) {
-                val statusIdx = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)
-                val status = cursor.getInt(statusIdx)
-                val reasonIdx = cursor.getColumnIndex(DownloadManager.COLUMN_REASON)
-                val reason = if (reasonIdx >= 0) cursor.getInt(reasonIdx) else -1
+                val status =
+                    cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS))
+                val reason = try {
+                    cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON))
+                } catch (_: IllegalArgumentException) {
+                    -1
+                }
                 val bytesSoFar =
-                    cursor.getLong(cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
+                    cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
                 val totalBytes =
-                    cursor.getLong(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
-
+                    cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
                 val statusText = when (status) {
                     DownloadManager.STATUS_PENDING -> "Pending"
                     DownloadManager.STATUS_RUNNING -> "Running"
@@ -1308,88 +1316,6 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         } catch (e: Exception) {
             if (BuildConfig.DEBUG) Log.e(TAG, "Error during database reload", e)
             navigateBackToMain()
-        }
-    }
-
-    private fun checkForPastoralBackup() {
-        val backupFile = PastoralDatabaseBackup.findBackupFile(this)
-            ?: return
-
-        val backupVersion = PastoralDatabaseBackup.readSchemaVersion(backupFile)
-        val backupSizeMb = "%.1f".format(backupFile.length() / 1_048_576.0)
-        val backupDate = java.text.SimpleDateFormat("d MMM yyyy HH:mm", Locale.getDefault())
-            .format(Date(backupFile.lastModified()))
-
-        when {
-            backupVersion < 0 -> {
-                AlertDialog.Builder(this)
-                    .setTitle(getString(R.string.pastoral_import_fout_titel))
-                    .setMessage(getString(R.string.pastoral_import_onleesbaar))
-                    .setPositiveButton(android.R.string.ok, null)
-                    .show()
-            }
-
-            backupVersion > CURRENT_PASTORAL_SCHEMA_VERSION -> {
-                AlertDialog.Builder(this)
-                    .setTitle(getString(R.string.pastoral_import_fout_titel))
-                    .setMessage(
-                        getString(
-                            R.string.pastoral_import_weergawe_fout,
-                            backupVersion,
-                            CURRENT_PASTORAL_SCHEMA_VERSION
-                        )
-                    )
-                    .setPositiveButton(android.R.string.ok, null)
-                    .show()
-            }
-
-            else -> {
-                AlertDialog.Builder(this)
-                    .setTitle(getString(R.string.pastoral_import_gevind_titel))
-                    .setMessage(
-                        getString(
-                            R.string.pastoral_import_gevind_boodskap,
-                            backupDate,
-                            backupSizeMb
-                        )
-                    )
-                    .setPositiveButton(getString(R.string.pastoral_import_ja)) { _, _ ->
-                        performPastoralImport(backupFile)
-                    }
-                    .setNegativeButton(getString(R.string.pastoral_import_nee), null)
-                    .show()
-            }
-        }
-    }
-
-    private fun performPastoralImport(backupFile: File) {
-        val progressDialog = AlertDialog.Builder(this)
-            .setMessage(getString(R.string.pastoral_import_besig))
-            .setCancelable(false)
-            .create()
-        progressDialog.show()
-
-        lifecycleScope.launch(Dispatchers.IO) {
-            val success = PastoralDatabaseBackup.importBackup(
-                context = applicationContext,
-                backupFile = backupFile
-            )
-            withContext(Dispatchers.Main) {
-                progressDialog.dismiss()
-                if (success) {
-                    Toast.makeText(
-                        this@LaaiDatabasisActivity,
-                        getString(R.string.pastoral_import_sukses),
-                        Toast.LENGTH_LONG
-                    ).show()
-                } else {
-                    AlertDialog.Builder(this@LaaiDatabasisActivity)
-                        .setTitle(getString(R.string.pastoral_import_fout_titel))
-                        .setMessage(getString(R.string.pastoral_import_misluk))
-                        .setPositiveButton(android.R.string.ok, null)
-                        .show()
-                }
-            }
         }
     }
 
@@ -1489,19 +1415,21 @@ class LaaiDatabasisActivity : AppCompatActivity() {
      * This should be called on a background thread.
      */
     private fun verifyRoomDatabaseOnFile(dbFile: File): Boolean {
+        // This function ONLY manages the local verification instance (dbFile.name = "Winkerk.db.new").
+        // The global singleton (Winkerk.db) is managed by processTempDatabase, which closes it
+        // explicitly after this function returns and before the rename step.
+        var localDb: WinkerkDatabase? = null
         return try {
-            val db = androidx.room.Room.databaseBuilder(
+            localDb = androidx.room.Room.databaseBuilder(
                 applicationContext,
                 WinkerkDatabase::class.java,
-                dbFile.name
+                dbFile.name          // "Winkerk.db.new" – separate from the global singleton
             ).build()
-            // Run a quick query – adjust to your actual DAO method
-            val count = db.memberDao().getCount()
+            val count = localDb.memberDao().getCount()
             if (BuildConfig.DEBUG) Log.d(
                 TAG,
                 "Room verification passed on ${dbFile.name}, count=$count"
             )
-            db.close()
             true
         } catch (e: IllegalStateException) {
             if (BuildConfig.DEBUG) Log.e(
@@ -1514,8 +1442,10 @@ class LaaiDatabasisActivity : AppCompatActivity() {
             if (BuildConfig.DEBUG) Log.e(TAG, "Room verification failed with other exception", e)
             false
         } finally {
+            // Close only the local verification instance – both on success and failure.
+            // Do NOT call WinkerkDatabase.closeInstance() here.
             try {
-                WinkerkDatabase.closeInstance()
+                localDb?.close()
             } catch (_: Exception) {
             }
         }

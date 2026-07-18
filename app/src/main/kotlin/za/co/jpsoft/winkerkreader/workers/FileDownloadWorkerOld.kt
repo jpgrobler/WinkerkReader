@@ -9,9 +9,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.BuildConfig
-import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.WINKERK_DB
-import za.co.jpsoft.winkerkreader.data.WinkerkDbHelper
-import za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase
 import java.io.BufferedOutputStream
 import java.io.BufferedReader
 import java.io.BufferedWriter
@@ -162,17 +159,6 @@ class FileDownloadWorkerOld(
             }
             val destFile = File(dbPath, "Winkerk.db.new")
 
-            // Close all DB connections before touching the file on disk,
-            // otherwise SQLite reports "file unlinked while open" / fileHasMoved errors.
-            WinkerkDatabase.closeInstance()
-            WinkerkDbHelper.closeInstance(WINKERK_DB)
-            delay(200)
-            System.gc()
-
-            // Delete existing file to ensure clean write
-            if (destFile.exists() && !destFile.delete()) {
-                if (BuildConfig.DEBUG) Log.w("FileDownloadWorker", "Could not delete old temp file")
-            }
             outputStream = BufferedOutputStream(FileOutputStream(destFile))
 
             var totalBytesReceived = 0L

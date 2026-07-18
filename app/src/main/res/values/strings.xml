@@ -697,7 +697,7 @@
     <string name="auth_wag_verifikasie">Verifieer om voort te gaan</string>
     <string name="auth_misluk_probeer_weer">Verifikasie misluk. Probeer weer.</string>
     <string name="auth_probeer_weer">Probeer weer</string>
-    <string name="settings_app_biometric">Vereis verifikasie by opstart</string>
+    <string name="settings_app_biometric">🔒 Vereis verifikasie by opening</string>
     <string name="settings_app_biometric_summary">Gebruik vingerafdruk, gesig of PIN om die app te ontsluit</string>
     <string name="herstel_rugsteun">Herstel Databasis Rugsteun</string>
 
@@ -833,4 +833,9 @@
     <string name="geen_verjaarsdae_vir_vandag_nie">Geen verjaarsdae vir vandag nie</string>
     <string name="winkerkreader_pc_v2_x">WinkerkReader-PC v2.x</string>
     <string name="winkerkreader_pc_v3_x">WinkerkReader-PC v3.x</string>
+    <string name="rugsteun_herstel">Rugsteun / Herstel</string>
+
+    <string name="verwyder">Verwyder</string>
+    <string name="herstel_rugsteun2">Herstel</string>
+    <string name="rugsteunlêers_gevind">%d rugsteunlêers gevind</string>
 </resources>

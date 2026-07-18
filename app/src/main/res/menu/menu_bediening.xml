@@ -6,10 +6,9 @@
         android:id="@+id/action_deel_rugsteun"
         android:title="@string/pastoral_deel_rugsteun"
         app:showAsAction="never" />
-    <!-- res/menu/menu_bediening.xml (or equivalent) -->
     <item
-        android:id="@+id/action_herstel_rugsteun"
-        android:title="@string/herstel_rugsteun"
+        android:id="@+id/action_backup_restore"
+        android:title="@string/rugsteun_herstel"
         app:showAsAction="never" />
     <item
         android:id="@+id/action_bestuur_sjablone"

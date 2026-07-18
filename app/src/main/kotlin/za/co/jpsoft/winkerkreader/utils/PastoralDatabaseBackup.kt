@@ -17,19 +17,19 @@ import za.co.jpsoft.winkerkreader.utils.PastoralDatabaseBackup.DEBOUNCE_MS
 import za.co.jpsoft.winkerkreader.utils.PastoralDatabaseBackup.backupDebounced
 import za.co.jpsoft.winkerkreader.utils.PastoralDatabaseBackup.backupNow
 import java.io.File
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 /**
- * Copies [PastoralDatabase] to [winkerkEntry.getWkrDir] for PC-accessible backup.
+ * Manages backup and restore of the pastoral database (wkr_pastoral.db).
  *
  * Two entry points:
- * - [backupDebounced] — called after every DB mutation; batches rapid writes with a 2s delay.
- * - [backupNow]       — called before congregation reload to guarantee a fresh copy exists.
+ * - [backupDebounced] – called after every DB mutation; batches rapid writes with a 2s delay.
+ * - [backupNow]       – called before congregation reload to guarantee a fresh copy exists.
  *
- * Copy strategy: WAL checkpoint (TRUNCATE) flushes all committed transactions into
- * the main .db file, then that file is copied both to a fixed name (for
- * import/restore and PC sync tooling) and a dated snapshot (for history —
- * see [DatabaseBackupHelper]). This avoids closing the database singleton
- * and is safe while Room is active.
+ * Backup strategy: WAL checkpoint (TRUNCATE) flushes all committed transactions into the main .db file,
+ * then that file is copied both to a fixed name (for import/restore and PC sync tooling) and a dated
+ * snapshot (for history). This avoids closing the database singleton and is safe while Room is active.
  */
 object PastoralDatabaseBackup {
 
@@ -58,22 +58,34 @@ object PastoralDatabaseBackup {
     /**
      * Schedules a backup after [DEBOUNCE_MS] of inactivity.
      * Cancels any pending backup first — only the last mutation in a burst triggers a copy.
+     * Errors are logged but not propagated (the caller is typically a repository mutation that
+     * should not fail because a backup couldn't be written).
      */
     fun backupDebounced(context: Context) {
         debounceJob?.cancel()
         debounceJob = scope.launch {
             delay(DEBOUNCE_MS)
-            runBackup(context.applicationContext)
+            try {
+                runBackup(context.applicationContext)
+            } catch (e: Exception) {
+                if (BuildConfig.DEBUG) Log.e(TAG, "Debounced backup failed", e)
+            }
         }
     }
 
     /**
      * Runs a backup immediately (blocking on IO).
      * Call this before any operation that might replace or delete congregation data.
+     *
+     * @return true if the backup succeeded, false if an error occurred.
      */
-    suspend fun backupNow(context: Context) {
-        withContext(Dispatchers.IO) {
+    suspend fun backupNow(context: Context): Boolean = withContext(Dispatchers.IO) {
+        try {
             runBackup(context.applicationContext)
+            true
+        } catch (e: Exception) {
+            if (BuildConfig.DEBUG) Log.e(TAG, "Immediate backup failed", e)
+            false
         }
     }
 
@@ -81,35 +93,36 @@ object PastoralDatabaseBackup {
     // Core backup logic
     // -------------------------------------------------------------------------
 
+    /**
+     * Performs the actual file copy. This function does NOT catch exceptions – they are
+     * handled by the callers ([backupDebounced] and [backupNow]) so each can decide
+     * whether to log, swallow, or propagate the error.
+     */
     private fun runBackup(context: Context) {
-        try {
-            val db = PastoralDatabase.getInstance(context)
-            DatabaseBackupHelper.checkpointWal(db.openHelper, TAG)
+        val db = PastoralDatabase.getInstance(context)
+        DatabaseBackupHelper.checkpointWal(db.openHelper, TAG)
 
-            val source = context.getDatabasePath(winkerkEntry.PASTORAL_DB)
-            val destDir = File(winkerkEntry.getWkrDir(context))
-            val settings = SettingsManager.getInstance(context)
+        val source = context.getDatabasePath(winkerkEntry.PASTORAL_DB)
+        val destDir = File(winkerkEntry.getWkrDir(context))
+        val settings = SettingsManager.getInstance(context)
 
-            DatabaseBackupHelper.copyWithDatedRetention(
-                source = source,
-                destDir = destDir,
-                fixedFilename = BACKUP_FILENAME,
-                baseName = BACKUP_BASENAME,
-                retentionDays = settings.backupRetentionDays,
-                tag = TAG
-            )
-            settings.lastPastoralBackupTimestamp = System.currentTimeMillis()
-        } catch (e: Exception) {
-            if (BuildConfig.DEBUG) Log.e(TAG, "Pastoral DB backup failed", e)
-        }
+        DatabaseBackupHelper.copyWithDatedRetention(
+            source = source,
+            destDir = destDir,
+            fixedFilename = BACKUP_FILENAME,
+            baseName = BACKUP_BASENAME,
+            retentionDays = settings.backupRetentionDays,
+            tag = TAG
+        )
+        settings.lastPastoralBackupTimestamp = System.currentTimeMillis()
     }
 
     // -------------------------------------------------------------------------
-    // Import helpers (used by LaaiDatabasisActivity) — unchanged
+    // Import helpers (used by LaaiDatabasisActivity & PastoralBackupActivity)
     // -------------------------------------------------------------------------
 
     /**
-     * Returns the backup file in WKR dir if it exists, null otherwise.
+     * Returns the backup file in the WKR dir if it exists, null otherwise.
      */
     fun findBackupFile(context: Context): File? {
         val file = File(winkerkEntry.getWkrDir(context), BACKUP_FILENAME)
@@ -208,13 +221,87 @@ object PastoralDatabaseBackup {
 
                     else -> if (importBackup(appContext, tempFile)) ImportResult.Success(
                         migratedFrom = version
-                    ) else ImportResult.Failed
+                    )
+                    else ImportResult.Failed
                 }
             } finally {
                 tempFile.delete()
             }
         }
+// PastoralDatabaseBackup.kt
 
+    /**
+     * Returns a list of all pastoral backup files in the WKR directory,
+     * sorted by last modified descending (newest first).
+     * Includes both the fixed "wkr_pastoral.db" and dated snapshots.
+     */
+    fun listBackupFiles(context: Context): List<BackupFileInfo> {
+        val dir = File(winkerkEntry.getWkrDir(context))
+        if (!dir.exists()) return emptyList()
+
+        val pattern = Regex("^wkr_pastoral(?:_(\\d{8}))?\\.db$")
+        return dir.listFiles()
+            ?.filter { it.isFile && pattern.matches(it.name) }
+            ?.map { file ->
+                val match = pattern.find(file.name)
+                val dateStr = match?.groupValues?.get(1)
+                val date = dateStr?.let {
+                    try {
+                        LocalDate.parse(it, DateTimeFormatter.ofPattern("yyyyMMdd"))
+                    } catch (_: Exception) {
+                        null
+                    }
+                }
+                BackupFileInfo(
+                    file = file,
+                    displayName = if (dateStr == null) "Huidige rugsteun" else "Rugsteun van ${
+                        date?.format(
+                            DateTimeFormatter.ofPattern("d MMM yyyy")
+                        ) ?: "Onbekende datum"
+                    }",
+                    isLatest = dateStr == null,
+                    date = date,
+                    size = file.length()
+                )
+            }
+            ?.sortedByDescending { it.file.lastModified() }
+            ?: emptyList()
+    }
+
+    data class BackupFileInfo(
+        val file: File,
+        val displayName: String,
+        val isLatest: Boolean,
+        val date: LocalDate?,
+        val size: Long
+    )
+
+    /**
+     * Deletes all dated snapshots older than [retentionDays] (default 7).
+     * The fixed "wkr_pastoral.db" is never deleted.
+     * Returns the number of deleted files.
+     */
+    fun pruneOldBackups(context: Context, retentionDays: Int = 7): Int {
+        val cutoff = LocalDate.now().minusDays(retentionDays.toLong())
+        val dir = File(winkerkEntry.getWkrDir(context))
+        if (!dir.exists()) return 0
+        val pattern = Regex("^wkr_pastoral_(\\d{8})\\.db$")
+        var deleted = 0
+        dir.listFiles()?.forEach { file ->
+            val match = pattern.find(file.name)
+            if (match != null) {
+                val dateStr = match.groupValues[1]
+                try {
+                    val date = LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("yyyyMMdd"))
+                    if (date.isBefore(cutoff) && file.delete()) {
+                        deleted++
+                    }
+                } catch (_: Exception) { /* skip malformed names */
+                }
+            }
+        }
+        return deleted
+    }
     sealed class ImportResult {
         object ReadError : ImportResult()   // ContentResolver could not open stream
         object InvalidFile : ImportResult()   // Not a valid SQLite file (version < 1)
