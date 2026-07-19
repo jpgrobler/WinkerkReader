@@ -308,6 +308,15 @@ class MainActivity : BaseActivity() {
                 loadDataAndFinalize(savedInstanceState)
             }
         )
+
+        // Also dismiss on scroll to avoid overlay:
+        binding.lidmaatList.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                if (newState == RecyclerView.SCROLL_STATE_DRAGGING) {
+                    listInteractionController.dismissQuickActions()
+                }
+            }
+        })
     }
 
     /**
@@ -1072,7 +1081,9 @@ class MainActivity : BaseActivity() {
             menuController.clearCallbacks()
         }
         WhatsAppContactLoader.reset()
-
+        if (::listInteractionController.isInitialized) {
+            listInteractionController.dismissQuickActions()
+        }
         super.onDestroy()
     }
 

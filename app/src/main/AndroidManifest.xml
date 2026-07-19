@@ -69,6 +69,7 @@
     <uses-permission
         android:name="android.permission.GET_RUNNING_SERVICES"
         tools:ignore="DeprecatedPermission" />
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
         android:name="za.co.jpsoft.winkerkreader.WinkerkReader"

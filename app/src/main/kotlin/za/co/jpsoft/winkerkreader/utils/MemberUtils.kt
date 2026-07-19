@@ -8,16 +8,18 @@ import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.provider.ContactsContract
 import android.text.format.DateUtils
 import android.util.Log
 import android.widget.Toast
+import androidx.core.net.toUri
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.models.MemberItem
 import za.co.jpsoft.winkerkreader.ui.activities.LidmaatDetailActivity
 import za.co.jpsoft.winkerkreader.ui.bottomsheets.StelHerinneringBottomSheet
 import za.co.jpsoft.winkerkreader.ui.bottomsheets.VoegNotaByBottomSheet
+import za.co.jpsoft.winkerkreader.utils.Utils.fixphonenumber
+import java.net.URLEncoder
 
 /**
  * Utility functions for common member actions: copying to clipboard,
@@ -175,53 +177,88 @@ object MemberUtils {
         }
     }
 
-    fun sendSms(context: Context, phoneNumber: String?) {
+    fun sendSms(context: Context, phoneNumber: String?, message: String? = null) {
         if (phoneNumber.isNullOrEmpty()) return
         try {
             val intent = Intent(Intent.ACTION_VIEW).apply {
-                data = Uri.parse("sms:$phoneNumber")
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-                    type = "vnd.android-dir/mms-sms"
+                data = if (message.isNullOrEmpty()) {
+                    Uri.parse("sms:$phoneNumber")
+                } else {
+                    Uri.parse("sms:$phoneNumber?body=${Uri.encode(message)}")
                 }
             }
             context.startActivity(intent)
         } catch (e: Exception) {
-            if (BuildConfig.DEBUG) Log.e(TAG, "Error sending SMS", e)
+            Log.e(TAG, "Error sending SMS", e)
         }
     }
 
-    fun sendWhatsApp(context: Context, phoneNumber: String?, method: Int = 2) {
-        if (phoneNumber.isNullOrEmpty()) return
-        val phone = Utils.fixphonenumber(phoneNumber)
-        try {
-            val intent = when (method) {
-                1 -> {
-                    val uri = Uri.parse("smsto: $phone")
-                    Intent(Intent.ACTION_SENDTO, uri).apply { `package` = "com.whatsapp" }
-                }
+    // MemberUtils.kt – add these methods
 
-                2 -> {
-                    val url = "https://api.whatsapp.com/send?phone=$phone"
-                    Intent(Intent.ACTION_VIEW).apply {
-                        data = Uri.parse(url)
-                        `package` = "com.whatsapp"
-                    }
-                }
-
-                else -> {
-                    Intent("android.intent.action.MAIN").apply {
-                        action = Intent.ACTION_SEND
-                        `package` = "com.whatsapp"
-                        type = "text/plain"
-                        putExtra("jid", "${phone}@s.whatsapp.net")
-                    }
-                }
+    /**
+     * Send a WhatsApp message using the selected method.
+     * @param method 1, 2, or 3 (as per settings)
+     * @param message Optional pre-filled message
+     */
+    fun sendWhatsApp(
+        context: Context,
+        phoneNumber: String?,
+        method: Int = 1,
+        message: String? = null
+    ): Boolean {
+        if (phoneNumber.isNullOrEmpty()) return false
+        val phone = fixphonenumber(phoneNumber) ?: return false
+        return try {
+            when (method) {
+                1 -> sendWhatsAppMethod1(context, phone, message)
+                2 -> sendWhatsAppMethod2(context, phone, message)
+                3 -> sendWhatsAppMethod3(context, phone, message)
+                else -> false
             }
-            context.startActivity(intent)
         } catch (e: Exception) {
-            if (BuildConfig.DEBUG) Log.e(TAG, "Error sending WhatsApp (method $method)", e)
-            Toast.makeText(context, "WhatsApp not installed", Toast.LENGTH_SHORT).show()
+            Log.e(TAG, "WhatsApp send failed", e)
+            Toast.makeText(context, "WhatsApp not installed or error occurred", Toast.LENGTH_SHORT)
+                .show()
+            false
         }
+    }
+
+    private fun sendWhatsAppMethod1(context: Context, phone: String, message: String?): Boolean {
+        val uri = "smsto: $phone".toUri()
+        val intent = Intent(Intent.ACTION_SENDTO, uri).apply {
+            `package` = "com.whatsapp"
+            if (!message.isNullOrEmpty()) {
+                putExtra("sms_body", message)
+                putExtra(Intent.EXTRA_TEXT, message)
+            }
+        }
+        context.startActivity(Intent.createChooser(intent, ""))
+        return true
+    }
+
+    private fun sendWhatsAppMethod2(context: Context, phone: String, message: String?): Boolean {
+        val encoded = if (!message.isNullOrEmpty()) URLEncoder.encode(message, "UTF-8") else ""
+        val url =
+            "https://api.whatsapp.com/send?phone=$phone${if (encoded.isNotEmpty()) "&text=$encoded" else ""}"
+        val intent = Intent(Intent.ACTION_VIEW, url.toUri()).apply { `package` = "com.whatsapp" }
+        if (intent.resolveActivity(context.packageManager) != null) {
+            context.startActivity(intent)
+            return true
+        }
+        return false
+    }
+
+    private fun sendWhatsAppMethod3(context: Context, phone: String, message: String?): Boolean {
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            `package` = "com.whatsapp"
+            type = "text/plain"
+            if (!message.isNullOrEmpty()) {
+                putExtra(Intent.EXTRA_TEXT, message)
+            }
+            putExtra("jid", "${phone}@s.whatsapp.net")
+        }
+        context.startActivity(intent)
+        return true
     }
 
     fun sendEmail(context: Context, email: String?) {

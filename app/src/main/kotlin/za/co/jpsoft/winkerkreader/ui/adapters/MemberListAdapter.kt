@@ -1,8 +1,12 @@
 package za.co.jpsoft.winkerkreader.ui.adapters
 
+import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.BackgroundColorSpan
@@ -559,6 +563,7 @@ class MemberListAdapter(
                         }
                     }
                 }
+
             } else {
                 separatorBlock.setOnClickListener(null)
             }
@@ -581,7 +586,24 @@ class MemberListAdapter(
                     ContextCompat.getColor(context, R.color.text_secondary_light),
                     android.graphics.PorterDuff.Mode.SRC_IN
                 )
-
+                updownContainer.setOnLongClickListener {
+                    // Vibrate briefly (if hardware supports)
+                    val vibrator =
+                        itemView.context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        vibrator?.vibrate(
+                            VibrationEffect.createOneShot(
+                                50,
+                                VibrationEffect.DEFAULT_AMPLITUDE
+                            )
+                        )
+                    } else {
+                        @Suppress("DEPRECATION")
+                        vibrator?.vibrate(50)
+                    }
+                    toggleAllGroups(sortOrder)
+                    true
+                }
                 updownContainer.setOnClickListener {
                     if (BuildConfig.DEBUG) {
                         Log.d(TAG, "Toggle collapse for group: $key at position $position")
@@ -806,6 +828,35 @@ class MemberListAdapter(
             }
         }
 
+        /**
+         * Collapses all groups if any are expanded, otherwise expands all groups.
+         */
+        private fun toggleAllGroups(sortOrder: String) {
+            // Collect all group keys from the current visible items that have separators
+            val allGroupKeys = mutableSetOf<String>()
+            for (i in 0 until itemCount) {
+                val item = getItem(i) ?: continue
+                if (item.showSeparator) {
+                    val key = "$sortOrder:${getGroupValueFor(item, sortOrder)}"
+                    allGroupKeys.add(key)
+                }
+            }
+            if (allGroupKeys.isEmpty()) return
+
+            // Check if any group is currently expanded (i.e., not in collapsedGroups)
+            val anyExpanded = allGroupKeys.any { !collapsedGroups.contains(it) }
+
+            if (anyExpanded) {
+                // Collapse all groups
+                collapsedGroups.addAll(allGroupKeys)
+            } else {
+                // Expand all groups
+                collapsedGroups.removeAll(allGroupKeys)
+            }
+
+            // Refresh the whole list to update chevrons and visibility
+            notifyDataSetChanged()
+        }
         private fun openMaps(view: View, address: String) {
             try {
                 val encodedAddress = Uri.encode(address)

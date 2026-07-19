@@ -45,6 +45,7 @@ import za.co.jpsoft.winkerkreader.data.models.MemberItem
 import za.co.jpsoft.winkerkreader.databinding.VerjaarBinding
 import za.co.jpsoft.winkerkreader.services.receivers.AlarmReceiver
 import za.co.jpsoft.winkerkreader.ui.adapters.MemberListAdapter
+import za.co.jpsoft.winkerkreader.ui.helpers.QuickActionHelper
 import za.co.jpsoft.winkerkreader.ui.viewmodels.EventViewModel
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel
 import za.co.jpsoft.winkerkreader.utils.MainNavigationController
@@ -69,7 +70,7 @@ class VerjaarSmsActivity : BaseActivity() {
     private lateinit var eventViewModel: EventViewModel
     private lateinit var memberViewModel: MemberViewModel
     private val navigationController by lazy { MainNavigationController(this) }
-
+    private lateinit var quickActionHelper: QuickActionHelper
     private var autoSms = false
     private var keuse: String = "Verjaar"
     private val saveHandler = Handler(Looper.getMainLooper())
@@ -120,8 +121,10 @@ class VerjaarSmsActivity : BaseActivity() {
     }
 
     override fun onDestroy() {
+        quickActionHelper.dismiss()
         saveRunnable?.let { saveHandler.removeCallbacks(it) }
         saveRunnable = null
+
         super.onDestroy()
     }
 
@@ -197,9 +200,17 @@ class VerjaarSmsActivity : BaseActivity() {
 
     private fun setupRecyclerView() {
         binding.lidmaatList.layoutManager = LinearLayoutManager(this)
+        // ─── Initialize Quick Action Helper ──────────────────────────────────────
+        quickActionHelper = QuickActionHelper(this, SettingsManager.getInstance(this))
+
+        // ─── Create the adapter with the new click handler ──────────────────────
         memberListAdapter = MemberListAdapter(
-            onItemClick = { _, item, _ ->
-                showPopupMenuForMember(item)
+            onItemClick = { view, item, _ ->
+                // Build the personalized message from the current template
+                val template = binding.boodskap.text.toString()
+                val personalizedMessage = MessageComposer.personalize(template, item)
+                // Pass it to the helper
+                quickActionHelper.showQuickActions(view, item, personalizedMessage)
             },
             onItemLongClick = { item, _ ->
                 toggleMemberTag(item)
