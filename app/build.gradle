@@ -9,11 +9,11 @@ android {
     compileSdk = 37
     defaultConfig {
         applicationId = "za.co.jpsoft.winkerkreader"
-        minSdk = 26
+        minSdk = 28
         versionCode = 117
         versionName = "4.2 test r017"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        targetSdk = 35
+        targetSdk = 36
         vectorDrawables.useSupportLibrary = true
 
         // ✅ Add BuildConfig fields if you use them
@@ -104,14 +104,14 @@ android {
 
 
 dependencies {
-    implementation 'androidx.security:security-crypto:1.1.0-alpha06'
+    implementation 'androidx.security:security-crypto:1.1.0'
     implementation 'androidx.lifecycle:lifecycle-process:2.11.0'
     implementation 'androidx.paging:paging-common:3.5.0'
     implementation "androidx.paging:paging-runtime-ktx:3.5.0"
     implementation("androidx.biometric:biometric:1.1.0")
     implementation "androidx.core:core-ktx:1.19.0"
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.2.0'
-    implementation 'com.google.android.libraries.places:places:5.2.0'
+    implementation 'com.google.android.libraries.places:places:5.3.0'
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0"
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0'
 
@@ -158,8 +158,8 @@ dependencies {
     implementation 'com.readystatesoftware.sqliteasset:sqliteassethelper:2.0.1'
     implementation 'com.github.yukuku:ambilwarna:2.0.1'
     implementation 'com.googlecode.ez-vcard:ez-vcard:0.12.2'
-    implementation 'com.github.bumptech.glide:glide:5.0.7'
-    ksp 'com.github.bumptech.glide:ksp:5.0.7'
+    implementation 'com.github.bumptech.glide:glide:5.0.9'
+    ksp 'com.github.bumptech.glide:ksp:5.0.9'
     implementation 'com.google.code.gson:gson:2.14.0'
     implementation 'com.squareup.okhttp3:okhttp:5.4.0'
     implementation 'com.squareup.retrofit2:retrofit:3.0.0'

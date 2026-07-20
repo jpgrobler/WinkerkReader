@@ -1,16 +1,21 @@
 package za.co.jpsoft.winkerkreader.ui.helpers
 
 import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.view.isNotEmpty
 import com.google.android.material.color.MaterialColors
+import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.models.MemberItem
 import za.co.jpsoft.winkerkreader.data.repositories.ContactRepository
@@ -23,24 +28,40 @@ import za.co.jpsoft.winkerkreader.utils.Utils
 /**
  * Reusable helper that displays a horizontal quick-action popup for a member.
  * Used in MainActivity, VerjaarSmsActivity, and anywhere else a member list appears.
+ *
+ * @property activity The parent [AppCompatActivity] used for inflating views and launching bottom sheets.
+ * @property settingsManager Manager for checking configured communication channels (e.g., WhatsApp preferences).
  */
 class QuickActionHelper(
     private val activity: AppCompatActivity,
     private val settingsManager: SettingsManager
 ) {
 
+    // ─── Properties ──────────────────────────────────────────────────────────
+
+    /** Reference to the currently active [PopupWindow] instance. */
     private var quickActionsPopup: PopupWindow? = null
+
+    /** Callback invoked when the user selects the "More" (expand) action. */
     var expandCallback: ((View, MemberItem) -> Unit)? = null
+
+
+    // ─── Public API (Popup Control) ──────────────────────────────────────────
 
     /**
      * Show the horizontal quick action popup anchored to the given view.
-     * @param message Optional personalized message for SMS/WhatsApp actions.
+     *
+     * @param anchor The anchor [View] where the popup will be displayed.
+     * @param item The [MemberItem] data associated with the quick actions.
+     * @param message Optional pre-filled personalized message for SMS/WhatsApp actions.
      */
     fun showQuickActions(anchor: View, item: MemberItem, message: String? = null) {
         dismiss()
 
         val inflater = LayoutInflater.from(activity)
-        val popupView = inflater.inflate(R.layout.popup_quick_actions, null)
+        val contentParent = FrameLayout(activity)
+        inflater.inflate(R.layout.popup_quick_actions, contentParent, true)
+        val popupView = contentParent.getChildAt(0) as LinearLayout  // the actual root
         val container = popupView.findViewById<LinearLayout>(R.id.quick_actions_container)
 
         val hasPhone = item.cellphone.isNotEmpty()
@@ -51,6 +72,7 @@ class QuickActionHelper(
             0
         )
 
+        /** Local helper to add action buttons separated by dividers to the popup container. */
         fun addActionButton(
             iconText: String? = null,
             iconDrawableRes: Int? = null,
@@ -58,7 +80,7 @@ class QuickActionHelper(
             onClick: () -> Unit,
             iconColor: Int? = null
         ) {
-            if (container.childCount > 0) {
+            if (container.isNotEmpty()) {
                 val divider = View(activity)
                 divider.layoutParams =
                     LinearLayout.LayoutParams(1, LinearLayout.LayoutParams.MATCH_PARENT)
@@ -70,11 +92,18 @@ class QuickActionHelper(
                 divider.setBackgroundColor(dividerColor)
                 container.addView(divider)
             }
-            val button = createActionButton(iconText, iconDrawableRes, label, onClick, iconColor)
+            val button = createActionButton(
+                container,
+                iconText,
+                iconDrawableRes,
+                label,
+                onClick,
+                iconColor
+            )
             container.addView(button)
         }
 
-        // 1. SMS – green icon (no icon colour, just the emoji)
+        // 1. SMS – green icon
         if (hasPhone) {
             addActionButton(
                 iconText = "💬",
@@ -87,7 +116,6 @@ class QuickActionHelper(
         }
 
         // 2. WhatsApp – drawable with green tint
-        // In showQuickActions, determine the WhatsApp method:
         val whatsappMethod = when {
             settingsManager.whatsapp1 -> 1
             settingsManager.whatsapp2 -> 2
@@ -95,7 +123,6 @@ class QuickActionHelper(
             else -> 0 // disabled
         }
 
-        // Then when adding the WhatsApp button:
         if (hasPhone && whatsappMethod != 0) {
             val formattedPhone = Utils.fixphonenumber(item.cellphone) ?: item.cellphone
             if (ContactRepository.isWhatsAppContact(formattedPhone)) {
@@ -103,7 +130,6 @@ class QuickActionHelper(
                     iconDrawableRes = R.drawable.whatsapp,
                     label = "WhatsApp",
                     onClick = {
-                        // Pass the method number
                         handleQuickAction(R.id.stuur_whatsapp, item, message, whatsappMethod)
                         dismiss()
                     }
@@ -177,31 +203,127 @@ class QuickActionHelper(
         quickActionsPopup = popup
     }
 
+    /**
+     * Dismisses the active popup window if it is currently visible.
+     */
+    fun dismiss() {
+        quickActionsPopup?.dismiss()
+        quickActionsPopup = null
+    }
+
+
+    // ─── Action Handlers ──────────────────────────────────────────────────────
+
+    /**
+     * Dispatches action clicks to the appropriate utility helper.
+     *
+     * @param actionId The menu item resource identifier (e.g., R.id.stuur_sms).
+     * @param item The [MemberItem] data target.
+     * @param message Optional message payload.
+     * @param whatsappMethod WhatsApp API style selection.
+     */
+    private fun handleQuickAction(
+        actionId: Int,
+        item: MemberItem,
+        message: String? = null,
+        whatsappMethod: Int = 1
+    ) {
+        when (actionId) {
+            R.id.stuur_sms -> MemberUtils.sendSms(activity, item.cellphone, message)
+            R.id.stuur_whatsapp -> MemberUtils.sendWhatsApp(
+                activity,
+                item.cellphone,
+                whatsappMethod,
+                message
+            )
+
+            R.id.bel_selfoon -> MemberUtils.callPhone(activity, item.cellphone)
+            R.id.voeg_nota_by -> openVoegNotaBy(item)
+            R.id.stel_herinnering -> openStelHerinnering(item)
+        }
+    }
+
+    /**
+     * Launches the "Add Note" bottom sheet for the given member.
+     *
+     * @param item The target [MemberItem].
+     */
+    private fun openVoegNotaBy(item: MemberItem) {
+        val guid = item.guid.takeIf { it.isNotBlank() } ?: run {
+            if (BuildConfig.DEBUG) Log.w("QuickActionHelper", "openVoegNotaBy: guid is null/blank")
+            return
+        }
+        VoegNotaByBottomSheet.newInstance(
+            memberGuid = guid,
+            familyHeadGuid = item.familyHead,
+            memberDisplayName = "${item.name} ${item.surname}".trim(),
+            memberSurname = item.surname.ifBlank { null },
+            memberGivenName = item.name.ifBlank { null }
+        ).show(activity.supportFragmentManager, VoegNotaByBottomSheet.TAG)
+    }
+
+    /**
+     * Launches the "Set Reminder" bottom sheet for the given member.
+     *
+     * @param item The target [MemberItem].
+     */
+    private fun openStelHerinnering(item: MemberItem) {
+        val guid = item.guid.takeIf { it.isNotBlank() } ?: run {
+            if (BuildConfig.DEBUG) Log.w(
+                "QuickActionHelper",
+                "openStelHerinnering: guid is null/blank"
+            )
+            return
+        }
+        StelHerinneringBottomSheet.newInstance(
+            memberGuid = guid,
+            familyHeadGuid = item.familyHead
+        ).show(activity.supportFragmentManager, StelHerinneringBottomSheet.TAG)
+    }
+
+
+    // ─── Private UI Helpers ──────────────────────────────────────────────────
+
+    /**
+     * Dynamically inflates and configures a quick action button.
+     *
+     * @param parent The parent [ViewGroup] that will hold the button (used for layout params).
+     * @param iconText Optional text/emoji string to render if no drawable is used.
+     * @param iconDrawableRes Optional resource ID of drawable icon.
+     * @param label Text label displayed below the icon.
+     * @param onClick Action closure triggered on click.
+     * @param iconColor Optional color override for the icon.
+     * @return Prepared action [View].
+     */
     private fun createActionButton(
+        parent: ViewGroup,
         iconText: String? = null,
         iconDrawableRes: Int? = null,
         label: String,
         onClick: () -> Unit,
         iconColor: Int? = null
     ): View {
+        // Inflate with the correct parent, attachToRoot = false
         val buttonView = LayoutInflater.from(activity)
-            .inflate(R.layout.quick_action_button, null)
+            .inflate(R.layout.quick_action_button, parent, false)
 
         val iconImageView = buttonView.findViewById<ImageView>(R.id.icon_image)
         val iconTextView = buttonView.findViewById<TextView>(R.id.icon_text)
         val labelView = buttonView.findViewById<TextView>(R.id.action_label)
 
-        // Reset visibility
         iconImageView.visibility = View.GONE
         iconTextView.visibility = View.GONE
 
         if (iconDrawableRes != null) {
             val drawable = ContextCompat.getDrawable(activity, iconDrawableRes)?.mutate()
             if (drawable != null) {
-                if (iconColor != null) {
-                    drawable.setColorFilter(iconColor, PorterDuff.Mode.SRC_IN)
-                }
+                // Set drawable first
                 iconImageView.setImageDrawable(drawable)
+                // Apply color filter using the non-deprecated API
+                if (iconColor != null) {
+                    iconImageView.colorFilter =
+                        PorterDuffColorFilter(iconColor, PorterDuff.Mode.SRC_IN)
+                }
                 iconImageView.visibility = View.VISIBLE
             }
         } else if (iconText != null) {
@@ -221,62 +343,5 @@ class QuickActionHelper(
         buttonView.contentDescription = label
 
         return buttonView
-    }
-
-    // ─── Handle quick action clicks ──────────────────────────────────────────
-
-    private fun handleQuickAction(
-        actionId: Int,
-        item: MemberItem,
-        message: String? = null,
-        whatsappMethod: Int = 1  // default to method 1
-    ) {
-        when (actionId) {
-            R.id.stuur_sms -> MemberUtils.sendSms(activity, item.cellphone, message)
-            R.id.stuur_whatsapp -> MemberUtils.sendWhatsApp(
-                activity,
-                item.cellphone,
-                whatsappMethod,
-                message
-            )
-
-            R.id.bel_selfoon -> MemberUtils.callPhone(activity, item.cellphone)
-            R.id.voeg_nota_by -> openVoegNotaBy(item)
-            R.id.stel_herinnering -> openStelHerinnering(item)
-        }
-    }
-
-    // ─── Open sheets ──────────────────────────────────────────────────────────
-
-    private fun openVoegNotaBy(item: MemberItem) {
-        val guid = item.guid?.takeIf { it.isNotBlank() } ?: run {
-            Log.w("QuickActionHelper", "openVoegNotaBy: guid is null/blank")
-            return
-        }
-        VoegNotaByBottomSheet.newInstance(
-            memberGuid = guid,
-            familyHeadGuid = item.familyHead,
-            memberDisplayName = "${item.name} ${item.surname}".trim(),
-            memberSurname = item.surname.ifBlank { null },
-            memberGivenName = item.name.ifBlank { null }
-        ).show(activity.supportFragmentManager, VoegNotaByBottomSheet.TAG)
-    }
-
-    private fun openStelHerinnering(item: MemberItem) {
-        val guid = item.guid?.takeIf { it.isNotBlank() } ?: run {
-            Log.w("QuickActionHelper", "openStelHerinnering: guid is null/blank")
-            return
-        }
-        StelHerinneringBottomSheet.newInstance(
-            memberGuid = guid,
-            familyHeadGuid = item.familyHead
-        ).show(activity.supportFragmentManager, StelHerinneringBottomSheet.TAG)
-    }
-
-    // ─── Cleanup ──────────────────────────────────────────────────────────────
-
-    fun dismiss() {
-        quickActionsPopup?.dismiss()
-        quickActionsPopup = null
     }
 }

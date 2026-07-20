@@ -2,15 +2,11 @@ package za.co.jpsoft.winkerkreader.ui.activities
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.content.ContentUris
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.database.Cursor
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
-import android.os.Environment
-import android.provider.MediaStore
 import android.text.Spannable
 import android.text.SpannableString
 import android.util.Log
@@ -65,7 +61,6 @@ import za.co.jpsoft.winkerkreader.ui.viewmodels.MainViewModel
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel
 import za.co.jpsoft.winkerkreader.utils.BackPressHandler
 import za.co.jpsoft.winkerkreader.utils.BatteryOptimizationHelper
-import za.co.jpsoft.winkerkreader.utils.DeviceIdManager
 import za.co.jpsoft.winkerkreader.utils.MainNavigationController
 import za.co.jpsoft.winkerkreader.utils.MenuItemHandler
 import za.co.jpsoft.winkerkreader.utils.PastoralNotificationHelper
@@ -75,48 +70,108 @@ import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import za.co.jpsoft.winkerkreader.utils.WhatsAppContactLoader
 import za.co.jpsoft.winkerkreader.utils.WorkScheduler
 import za.co.jpsoft.winkerkreader.workers.PastoralBackupWorker
-import java.io.File
 
+/**
+ * The main container Activity of the application. Displays the search interface,
+ * congregation filter chips, and the paginated list of congregation members.
+ */
 class MainActivity : BaseActivity() {
 
+    // ─── View Binding & Adapters ─────────────────────────────────────────────
+
+    /** View binding containing layout elements. */
     lateinit var binding: ActivityMainBinding
+
+    /** Adapter for rendering the paginated list of member records. */
     lateinit var memberListAdapter: MemberListAdapter
 
+
+    // ─── Coordinators & Managers ─────────────────────────────────────────────
+
+    /** Controls navigation flows to sub-activities. */
     private lateinit var navigationController: MainNavigationController
-    private lateinit var viewModel: MemberViewModel
+
+    /** Main shared configuration settings manager. */
     lateinit var settingsManager: SettingsManager
 
-    private lateinit var workScheduler: WorkScheduler
+    /** Coordinates search parameters and filters between UI and ViewModel. */
     lateinit var searchFilterCoordinator: MainSearchFilterCoordinator
 
+    /** Coordinates startup tasks, initialization sequence, and background services. */
+    private lateinit var startupCoordinator: MainStartupCoordinator
+
+    /** Manages application permissions requested from the user. */
     private lateinit var permissionManager: PermissionManager
 
+    /** Schedules periodic background tasks (e.g. notifications and database syncing). */
+    private lateinit var workScheduler: WorkScheduler
+
+    /** Manages options menu states and creation. */
     private lateinit var menuController: MainMenuController
-    private lateinit var startupCoordinator: MainStartupCoordinator
+
+    /** Handles interaction clicks and quick-actions menu triggers on list rows. */
     private lateinit var listInteractionController: MemberListInteractionController
+
+    /** Processes on-activity-result callbacks for child views or settings. */
     private lateinit var activityResultCoordinator: ActivityResultCoordinator
 
+    /** Coordinates and handles physical device back button presses. */
     private lateinit var backPressHandler: BackPressHandler
 
+    /** Controls pastoral reminders visual badge counts in the menu. */
     private lateinit var pastoralBadgeController: PastoralReminderBadgeController
-    private lateinit var swipeGestureController: MainSwipeGestureController
-    private var workInfoObserver: Observer<WorkInfo?> = Observer { }
-    private var searchList: ArrayList<SearchCheckBox> = arrayListOf()
 
-    private var savedListScroll: MemberListScrollHelper.ScrollState? = null
-    private var originalRecordStatusBeforeFilter: String = "0"
+    /** Intercepts and detects horizontal swipe gestures to change list sorting. */
+    private lateinit var swipeGestureController: MainSwipeGestureController
+
+
+    // ─── ViewModels ──────────────────────────────────────────────────────────
+
+    /** Viewmodel supplying members data and pagination flows. */
+    private lateinit var viewModel: MemberViewModel
+
+    /** State-holder viewmodel that survives configuration changes. */
     val mainViewModel: MainViewModel by viewModels(
         factoryProducer = { SavedStateViewModelFactory(application, this, intent?.extras) }
     )
+
+
+    // ─── Observers & States ──────────────────────────────────────────────────
+
+    /** Observer listening to periodic DB backup worker progress. */
+    private var workInfoObserver: Observer<WorkInfo?> = Observer { }
+
+    /** Currently active LiveData monitoring Room/WorkManager database tasks. */
     private var currentWorkInfoLiveData: LiveData<WorkInfo?>? = null
+
+    /** List of search fields currently checked for queries. */
+    private var searchList: ArrayList<SearchCheckBox> = arrayListOf()
+
+    /** Temporarily holds list scroll state during configuration changes. */
+    private var savedListScroll: MemberListScrollHelper.ScrollState? = null
+
+    /** Current sort order identifier (e.g. VAN, WYK, etc.). */
     private var currentSortOrder: String = ""
+
+    /** Offset position where the next upcoming birthday member resides in the sorted list. */
     private var pendingBirthdayOffset: Int? = null
+
+    /** Status checking if basic application components have completed initialization. */
     private var isAppInitialized = false
 
+    /** Status checking if initial network/local database load has finished. */
     private var hasCompletedInitialLoad = false
+
+    /** Flag indicating that initial data loading process has begun. */
     private var initialLoadStarted = false
+
+    /** Flag indicating that initial data loading process has fully completed. */
     private var initialLoadComplete = false
+
+    /** List of congregations registered in the configuration settings. */
     private lateinit var initialCongregations: Set<String>
+
+    /** Flag representing if initial load has finished and configurations synced. */
     private var initialLoadDone = false
 
 
@@ -127,16 +182,13 @@ class MainActivity : BaseActivity() {
         const val FILTER_CHECK_BOX = "FILTER_CHECK_BOX"
     }
 
-    private fun handleResultCancelled() {
-        if (::searchFilterCoordinator.isInitialized) {
-            searchFilterCoordinator.handleResultCancelled()
-        }
-    }
+
+    // ─── Android Lifecycle Callbacks ─────────────────────────────────────────
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // ---------- 1. Basic (ViewModel‑independent) setup ----------
+        // 1. Basic configuration and settings managers setup
         settingsManager = SettingsManager.getInstance(this)
         initialCongregations = listOfNotNull(
             settingsManager.gemeenteNaam.takeIf { it.isNotBlank() },
@@ -168,20 +220,17 @@ class MainActivity : BaseActivity() {
             insets
         }
 
-        // ---------- 2. Create ViewModel and all controllers early ----------
-        // ✅ Create SavedStateHandle for the ViewModel
+        // 2. Setup ViewModel and data source controllers
         val savedStateHandle = SavedStateHandle()
-
         viewModel = ViewModelProvider(
             this,
             MemberViewModel.MemberViewModelFactory(
                 application,
-                savedStateHandle,  // ✅ Now savedStateHandle is defined
+                savedStateHandle,
                 initialCongregations
             )
         ).get(MemberViewModel::class.java)
 
-        // Adapter and RecyclerView
         memberListAdapter = MemberListAdapter(
             onItemClick = { view, item, _ ->
                 if (::listInteractionController.isInitialized) {
@@ -200,13 +249,11 @@ class MainActivity : BaseActivity() {
         binding.lidmaatList.apply {
             layoutManager = LinearLayoutManager(this@MainActivity)
             adapter = memberListAdapter
-            // ✅ Remove or set to false if items can change size
             setHasFixedSize(false)
             itemAnimator = null
         }
-        //memberListAdapter.stateRestorationPolicy = RecyclerView.Adapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY
         memberListAdapter.stateRestorationPolicy = RecyclerView.Adapter.StateRestorationPolicy.ALLOW
-        // Controllers that depend on ViewModel
+
         searchFilterCoordinator = MainSearchFilterCoordinator(
             tag = TAG,
             context = this,
@@ -269,22 +316,16 @@ class MainActivity : BaseActivity() {
 
         binding.lidmaatList.addOnItemTouchListener(object : RecyclerView.OnItemTouchListener {
             override fun onInterceptTouchEvent(rv: RecyclerView, e: MotionEvent): Boolean {
-                // Allow swipe controller to handle horizontal swipes
-                if (e.action == MotionEvent.ACTION_MOVE) {
-                    // Check if it's a horizontal swipe
-                    // If yes, return true to intercept
-                }
                 return false
             }
 
             override fun onTouchEvent(rv: RecyclerView, e: MotionEvent) {
-                // Pass to swipe controller
                 swipeGestureController.handleTouchEvent(e)
             }
 
             override fun onRequestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {}
         })
-        // ActivityResultCoordinator must be created before onStart
+
         activityResultCoordinator = ActivityResultCoordinator(
             activity = this,
             searchCheckBoxKey = SEARCH_CHECK_BOX,
@@ -299,17 +340,16 @@ class MainActivity : BaseActivity() {
             onCancelled = ::handleResultCancelled
         )
 
-        // ---------- 3. Setup filter chips ----------
+        // 3. UI details and chip setup
         setupFilterChips()
 
-        // ---------- 4. Authentication guard ----------
+        // 4. Load remaining application state behind AuthGuard
         appAuthGuard.guardIfNeeded(
             onAuthenticated = {
                 loadDataAndFinalize(savedInstanceState)
             }
         )
 
-        // Also dismiss on scroll to avoid overlay:
         binding.lidmaatList.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                 if (newState == RecyclerView.SCROLL_STATE_DRAGGING) {
@@ -319,26 +359,47 @@ class MainActivity : BaseActivity() {
         })
     }
 
-    /**
-     * Called after every onResume, but only when the app is authenticated
-     * (or when biometric lock is disabled). This is the place for all
-     * resume‑time housekeeping.
-     */
+    override fun onStart() {
+        super.onStart()
+        if (settingsManager.callLogEnabled) {
+            BatteryOptimizationHelper.showBatteryOptimizationDialog(this)
+        }
+    }
+
+    override fun onPause() {
+        if (isAppInitialized) {
+            savedListScroll =
+                MemberListScrollHelper.saveScrollState(binding.lidmaatList, memberListAdapter)
+        }
+        super.onPause()
+    }
+
+    override fun onDestroy() {
+        currentWorkInfoLiveData?.removeObserver(workInfoObserver)
+        if (::menuController.isInitialized) {
+            menuController.clearCallbacks()
+        }
+        WhatsAppContactLoader.reset()
+        if (::listInteractionController.isInitialized) {
+            listInteractionController.dismissQuickActions()
+        }
+        super.onDestroy()
+    }
+
+
+    // ─── Authentication Guarded Resume Housekeeping ─────────────────────────
+
     override fun onResumeAfterAuth() {
-        // This logic was previously inside the checkOnResume callback.
         if (isAppInitialized) {
             startupCoordinator.runOnResume()
             pastoralBadgeController.refresh()
             updateFilterSummary()
 
-            // Check if we need to scroll to birthday
             val currentSort = settingsManager.defLayout
             if (currentSort == "VERJAAR" || currentSort == "VERJAARSDAG") {
                 scrollToCurrentBirthday()
             }
 
-            // Load initial data if not already done (but this may be redundant,
-            // keep it to be safe)
             if (!initialLoadDone) {
                 initialLoadDone = true
                 loadInitialData()
@@ -348,18 +409,14 @@ class MainActivity : BaseActivity() {
             binding.lidmaatList.post { restoreListScrollIfNeeded() }
         }
     }
+
     /**
-     * Called only after successful authentication.
-     * Loads data, sets up remaining controllers, and marks the app as initialized.
+     * Initializes core observers, background triggers, and registers event loops after successful auth.
      */
     private fun loadDataAndFinalize(savedInstanceState: Bundle?) {
-        // ---------- IMPORTANT: Set up data observers BEFORE loading data ----------
-        // ✅ IMPORTANT: Setup observers BEFORE any data load
         setupObservers()
         setupViewModelObservers()
 
-
-        // ✅ Set initialLoadDone flag to false (will be set true in loadInitialData)
         initialLoadDone = false
         initialLoadStarted = false
 
@@ -370,7 +427,7 @@ class MainActivity : BaseActivity() {
             mainViewModel = mainViewModel
         )
         pastoralBadgeController.setup()
-        // ---------- Startup coordinator (loads data, sets up permissions, etc.) ----------
+
         startupCoordinator = MainStartupCoordinator(
             context = this,
             lifecycleScope = lifecycleScope,
@@ -393,9 +450,7 @@ class MainActivity : BaseActivity() {
                     this@MainActivity.startMonitoringServiceIfEnabled()
                 }
 
-                override fun setupViewModel() {
-                    // Already set up; do nothing
-                }
+                override fun setupViewModel() {}
 
                 override fun setupPermissions() {
                     this@MainActivity.setupPermissions()
@@ -421,10 +476,6 @@ class MainActivity : BaseActivity() {
                     this@MainActivity.ensureServicesAreRunning()
                 }
 
-//                override fun isNotificationAccessEnabled(): Boolean {
-//                    return permissionManager.isNotificationListenerEnabled()
-//                }
-
                 override fun openNotificationSettings() {
                     navigationController.navigateToNotificationListenerSettings()
                 }
@@ -434,11 +485,8 @@ class MainActivity : BaseActivity() {
                 }
             }
         )
-        // This will call loadInitialData() which triggers the first data load.
         startupCoordinator.runOnCreate()
-        // Force a refresh to update the count
-        //viewModel.refresh()
-        // ---------- Back‑press handler ----------
+
         backPressHandler = BackPressHandler(
             activity = this,
             mainViewModel = mainViewModel,
@@ -446,31 +494,65 @@ class MainActivity : BaseActivity() {
             onFinish = { finish() }
         )
         backPressHandler.register()
-
-        // ---------- Check for newer backup ----------
-        checkForNewerBackup()
-
-        // ---------- Restore instance state (if any) ----------
         savedInstanceState?.let { restoreInstanceState(it) }
 
-        // ---------- Sync sort, scroll handling (these don't affect initial load) ----------
         syncSortOrderWithSettings()
         setupBirthdayScrollHandling()
         setupScrollRestorationObserver()
 
-        // Force menu to be recreated now that the app is ready
         invalidateOptionsMenu()
-
         isAppInitialized = true
     }
 
+
+    // ─── Options Menu Callbacks ──────────────────────────────────────────────
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        return if (isAppInitialized) {
+            menuController.onCreateOptionsMenu(menu)
+        } else {
+            false
+        }
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (!isAppInitialized) {
+            return super.onOptionsItemSelected(item)
+        }
+
+        if (item.itemId == R.id.filter_options) {
+            FilterBottomSheet().show(supportFragmentManager, "filter")
+            return true
+        }
+
+        return MenuItemHandler(this, settingsManager, viewModel, navigationController)
+            .handleMenuItem(item) || super.onOptionsItemSelected(item)
+    }
+
+    override fun onPrepareOptionsMenu(menu: Menu): Boolean {
+        if (!isAppInitialized) return false
+
+        val bedieningItem = menu.findItem(R.id.action_bediening)
+        if (bedieningItem != null) {
+            val count = pastoralBadgeController.badgeCount
+            val title = if (count > 0) {
+                getString(R.string.mainmenu_bediening_badge, count)
+            } else {
+                getString(R.string.mainmenu_bediening)
+            }
+            bedieningItem.title = title
+        }
+
+        return super.onPrepareOptionsMenu(menu)
+    }
+
+
+    // ─── Data Observers & Bindings ───────────────────────────────────────────
+
     /**
-     * Sets up all the data observers that bind the ViewModel to the UI.
-     * This must be called after viewModel and memberListAdapter are created.
+     * Connects LiveData elements and flows inside the ViewModels directly to UI elements.
      */
-    // MainActivity.kt - setupObservers()
     private fun setupObservers() {
-        // LiveData observers (unchanged)
         viewModel.getTextLiveData().observe(this) { searchText ->
             binding.searchText.text = searchText
             binding.searchItemBlock.visibility =
@@ -487,16 +569,15 @@ class MainActivity : BaseActivity() {
             restoreListScrollIfNeeded()
         }
 
-        // ✅ Observe total count
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.totalCount.collect { count ->
-                    binding.totalCount.text = "($count)"
+                    val txt = "($count)"
+                    binding.totalCount.text = txt
                 }
             }
         }
 
-        // ✅ Paging data flow - use collectLatest to handle rapid emissions
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 if (BuildConfig.DEBUG) Log.d(TAG, "📊 Starting paging data collection")
@@ -506,52 +587,19 @@ class MainActivity : BaseActivity() {
                         if (BuildConfig.DEBUG) Log.e(TAG, "Paging flow error", e)
                     }
                     .collectLatest { pagingData ->
-                        if (BuildConfig.DEBUG) {
-                            Log.d(
-                                TAG,
-                                "📊 Received paging data, adapter itemCount before: ${memberListAdapter.itemCount}"
-                            )
-                        }
-
-                        // ✅ Ensure adapter is attached
                         if (binding.lidmaatList.adapter == null) {
-                            if (BuildConfig.DEBUG) Log.d(TAG, "📊 Adapter is null, reattaching")
                             binding.lidmaatList.adapter = memberListAdapter
                         }
-
-                        // ✅ Submit data - collectLatest ensures previous submissions are cancelled
                         memberListAdapter.submitData(lifecycle, pagingData)
-
-                        if (BuildConfig.DEBUG) {
-                            Log.d(
-                                TAG,
-                                "📊 Submitted paging data, adapter itemCount after: ${memberListAdapter.itemCount}"
-                            )
-                        }
                     }
             }
         }
 
-
-        // Load state (progress bar)
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 memberListAdapter.loadStateFlow.collect { loadStates ->
                     val isLoading = loadStates.refresh is LoadState.Loading
-                    if (BuildConfig.DEBUG) {
-                        Log.d(
-                            TAG,
-                            "📊 Load state: refresh=${loadStates.refresh}, append=${loadStates.append}, itemCount=${memberListAdapter.itemCount}"
-                        )
-                    }
                     binding.indeterminateBar.visibility = if (isLoading) View.VISIBLE else View.GONE
-
-                    if (loadStates.refresh is LoadState.NotLoading && memberListAdapter.itemCount > 0) {
-                        if (BuildConfig.DEBUG) Log.d(
-                            TAG,
-                            "📊 Data loaded successfully, count=${memberListAdapter.itemCount}"
-                        )
-                    }
 
                     if (loadStates.refresh is LoadState.Error) {
                         if (BuildConfig.DEBUG) Log.e(
@@ -564,6 +612,7 @@ class MainActivity : BaseActivity() {
         }
     }
 
+    /** Observes repository and intent modifications to refresh items dynamically. */
     private fun setupViewModelObservers() {
         lifecycleScope.launch {
             ContactRepository.contactsUpdateFlow.collect {
@@ -572,46 +621,9 @@ class MainActivity : BaseActivity() {
         }
     }
 
-
-    private fun loadInitialData() {
-        // ✅ Prevent multiple loads
-        if (initialLoadStarted) {
-            if (BuildConfig.DEBUG) Log.d(TAG, "loadInitialData: already started, skipping")
-            return
-        }
-        initialLoadStarted = true
-
-        if (::memberListAdapter.isInitialized && memberListAdapter.itemCount > 0) {
-            savedListScroll =
-                MemberListScrollHelper.saveScrollState(binding.lidmaatList, memberListAdapter)
-        }
-        initializeData(null)
-        currentFocus?.let {
-            val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-            imm.hideSoftInputFromWindow(it.windowToken, 0)
-        }
-        binding.searchItemBlock.visibility = View.GONE
-        searchFilterCoordinator.refresh()
-        WhatsAppContactLoader.loadWhatsAppContactsAtomic(this, lifecycleScope)
-
-        hasCompletedInitialLoad = true
-
-        // Sync sort order properly now that database is ready
-        val defLayout = settingsManager.defLayout
-        updateSortOrder(defLayout, forceRefreshIfUnchanged = true)
-
-        // ✅ If default layout is birthday, scroll to current birthday
-        if (defLayout == "VERJAAR" || defLayout == "VERJAARSDAG") {
-            // Wait a moment for data to load, then scroll
-            binding.lidmaatList.postDelayed({
-                scrollToCurrentBirthday()
-            }, 500)
-        }
-        initialLoadComplete = true
-    }
-
-    // In MainActivity.kt - update observeDataset
-
+    /**
+     * Triggered to notify adapter state modifications and display search overlays.
+     */
     fun observeDataset() {
         if (BuildConfig.DEBUG) Log.d(TAG, "observeDataset called")
 
@@ -640,7 +652,6 @@ class MainActivity : BaseActivity() {
 
         binding.sortorder.text = getSortIcon(viewModel.sortOrder)
 
-        // ✅ FIXED: use memberListAdapter and viewModel.sortOrder
         memberListAdapter.updateState(
             listView = settingsManager.listView,
             soekList = viewModel.soekList,
@@ -671,19 +682,47 @@ class MainActivity : BaseActivity() {
                 }
             }
         }
-
-        if (BuildConfig.DEBUG) {
-            Log.d(
-                TAG,
-                "observeDataset: sort=${viewModel.sortOrder}, hasFilter=$hasFilter, hasSearch=$hasSearch, isBirthdaySort=$isBirthdaySort"
-            )
-        }
     }
 
 
-    private fun initializeData(savedInstanceState: Bundle?) {
-        val deviceId = DeviceIdManager.getDeviceId(this)
+    // ─── Initialization & Setup Helpers ──────────────────────────────────────
 
+    /** Performs the initial queries load after app authorization check. */
+    private fun loadInitialData() {
+        if (initialLoadStarted) {
+            if (BuildConfig.DEBUG) Log.d(TAG, "loadInitialData: already started, skipping")
+            return
+        }
+        initialLoadStarted = true
+
+        if (::memberListAdapter.isInitialized && memberListAdapter.itemCount > 0) {
+            savedListScroll =
+                MemberListScrollHelper.saveScrollState(binding.lidmaatList, memberListAdapter)
+        }
+        initializeData(null)
+        currentFocus?.let {
+            val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.hideSoftInputFromWindow(it.windowToken, 0)
+        }
+        binding.searchItemBlock.visibility = View.GONE
+        searchFilterCoordinator.refresh()
+        WhatsAppContactLoader.loadWhatsAppContactsAtomic(this, lifecycleScope)
+
+        hasCompletedInitialLoad = true
+
+        val defLayout = settingsManager.defLayout
+        updateSortOrder(defLayout)
+
+        if (defLayout == "VERJAAR" || defLayout == "VERJAARSDAG") {
+            binding.lidmaatList.postDelayed({
+                scrollToCurrentBirthday()
+            }, 500)
+        }
+        initialLoadComplete = true
+    }
+
+    /** Prepares default local configurations for filters and search fields. */
+    private fun initializeData(savedInstanceState: Bundle?) {
         setupVersionInfo()
         initializeSearchAndFilterLists()
         viewModel.setSearchList(searchList)
@@ -691,16 +730,10 @@ class MainActivity : BaseActivity() {
         if (settingsManager.defLayout.isEmpty()) {
             settingsManager.defLayout = "GESINNE"
         }
-        if (BuildConfig.DEBUG) {
-            Log.d(TAG, "initializeData: defLayout = ${settingsManager.defLayout}")
-        }
-        // Do not set currentSortOrder, viewModel.sortOrder, or layout UI values here.
-        // Doing so would cause updateSortOrder to think the state is already synced and return early,
-        // leaving the database query, view model eventType, and adapter layout out of sync on startup.
         viewModel.soekList = false
     }
 
-
+    /** Populates the title bar with current build version metadata. */
     private fun setupVersionInfo() {
         try {
             val packageInfo = packageManager.getPackageInfo(packageName, 0)
@@ -723,6 +756,7 @@ class MainActivity : BaseActivity() {
         }
     }
 
+    /** Creates standard default list items configurations for search dialogs. */
     private fun createDefaultSearchList(): ArrayList<SearchCheckBox> {
         return arrayListOf(
             SearchCheckBox(winkerkEntry.LIDMATE_VAN, "", "Van", true),
@@ -738,32 +772,13 @@ class MainActivity : BaseActivity() {
         )
     }
 
+    /** Restores checked search criteria from shared preferences. */
     private fun initializeSearchAndFilterLists() {
         val prefsManager = SearchCheckBoxPreferences(this)
         searchList = prefsManager.getSearchCheckBoxList()
         if (searchList.isEmpty()) {
             searchList = createDefaultSearchList()
             prefsManager.saveSearchCheckBoxList(searchList)
-        }
-    }
-
-    private fun restoreInstanceState(savedInstanceState: Bundle) {
-        try {
-            val savedSearchList = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                savedInstanceState.getParcelableArrayList(
-                    SEARCH_CHECK_BOX,
-                    SearchCheckBox::class.java
-                )
-            } else {
-                @Suppress("DEPRECATION")
-                savedInstanceState.getParcelableArrayList<SearchCheckBox>(SEARCH_CHECK_BOX)
-            }
-            if (savedSearchList != null) {
-                searchList = savedSearchList
-                SearchCheckBoxPreferences(this).saveSearchCheckBoxList(searchList)
-            }
-        } catch (e: Exception) {
-            if (BuildConfig.DEBUG) Log.w(TAG, "Failed to restore search list", e)
         }
     }
 
@@ -778,36 +793,10 @@ class MainActivity : BaseActivity() {
         }
     }
 
-    private fun findSearchView(): SearchView? {
-        return if (::menuController.isInitialized) menuController.findSearchView() else null
-    }
-
-    fun applyFilterList(filterList: ArrayList<FilterBox>) {
-        searchFilterCoordinator.filterList = filterList
-    }
-
     private fun setupPermissions() {
         checkOverlayPermission()
         createNotificationChannel()
         PastoralNotificationHelper.ensureChannel(this)
-    }
-
-    private fun startMonitoringServiceIfEnabled() {
-        if (settingsManager.autoStartEnabled && !CallMonitoringService.isServiceRunning(this)) {
-            try {
-                val serviceIntent = Intent(this, CallMonitoringService::class.java)
-                startForegroundService(serviceIntent)
-                if (BuildConfig.DEBUG) Log.d(TAG, "Call monitoring service started successfully")
-            } catch (e: SecurityException) {
-                if (BuildConfig.DEBUG) Log.e(TAG, "Security exception - check permissions", e)
-            } catch (e: Exception) {
-                if (BuildConfig.DEBUG) Log.e(TAG, "Failed to start call monitoring service", e)
-            }
-        }
-    }
-
-    private fun checkOverlayPermission() {
-        permissionManager.requestOverlayPermissionWithRationale(this)
     }
 
     private fun createNotificationChannel() {
@@ -817,33 +806,12 @@ class MainActivity : BaseActivity() {
         notificationManager?.createNotificationChannel(serviceChannel)
     }
 
-    private fun ensureServicesAreRunning() {
-        if (settingsManager.autoStartEnabled && !CallMonitoringService.isServiceRunning(this)) {
-            if (BuildConfig.DEBUG) Log.d(TAG, "CallMonitoring service was killed, restarting…")
-            startMonitoringServiceIfEnabled()
-        }
-    }
 
-    private fun syncSortOrderWithSettings() {
-        if (!hasCompletedInitialLoad) {
-            if (BuildConfig.DEBUG) Log.d(
-                TAG,
-                "syncSortOrderWithSettings: skipping, initial load not complete yet"
-            )
-            return
-        }
-        val currentDefLayout = settingsManager.defLayout
-        if (BuildConfig.DEBUG) Log.d(
-            TAG,
-            "syncSortOrderWithSettings: defLayout = $currentDefLayout"
-        )
-        updateSortOrder(currentDefLayout, forceRefreshIfUnchanged = true)
-    }
+    // ─── Filter Operations ───────────────────────────────────────────────────
 
-    // ------------------------------------------------------------
-    // Filter chips setup
-    // ------------------------------------------------------------
-
+    /**
+     * Initializes congregation select chips dynamically from layout properties.
+     */
     private fun setupFilterChips() {
         val group = binding.congregationChipGroup
         val settings = SettingsManager.getInstance(this)
@@ -916,22 +884,12 @@ class MainActivity : BaseActivity() {
             group.addView(chip)
         }
 
-        // ✅ Only call this ONCE, and it's already handled by the ViewModel init
-        // The ViewModel is already initialized with initialCongregations
-        if (BuildConfig.DEBUG) Log.d(TAG, "🔍 setupFilterChips: congregations = $congregations")
-        if (BuildConfig.DEBUG) Log.d(
-            TAG,
-            "🔍 setupFilterChips: initialCongregations = $initialCongregations"
-        )
-        if (BuildConfig.DEBUG) Log.d(
-            TAG,
-            "🔍 setupFilterChips: viewModel._congregationFilter = ${viewModel.getCurrentCongregations()}"
-        )
         binding.indeterminateBar.post {
             binding.indeterminateBar.visibility = View.GONE
         }
     }
 
+    /** Resolves which congregation chips are actively checked. */
     private fun getSelectedCongregations(): Set<String> {
         val group = binding.congregationChipGroup
         val selected = mutableSetOf<String>()
@@ -944,246 +902,16 @@ class MainActivity : BaseActivity() {
         return selected
     }
 
+    /** Applies checked chip tags directly as ViewModel query limitations. */
     private fun applyCongregationFilter() {
         val selected = getSelectedCongregations()
         viewModel.setCongregationFilter(selected)
-        //memberListAdapter.forceRefresh()
         viewModel.refresh()
     }
 
-    private fun isColorDark(color: Int): Boolean {
-        val darkness =
-            1 - (0.299 * Color.red(color) + 0.587 * Color.green(color) + 0.114 * Color.blue(color)) / 255
-        return darkness >= 0.5
-    }
-
-    private fun getSortIcon(sortOrder: String): String = when (sortOrder) {
-        "VAN" -> "⇵🔤"
-        "GESINNE" -> "⇵👨‍👩‍👧‍👦"
-        "WYK" -> "⇵🏘️"
-        "OUDERDOM" -> "⇵📅"
-        "VERJAAR" -> "⇵🎂"
-        "ADRES" -> "⇵📌"
-        "HUWELIK" -> "⇵💍"
-        else -> "⇵📋"
-    }
-
-    // ------------------------------------------------------------
-    // Sort order management
-    // ------------------------------------------------------------
-
-
-    // MainActivity.kt
-    // MainActivity.kt
-    // MainActivity.kt
-    fun updateSortOrder(newSort: String, forceRefreshIfUnchanged: Boolean = true) {
-        if (BuildConfig.DEBUG) Log.d(
-            TAG,
-            "updateSortOrder: newSort=$newSort, currentSort=$currentSortOrder"
-        )
-
-        if (newSort == currentSortOrder) {
-            memberListAdapter.updateState(
-                listView = settingsManager.listView,
-                soekList = viewModel.soekList,
-                soek = viewModel.soek,
-                recordStatus = viewModel.recordStatus,
-                sortOrder = newSort,
-                useCongregationIndicator = settingsManager.useCongregationIndicator
-            )
-            binding.sortorder.text = getSortIcon(newSort)
-            return
-        }
-
-        currentSortOrder = newSort
-        settingsManager.defLayout = newSort
-        mainViewModel.setSortOrder(newSort)
-
-        viewModel.updateSortOrder(newSort)
-
-        memberListAdapter.updateState(
-            listView = settingsManager.listView,
-            soekList = viewModel.soekList,
-            soek = viewModel.soek,
-            recordStatus = viewModel.recordStatus,
-            sortOrder = newSort,
-            useCongregationIndicator = settingsManager.useCongregationIndicator
-        )
-
-        binding.sortorder.text = getSortIcon(newSort)
-        invalidateOptionsMenu()
-
-        if (newSort == "VERJAAR" || newSort == "VERJAARSDAG") {
-            scrollToCurrentBirthday()
-        }
-
-        if (BuildConfig.DEBUG) Log.d(TAG, "updateSortOrder completed")
-    }
-
-    private fun scrollToCurrentBirthday() {
-        if (BuildConfig.DEBUG) Log.d(TAG, "scrollToCurrentBirthday called")
-
-        // First, compute the offset
-        lifecycleScope.launch {
-            try {
-                val offset = viewModel.getBirthdayOffset(viewModel.sortOrder)
-                if (BuildConfig.DEBUG) Log.d(TAG, "Birthday offset = $offset")
-
-                // Wait for the data to load, then scroll
-                memberListAdapter.loadStateFlow.collect { loadStates ->
-                    if (loadStates.refresh is LoadState.NotLoading) {
-                        val itemCount = memberListAdapter.itemCount
-                        if (BuildConfig.DEBUG) Log.d(
-                            TAG,
-                            "Data loaded, itemCount=$itemCount, offset=$offset"
-                        )
-
-                        if (itemCount > 0 && offset >= 0) {
-                            val scrollPos = if (offset < itemCount) offset else itemCount - 1
-                            if (BuildConfig.DEBUG) Log.d(TAG, "Scrolling to position $scrollPos")
-
-                            binding.lidmaatList.post {
-                                (binding.lidmaatList.layoutManager as? LinearLayoutManager)
-                                    ?.scrollToPositionWithOffset(scrollPos, 0)
-                            }
-                        }
-                        // Stop collecting after we've scrolled
-                        return@collect
-                    }
-                }
-            } catch (e: Exception) {
-                if (BuildConfig.DEBUG) Log.e(TAG, "Failed to scroll to birthday", e)
-            }
-        }
-    }
-    // ------------------------------------------------------------
-    // Lifecycle methods
-    // ------------------------------------------------------------
-
-    override fun onStart() {
-        super.onStart()
-        if (settingsManager.callLogEnabled) {
-            BatteryOptimizationHelper.showBatteryOptimizationDialog(this)
-        }
-    }
-
-    override fun onPause() {
-        if (isAppInitialized) {
-            savedListScroll =
-                MemberListScrollHelper.saveScrollState(binding.lidmaatList, memberListAdapter)
-        }
-        super.onPause()
-    }
-
-    override fun onDestroy() {
-        currentWorkInfoLiveData?.removeObserver(workInfoObserver)
-        if (::menuController.isInitialized) {
-            menuController.clearCallbacks()
-        }
-        WhatsAppContactLoader.reset()
-        if (::listInteractionController.isInitialized) {
-            listInteractionController.dismissQuickActions()
-        }
-        super.onDestroy()
-    }
-
-    // ------------------------------------------------------------
-    // Options menu
-    // ------------------------------------------------------------
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        return if (isAppInitialized) {
-            menuController.onCreateOptionsMenu(menu)
-        } else {
-            false
-        }
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (!isAppInitialized) {
-            return super.onOptionsItemSelected(item)
-        }
-
-        if (item.itemId == R.id.filter_options) {
-            FilterBottomSheet().show(supportFragmentManager, "filter")
-            return true
-        }
-
-        return MenuItemHandler(this, settingsManager, viewModel, navigationController)
-            .handleMenuItem(item) || super.onOptionsItemSelected(item)
-    }
-
-    override fun onPrepareOptionsMenu(menu: Menu): Boolean {
-        if (!isAppInitialized) return false
-
-        val bedieningItem = menu.findItem(R.id.action_bediening)
-        if (bedieningItem != null) {
-            val count = pastoralBadgeController.badgeCount
-            val title = if (count > 0) {
-                getString(R.string.mainmenu_bediening_badge, count)
-            } else {
-                getString(R.string.mainmenu_bediening)
-            }
-            bedieningItem.title = title
-        }
-
-        return super.onPrepareOptionsMenu(menu)
-    }
-
-    // ------------------------------------------------------------
-    // Touch events & gestures
-    // ------------------------------------------------------------
-
-    override fun onTouchEvent(event: MotionEvent): Boolean {
-        return if (isAppInitialized) {
-            swipeGestureController.onTouchEvent(event) || super.onTouchEvent(event)
-        } else {
-            super.onTouchEvent(event)
-        }
-    }
-
-    override fun dispatchTouchEvent(event: MotionEvent): Boolean {
-        if (isAppInitialized) {
-            val chipView = binding.chipScrollView
-            if (chipView != null && isTouchInsideView(event, chipView)) {
-                return super.dispatchTouchEvent(event)
-            }
-            swipeGestureController.handleTouchEvent(event)
-        }
-        return super.dispatchTouchEvent(event)
-    }
-
-    private fun isTouchInsideView(event: MotionEvent, view: View): Boolean {
-        val location = IntArray(2)
-        view.getLocationOnScreen(location)
-        val x = event.rawX
-        val y = event.rawY
-        return x >= location[0] && x <= location[0] + view.width &&
-                y >= location[1] && y <= location[1] + view.height
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putParcelableArrayList(SEARCH_CHECK_BOX, searchList)
-        (binding.lidmaatList.layoutManager as? LinearLayoutManager)?.let { lm ->
-            outState.putInt("scroll_position", lm.findFirstVisibleItemPosition())
-        }
-    }
-
-    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
-        super.onRestoreInstanceState(savedInstanceState)
-        val position = savedInstanceState.getInt("scroll_position", -1)
-        if (position != -1) {
-            binding.lidmaatList.post {
-                binding.lidmaatList.scrollToPosition(position)
-            }
-        }
-    }
-
-    // ------------------------------------------------------------
-    // Filter summary and clearing
-    // ------------------------------------------------------------
-
+    /**
+     * Builds and displays the text string summarizing active filters on the search panel.
+     */
     fun updateFilterSummary() {
         val filterList = viewModel.getCurrentFilterList()
         if (filterList != null && filterList.any { it.checked }) {
@@ -1200,6 +928,7 @@ class MainActivity : BaseActivity() {
         }
     }
 
+    /** Formats active database selection structures as UI summary strings. */
     private fun buildFilterSummary(filterList: ArrayList<FilterBox>): String {
         val parts = mutableListOf<String>()
 
@@ -1254,6 +983,7 @@ class MainActivity : BaseActivity() {
         return parts.joinToString(" • ")
     }
 
+    /** Clears active search parameters and restores original sorting structure. */
     private fun clearFilter() {
         if (BuildConfig.DEBUG) Log.d(TAG, "clearFilter called")
 
@@ -1262,8 +992,6 @@ class MainActivity : BaseActivity() {
         } else {
             "VAN"
         }
-
-        if (BuildConfig.DEBUG) Log.d(TAG, "Restoring sort order to: $restoreSort")
 
         viewModel.clearFilters()
         viewModel.recordStatus = "0"
@@ -1293,61 +1021,11 @@ class MainActivity : BaseActivity() {
         )
 
         binding.sortorder.text = getSortIcon(restoreSort)
-
         viewModel.refresh()
         recomputeBirthdayOffset()
-
-        if (BuildConfig.DEBUG) Log.d(TAG, "clearFilter completed, sort order: $restoreSort")
     }
 
-    // ------------------------------------------------------------
-    // Birthday and scroll handling
-    // ------------------------------------------------------------
-
-    fun recomputeBirthdayOffset() {
-        val currentSort = settingsManager.defLayout
-        if (currentSort == "VERJAAR" || currentSort == "VERJAARSDAG") {
-            lifecycleScope.launch {
-                pendingBirthdayOffset = viewModel.getBirthdayOffset(currentSort)
-            }
-        }
-    }
-
-    private fun setupBirthdayScrollHandling() {
-        // This is now handled directly in updateSortOrder()
-        // Keep this method but make it minimal
-        if (BuildConfig.DEBUG) Log.d(TAG, "setupBirthdayScrollHandling initialized")
-    }
-
-    private var scrollRestored = false
-
-    private fun restoreListScrollIfNeeded() {
-        if (pendingBirthdayOffset != null) return
-        val state = savedListScroll ?: return
-        if (memberListAdapter.itemCount == 0) return
-        MemberListScrollHelper.restoreScrollState(binding.lidmaatList, state, memberListAdapter)
-        savedListScroll = null
-        scrollRestored = true
-    }
-
-    private fun setupScrollRestorationObserver() {
-        lifecycleScope.launch {
-            memberListAdapter.loadStateFlow.collect { loadStates ->
-                if (loadStates.refresh is LoadState.NotLoading && savedListScroll != null) {
-                    restoreListScrollIfNeeded()
-                }
-            }
-        }
-    }
-
-    // ------------------------------------------------------------
-    // Filter & cancellation helpers
-    // ------------------------------------------------------------
-
-    fun setOriginalRecordStatusBeforeFilter(status: String) {
-        originalRecordStatusBeforeFilter = status
-    }
-
+    /** Cancels the current filter criteria, reverting sorting and hiding the text summary. */
     fun cancelFilter() {
         if (BuildConfig.DEBUG) Log.d(TAG, "cancelFilter called")
         recomputeBirthdayOffset()
@@ -1356,16 +1034,11 @@ class MainActivity : BaseActivity() {
         } else {
             "VAN"
         }
-        if (BuildConfig.DEBUG) Log.d(TAG, "cancelFilter: restoreSort = $restoreSort")
 
         clearAppliedFilterList()
         viewModel.soekList = false
 
         updateSortOrder(restoreSort)
-        if (BuildConfig.DEBUG) Log.d(
-            TAG,
-            "cancelFilter: after updateSortOrder, viewModel.sortOrder = ${viewModel.sortOrder}"
-        )
         searchFilterCoordinator.originalLayoutBeforeFilter = ""
         mainViewModel.setSavedSortOrderBeforeFilter(null)
 
@@ -1382,8 +1055,6 @@ class MainActivity : BaseActivity() {
         }
 
         resetChipSelection()
-
-        if (BuildConfig.DEBUG) Log.d(TAG, "cancelFilter finished")
     }
 
     private fun resetChipSelection() {
@@ -1394,118 +1065,252 @@ class MainActivity : BaseActivity() {
         applyCongregationFilter()
     }
 
-    fun setFilterRestoreState(savedSortOrder: String) {
-        mainViewModel.setSavedSortOrderBeforeFilter(savedSortOrder)
-    }
-
-    fun clearFilterRestoreState() {
-        mainViewModel.setSavedSortOrderBeforeFilter(null)
-    }
-
     fun clearAppliedFilterList() {
         searchFilterCoordinator.filterList = null
     }
 
-    // ------------------------------------------------------------
-    // Backup helpers
-    // ------------------------------------------------------------
 
-    private fun checkForNewerBackup() {
-//        lifecycleScope.launch(Dispatchers.IO) {
-//            val candidate = PastoralDatabaseBackup.findBackupFile(this@MainActivity)
-//                ?: findDownloadsBackup()
-//                ?: return@launch
-//
-//            val liveModified = getDatabasePath(winkerkEntry.PASTORAL_DB).lastModified()
-//            val backupModified = candidate.lastModified()
-//            if (backupModified <= liveModified) {
-//                if (candidate.absolutePath.startsWith(cacheDir.absolutePath)) {
-//                    candidate.delete()
-//                }
-//                return@launch
-//            }
-//
-//            val version = PastoralDatabaseBackup.readSchemaVersion(candidate)
-//            if (version < 1 || version > PastoralDatabaseBackup.CURRENT_PASTORAL_SCHEMA_VERSION) {
-//                candidate.delete()
-//                return@launch
-//            }
-//
-//            withContext(Dispatchers.Main) {
-//                val dateStr = SimpleDateFormat("d MMM HH:mm", Locale.getDefault())
-//                    .format(Date(backupModified))
-//                Snackbar.make(
-//                    binding.root,
-//                    "Rugsteun van $dateStr gevind. Wil jy herstel?",
-//                    Snackbar.LENGTH_LONG
-//                ).setAction("Herstel") {
-//                    val extras = Bundle().apply {
-//                        putBoolean(LaaiDatabasisActivity.EXTRA_PROMPT_RESTORE, true)
-//                    }
-//                    navigationController.navigateToLaaiDatabasis(extras)
-////                    startActivity(
-////                        Intent(this@MainActivity, LaaiDatabasisActivity::class.java)
-////                            .putExtra(LaaiDatabasisActivity.EXTRA_PROMPT_RESTORE, true)
-////                    )
-//                }.show()
-//                if (candidate.absolutePath.startsWith(cacheDir.absolutePath)) {
-//                    candidate.delete()
-//                }
-//            }
-//        }
+    // ─── Sorting & Scroll Control ────────────────────────────────────────────
+
+    /** Synchronizes current visual sort orders matching settings options. */
+    private fun syncSortOrderWithSettings() {
+        if (!hasCompletedInitialLoad) {
+            return
+        }
+        val currentDefLayout = settingsManager.defLayout
+        updateSortOrder(currentDefLayout)
     }
 
-    private fun findDownloadsBackup(): File? {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            val projection = arrayOf(
-                MediaStore.Downloads._ID,
-                MediaStore.Downloads.DISPLAY_NAME,
-                MediaStore.Downloads.DATE_MODIFIED,
-                MediaStore.Downloads.RELATIVE_PATH
+    fun updateSortOrder(newSort: String) {
+        if (BuildConfig.DEBUG) Log.d(
+            TAG,
+            "updateSortOrder: newSort=$newSort, currentSort=$currentSortOrder"
+        )
+
+        if (newSort == currentSortOrder) {
+            memberListAdapter.updateState(
+                listView = settingsManager.listView,
+                soekList = viewModel.soekList,
+                soek = viewModel.soek,
+                recordStatus = viewModel.recordStatus,
+                sortOrder = newSort,
+                useCongregationIndicator = settingsManager.useCongregationIndicator
             )
-            val selection = "${MediaStore.Downloads.DISPLAY_NAME} LIKE ? AND " +
-                    "${MediaStore.Downloads.RELATIVE_PATH} LIKE ?"
-            val selectionArgs = arrayOf("wkr_pastoral_%.db", "%WinkerkReader%")
-            val sortOrder = "${MediaStore.Downloads.DATE_MODIFIED} DESC"
+            binding.sortorder.text = getSortIcon(newSort)
+            return
+        }
 
-            var cursor: Cursor? = null
+        currentSortOrder = newSort
+        settingsManager.defLayout = newSort
+        mainViewModel.setSortOrder(newSort)
+
+        viewModel.updateSortOrder(newSort)
+
+        memberListAdapter.updateState(
+            listView = settingsManager.listView,
+            soekList = viewModel.soekList,
+            soek = viewModel.soek,
+            recordStatus = viewModel.recordStatus,
+            sortOrder = newSort,
+            useCongregationIndicator = settingsManager.useCongregationIndicator
+        )
+
+        binding.sortorder.text = getSortIcon(newSort)
+        invalidateOptionsMenu()
+
+        if (newSort == "VERJAAR" || newSort == "VERJAARSDAG") {
+            scrollToCurrentBirthday()
+        }
+
+        if (BuildConfig.DEBUG) Log.d(TAG, "updateSortOrder completed")
+    }
+
+
+    /** Launches a coroutine to retrieve upcoming birthdays offset index and scroll to it. */
+    private fun scrollToCurrentBirthday() {
+        lifecycleScope.launch {
             try {
-                cursor = contentResolver.query(
-                    MediaStore.Downloads.EXTERNAL_CONTENT_URI,
-                    projection,
-                    selection,
-                    selectionArgs,
-                    sortOrder
-                )
-                if (cursor != null && cursor.moveToFirst()) {
-                    val idIdx = cursor.getColumnIndex(MediaStore.Downloads._ID)
-                    val id = cursor.getLong(idIdx)
-                    val uri =
-                        ContentUris.withAppendedId(MediaStore.Downloads.EXTERNAL_CONTENT_URI, id)
-
-                    val tempFile = File(cacheDir, "temp_backup_check.db")
-                    contentResolver.openInputStream(uri)?.use { input ->
-                        tempFile.outputStream().use { output ->
-                            input.copyTo(output)
+                val offset = viewModel.getBirthdayOffset(viewModel.sortOrder)
+                memberListAdapter.loadStateFlow.collect { loadStates ->
+                    if (loadStates.refresh is LoadState.NotLoading) {
+                        val itemCount = memberListAdapter.itemCount
+                        if (itemCount > 0 && offset >= 0) {
+                            val scrollPos = if (offset < itemCount) offset else itemCount - 1
+                            binding.lidmaatList.post {
+                                (binding.lidmaatList.layoutManager as? LinearLayoutManager)
+                                    ?.scrollToPositionWithOffset(scrollPos, 0)
+                            }
                         }
+                        return@collect
                     }
-                    return tempFile
                 }
             } catch (e: Exception) {
-                if (BuildConfig.DEBUG) Log.e(TAG, "Failed to query MediaStore for backups", e)
-            } finally {
-                cursor?.close()
+                if (BuildConfig.DEBUG) Log.e(TAG, "Failed to scroll to birthday", e)
             }
-            null
-        } else {
-            @Suppress("DEPRECATION")
-            val dir = File(
-                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                "WinkerkReader"
-            )
-            dir.listFiles { f -> f.name.startsWith("wkr_pastoral_") && f.name.endsWith(".db") }
-                ?.maxByOrNull { it.lastModified() }
         }
     }
 
+    fun recomputeBirthdayOffset() {
+        val currentSort = settingsManager.defLayout
+        if (currentSort == "VERJAAR" || currentSort == "VERJAARSDAG") {
+            lifecycleScope.launch {
+                pendingBirthdayOffset = viewModel.getBirthdayOffset(currentSort)
+            }
+        }
+    }
+
+    private fun setupBirthdayScrollHandling() {
+        if (BuildConfig.DEBUG) Log.d(TAG, "setupBirthdayScrollHandling initialized")
+    }
+
+
+    // ─── Service Controls ────────────────────────────────────────────────────
+
+    /** Launches standard foreground Telephony broadcast listening services. */
+    private fun startMonitoringServiceIfEnabled() {
+        if (settingsManager.autoStartEnabled && !CallMonitoringService.isServiceRunning(this)) {
+            try {
+                val serviceIntent = Intent(this, CallMonitoringService::class.java)
+                startForegroundService(serviceIntent)
+            } catch (e: SecurityException) {
+                if (BuildConfig.DEBUG) Log.e(TAG, "Security exception - check permissions", e)
+            } catch (e: Exception) {
+                if (BuildConfig.DEBUG) Log.e(TAG, "Failed to start call monitoring service", e)
+            }
+        }
+    }
+
+    private fun checkOverlayPermission() {
+        permissionManager.requestOverlayPermissionWithRationale(this)
+    }
+
+    private fun ensureServicesAreRunning() {
+        if (settingsManager.autoStartEnabled && !CallMonitoringService.isServiceRunning(this)) {
+            startMonitoringServiceIfEnabled()
+        }
+    }
+
+
+    // ─── Touch Gestures & Inputs ─────────────────────────────────────────────
+
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        return if (isAppInitialized) {
+            swipeGestureController.onTouchEvent(event) || super.onTouchEvent(event)
+        } else {
+            super.onTouchEvent(event)
+        }
+    }
+
+    override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+        if (isAppInitialized) {
+            val chipView = binding.chipScrollView
+            if (isTouchInsideView(event, chipView)) {
+                return super.dispatchTouchEvent(event)
+            }
+            swipeGestureController.handleTouchEvent(event)
+        }
+        return super.dispatchTouchEvent(event)
+    }
+
+    private fun isTouchInsideView(event: MotionEvent, view: View): Boolean {
+        val location = IntArray(2)
+        view.getLocationOnScreen(location)
+        val x = event.rawX
+        val y = event.rawY
+        return x >= location[0] && x <= location[0] + view.width &&
+                y >= location[1] && y <= location[1] + view.height
+    }
+
+
+    // ─── State Restoration ───────────────────────────────────────────────────
+
+    private fun restoreInstanceState(savedInstanceState: Bundle?) {
+        if (savedInstanceState == null) return
+        try {
+            val savedSearchList = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                savedInstanceState.getParcelableArrayList(
+                    SEARCH_CHECK_BOX,
+                    SearchCheckBox::class.java
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                savedInstanceState.getParcelableArrayList<SearchCheckBox>(SEARCH_CHECK_BOX)
+            }
+            if (savedSearchList != null) {
+                searchList = savedSearchList
+                SearchCheckBoxPreferences(this).saveSearchCheckBoxList(searchList)
+            }
+        } catch (e: Exception) {
+            if (BuildConfig.DEBUG) Log.w(TAG, "Failed to restore search list", e)
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putParcelableArrayList(SEARCH_CHECK_BOX, searchList)
+        (binding.lidmaatList.layoutManager as? LinearLayoutManager)?.let { lm ->
+            outState.putInt("scroll_position", lm.findFirstVisibleItemPosition())
+        }
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        val position = savedInstanceState.getInt("scroll_position", -1)
+        if (position != -1) {
+            binding.lidmaatList.post {
+                binding.lidmaatList.scrollToPosition(position)
+            }
+        }
+    }
+
+    private fun restoreListScrollIfNeeded() {
+        if (pendingBirthdayOffset != null) return
+        val state = savedListScroll ?: return
+        if (memberListAdapter.itemCount == 0) return
+        MemberListScrollHelper.restoreScrollState(binding.lidmaatList, state, memberListAdapter)
+        savedListScroll = null
+        scrollRestored = true
+    }
+
+    private var scrollRestored = false
+
+    private fun setupScrollRestorationObserver() {
+        lifecycleScope.launch {
+            memberListAdapter.loadStateFlow.collect { loadStates ->
+                if (loadStates.refresh is LoadState.NotLoading && savedListScroll != null) {
+                    restoreListScrollIfNeeded()
+                }
+            }
+        }
+    }
+
+
+    // ─── Helper & Utility functions ──────────────────────────────────────────
+
+    private fun isColorDark(color: Int): Boolean {
+        val darkness =
+            1 - (0.299 * Color.red(color) + 0.587 * Color.green(color) + 0.114 * Color.blue(color)) / 255
+        return darkness >= 0.5
+    }
+
+    private fun getSortIcon(sortOrder: String): String = when (sortOrder) {
+        "VAN" -> "⇵🔤"
+        "GESINNE" -> "⇵👨‍👩‍👧‍👦"
+        "WYK" -> "⇵🏘️"
+        "OUDERDOM" -> "⇵📅"
+        "VERJAAR" -> "⇵🎂"
+        "ADRES" -> "⇵📌"
+        "HUWELIK" -> "⇵💍"
+        else -> "⇵📋"
+    }
+
+    private fun findSearchView(): SearchView? {
+        return if (::menuController.isInitialized) menuController.findSearchView() else null
+    }
+
+    private fun handleResultCancelled() {
+        if (::searchFilterCoordinator.isInitialized) {
+            searchFilterCoordinator.handleResultCancelled()
+        }
+    }
 }

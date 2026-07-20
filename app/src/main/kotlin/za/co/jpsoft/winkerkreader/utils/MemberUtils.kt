@@ -16,8 +16,6 @@ import androidx.core.net.toUri
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.models.MemberItem
 import za.co.jpsoft.winkerkreader.ui.activities.LidmaatDetailActivity
-import za.co.jpsoft.winkerkreader.ui.bottomsheets.StelHerinneringBottomSheet
-import za.co.jpsoft.winkerkreader.ui.bottomsheets.VoegNotaByBottomSheet
 import za.co.jpsoft.winkerkreader.utils.Utils.fixphonenumber
 import java.net.URLEncoder
 
@@ -88,8 +86,8 @@ object MemberUtils {
         val name = item.name
         val surname = item.surname
         val cellPhone =
-            if (item.cellphone.isNotEmpty()) Utils.fixphonenumber(item.cellphone) else null
-        val landline = if (item.landline.isNotEmpty()) Utils.fixphonenumber(item.landline) else null
+            if (item.cellphone.isNotEmpty()) fixphonenumber(item.cellphone) else null
+        val landline = if (item.landline.isNotEmpty()) fixphonenumber(item.landline) else null
         val email = item.email
         val address = item.address
         val birthday = item.birthday
@@ -116,16 +114,16 @@ object MemberUtils {
                 )
             }
 
-            email?.let {
+            email.let {
                 putExtra(ContactsContract.Intents.Insert.EMAIL, it)
             }
 
-            if (!address.isNullOrEmpty()) {
+            if (address.isNotEmpty()) {
                 putExtra(ContactsContract.Intents.Insert.POSTAL, address.replace("\r\n", ", "))
             }
 
             // Birthday and nickname if available
-            if (!birthday.isNullOrEmpty() && birthday.length >= 10) {
+            if (birthday.isNotEmpty() && birthday.length >= 10) {
                 val data = ArrayList<ContentValues>().apply {
                     // Birthday
                     add(ContentValues().apply {
@@ -168,9 +166,9 @@ object MemberUtils {
 
     fun callPhone(context: Context, phoneNumber: String?) {
         if (phoneNumber.isNullOrEmpty()) return
-        val formatted = Utils.fixphonenumber(phoneNumber)
+        val formatted = fixphonenumber(phoneNumber)
         try {
-            val intent = Intent(Intent.ACTION_DIAL).apply { data = Uri.parse("tel:$formatted") }
+            val intent = Intent(Intent.ACTION_DIAL).apply { data = "tel:$formatted".toUri() }
             context.startActivity(intent)
         } catch (e: Exception) {
             if (BuildConfig.DEBUG) Log.e(TAG, "Error making call", e)
@@ -182,14 +180,14 @@ object MemberUtils {
         try {
             val intent = Intent(Intent.ACTION_VIEW).apply {
                 data = if (message.isNullOrEmpty()) {
-                    Uri.parse("sms:$phoneNumber")
+                    "sms:$phoneNumber".toUri()
                 } else {
-                    Uri.parse("sms:$phoneNumber?body=${Uri.encode(message)}")
+                    "sms:$phoneNumber?body=${Uri.encode(message)}".toUri()
                 }
             }
             context.startActivity(intent)
         } catch (e: Exception) {
-            Log.e(TAG, "Error sending SMS", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error sending SMS", e)
         }
     }
 
@@ -216,7 +214,7 @@ object MemberUtils {
                 else -> false
             }
         } catch (e: Exception) {
-            Log.e(TAG, "WhatsApp send failed", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "WhatsApp send failed", e)
             Toast.makeText(context, "WhatsApp not installed or error occurred", Toast.LENGTH_SHORT)
                 .show()
             false
@@ -264,7 +262,7 @@ object MemberUtils {
     fun sendEmail(context: Context, email: String?) {
         if (email.isNullOrEmpty()) return
         try {
-            val intent = Intent(Intent.ACTION_VIEW).apply { data = Uri.parse("mailto:$email") }
+            val intent = Intent(Intent.ACTION_VIEW).apply { data = "mailto:$email".toUri() }
             context.startActivity(intent)
         } catch (e: Exception) {
             if (BuildConfig.DEBUG) Log.e(TAG, "Error sending email", e)
@@ -291,61 +289,6 @@ object MemberUtils {
         }
     }
 
-
-    /**
-     * Opens [VoegNotaByBottomSheet] for the given member.
-     * Requires the calling Context to be an AppCompatActivity / FragmentActivity.
-     */
-    fun openVoegNotaBy(context: Context, item: MemberItem) {
-        val activity = context as? androidx.fragment.app.FragmentActivity
-        if (activity == null) {
-            if (BuildConfig.DEBUG) Log.e(TAG, "openVoegNotaBy: context is not a FragmentActivity")
-            return
-        }
-        val guid = item.guid
-        if (guid.isNullOrBlank()) {
-            if (BuildConfig.DEBUG) Log.e(
-                TAG,
-                "openVoegNotaBy: memberGuid is null/blank for ${item.name}"
-            )
-            return
-        }
-        VoegNotaByBottomSheet.newInstance(
-            memberGuid = guid,
-            familyHeadGuid = item.familyHead,
-            memberDisplayName = "${item.name} ${item.surname}".trim(),
-            memberSurname = item.surname.ifBlank { null },
-            memberGivenName = item.name.ifBlank { null }
-        ).show(activity.supportFragmentManager, VoegNotaByBottomSheet.TAG)
-    }
-
-    /**
-     * Opens [StelHerinneringBottomSheet] for the given member.
-     * Requires the calling Context to be an AppCompatActivity / FragmentActivity.
-     */
-    fun openStelHerinnering(context: Context, item: MemberItem) {
-        val activity = context as? androidx.fragment.app.FragmentActivity
-        if (activity == null) {
-            if (BuildConfig.DEBUG) Log.e(
-                TAG,
-                "openStelHerinnering: context is not a FragmentActivity"
-            )
-            return
-        }
-        val guid = item.guid
-        if (guid.isNullOrBlank()) {
-            if (BuildConfig.DEBUG) Log.e(
-                TAG,
-                "openStelHerinnering: memberGuid is null/blank for ${item.name}"
-            )
-            return
-        }
-        StelHerinneringBottomSheet.newInstance(
-            memberGuid = guid,
-            familyHeadGuid = item.familyHead
-        ).show(activity.supportFragmentManager, StelHerinneringBottomSheet.TAG)
-    }
-
     // -------------------------------------------------------------------------
     // Private helper
     // -------------------------------------------------------------------------
@@ -364,11 +307,11 @@ object MemberUtils {
         add("Van", item.surname)
         add(
             "Selfoon",
-            if (item.cellphone.isNotEmpty()) Utils.fixphonenumber(item.cellphone) else null
+            if (item.cellphone.isNotEmpty()) fixphonenumber(item.cellphone) else null
         )
         add(
             "Landlyn",
-            if (item.landline.isNotEmpty()) Utils.fixphonenumber(item.landline) else null
+            if (item.landline.isNotEmpty()) fixphonenumber(item.landline) else null
         )
         add("Epos", item.email)
         add("Adres", item.address)

@@ -35,8 +35,6 @@ class PhoneCallMonitor(
 
     @Suppress("DEPRECATION")
     private var phoneStateListener: PhoneStateListener? = null
-    private var telephonyCallback: Any? = null
-
     private var currentIncomingNumber: String? = null
     private var currentOutgoingNumber: String? = null
     private var callStartTime: Long = 0
@@ -60,7 +58,7 @@ class PhoneCallMonitor(
 
     fun startMonitoring() {
         if (!hasRequiredPermissions()) {
-            Log.e(TAG, "Missing permissions")
+            if (BuildConfig.DEBUG) Log.e(TAG, "Missing permissions")
             return
         }
 
@@ -72,15 +70,17 @@ class PhoneCallMonitor(
         // Use the deprecated listener on all SDK versions – it still provides the number
         @Suppress("DEPRECATION")
         phoneStateListener = object : PhoneStateListener() {
+            @Deprecated("Deprecated in Java")
             override fun onCallStateChanged(state: Int, phoneNumber: String?) {
-                super.onCallStateChanged(state, phoneNumber)
                 handleStateChanged(state, phoneNumber)
+                super.onCallStateChanged(state, phoneNumber)
+
             }
         }
 
         @Suppress("DEPRECATION")
         telephonyManager?.listen(phoneStateListener, PhoneStateListener.LISTEN_CALL_STATE)
-        Log.d(TAG, "PhoneStateListener registered (all versions)")
+        if (BuildConfig.DEBUG) Log.d(TAG, "PhoneStateListener registered (all versions)")
     }
 
     private fun handleStateChanged(state: Int, phoneNumber: String?) {
@@ -252,62 +252,6 @@ class PhoneCallMonitor(
         resetCallState()
     }
 
-    /**
-     * Get contact name from system contacts using PhoneLookup.
-     * Uses the correct URI format: PhoneLookup.CONTENT_FILTER_URI with the phone number appended.
-     */
-    private fun getContactNameFromSystem(phoneNumber: String): String? {
-        if (phoneNumber.isEmpty() || phoneNumber == "Unknown Number") return null
-
-        // Check for READ_CONTACTS permission
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS)
-            != PackageManager.PERMISSION_GRANTED
-        ) {
-            if (BuildConfig.DEBUG) Log.d(
-                TAG,
-                "READ_CONTACTS permission missing, skipping contact lookup"
-            )
-            return null
-        }
-
-        try {
-            // ✅ FIX: Build URI correctly with the phone number
-            val uri = ContactsContract.PhoneLookup.CONTENT_FILTER_URI.buildUpon()
-                .appendPath(phoneNumber)
-                .build()
-
-            if (BuildConfig.DEBUG) Log.d(TAG, "Querying contacts with URI: $uri")
-
-            val projection = arrayOf(
-                ContactsContract.PhoneLookup.DISPLAY_NAME,
-                ContactsContract.PhoneLookup.NUMBER
-            )
-
-            val cursor = context.contentResolver.query(
-                uri,
-                projection,
-                null,
-                null,
-                null
-            )
-
-            return cursor?.use {
-                if (it.moveToFirst()) {
-                    val nameIndex = it.getColumnIndex(ContactsContract.PhoneLookup.DISPLAY_NAME)
-                    if (nameIndex >= 0) {
-                        it.getString(nameIndex)
-                    } else null
-                } else null
-            }
-        } catch (e: SecurityException) {
-            if (BuildConfig.DEBUG) Log.e(TAG, "Security exception accessing contacts", e)
-            return null
-        } catch (e: Exception) {
-            if (BuildConfig.DEBUG) Log.e(TAG, "Error getting contact name from system", e)
-            return null
-        }
-    }
-
     private fun resetCallState() {
         currentIncomingNumber = null
         currentOutgoingNumber = null
@@ -412,6 +356,5 @@ class PhoneCallMonitor(
         private const val TAG = "PhoneCallMonitor"
         private const val PLACEHOLDER_NUMBER = "XXXXXXXXXX"
         private const val CALL_END_DELAY_MS = 2000L
-        const val ACTION_CALL_LOG_UPDATED = "za.co.jpsoft.winkerkreader.CALL_LOG_UPDATED"
     }
 }
