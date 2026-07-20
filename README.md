@@ -318,8 +318,8 @@ limitations under the License.
 ## 📞 Contact
 
 **Author:** Pieter Grobler
-**Email:** jpgrobler@gmail.com
-**Phone:** 082 293 2795
+**Email:** 
+**Phone:** 
 
 ---
 
