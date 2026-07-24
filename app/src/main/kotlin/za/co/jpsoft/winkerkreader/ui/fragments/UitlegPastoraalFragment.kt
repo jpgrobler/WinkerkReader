@@ -373,9 +373,110 @@ class UitlegPastoraalFragment : Fragment() {
     }
 
     private fun copyScriptToClipboard() {
-        // ... (unchanged)
-        val scriptCode = """…"""
-        val instructions = """…"""
+        val scriptCode = """
+/**
+ * WinkerkReader Pastoral Reminders — Google Tasks Bridge
+ * Deploy as: Web App | Execute as: Me | Who has access: Anyone
+ */
+const WKR_MARKER = '[WKR] ';
+function doGet(e) {
+  var secret = PropertiesService.getScriptProperties().getProperty('SECRET');
+  if (!e.parameter || e.parameter.secret !== secret) {
+    console.log('Invalid secret provided');
+    return respond('UNAUTHORIZED');
+  }
+  var action = e.parameter.action;
+  console.log('Action: ' + action);
+  try {
+    if (action === 'add')      return handleAdd(e);
+    if (action === 'delete')   return handleDelete(e);
+    if (action === 'complete') return handleComplete(e);
+    if (action === 'list')     return handleList(e);
+    return respond('ERROR:unknown_action');
+  } catch (err) {
+    console.error('Error in doGet: ' + err.message);
+    return respond('ERROR:' + err.message);
+  }
+}
+function handleAdd(e) {
+  var title = e.parameter.title || 'Herinnering';
+  var notes = e.parameter.notes || '';
+  var due   = e.parameter.due;
+  var listId = e.parameter.listId;
+  var fullTitle = WKR_MARKER + title;
+  console.log('Adding task: ' + fullTitle);
+  var taskListId = (listId && listId !== '') ? listId : getDefaultTaskListId();
+  var task = { title: fullTitle, notes: notes };
+  if (due) task.due = due + 'T00:00:00.000Z';
+  var created = Tasks.Tasks.insert(task, taskListId);
+  console.log('Task created with ID: ' + created.id);
+  return respond('OK:' + created.id);
+}
+function handleDelete(e) {
+  var taskId = e.parameter.taskId;
+  if (!taskId) return respond('ERROR:no_taskId');
+  if (!taskBelongsToUs(taskId)) return respond('ERROR:not_our_task');
+  console.log('Deleting task: ' + taskId);
+  var taskListId = getDefaultTaskListId();
+  Tasks.Tasks.remove(taskListId, taskId);
+  return respond('DELETED');
+}
+function handleComplete(e) {
+  var taskId = e.parameter.taskId;
+  if (!taskId) return respond('ERROR:no_taskId');
+  if (!taskBelongsToUs(taskId)) return respond('ERROR:not_our_task');
+  console.log('Completing task: ' + taskId);
+  var taskListId = getDefaultTaskListId();
+  var task = Tasks.Tasks.get(taskListId, taskId);
+  task.status = 'completed';
+  task.completed = new Date().toISOString();
+  Tasks.Tasks.update(task, taskListId, taskId);
+  return respond('COMPLETED');
+}
+function handleList(e) {
+  var lists = Tasks.Tasklists.list();
+  var result = lists.items.map(function(item) { return { id: item.id, title: item.title }; });
+  return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+}
+var CACHED_TASK_LIST_ID = null;
+function getDefaultTaskListId() {
+  if (CACHED_TASK_LIST_ID) return CACHED_TASK_LIST_ID;
+  var lists = Tasks.Tasklists.list();
+  CACHED_TASK_LIST_ID = lists.items[0].id;
+  return CACHED_TASK_LIST_ID;
+}
+function respond(text) {
+  return ContentService.createTextOutput(text).setMimeType(ContentService.MimeType.TEXT);
+}
+function taskBelongsToUs(taskId) {
+  try {
+    var taskListId = getDefaultTaskListId();
+    var task = Tasks.Tasks.get(taskListId, taskId);
+    return task.title && task.title.startsWith(WKR_MARKER);
+  } catch (e) {
+    console.log('Error fetching task ' + taskId + ': ' + e.message);
+    return false;
+  }
+}
+        """.trimIndent()
+        val instructions = """
+📋 INSTALLASIE-INSTRUKSIES:
+
+1. Gaan na script.google.com en skep 'n nuwe projek.
+2. Vee die standaardkode uit en plak die skrip hierbo in.
+3. Klik op "Project Settings" (rat-ikoon) en voeg 'n script property by:
+   - Eienskap: SECRET
+   - Waarde: Kies 'n geheim (bv. 'MyGeheim123') – onthou dit!
+4. Klik op "Services" (+), voeg "Tasks API" by en aktiveer dit.
+5. Klik op "Deploy" → "New deployment" → "Web app".
+6. Stel "Execute as" op "Me" en "Who has access" op "Anyone".
+7. Klik "Deploy" en kopieer die /exec URL.
+8. Plak die URL in die "Apps Script-skakel" veld hierbo.
+9. Plak dieselfde SECRET in die "Geheime kode" veld hierbo.
+10. Stoor die instellings.
+
+Die skrip is nou gereed!
+        """.trimIndent()
         val fullText = "$scriptCode\n\n$instructions"
         val clipboard =
             requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -388,24 +489,24 @@ class UitlegPastoraalFragment : Fragment() {
         ).show()
     }
 
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
 
     private fun setupBackupStatusSection() {
-        binding.backupLocationText.text =
-            "Ligging: ${
-                za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.getWkrDir(
-                    requireContext()
-                )
-            }"
-
-        binding.backupStatusPastoralText.text =
+        var ligg = "Ligging: ${
+            za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.getWkrDir(
+                requireContext()
+            )
+        }"
+        binding.backupLocationText.text = ligg
+        ligg =
             "Herinneringe & notas: ${formatBackupTimestamp(settingsManager.lastPastoralBackupTimestamp)}"
-
-        binding.backupStatusCallLogText.text =
-            "Oproeplog: ${formatBackupTimestamp(settingsManager.lastCallLogBackupTimestamp)}"
+        binding.backupStatusPastoralText.text = ligg
+        ligg = "Oproeplog: ${formatBackupTimestamp(settingsManager.lastCallLogBackupTimestamp)}"
+        binding.backupStatusCallLogText.text = ligg
 
         binding.callLogBackupSwitch.isChecked = settingsManager.callLogBackupEnabled
         binding.callLogBackupSwitch.setOnCheckedChangeListener { _, isChecked ->
@@ -419,8 +520,9 @@ class UitlegPastoraalFragment : Fragment() {
                             requireContext()
                         )
                     }
-                    binding.backupStatusCallLogText.text =
+                    ligg =
                         "Oproeplog: ${formatBackupTimestamp(settingsManager.lastCallLogBackupTimestamp)}"
+                    binding.backupStatusCallLogText.text = ligg
                 }
             }
         }

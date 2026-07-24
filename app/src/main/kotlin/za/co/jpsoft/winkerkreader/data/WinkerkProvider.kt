@@ -134,29 +134,48 @@ class WinkerkProvider : ContentProvider() {
             LIDMAAT_GUID, LIDMAAT_LIST -> {
                 if (contentValues == null || contentValues.size() == 0) return 0
 
-                // Build dynamic UPDATE statement
                 val setClauses = mutableListOf<String>()
-                val args = mutableListOf<String>()
+                val args = mutableListOf<Any?>()
+
                 contentValues.keySet().forEach { key ->
                     setClauses.add("[$key] = ?")
-                    args.add(contentValues.getAsString(key))
+                    args.add(contentValues.get(key))
                 }
-                // Add the selection args at the end
                 selectionArgs?.let { args.addAll(it) }
 
-                val sql = StringBuilder("UPDATE Members SET ")
-                    .append(setClauses.joinToString(", "))
-                    .append(" WHERE $selection")
-                    .toString()
+                val sql = "UPDATE Members SET ${setClauses.joinToString(", ")} WHERE $selection"
 
-                // Use compileStatement to get the affected row count
-                val statement = db.openHelper.writableDatabase.compileStatement(sql)
-                args.forEachIndexed { index, value ->
-                    statement.bindString(index + 1, value)
+                try {
+                    val statement = db.openHelper.writableDatabase.compileStatement(sql)
+                    args.forEachIndexed { index, value ->
+                        val pos = index + 1
+                        when (value) {
+                            null -> statement.bindNull(pos)
+                            is Long -> statement.bindLong(pos, value)
+                            is Double -> statement.bindDouble(pos, value)
+                            is ByteArray -> statement.bindBlob(pos, value)
+                            else -> statement.bindString(pos, value.toString())
+                        }
+                    }
+                    val rows = statement.executeUpdateDelete()
+                    statement.close()
+
+                    // ← Debug logging must be inside try, where `rows` is in scope
+                    if (BuildConfig.DEBUG) {
+                        Log.d(tag, "update() SQL: $sql")
+                        Log.d(tag, "update() args: $args")
+                        Log.d(tag, "update() rows affected: $rows")
+                    }
+
+                    if (rows > 0) {
+                        context?.contentResolver?.notifyChange(uri, null)
+                    }
+                    rows
+
+                } catch (e: Exception) {
+                    if (BuildConfig.DEBUG) Log.e(tag, "update() failed — sql: $sql", e)
+                    0
                 }
-                val rows = statement.executeUpdateDelete()
-                statement.close()
-                rows
             }
 
             else -> 0

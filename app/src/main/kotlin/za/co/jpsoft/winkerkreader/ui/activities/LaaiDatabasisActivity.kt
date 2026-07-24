@@ -27,11 +27,13 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.LinearLayoutCompat
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
@@ -68,7 +70,7 @@ import java.io.FileOutputStream
 import java.util.UUID
 import java.util.regex.Pattern
 
-class LaaiDatabasisActivity : AppCompatActivity() {
+class LaaiDatabasisActivity : BaseActivity() {
 
     companion object {
         private const val TAG = "LaaiDatabasisActivity"
@@ -362,7 +364,11 @@ class LaaiDatabasisActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = LaaidatabasisBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
+        ViewCompat.setOnApplyWindowInsetsListener(binding.laaiScroll) { view, insets ->
+            val navBar = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+            view.updatePadding(bottom = navBar.bottom)
+            insets
+        }
         settings = getSharedPreferences(WinkerkContract.PREFS_USER_INFO, MODE_PRIVATE)
         settingsManager = SettingsManager.getInstance(this)
 

@@ -11,6 +11,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.PixelFormat
+import android.os.Build
 import android.os.IBinder
 import android.provider.Settings
 import android.util.Log
@@ -25,6 +26,7 @@ import android.widget.TextView
 import androidx.core.app.NotificationCompat
 import androidx.core.content.edit
 import androidx.core.net.toUri
+import androidx.core.view.WindowInsetsCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -251,10 +253,20 @@ class OproepDetailService : Service() {
 
     private fun createFloatingWindow() {
         // Anchor to top-centre so the overlay never covers answer/decline buttons
+        val statusBarHeight = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            windowManager.currentWindowMetrics.windowInsets
+                .getInsets(WindowInsetsCompat.Type.statusBars()).top
+        } else {
+            val resourceId = resources.getIdentifier("status_bar_height", "dimen", "android")
+            if (resourceId > 0) resources.getDimensionPixelSize(resourceId) else 0
+        }
+
+
         val params = createWindowLayoutParams().apply {
             gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
             x = 0
-            y = 80  // px from top — clears the status bar on virtually all devices
+            y =
+                statusBarHeight    //80  // px from top — clears the status bar on virtually all devices
         }
         try {
             windowManager.addView(floatingView, params)

@@ -4,11 +4,13 @@ import android.os.Bundle
 import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.core.content.edit
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import com.google.android.material.snackbar.Snackbar
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
 import za.co.jpsoft.winkerkreader.databinding.RegistreerBinding
-import za.co.jpsoft.winkerkreader.utils.EdgeToEdgeHelper
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
 
 class RegistreerActivity : BaseActivity() {
@@ -20,18 +22,16 @@ class RegistreerActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         binding = RegistreerBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        setupWindowInsets()
+        ViewCompat.setOnApplyWindowInsetsListener(binding.regScroll) { view, insets ->
+            val navBar = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+            view.updatePadding(bottom = navBar.bottom)
+            insets
+        }
         initializeUI()
         populateUserData()
         setupTextWatchers()
         setupClickListeners()
         setupBackPressedCallback()
-    }
-
-
-    private fun setupWindowInsets() {
-        EdgeToEdgeHelper.setupEdgeToEdge(window, isLightStatusBar = true)
     }
 
     private fun initializeUI() {

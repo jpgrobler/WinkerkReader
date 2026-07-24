@@ -6,6 +6,9 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
@@ -50,6 +53,11 @@ class BedieningVandagFragment : Fragment() {
         setupAdapter()
         setupChips()
         setupObservers()
+        ViewCompat.setOnApplyWindowInsetsListener(binding.rvBedieningReminders) { view, insets ->
+            val navBar = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+            view.updatePadding(bottom = navBar.bottom)
+            insets
+        }
     }
 
     override fun onDestroyView() {

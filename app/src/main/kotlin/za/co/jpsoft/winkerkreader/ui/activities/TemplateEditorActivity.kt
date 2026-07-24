@@ -6,7 +6,9 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -21,7 +23,7 @@ import za.co.jpsoft.winkerkreader.databinding.ActivityTemplateEditorBinding
 import za.co.jpsoft.winkerkreader.ui.adapters.StepEditorAdapter
 import za.co.jpsoft.winkerkreader.ui.dialogs.StepEditorDialog
 
-class TemplateEditorActivity : AppCompatActivity() {
+class TemplateEditorActivity : BaseActivity() {
 
     private lateinit var binding: ActivityTemplateEditorBinding
     private lateinit var repository: PastoralReminderRepository
@@ -66,6 +68,12 @@ class TemplateEditorActivity : AppCompatActivity() {
         }
 
         binding.btnSaveMeta.setOnClickListener { saveMeta() }
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.scrollView) { view, insets ->
+            val navBar = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+            view.updatePadding(bottom = navBar.bottom)
+            insets
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

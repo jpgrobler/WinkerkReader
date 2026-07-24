@@ -24,6 +24,9 @@ import androidx.appcompat.widget.PopupMenu
 import androidx.core.app.ActivityCompat
 import androidx.core.content.edit
 import androidx.core.net.toUri
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -99,6 +102,11 @@ class VerjaarSmsActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         binding = VerjaarBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        ViewCompat.setOnApplyWindowInsetsListener(binding.lidmaatList) { view, insets ->
+            val navBar = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+            view.updatePadding(bottom = navBar.bottom)
+            insets
+        }
 
         initializeComponents()
 
@@ -202,6 +210,7 @@ class VerjaarSmsActivity : BaseActivity() {
         binding.lidmaatList.layoutManager = LinearLayoutManager(this)
         // ─── Initialize Quick Action Helper ──────────────────────────────────────
         quickActionHelper = QuickActionHelper(this, SettingsManager.getInstance(this))
+        quickActionHelper.expandCallback = { _, item -> showPopupMenuForMember(item) }
 
         // ─── Create the adapter with the new click handler ──────────────────────
         memberListAdapter = MemberListAdapter(

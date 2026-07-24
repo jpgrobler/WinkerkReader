@@ -6,7 +6,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.PopupWindow
@@ -24,6 +23,7 @@ import za.co.jpsoft.winkerkreader.ui.bottomsheets.VoegNotaByBottomSheet
 import za.co.jpsoft.winkerkreader.utils.MemberUtils
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import za.co.jpsoft.winkerkreader.utils.Utils
+
 
 /**
  * Reusable helper that displays a horizontal quick-action popup for a member.
@@ -56,12 +56,13 @@ class QuickActionHelper(
      * @param message Optional pre-filled personalized message for SMS/WhatsApp actions.
      */
     fun showQuickActions(anchor: View, item: MemberItem, message: String? = null) {
+
         dismiss()
 
         val inflater = LayoutInflater.from(activity)
-        val contentParent = FrameLayout(activity)
-        inflater.inflate(R.layout.popup_quick_actions, contentParent, true)
-        val popupView = contentParent.getChildAt(0) as LinearLayout  // the actual root
+
+        val popupView = inflater.inflate(R.layout.popup_quick_actions, null) as LinearLayout
+
         val container = popupView.findViewById<LinearLayout>(R.id.quick_actions_container)
 
         val hasPhone = item.cellphone.isNotEmpty()
@@ -103,8 +104,19 @@ class QuickActionHelper(
             container.addView(button)
         }
 
+        // 0. Details
+        if (settingsManager.quickActionDetail && hasPhone) {
+            addActionButton(
+                iconText = "ℹ\uFE0F",
+                label = "Detail",
+                onClick = {
+                    handleQuickAction(R.id.kyk_lidmaat_detail, item, item.recordstatus)
+                    dismiss()
+                }
+            )
+        }
         // 1. SMS – green icon
-        if (hasPhone) {
+        if (settingsManager.quickActionSms && hasPhone) {
             addActionButton(
                 iconText = "💬",
                 label = "SMS",
@@ -123,7 +135,7 @@ class QuickActionHelper(
             else -> 0 // disabled
         }
 
-        if (hasPhone && whatsappMethod != 0) {
+        if (settingsManager.quickActionWhatsApp && hasPhone && whatsappMethod != 0) {
             val formattedPhone = Utils.fixphonenumber(item.cellphone) ?: item.cellphone
             if (ContactRepository.isWhatsAppContact(formattedPhone)) {
                 addActionButton(
@@ -138,7 +150,7 @@ class QuickActionHelper(
         }
 
         // 3. Call – default color
-        if (hasPhone) {
+        if (settingsManager.quickActionCall && hasPhone) {
             addActionButton(
                 iconText = "📱",
                 label = "Bel",
@@ -149,27 +161,74 @@ class QuickActionHelper(
             )
         }
 
-        // 4. Note – always visible
-        addActionButton(
-            iconText = "📝",
-            label = "Nota",
-            onClick = {
-                handleQuickAction(R.id.voeg_nota_by, item)
-                dismiss()
-            }
-        )
+        // 4. Email (new)
+        if (settingsManager.quickActionEmail && item.email.isNotEmpty()) {
+            addActionButton(
+                iconText = "✉️", label = "E-pos",
+                onClick = {
+                    handleQuickAction(R.id.stuur_epos, item)
+                    dismiss()
+                }
+            )
+        }
 
-        // 5. Reminder – drawable with primary colour
-        addActionButton(
-            iconDrawableRes = R.drawable.ic_bediening,
-            label = "Herinner",
-            onClick = {
-                handleQuickAction(R.id.stel_herinnering, item)
-                dismiss()
-            }
-        )
+        // 5. Landline (new)
+        if (settingsManager.quickActionLandline && item.landline.isNotEmpty()) {
+            addActionButton(
+                iconText = "☎️", label = "Landlyn",
+                onClick = {
+                    handleQuickAction(R.id.bel_landlyn, item)
+                    dismiss()
+                }
+            )
+        }
 
-        // 6. Expand – always visible
+        // 6. Note
+        if (settingsManager.quickActionNote) {
+            addActionButton(
+                iconText = "📝", label = "Nota",
+                onClick = {
+                    handleQuickAction(R.id.voeg_nota_by, item)
+                    dismiss()
+                }
+            )
+        }
+
+        // 7. Reminder
+        if (settingsManager.quickActionReminder) {
+            addActionButton(
+                iconDrawableRes = R.drawable.ic_bediening,
+                label = "Herinner",
+                onClick = {
+                    handleQuickAction(R.id.stel_herinnering, item)
+                    dismiss()
+                }
+            )
+        }
+
+        // 8. Copy to clipboard (new)
+        if (settingsManager.quickActionCopy) {
+            addActionButton(
+                iconText = "📋", label = "Kopieer",
+                onClick = {
+                    handleQuickAction(R.id.kopieer, item)
+                    dismiss()
+                }
+            )
+        }
+
+        // 9. Copy to contacts (new)
+        if (settingsManager.quickActionCopyContacts) {
+            addActionButton(
+                iconText = "👤", label = "Stoor",
+                onClick = {
+                    handleQuickAction(R.id.copy_to_contacts, item)
+                    dismiss()
+                }
+            )
+        }
+
+        // 10. Expand – always visible
         addActionButton(
             iconDrawableRes = R.drawable.ic_chevron_down,
             label = "Meer",
@@ -229,17 +288,35 @@ class QuickActionHelper(
         whatsappMethod: Int = 1
     ) {
         when (actionId) {
-            R.id.stuur_sms -> MemberUtils.sendSms(activity, item.cellphone, message)
-            R.id.stuur_whatsapp -> MemberUtils.sendWhatsApp(
-                activity,
-                item.cellphone,
-                whatsappMethod,
-                message
-            )
+            R.id.kyk_lidmaat_detail ->
+                MemberUtils.openMemberDetail(activity, item, item.recordstatus)
 
-            R.id.bel_selfoon -> MemberUtils.callPhone(activity, item.cellphone)
-            R.id.voeg_nota_by -> openVoegNotaBy(item)
-            R.id.stel_herinnering -> openStelHerinnering(item)
+            R.id.stuur_sms ->
+                MemberUtils.sendSms(activity, item.cellphone, message)
+
+            R.id.stuur_whatsapp ->
+                MemberUtils.sendWhatsApp(activity, item.cellphone, whatsappMethod, message)
+
+            R.id.bel_selfoon ->
+                MemberUtils.callPhone(activity, item.cellphone)
+
+            R.id.stuur_epos ->                         // ← was missing
+                MemberUtils.sendEmail(activity, item.email)
+
+            R.id.bel_landlyn ->                        // ← was missing
+                MemberUtils.callPhone(activity, item.landline)
+
+            R.id.kopieer ->                            // ← was missing
+                MemberUtils.copyToClipboard(activity, item)
+
+            R.id.copy_to_contacts ->                   // ← was missing
+                MemberUtils.saveToContacts(activity, item)
+
+            R.id.voeg_nota_by ->
+                openVoegNotaBy(item)
+
+            R.id.stel_herinnering ->
+                openStelHerinnering(item)
         }
     }
 

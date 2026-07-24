@@ -684,9 +684,7 @@ class MainActivity : BaseActivity() {
         }
     }
 
-
     // ─── Initialization & Setup Helpers ──────────────────────────────────────
-
     /** Performs the initial queries load after app authorization check. */
     private fun loadInitialData() {
         if (initialLoadStarted) {

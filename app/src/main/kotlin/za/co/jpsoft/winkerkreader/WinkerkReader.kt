@@ -10,8 +10,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ProcessLifecycleOwner
 import com.google.android.material.color.DynamicColors
-import leakcanary.LeakCanary
-import shark.AndroidReferenceMatchers
 import za.co.jpsoft.winkerkreader.utils.AppAuthState
 import za.co.jpsoft.winkerkreader.utils.AppInitializer
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
@@ -19,19 +17,41 @@ import za.co.jpsoft.winkerkreader.widget.PastoralWidgetProvider
 import za.co.jpsoft.winkerkreader.widget.WidgetDataRepository
 import za.co.jpsoft.winkerkreader.widget.WinkerkReaderWidgetProvider
 
-class WinkerkReader : Application() {
+/**
+ * Interface for LeakCanary setup – implemented in debug builds only.
+ * Release builds use the no‑op implementation.
+ */
+interface LeakCanaryHelper {
+    fun setup(application: Application)
+}
+
+/**
+ * No‑operation helper used in release builds.
+ */
+class NoOpLeakCanaryHelper : LeakCanaryHelper {
+    override fun setup(application: Application) {
+        // Intentionally empty – no LeakCanary in release.
+    }
+}
+
+/**
+ * Main Application class.
+ * The debug variant will substitute a subclass that provides the real LeakCanary setup.
+ */
+open class WinkerkReader : Application() {
+
+    // Will be set in onCreate; uses the helper to avoid direct LeakCanary references.
+    private lateinit var leakCanaryHelper: LeakCanaryHelper
+
     @OptIn(ExperimentalStdlibApi::class)
     override fun onCreate() {
         super.onCreate()
-        if (BuildConfig.DEBUG) {
-            LeakCanary.config = LeakCanary.config.copy(
-                referenceMatchers = AndroidReferenceMatchers.appDefaults +
-                        AndroidReferenceMatchers.ignoredInstanceField(
-                            "android.service.notification.NotificationListenerService\$NotificationListenerWrapper",
-                            "this\$0"
-                        )
-            )
-        }
+
+        // Obtain the appropriate helper (overridden in debug source set)
+        leakCanaryHelper = createLeakCanaryHelper()
+        leakCanaryHelper.setup(this)
+
+        // Apply dynamic colors on Android 12+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             DynamicColors.applyToActivitiesIfAvailable(this)
         }
@@ -65,19 +85,23 @@ class WinkerkReader : Application() {
         refreshWidgetsOnStartup()
     }
 
+    /**
+     * Factory method for the LeakCanary helper.
+     * Overridden in the debug source set to return a real implementation.
+     */
+    protected open fun createLeakCanaryHelper(): LeakCanaryHelper {
+        return NoOpLeakCanaryHelper()
+    }
+
     private fun refreshWidgetsOnStartup() {
-        // ✅ Use multiple delays to ensure widget loads
+        // First attempt after 1 second
         Handler(Looper.getMainLooper()).postDelayed({
             try {
                 if (BuildConfig.DEBUG) Log.d("WinkerkReader", "🔄 First widget refresh attempt")
 
-                // Refresh birthday widget
                 WinkerkReaderWidgetProvider.updateAllWidgets(this)
-
-                // Refresh pastoral widget - force reload
                 PastoralWidgetProvider.forceRefreshWidgets(this)
 
-                // Refresh data cache for birthday widget
                 WidgetDataRepository.invalidateCache()
                 WidgetDataRepository.refreshCache(this)
 
@@ -91,14 +115,13 @@ class WinkerkReader : Application() {
                     e
                 )
             }
-        }, 1000) // First attempt after 1 second
+        }, 1000)
 
-        // ✅ Second attempt after 3 seconds (to ensure database is ready)
+        // Second attempt after 3 seconds
         Handler(Looper.getMainLooper()).postDelayed({
             try {
                 if (BuildConfig.DEBUG) Log.d("WinkerkReader", "🔄 Second widget refresh attempt")
 
-                // Force pastoral widget refresh again
                 PastoralWidgetProvider.forceRefreshWidgets(this)
 
                 if (BuildConfig.DEBUG) {
@@ -111,8 +134,6 @@ class WinkerkReader : Application() {
                     e
                 )
             }
-        }, 3000) // Second attempt after 3 seconds
+        }, 3000)
     }
-
-
 }

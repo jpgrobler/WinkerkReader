@@ -31,6 +31,9 @@ import androidx.activity.viewModels
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.toColorInt
 import androidx.core.net.toUri
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.core.widget.TextViewCompat
 import androidx.lifecycle.ViewModelProvider
 import com.bumptech.glide.Glide
@@ -105,6 +108,11 @@ class LidmaatDetailActivity : BaseActivity() {
         settingsManager = SettingsManager.getInstance(this)
         binding = LidmaatDetailBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        ViewCompat.setOnApplyWindowInsetsListener(binding.detailScroll) { view, insets ->
+            val navBar = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+            view.updatePadding(bottom = navBar.bottom)
+            insets
+        }
 
         photoController = MemberPhotoController(
             activity = this,
@@ -753,11 +761,15 @@ class LidmaatDetailActivity : BaseActivity() {
             mPosAdres = binding.detailPosadres.text.toString()
             showSoftKeyboard(binding.buttonWysig)
         } else {
+            // FIRST: save while fields still hold edited values
+            viewModel.memberDetail.value?.let { wysigLidmaatData(it) }
+            // THEN: disable editing
             enableEditing(false)
             binding.buttonWysig.text = getString(R.string.wysig)
             binding.buttonWysig.setBackgroundTintList(ColorStateList.valueOf("#0A064F".toColorInt()))
-            viewModel.memberDetail.value?.let { wysigLidmaatData(it) }
             hideSoftKeyboard()
+            // FINALLY: reload from DB so cleared/changed fields reflect correctly
+            mLidmaatGUID?.let { viewModel.loadMemberByGuid(it, recordStatus) }
         }
     }
 
@@ -846,7 +858,11 @@ class LidmaatDetailActivity : BaseActivity() {
         checkAndPut(winkerkEntry.LIDMATE_WYK, binding.detailWyk.text.toString(), item.ward)
         checkAndPut(
             winkerkEntry.LIDMATE_LIDMAATSTATUS,
-            binding.detailLidmaatstatus.text.toString(),
+            binding.detailLidmaatstatus.text.toString()
+                .removePrefix("✓ ")
+                .removePrefix("⏳ ")
+                .removePrefix("✕ ")
+                .removePrefix("? "),
             item.memberStatus
         )
         checkAndPut(

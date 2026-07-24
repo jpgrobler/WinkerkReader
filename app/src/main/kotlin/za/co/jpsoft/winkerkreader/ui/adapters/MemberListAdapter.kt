@@ -1,10 +1,8 @@
 package za.co.jpsoft.winkerkreader.ui.adapters
 
-import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
-import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.text.Spannable
@@ -20,6 +18,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
@@ -150,21 +149,6 @@ class MemberListAdapter(
     }
 
     /**
-     * Check if an item should be hidden because its group is collapsed.
-     * The separator itself is never hidden.
-     */
-    private fun isItemCollapsed(item: MemberItem, position: Int): Boolean {
-        // Separators are never collapsed (they're the header)
-        if (item.showSeparator) return false
-
-        val groupValue = getGroupValueFor(item, sortOrder)
-        if (groupValue.isEmpty()) return false
-
-        val key = "$sortOrder:$groupValue"
-        return collapsedGroups.contains(key)
-    }
-
-    /**
      * Clear all collapse state when sort order changes.
      */
     private fun clearCollapseState() {
@@ -184,15 +168,6 @@ class MemberListAdapter(
             getItem(i)?.let { list.add(it) }
         }
         return list
-    }
-
-    // ================================================================
-    // Force refresh
-    // ================================================================
-
-    fun forceRefresh() {
-        if (BuildConfig.DEBUG) Log.d(TAG, "🔄 Adapter forceRefresh called - itemCount: $itemCount")
-        notifyDataSetChanged()
     }
 
     override fun getItemViewType(position: Int): Int = listView
@@ -234,17 +209,6 @@ class MemberListAdapter(
     override fun onViewDetachedFromWindow(holder: MemberViewHolder) {
         super.onViewDetachedFromWindow(holder)
         Glide.with(holder.itemView).clear(holder.fotoImageView)
-    }
-
-    fun getItemAt(position: Int): MemberItem? {
-        val item = getItem(position)
-        if (item == null && position < itemCount) {
-            if (BuildConfig.DEBUG) Log.w(
-                TAG,
-                "⚠️ getItem returned null for position $position (itemCount=$itemCount)"
-            )
-        }
-        return item
     }
 
     override fun getItemCount(): Int {
@@ -544,17 +508,17 @@ class MemberListAdapter(
                 separatorBlock.setOnClickListener { view ->
                     try {
                         val encodedAddress = Uri.encode(item.address)
-                        val uri = Uri.parse("geo:0,0?q=$encodedAddress")
+                        val uri = "geo:0,0?q=$encodedAddress".toUri()
                         val intent = Intent(Intent.ACTION_VIEW, uri)
                         view.context.startActivity(intent)
-                    } catch (e: Exception) {
+                    } catch (_: Exception) {
                         try {
                             val intent = Intent(
                                 Intent.ACTION_VIEW,
-                                Uri.parse("https://maps.google.com/maps?q=" + Uri.encode(item.address))
+                                ("https://maps.google.com/maps?q=" + Uri.encode(item.address)).toUri()
                             )
                             view.context.startActivity(intent)
-                        } catch (e2: Exception) {
+                        } catch (_: Exception) {
                             Toast.makeText(
                                 view.context,
                                 "Geen kaarttoepassing gevind",
@@ -588,19 +552,13 @@ class MemberListAdapter(
                 )
                 updownContainer.setOnLongClickListener {
                     // Vibrate briefly (if hardware supports)
-                    val vibrator =
-                        itemView.context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        vibrator?.vibrate(
-                            VibrationEffect.createOneShot(
-                                50,
-                                VibrationEffect.DEFAULT_AMPLITUDE
-                            )
+                    val vibrator = itemView.context.getSystemService(Vibrator::class.java)
+                    vibrator?.vibrate(
+                        VibrationEffect.createOneShot(
+                            50,
+                            VibrationEffect.DEFAULT_AMPLITUDE
                         )
-                    } else {
-                        @Suppress("DEPRECATION")
-                        vibrator?.vibrate(50)
-                    }
+                    )
                     toggleAllGroups(sortOrder)
                     true
                 }
@@ -752,21 +710,21 @@ class MemberListAdapter(
 
         private fun bindAgeInfo(item: MemberItem, settings: SettingsManager) {
             if (item.birthday.isNotEmpty() && settings.isListOuderdom && item.birthday.length >= 10) {
-                ouderdomTextView.text = "(${item.age})"
+                var txt = "(${item.age})"
+                ouderdomTextView.text = txt
                 ouderdomTextView.visibility = View.VISIBLE
                 val day = item.birthday.substring(0, 2)
                 val month = item.birthday.substring(3, 5)
-                verjaarTextView.text = "$day ${getMonthAbbreviation(month)}"
+                txt = "$day ${getMonthAbbreviation(month)}"
+                verjaarTextView.text = txt
 
                 val today = java.time.LocalDate.now()
-                if (item.birthday.length >= 5) {
-                    val bMonth = item.birthday.substring(3, 5).trimStart('0').toIntOrNull() ?: 0
-                    val bDay = item.birthday.substring(0, 2).trimStart('0').toIntOrNull() ?: 0
-                    if (bMonth == today.monthValue && bDay == today.dayOfMonth && settings.isListVerjaarBlok) {
-                        koekImageView.visibility = View.VISIBLE
-                    } else {
-                        koekImageView.visibility = View.GONE
-                    }
+                val bMonth = item.birthday.substring(3, 5).trimStart('0').toIntOrNull() ?: 0
+                val bDay = item.birthday.substring(0, 2).trimStart('0').toIntOrNull() ?: 0
+                if (bMonth == today.monthValue && bDay == today.dayOfMonth && settings.isListVerjaarBlok) {
+                    koekImageView.visibility = View.VISIBLE
+                } else {
+                    koekImageView.visibility = View.GONE
                 }
             } else {
                 ouderdomTextView.text = ""
@@ -779,7 +737,8 @@ class MemberListAdapter(
                 ringImageView.visibility = View.VISIBLE
                 val day = item.weddingDate.substring(0, 2)
                 val month = item.weddingDate.substring(3, 5)
-                huwelikTextView.text = "$day ${getMonthAbbreviation(month)} (${item.weddingYears})"
+                val txt = "$day ${getMonthAbbreviation(month)} (${item.weddingYears})"
+                huwelikTextView.text = txt
                 huwelikTextView.visibility = View.VISIBLE
             }
         }
@@ -792,7 +751,7 @@ class MemberListAdapter(
         private fun bindSeparator(item: MemberItem) {
             val hasSeparator = item.showSeparator || item.showSeparator2
             val hasText =
-                !item.separatorLabel.isNullOrBlank() || !item.separatorWykLabel.isNullOrBlank()
+                item.separatorLabel.isNotBlank() || item.separatorWykLabel.isNotBlank()
 
             if (hasSeparator && hasText) {
                 separatorTextView.text = item.separatorLabel
@@ -857,20 +816,21 @@ class MemberListAdapter(
             // Refresh the whole list to update chevrons and visibility
             notifyDataSetChanged()
         }
+
         private fun openMaps(view: View, address: String) {
             try {
                 val encodedAddress = Uri.encode(address)
-                val uri = Uri.parse("geo:0,0?q=$encodedAddress")
+                val uri = "geo:0,0?q=$encodedAddress".toUri()
                 val intent = Intent(Intent.ACTION_VIEW, uri)
                 view.context.startActivity(intent)
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 try {
                     val intent = Intent(
                         Intent.ACTION_VIEW,
-                        Uri.parse("https://maps.google.com/maps?q=" + Uri.encode(address))
+                        ("https://maps.google.com/maps?q=" + Uri.encode(address)).toUri()
                     )
                     view.context.startActivity(intent)
-                } catch (e2: Exception) {
+                } catch (_: Exception) {
                     Toast.makeText(
                         view.context,
                         "Geen kaarttoepassing gevind",

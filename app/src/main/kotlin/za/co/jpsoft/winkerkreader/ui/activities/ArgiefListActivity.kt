@@ -11,6 +11,9 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.widget.SearchView
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.cursoradapter.widget.CursorAdapter
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -35,7 +38,11 @@ class ArgiefListActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         binding = ArgiefBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
+        ViewCompat.setOnApplyWindowInsetsListener(binding.argiefList) { view, insets ->
+            val navBar = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+            view.updatePadding(bottom = navBar.bottom)
+            insets
+        }
         mCursorAdapter = ArgiefLysAdapter(this, null)
         mCursorAdapter.keuse = keuse
         binding.argiefList.adapter = mCursorAdapter

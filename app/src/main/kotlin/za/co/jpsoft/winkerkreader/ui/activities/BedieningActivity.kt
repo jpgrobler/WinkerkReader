@@ -6,6 +6,9 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import androidx.activity.viewModels
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayoutMediator
@@ -33,6 +36,11 @@ class BedieningActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityBedieningBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        ViewCompat.setOnApplyWindowInsetsListener(binding.bedieningViewPager) { view, insets ->
+            val navBar = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+            view.updatePadding(bottom = navBar.bottom)
+            insets
+        }
         lifecycleScope.launch {
             PastoralReminderRepository.create(this@BedieningActivity).ensureSystemTemplates()
         }

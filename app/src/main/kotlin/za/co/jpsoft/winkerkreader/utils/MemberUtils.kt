@@ -1,6 +1,7 @@
 package za.co.jpsoft.winkerkreader.utils
 
 
+import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.ContentUris
@@ -12,8 +13,10 @@ import android.provider.ContactsContract
 import android.text.format.DateUtils
 import android.util.Log
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.net.toUri
 import za.co.jpsoft.winkerkreader.BuildConfig
+import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.models.MemberItem
 import za.co.jpsoft.winkerkreader.ui.activities.LidmaatDetailActivity
 import za.co.jpsoft.winkerkreader.utils.Utils.fixphonenumber
@@ -317,5 +320,51 @@ object MemberUtils {
         add("Adres", item.address)
 
         return builder.toString()
+    }
+
+    fun saveToContacts(activity: AppCompatActivity, item: MemberItem) {
+        val intent = Intent(ContactsContract.Intents.Insert.ACTION).apply {
+            type = ContactsContract.RawContacts.CONTENT_TYPE
+
+            val fullName = "${item.name} ${item.surname}".trim()
+            putExtra(ContactsContract.Intents.Insert.NAME, fullName)
+
+            if (item.cellphone.isNotBlank()) {
+                putExtra(
+                    ContactsContract.Intents.Insert.PHONE,
+                    fixphonenumber(item.cellphone) ?: item.cellphone
+                )
+                putExtra(
+                    ContactsContract.Intents.Insert.PHONE_TYPE,
+                    ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE
+                )
+            }
+
+            if (item.landline.isNotBlank()) {
+                putExtra(
+                    ContactsContract.Intents.Insert.SECONDARY_PHONE,
+                    fixphonenumber(item.landline) ?: item.landline
+                )
+                putExtra(
+                    ContactsContract.Intents.Insert.SECONDARY_PHONE_TYPE,
+                    ContactsContract.CommonDataKinds.Phone.TYPE_HOME
+                )
+            }
+
+            if (item.email.isNotBlank()) {
+                putExtra(ContactsContract.Intents.Insert.EMAIL, item.email)
+                putExtra(
+                    ContactsContract.Intents.Insert.EMAIL_TYPE,
+                    ContactsContract.CommonDataKinds.Email.TYPE_HOME
+                )
+            }
+        }
+
+        try {
+            activity.startActivity(intent)
+        } catch (e: ActivityNotFoundException) {
+            if (BuildConfig.DEBUG) Log.e("MemberUtils", "No contacts app found", e)
+            Toast.makeText(activity, R.string.error_no_contacts_app, Toast.LENGTH_SHORT).show()
+        }
     }
 }

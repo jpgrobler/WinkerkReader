@@ -5,6 +5,9 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.activity.viewModels
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -34,7 +37,11 @@ class TemplateManagerActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityTemplateManagerBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.updatePadding(bottom = bars.bottom)
+            insets  // important: return insets so RecyclerView also gets them
+        }
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 

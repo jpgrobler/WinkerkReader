@@ -9,9 +9,11 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import za.co.jpsoft.winkerkreader.R
@@ -23,7 +25,7 @@ import za.co.jpsoft.winkerkreader.utils.MainNavigationController
 import za.co.jpsoft.winkerkreader.utils.PermissionManager
 import za.co.jpsoft.winkerkreader.utils.PermissionRationaleHelper
 
-class PermissionsActivity : AppCompatActivity() {
+class PermissionsActivity : BaseActivity() {
     // ✅ Only ONE declaration - keep this one
     private val navigationController by lazy { MainNavigationController(this) }
     private val permissionManager by lazy { PermissionManager(this) }
@@ -88,7 +90,11 @@ class PermissionsActivity : AppCompatActivity() {
         binding.tvBatteryStatus.setOnClickListener {
             showBatteryOptimizationDialog(this)
         }
-
+        ViewCompat.setOnApplyWindowInsetsListener(binding.recyclerViewPermissions) { view, insets ->
+            val navBar = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+            view.updatePadding(bottom = navBar.bottom)
+            insets
+        }
     }
 
     fun updateBatteryStatus() {

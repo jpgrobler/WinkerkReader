@@ -1,5 +1,7 @@
 package za.co.jpsoft.winkerkreader.ui.activities
 
+import android.os.Bundle
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import za.co.jpsoft.winkerkreader.utils.AppAuthGuard
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
@@ -85,5 +87,11 @@ abstract class BaseActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         appAuthGuard.checkOnResume(onAuthenticated = { onResumeAfterAuth() })
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        // Must be called BEFORE setContentView()
+        enableEdgeToEdge()
+        super.onCreate(savedInstanceState)
     }
 }

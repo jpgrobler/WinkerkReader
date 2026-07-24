@@ -5,6 +5,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.WinkerkContract
 import za.co.jpsoft.winkerkreader.databinding.SubMenuBinding
@@ -26,6 +29,11 @@ class SettingsActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         binding = SubMenuBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        ViewCompat.setOnApplyWindowInsetsListener(binding.list) { view, insets ->
+            val navBar = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+            view.updatePadding(bottom = navBar.bottom)
+            insets
+        }
         title = "Soek in velde:"
 
         // Load saved list from preferences

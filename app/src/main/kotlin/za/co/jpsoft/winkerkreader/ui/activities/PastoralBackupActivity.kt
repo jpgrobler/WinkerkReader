@@ -6,8 +6,10 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
@@ -20,7 +22,7 @@ import za.co.jpsoft.winkerkreader.utils.PastoralDatabaseBackup
 import za.co.jpsoft.winkerkreader.utils.PastoralDatabaseBackup.BackupFileInfo
 import java.io.File
 
-class PastoralBackupActivity : AppCompatActivity() {
+class PastoralBackupActivity : BaseActivity() {
 
     private lateinit var binding: ActivityPastoralBackupBinding
     private lateinit var backupAdapter: BackupListAdapter
@@ -39,6 +41,11 @@ class PastoralBackupActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityPastoralBackupBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        ViewCompat.setOnApplyWindowInsetsListener(binding.backupScroll) { view, insets ->
+            val navBar = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+            view.updatePadding(bottom = navBar.bottom)
+            insets
+        }
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = "Pastorale Rugsteun & Herstel"

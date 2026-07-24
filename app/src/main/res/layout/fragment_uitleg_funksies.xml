@@ -1,228 +1,405 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/colorSurface"
-    android:fillViewport="true">
+    android:orientation="vertical">
 
-    <LinearLayout
+    <!-- Fixed: Title + Save (never scrolls away) -->
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:layout_margin="16dp"
+        android:layout_marginBottom="0dp"
+        app:cardBackgroundColor="?attr/colorSurface"
+        app:cardCornerRadius="8dp"
+        app:cardElevation="4dp">
 
-        <!-- Funksies -->
-        <com.google.android.material.card.MaterialCardView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            app:cardBackgroundColor="?attr/colorSurface"
-            app:cardCornerRadius="8dp"
-            app:cardElevation="2dp">
+            android:orientation="vertical"
+            android:padding="8dp">
 
-            <LinearLayout
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="8dp">
+                android:layout_marginBottom="8dp"
+                android:background="?attr/colorPrimary"
+                android:padding="4dp"
+                android:text="@string/uitleg_funksies_title"
+                android:textAlignment="center"
+                android:textColor="?attr/colorOnPrimary"
+                android:textSize="18sp"
+                android:textStyle="bold" />
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    android:background="?attr/colorPrimary"
-                    android:padding="4dp"
-                    android:text="@string/uitleg_funksies_title"
-                    android:textAlignment="center"
-                    android:textColor="?attr/colorOnPrimary"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
+            <Button
+                android:id="@+id/funksoie_Stoor"
+                style="@style/Widget.WinkerkReader.Button.Primary"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:enabled="false"
+                android:text="@string/stoor" />
 
-                <Button
-                    android:id="@+id/funksoie_Stoor"
-                    style="@style/Widget.WinkerkReader.Button.Primary"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:layout_marginBottom="8dp"
-                    android:enabled="false"
-                    android:text="@string/stoor" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 
-                <CheckBox
-                    android:id="@+id/autoStartSwitch"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/uitleg_autostart_monitor"
-                    android:textColor="?attr/colorOnSurface" />
+    <!-- Scrollable content -->
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/nestedScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:padding="16dp"
+        android:paddingTop="12dp">
 
-                <CheckBox
-                    android:id="@+id/uitleg_Monitor_Oproepe"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/uitleg_monitor_oproepe"
-                    android:textColor="?attr/colorOnSurface" />
-
-                <CheckBox
-                    android:id="@+id/uitleg_Log_Oproepe"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/uitleg_log_tel_oproepe"
-                    android:textColor="?attr/colorOnSurface" />
-
-                <CheckBox
-                    android:id="@+id/uitleg_Log_VOIP"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/uitleg_log_voip_oproepe"
-                    android:textColor="?attr/colorOnSurface" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:text="@string/uitleg_calendar_picker"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-
-                <Spinner
-                    android:id="@+id/calendarSpinner"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    android:backgroundTint="?attr/colorPrimary"
-                    android:minHeight="48dp" />
-
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-        <!-- NEW: app lock -->
-        <com.google.android.material.card.MaterialCardView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:layout_marginBottom="4dp"
-            app:cardBackgroundColor="?attr/colorSurfaceVariant"
-            app:cardCornerRadius="4dp"
-            app:cardElevation="0dp">
+            android:orientation="vertical">
 
-            <LinearLayout
+            <!-- Main settings -->
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="4dp">
-                <!-- NEW: app lock -->
-                <CheckBox
-                    android:id="@+id/uitleg_biometric_lock"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="@string/settings_app_biometric"
-                    android:textColor="?attr/colorOnSurface" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="32dp"
-                    android:layout_marginBottom="4dp"
-                    android:text="@string/settings_app_biometric_summary"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    android:textSize="12sp" />
-
-                <Spinner
-                    android:id="@+id/biometric_timeout_spinner"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="32dp"
-                    android:layout_marginBottom="8dp"
-                    android:backgroundTint="?attr/colorPrimary"
-                    android:entries="@array/biometric_timeout_options"
-                    android:minHeight="48dp" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-        <!-- WhatsApp Methods -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"
-            app:cardBackgroundColor="?attr/colorSurfaceVariant"
-            app:cardCornerRadius="4dp"
-            app:cardElevation="0dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="4dp">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingTop="8dp"
-                    android:text="@string/uitleg_whatsapp_label"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textSize="16sp" />
+                android:layout_marginBottom="12dp"
+                app:cardBackgroundColor="?attr/colorSurface"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="2dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:padding="4dp">
+                    android:orientation="vertical"
+                    android:padding="8dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Oproepe Monitor &amp; log"
+                        android:textStyle="bold" />
 
                     <CheckBox
-                        android:id="@+id/uitleg_w1"
-                        android:layout_width="wrap_content"
+                        android:id="@+id/autoStartSwitch"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/uitleg_whatsapp_method_1"
+                        android:text="@string/uitleg_autostart_monitor"
                         android:textColor="?attr/colorOnSurface" />
 
                     <CheckBox
-                        android:id="@+id/uitleg_w2"
-                        android:layout_width="wrap_content"
+                        android:id="@+id/uitleg_Monitor_Oproepe"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/uitleg_whatsapp_method_2"
+                        android:text="@string/uitleg_monitor_oproepe"
                         android:textColor="?attr/colorOnSurface" />
 
                     <CheckBox
-                        android:id="@+id/uitleg_w3"
-                        android:layout_width="wrap_content"
+                        android:id="@+id/uitleg_Log_Oproepe"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/uitleg_whatsapp_method_3"
+                        android:text="@string/uitleg_log_tel_oproepe"
                         android:textColor="?attr/colorOnSurface" />
+
+                    <CheckBox
+                        android:id="@+id/uitleg_Log_VOIP"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/uitleg_log_voip_oproepe"
+                        android:textColor="?attr/colorOnSurface" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="@string/uitleg_calendar_picker"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <Spinner
+                        android:id="@+id/calendarSpinner"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
+                        android:backgroundTint="?attr/colorPrimary"
+                        android:minHeight="48dp" />
+
                 </LinearLayout>
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-        <!-- Email -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            app:cardBackgroundColor="?attr/colorSurfaceVariant"
-            app:cardCornerRadius="4dp"
-            app:cardElevation="0dp">
+            </com.google.android.material.card.MaterialCardView>
 
-            <LinearLayout
+            <!-- Quick Action -->
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="8dp">
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="4dp"
+                app:cardBackgroundColor="?attr/colorSurfaceVariant"
+                app:cardCornerRadius="4dp"
+                app:cardElevation="0dp">
 
-                <TextView
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:paddingTop="8dp"
-                    android:text="@string/uitleg_epos_label"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textSize="16sp" />
+                    android:orientation="vertical"
+                    android:padding="4dp">
 
-                <CheckBox
-                    android:id="@+id/uitleg_html"
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+            <!-- Title could be outside the scroll, or as first item -->
+            <!-- Quick Action Buttons (customisation) -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                app:cardBackgroundColor="?attr/colorSurfaceVariant"
+                app:cardCornerRadius="4dp"
+                app:cardElevation="0dp">
+
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/uitleg_html_epos"
-                    android:textColor="?attr/colorOnSurface" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-    </LinearLayout>
-</ScrollView>
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Vinne Aksie Menu"
+                        android:textStyle="bold" />
+
+                    <CheckBox
+                        android:id="@+id/uitleg_show_quick_actions"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/wys_vinnige_aksies"
+                        android:textColor="?attr/colorOnSurface" />
+
+                    <androidx.gridlayout.widget.GridLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="2dp"
+                        app:columnCount="2"
+                        app:rowCount="6"
+                        app:useDefaultMargins="true">
+
+                        <CheckBox
+                            android:id="@+id/qa_detail"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:text="@string/qa_detail"
+                            app:layout_columnWeight="1" />
+
+                        <CheckBox
+                            android:id="@+id/qa_sms"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:text="@string/qa_sms"
+                            app:layout_columnWeight="1" />
+
+                        <CheckBox
+                            android:id="@+id/qa_whatsapp"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:text="@string/qa_whatsapp"
+                            app:layout_columnWeight="1" />
+
+                        <CheckBox
+                            android:id="@+id/qa_call"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:text="@string/qa_call"
+                            app:layout_columnWeight="1" />
+
+                        <CheckBox
+                            android:id="@+id/qa_email"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:text="@string/qa_email"
+                            app:layout_columnWeight="1" />
+
+                        <CheckBox
+                            android:id="@+id/qa_landline"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:text="@string/qa_landline"
+                            app:layout_columnWeight="1" />
+
+                        <CheckBox
+                            android:id="@+id/qa_note"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:text="@string/qa_note"
+                            app:layout_columnWeight="1" />
+
+                        <CheckBox
+                            android:id="@+id/qa_reminder"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:text="@string/qa_reminder"
+                            app:layout_columnWeight="1" />
+
+                        <CheckBox
+                            android:id="@+id/qa_copy"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:text="@string/qa_copy"
+                            app:layout_columnWeight="1" />
+
+                        <CheckBox
+                            android:id="@+id/qa_copy_contacts"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:text="@string/qa_copy_contacts"
+                            app:layout_columnWeight="1" />
+                    </androidx.gridlayout.widget.GridLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+            <!-- App lock -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="4dp"
+                app:cardBackgroundColor="?attr/colorSurfaceVariant"
+                app:cardCornerRadius="4dp"
+                app:cardElevation="0dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="4dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Sekuriteit"
+                        android:textStyle="bold" />
+
+                    <CheckBox
+                        android:id="@+id/uitleg_biometric_lock"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="@string/settings_app_biometric"
+                        android:textColor="?attr/colorOnSurface" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="32dp"
+                        android:layout_marginBottom="4dp"
+                        android:text="@string/settings_app_biometric_summary"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textSize="12sp" />
+
+                    <Spinner
+                        android:id="@+id/biometric_timeout_spinner"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="32dp"
+                        android:layout_marginBottom="8dp"
+                        android:backgroundTint="?attr/colorPrimary"
+                        android:entries="@array/biometric_timeout_options"
+                        android:minHeight="48dp" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- WhatsApp Methods -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
+                app:cardBackgroundColor="?attr/colorSurfaceVariant"
+                app:cardCornerRadius="4dp"
+                app:cardElevation="0dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="4dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingTop="8dp"
+                        android:text="@string/uitleg_whatsapp_label"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:padding="4dp">
+
+                        <CheckBox
+                            android:id="@+id/uitleg_w1"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/uitleg_whatsapp_method_1"
+                            android:textColor="?attr/colorOnSurface" />
+
+                        <CheckBox
+                            android:id="@+id/uitleg_w2"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/uitleg_whatsapp_method_2"
+                            android:textColor="?attr/colorOnSurface" />
+
+                        <CheckBox
+                            android:id="@+id/uitleg_w3"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/uitleg_whatsapp_method_3"
+                            android:textColor="?attr/colorOnSurface" />
+
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Email -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                app:cardBackgroundColor="?attr/colorSurfaceVariant"
+                app:cardCornerRadius="4dp"
+                app:cardElevation="0dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="8dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingTop="8dp"
+                        android:text="@string/uitleg_epos_label"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <CheckBox
+                        android:id="@+id/uitleg_html"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/uitleg_html_epos"
+                        android:textColor="?attr/colorOnSurface" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</LinearLayout>

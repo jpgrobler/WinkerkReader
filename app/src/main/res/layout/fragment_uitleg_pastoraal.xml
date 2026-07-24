@@ -1,301 +1,289 @@
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:ns1="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/colorSurface"
-    android:fillViewport="true">
+    android:orientation="vertical">
 
-
-    <LinearLayout
+    <!-- Fixed: Title + Save (never scrolls away) -->
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:layout_margin="16dp"
+        android:layout_marginBottom="0dp"
+        ns1:cardBackgroundColor="?attr/colorSurface"
+        ns1:cardCornerRadius="8dp"
+        ns1:cardElevation="4dp">
 
-
-        <com.google.android.material.card.MaterialCardView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            ns1:cardBackgroundColor="?attr/colorSurface"
-            ns1:cardCornerRadius="8dp"
-            ns1:cardElevation="2dp">
+            android:orientation="vertical"
+            android:padding="8dp">
 
-
-            <LinearLayout
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="8dp">
+                android:layout_marginBottom="8dp"
+                android:background="?attr/colorPrimary"
+                android:enabled="false"
+                android:padding="4dp"
+                android:text="@string/pastoral_titel"
+                android:textAlignment="center"
+                android:textColor="?attr/colorOnPrimary"
+                android:textSize="18sp"
+                android:textStyle="bold" />
 
+            <Button
+                android:id="@+id/tasks_save"
+                style="@style/Widget.WinkerkReader.Button.Primary"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="@string/stoor"
+                android:textColor="?attr/colorOnPrimary" />
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    android:background="?attr/colorPrimary"
-                    android:enabled="false"
-                    android:padding="4dp"
-                    android:text="@string/pastoral_titel"
-                    android:textAlignment="center"
-                    android:textColor="?attr/colorOnPrimary"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 
+    <!-- Scrollable content -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:padding="16dp"
+        android:paddingTop="12dp">
 
-                <Button
-                    android:id="@+id/tasks_save"
-                    style="@style/Widget.WinkerkReader.Button.Primary"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:layout_marginTop="8dp"
-                    android:text="@string/stoor"
-                    android:textColor="?attr/colorOnPrimary" />
-
-
-                <CheckBox
-                    android:id="@+id/pastoral_calendar_auto_sync"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="4dp"
-                    android:text="@string/pastoral_calendar_auto_sync_label"
-                    android:textColor="?attr/colorOnSurface" />
-
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/uitleg_pastoral_calendar_label"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    android:textSize="14sp" />
-
-
-                <Spinner
-                    android:id="@+id/pastoral_calendar_spinner"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    android:backgroundTint="?attr/colorPrimary"
-                    android:minHeight="48dp" />
-
-
-            </LinearLayout>
-
-
-        </com.google.android.material.card.MaterialCardView>
-
-
-        <com.google.android.material.card.MaterialCardView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            ns1:cardBackgroundColor="?attr/colorSurface"
-            ns1:cardCornerRadius="8dp"
-            ns1:cardElevation="2dp">
+            android:orientation="vertical">
 
-
-            <LinearLayout
+            <!-- Calendar settings -->
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="8dp">
-
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="4dp"
-                    android:paddingTop="4dp"
-                    android:text="@string/tasks_titel"
-                    android:textAlignment="center"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-
-
-                <RadioGroup
-                    android:id="@+id/tasks_mode_group"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp">
-
-
-                    <RadioButton
-                        android:id="@+id/tasks_mode_off"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/tasks_af"
-                        android:textColor="?attr/colorOnSurface" />
-
-
-                    <RadioButton
-                        android:id="@+id/tasks_mode_api"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/tasks_outomaties"
-                        android:textColor="?attr/colorOnSurface" />
-
-
-                    <RadioButton
-                        android:id="@+id/tasks_mode_share"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/tasks_deel_elke_keer"
-                        android:textColor="?attr/colorOnSurface" />
-
-
-                </RadioGroup>
-
-
-                <EditText
-                    android:id="@+id/apps_script_link"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:autofillHints="Edit Apps Script Link"
-                    android:backgroundTint="?attr/colorPrimary"
-                    android:hint="@string/google_apps_script_link"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textSize="11sp" />
-
-
-                <com.google.android.material.textfield.TextInputLayout
-                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    ns1:passwordToggleEnabled="true"
-                    ns1:passwordToggleTint="?attr/colorPrimary">
-
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/apps_script_key"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="@string/google_apps_script_key"
-                        android:inputType="textPassword"
-                        android:textColor="?attr/colorOnSurface"
-                        android:textSize="11sp" />
-
-
-                </com.google.android.material.textfield.TextInputLayout>
-
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="@string/tasks_taaklys"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textSize="14sp" />
-
+                android:layout_marginBottom="12dp"
+                ns1:cardBackgroundColor="?attr/colorSurface"
+                ns1:cardCornerRadius="8dp"
+                ns1:cardElevation="2dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:orientation="vertical"
+                    android:padding="8dp">
 
+                    <CheckBox
+                        android:id="@+id/pastoral_calendar_auto_sync"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="4dp"
+                        android:text="@string/pastoral_calendar_auto_sync_label"
+                        android:textColor="?attr/colorOnSurface" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/uitleg_pastoral_calendar_label"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textSize="14sp" />
 
                     <Spinner
-                        android:id="@+id/tasks_list_spinner"
-                        android:layout_width="0dp"
+                        android:id="@+id/pastoral_calendar_spinner"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
+                        android:layout_marginBottom="8dp"
                         android:backgroundTint="?attr/colorPrimary"
                         android:minHeight="48dp" />
 
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Tasks -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                ns1:cardBackgroundColor="?attr/colorSurface"
+                ns1:cardCornerRadius="8dp"
+                ns1:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="8dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="4dp"
+                        android:paddingTop="4dp"
+                        android:text="@string/tasks_titel"
+                        android:textAlignment="center"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <RadioGroup
+                        android:id="@+id/tasks_mode_group"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp">
+
+                        <RadioButton
+                            android:id="@+id/tasks_mode_off"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/tasks_af"
+                            android:textColor="?attr/colorOnSurface" />
+
+                        <RadioButton
+                            android:id="@+id/tasks_mode_api"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/tasks_outomaties"
+                            android:textColor="?attr/colorOnSurface" />
+
+                        <RadioButton
+                            android:id="@+id/tasks_mode_share"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/tasks_deel_elke_keer"
+                            android:textColor="?attr/colorOnSurface" />
+
+                    </RadioGroup>
+
+                    <EditText
+                        android:id="@+id/apps_script_link"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:autofillHints="Edit Apps Script Link"
+                        android:backgroundTint="?attr/colorPrimary"
+                        android:hint="@string/google_apps_script_link"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="11sp" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        ns1:passwordToggleEnabled="true"
+                        ns1:passwordToggleTint="?attr/colorPrimary">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/apps_script_key"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/google_apps_script_key"
+                            android:inputType="textPassword"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textSize="11sp" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="@string/tasks_taaklys"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="14sp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <Spinner
+                            android:id="@+id/tasks_list_spinner"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:backgroundTint="?attr/colorPrimary"
+                            android:minHeight="48dp" />
+
+                        <Button
+                            android:id="@+id/btn_refresh_lists"
+                            style="@style/Widget.WinkerkReader.Button.Primary"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:text="@string/refresh_lists_btn" />
+
+                    </LinearLayout>
 
                     <Button
-                        android:id="@+id/btn_refresh_lists"
+                        android:id="@+id/btn_copy_script"
                         style="@style/Widget.WinkerkReader.Button.Primary"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:text="@string/refresh_lists_btn" />
-
+                        android:layout_gravity="center"
+                        android:layout_marginTop="8dp"
+                        android:text="@string/copy_script_btn" />
 
                 </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
-
-                <Button
-                    android:id="@+id/btn_copy_script"
-                    style="@style/Widget.WinkerkReader.Button.Primary"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:layout_marginTop="8dp"
-                    android:text="@string/copy_script_btn" />
-
-
-            </LinearLayout>
-
-
-        </com.google.android.material.card.MaterialCardView>
-
-
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            ns1:cardBackgroundColor="?attr/colorSurface">
-
-
-            <LinearLayout
+            <!-- Backup -->
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:layout_marginTop="16dp"
+                ns1:cardBackgroundColor="?attr/colorSurface">
 
-
-                <TextView
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/rugsteun"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textStyle="bold" />
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/rugsteun"
+                        android:textAlignment="center"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
 
-                <TextView
-                    android:id="@+id/backupLocationText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    android:textSize="12sp" />
+                    <TextView
+                        android:id="@+id/backupLocationText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textSize="12sp" />
 
+                    <TextView
+                        android:id="@+id/backupStatusPastoralText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:textColor="?attr/colorOnSurface" />
 
-                <TextView
-                    android:id="@+id/backupStatusPastoralText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:textColor="?attr/colorOnSurface" />
+                    <TextView
+                        android:id="@+id/backupStatusCallLogText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:textColor="?attr/colorOnSurface" />
 
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/callLogBackupSwitch"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="@string/rugsteun_ook_oproeplog" />
 
-                <TextView
-                    android:id="@+id/backupStatusCallLogText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:textColor="?attr/colorOnSurface" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
 
-                <com.google.android.material.materialswitch.MaterialSwitch
-                    android:id="@+id/callLogBackupSwitch"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="@string/rugsteun_ook_oproeplog" />
-
-
-            </LinearLayout>
-
-
-        </com.google.android.material.card.MaterialCardView>
-
-
-    </LinearLayout>
-
-
-</ScrollView>
+</LinearLayout>

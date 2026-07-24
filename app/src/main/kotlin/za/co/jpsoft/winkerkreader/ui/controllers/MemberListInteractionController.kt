@@ -58,7 +58,11 @@ class MemberListInteractionController(
 
     // ─── Click: show quick‑action popup ──────────────────────────────────────
     fun showMemberPopupMenu(anchor: View, item: MemberItem) {
-        quickActionHelper.showQuickActions(anchor, item)
+        if (!settingsManager.showQuickActionBar) {
+            showFullPopupMenu(anchor, item)  // same method the expandCallback calls
+        } else {
+            quickActionHelper.showQuickActions(anchor, item)
+        }
     }
 
     // ─── Full menu (original expanded menu) ──────────────────────────────────

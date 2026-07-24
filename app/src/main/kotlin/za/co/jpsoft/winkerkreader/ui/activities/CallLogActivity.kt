@@ -8,6 +8,9 @@ import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -37,7 +40,11 @@ class CallLogActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityCallLogBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
+        ViewCompat.setOnApplyWindowInsetsListener(binding.recyclerView) { view, insets ->
+            val navBar = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+            view.updatePadding(bottom = navBar.bottom)
+            insets
+        }
         supportActionBar?.apply {
             setDisplayHomeAsUpEnabled(true)
             title = getString(menu_call_log)

@@ -11,8 +11,8 @@
       "type": "SINGLE",
       "filters": [],
       "attributes": [],
-      "versionCode": 80,
-      "versionName": "4.1t",
+      "versionCode": 118,
+      "versionName": "4.2 test r018",
       "outputFile": "app-release.apk"
     }
   ],
@@ -33,5 +33,5 @@
       ]
     }
   ],
-  "minSdkVersionForDexing": 26
+  "minSdkVersionForDexing": 28
 }

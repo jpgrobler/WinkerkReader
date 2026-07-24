@@ -422,7 +422,7 @@
     <string name="uitleg_doopdatum">Doopdatum</string>
     <string name="uitleg_belydenisdatum">Belydenisdatum</string>
     <string name="uitleg_sterfdatum">Sterfdatum</string>
-    <string name="uitleg_funksies_title">Oproepe &amp; Epos</string>
+    <string name="uitleg_funksies_title">Funksies: Oproepe Log, "Quick Action bar", Whatsapp metode, Sekuriteit Epos</string>
     <string name="uitleg_autostart_monitor">Monitor Telefoon &amp; Voip Oproepe</string>
     <string name="uitleg_monitor_oproepe">Wys Oproepe Inligting</string>
     <string name="uitleg_log_tel_oproepe">Log Tel Oproepe</string>
@@ -838,4 +838,19 @@
     <string name="verwyder">Verwyder</string>
     <string name="herstel_rugsteun2">Herstel</string>
     <string name="rugsteunlêers_gevind">%d rugsteunlêers gevind</string>
+
+
+    <string name="quick_actions_customise_title">Kies vinnige aksies</string>
+    <string name="qa_detail">ℹ️ Detail</string>
+    <string name="qa_sms">💬 SMS</string>
+    <string name="qa_whatsapp">WhatsApp</string>
+    <string name="qa_call">📱 Bel</string>
+    <string name="qa_email">✉️ E-pos</string>
+    <string name="qa_landline">☎️ Landlyn</string>
+    <string name="qa_note">📝 Nota</string>
+    <string name="qa_reminder">❤️ Herinner</string>
+    <string name="qa_copy">📋 Kopieer</string>
+    <string name="qa_copy_contacts">👤+ Stoor in kontakte</string>
+    <string name="wys_vinnige_aksies">Wys vinnige aksies</string>
+    <string name="error_no_contacts_app">Geen Kontak App</string>
 </resources>
