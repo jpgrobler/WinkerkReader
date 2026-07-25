@@ -104,7 +104,7 @@ class_to_full_package["SettingsManager"] = f"{base_package}.utils"
 
 
 # 1. Create Directories and Move Files
-print("Moving files to new directories...")
+print("Moving files to new directories…")
 for filename, subpkg in domain_map.items():
     old_path = os.path.join(base_kt_dir, filename)
     
@@ -121,7 +121,7 @@ for filename, subpkg in domain_map.items():
         shutil.move(old_path, new_path)
 
 # 2. Update Packages and Imports in KT Files
-print("Updating Kotlin files...")
+print("Updating Kotlin files…")
 for root, _, files in os.walk(new_base_path):
     for filename in files:
         if filename.endswith(".kt"):
@@ -170,7 +170,7 @@ for root, _, files in os.walk(new_base_path):
                 f.write(content)
 
 # 3. Update AndroidManifest.xml
-print("Updating AndroidManifest.xml...")
+print("Updating AndroidManifest.xml…")
 manifest_path = r"c:\Pieter Folders\WinkerkReader\Winkerk10Reader 2024\app\src\main\AndroidManifest.xml"
 with open(manifest_path, 'r', encoding='utf-8') as f:
     manifest = f.read()
@@ -187,7 +187,7 @@ with open(manifest_path, 'w', encoding='utf-8') as f:
     f.write(manifest)
 
 # 4. Update XML layouts (tools:context, custom views)
-print("Updating XML Layouts...")
+print("Updating XML Layouts…")
 res_dir = r"c:\Pieter Folders\WinkerkReader\Winkerk10Reader 2024\app\src\main\res"
 for root, _, files in os.walk(res_dir):
     for filename in files:

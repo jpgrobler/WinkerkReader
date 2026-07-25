@@ -2,6 +2,7 @@ package za.co.jpsoft.winkerkreader.ui.controllers
 
 import android.view.GestureDetector
 import android.view.MotionEvent
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 
 /**
@@ -62,5 +63,38 @@ class MainSwipeGestureController(
      */
     fun handleTouchEvent(event: MotionEvent): Boolean {
         return gestureDetector.onTouchEvent(event)
+    }
+
+    /**
+     * Forwards [event] to the gesture detector only when the touch falls
+     * *outside* [excludedView].
+     *
+     * Replaces the two-step pattern in MainActivity.dispatchTouchEvent():
+     *   if (isTouchInsideView(event, chipView)) return super.dispatchTouchEvent(event)
+     *   swipeGestureController.handleTouchEvent(event)
+     *
+     * New call site (MainActivity.dispatchTouchEvent):
+     *   swipeGestureController.handleTouchEventIfOutside(event, binding.chipScrollView)
+     *   return super.dispatchTouchEvent(event)
+     */
+    fun handleTouchEventIfOutside(event: MotionEvent, excludedView: View) {
+        if (!isTouchInsideView(event, excludedView)) {
+            gestureDetector.onTouchEvent(event)
+        }
+    }
+
+    /**
+     * Returns true when [event] raw coordinates fall within [view]'s screen bounds.
+     *
+     * Moved from MainActivity where it was a private helper that existed solely
+     * to gate whether this controller receives a touch event.
+     */
+    private fun isTouchInsideView(event: MotionEvent, view: View): Boolean {
+        val location = IntArray(2)
+        view.getLocationOnScreen(location)
+        val x = event.rawX
+        val y = event.rawY
+        return x >= location[0] && x <= location[0] + view.width &&
+                y >= location[1] && y <= location[1] + view.height
     }
 }

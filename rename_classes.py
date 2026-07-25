@@ -57,25 +57,25 @@ def process_file(filepath):
         print(f"Updated references in {os.path.basename(filepath)}")
 
 # 1. Update references in Kotlin files
-print("Updating KT files...")
+print("Updating KT files…")
 for root, dirs, files in os.walk(kt_dir):
     for filename in files:
         if filename.endswith(".kt"):
             process_file(os.path.join(root, filename))
 
 # 2. Update references in XML layout files
-print("Updating XML files...")
+print("Updating XML files…")
 for root, dirs, files in os.walk(res_dir):
     for filename in files:
         if filename.endswith(".xml"):
             process_file(os.path.join(root, filename))
 
 # 3. Update AndroidManifest.xml
-print("Updating AndroidManifest.xml...")
+print("Updating AndroidManifest.xml…")
 process_file(manifest_path)
 
 # 4. Rename the Kotlin files
-print("Renaming physical files...")
+print("Renaming physical files…")
 for old_name, new_name in file_renames.items():
     old_path = os.path.join(kt_dir, old_name)
     new_path = os.path.join(kt_dir, new_name)

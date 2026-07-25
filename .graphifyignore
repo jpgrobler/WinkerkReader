@@ -1,0 +1,6 @@
+@"
+# .graphifyignore
+md/
+graphify-out/
+README.md
+"@ | Set-Content .graphifyignore

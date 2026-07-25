@@ -25,12 +25,11 @@ class FilterBottomSheet : BottomSheetDialogFragment() {
     private val binding get() = _binding!!
 
     private val viewModel: MemberViewModel by activityViewModels()
-    private val filterList = mutableListOf<FilterBox>()
 
-    // Store original state for reset
+    // Store original state for cancel
     private var originalRecordStatus = "0"
     private var originalFilterList: ArrayList<FilterBox>? = null
-    private var originalSortOrder: String = ""  // ✅ ADD THIS - store the sort order
+    private var originalSortOrder: String = ""
 
     companion object {
         private const val TAG = "FilterBottomSheet"
@@ -39,7 +38,7 @@ class FilterBottomSheet : BottomSheetDialogFragment() {
     override fun onStart() {
         super.onStart()
 
-        // Make bottom sheet expand to full height and prevent swipe-to-dismiss
+        // Expand bottom sheet and prevent swipe-to-dismiss
         dialog?.let { dialog ->
             if (dialog is BottomSheetDialog) {
                 val behavior = dialog.behavior
@@ -49,11 +48,9 @@ class FilterBottomSheet : BottomSheetDialogFragment() {
                 behavior.isHideable = false
                 behavior.skipCollapsed = true
 
-                // Set a custom height - 90% of screen height
                 val displayMetrics = resources.displayMetrics
                 val screenHeight = displayMetrics.heightPixels
-                val maxHeight = (screenHeight * 0.9).toInt()
-                behavior.maxHeight = maxHeight
+                behavior.maxHeight = (screenHeight * 0.9).toInt()
             }
         }
     }
@@ -70,27 +67,19 @@ class FilterBottomSheet : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // ✅ Store original state - including current sort order
+        // Capture original state before any changes
         originalRecordStatus = viewModel.recordStatus
         originalFilterList = viewModel.getCurrentFilterList()?.let { ArrayList(it) }
-        originalSortOrder = viewModel.sortOrder  // ✅ Capture current sort order
+        originalSortOrder = viewModel.sortOrder
 
         if (BuildConfig.DEBUG) {
-            Log.d(TAG, "Original sort order captured: $originalSortOrder")
-            if (BuildConfig.DEBUG) Log.d(TAG, "Original record status: $originalRecordStatus")
-            if (BuildConfig.DEBUG) Log.d(
-                TAG,
-                "Original filter list: ${originalFilterList?.size ?: 0} items"
-            )
+            Log.d(TAG, "Original sort order: $originalSortOrder")
+            Log.d(TAG, "Original record status: $originalRecordStatus")
+            Log.d(TAG, "Original filter list size: ${originalFilterList?.size ?: 0}")
         }
 
-        // Setup AutoCompleteTextViews with adapters
         setupAutoCompleteTextViews()
-
-        // Restore current filter state
         restoreFilterState()
-
-        // Setup listeners
         setupListeners()
 
         // Apply button
@@ -99,13 +88,13 @@ class FilterBottomSheet : BottomSheetDialogFragment() {
             dismiss()
         }
 
-        // Cancel button - restore original state
+        // Cancel button – revert to original state
         binding.btnCancel.setOnClickListener {
             restoreOriginalState()
             dismiss()
         }
 
-        // Reset button - clear all filters
+        // Reset button – clear all filters within the sheet (does not apply)
         binding.btnReset.setOnClickListener {
             resetAllFilters()
         }
@@ -116,56 +105,19 @@ class FilterBottomSheet : BottomSheetDialogFragment() {
         _binding = null
     }
 
+    // -------------------------------------------------------------------------
+    // UI Setup
+    // -------------------------------------------------------------------------
+
     private fun setupAutoCompleteTextViews() {
-        // Setup Geslag options: manlik, vroulik
-        setupAutoCompleteTextView(
-            binding.filterGeslagOpsies,
-            R.array.filtergeslagoptions,
-            "manlik"
-        )
-
-        // Setup Huwelikstatus options: Getroud, Ongetroud, Geskei, Weduwee, Wewenaar, Onbekend
-        setupAutoCompleteTextView(
-            binding.filterHuwelikstatusOpsies,
-            R.array.filterhuwelikstatusoptions,
-            "Getroud"
-        )
-
-        // Setup Lidmaatskap options: Belydend, Doop, Onbekend
-        setupAutoCompleteTextView(
-            binding.filterLidmaatskapOpsies,
-            R.array.filterlidmaatsakpstatusoptions,
-            "Belydend"
-        )
-
-        // Setup Text filter options: gelyk aan, nie gelyk aan, begin met, eindig met, leeg
-        setupAutoCompleteTextView(
-            binding.filterVanOpsies,
-            R.array.filtertextoptions,
-            "gelyk aan"
-        )
-        setupAutoCompleteTextView(
-            binding.filterNoemnaamOpsies,
-            R.array.filtertextoptions,
-            "gelyk aan"
-        )
-        setupAutoCompleteTextView(
-            binding.filterNooiensvanOpsies,
-            R.array.filtertextoptions,
-            "gelyk aan"
-        )
-        setupAutoCompleteTextView(
-            binding.filterWykOpsies,
-            R.array.filtertextoptions,
-            "gelyk aan"
-        )
-
-        // Setup Ouderdom options: gelyk, kleiner as, groter as, tussen
-        setupAutoCompleteTextView(
-            binding.filterOuderdomOpsies,
-            R.array.filterouderdomoptions,
-            "gelyk"
-        )
+        setupAutoCompleteTextView(binding.filterGeslagOpsies, R.array.filtergeslagoptions, "manlik")
+        setupAutoCompleteTextView(binding.filterHuwelikstatusOpsies, R.array.filterhuwelikstatusoptions, "Getroud")
+        setupAutoCompleteTextView(binding.filterLidmaatskapOpsies, R.array.filterlidmaatsakpstatusoptions, "Belydend")
+        setupAutoCompleteTextView(binding.filterVanOpsies, R.array.filtertextoptions, "gelyk aan")
+        setupAutoCompleteTextView(binding.filterNoemnaamOpsies, R.array.filtertextoptions, "gelyk aan")
+        setupAutoCompleteTextView(binding.filterNooiensvanOpsies, R.array.filtertextoptions, "gelyk aan")
+        setupAutoCompleteTextView(binding.filterWykOpsies, R.array.filtertextoptions, "gelyk aan")
+        setupAutoCompleteTextView(binding.filterOuderdomOpsies, R.array.filterouderdomoptions, "gelyk")
     }
 
     private fun setupAutoCompleteTextView(
@@ -180,12 +132,11 @@ class FilterBottomSheet : BottomSheetDialogFragment() {
             items
         )
         view.setAdapter(adapter)
-        // Set the default value
         view.setText(defaultValue, false)
     }
 
     private fun restoreFilterState() {
-        // 1. Restore status using ChipGroup
+        // Record status chips
         when (viewModel.recordStatus) {
             "0" -> binding.filterStatusAktief.isChecked = true
             "2" -> binding.filterStatusOnaktief.isChecked = true
@@ -193,125 +144,111 @@ class FilterBottomSheet : BottomSheetDialogFragment() {
             else -> binding.filterStatusAktief.isChecked = true
         }
 
-        // 2. Restore filters if they exist
+        // Existing filters
         val currentFilters = viewModel.getCurrentFilterList()
-        if (currentFilters != null) {
-            currentFilters.forEach { filter ->
-                when (filter.title) {
-                    "Selfoon" -> binding.filterSelfoon.isChecked = filter.checked
-                    "Landlyn" -> binding.filterLandlyn.isChecked = filter.checked
-                    "E-pos" -> binding.filterEpos.isChecked = filter.checked
-                    "Gesinshoof" -> binding.filterGesinshoof.isChecked = filter.checked
+        currentFilters?.forEach { filter ->
+            when (filter.title) {
+                "Selfoon" -> binding.filterSelfoon.isChecked = filter.checked
+                "Landlyn" -> binding.filterLandlyn.isChecked = filter.checked
+                "E-pos" -> binding.filterEpos.isChecked = filter.checked
+                "Gesinshoof" -> binding.filterGesinshoof.isChecked = filter.checked
 
-                    "Geslag" -> {
-                        binding.filterGeslagCheck.isChecked = filter.checked
-                        setAutoCompleteText(binding.filterGeslagOpsies, filter.text3)
-                    }
-
-                    "Huwelikstatus" -> {
-                        binding.filterHuwelikstatusCheck.isChecked = filter.checked
-                        setAutoCompleteText(binding.filterHuwelikstatusOpsies, filter.text3)
-                    }
-
-                    "Lidmaatskap" -> {
-                        binding.filterLidmaatskapCheck.isChecked = filter.checked
-                        setAutoCompleteText(binding.filterLidmaatskapOpsies, filter.text3)
-                    }
-
-                    "Van" -> {
-                        binding.filterVanCheck.isChecked = filter.checked
-                        setAutoCompleteText(binding.filterVanOpsies, filter.text3)
-                        binding.filterVan.setText(filter.text1)
-                    }
-
-                    "Noemnaam" -> {
-                        binding.filterNoemnaamCheck.isChecked = filter.checked
-                        setAutoCompleteText(binding.filterNoemnaamOpsies, filter.text3)
-                        binding.filterNoemnaam.setText(filter.text1)
-                    }
-
-                    "Nooiensvan" -> {
-                        binding.filterNooiensvanCheck.isChecked = filter.checked
-                        setAutoCompleteText(binding.filterNooiensvanOpsies, filter.text3)
-                        binding.filterNooiensvan.setText(filter.text1)
-                    }
-
-                    "Wyk" -> {
-                        binding.filterWykCheck.isChecked = filter.checked
-                        setAutoCompleteText(binding.filterWykOpsies, filter.text3)
-                        binding.filterWyk.setText(filter.text1)
-                    }
-
-                    "Ouderdom" -> {
-                        binding.filterOuderdomCheck.isChecked = filter.checked
-                        setAutoCompleteText(binding.filterOuderdomOpsies, filter.text3)
-                        binding.filterOuderdom1.setText(filter.text1)
-                        binding.filterOuderdom2.setText(filter.text2)
-                    }
+                "Geslag" -> {
+                    binding.filterGeslagCheck.isChecked = filter.checked
+                    setAutoCompleteText(binding.filterGeslagOpsies, filter.text3)
+                }
+                "Huwelikstatus" -> {
+                    binding.filterHuwelikstatusCheck.isChecked = filter.checked
+                    setAutoCompleteText(binding.filterHuwelikstatusOpsies, filter.text3)
+                }
+                "Lidmaatskap" -> {
+                    binding.filterLidmaatskapCheck.isChecked = filter.checked
+                    setAutoCompleteText(binding.filterLidmaatskapOpsies, filter.text3)
+                }
+                "Van" -> {
+                    binding.filterVanCheck.isChecked = filter.checked
+                    setAutoCompleteText(binding.filterVanOpsies, filter.text3)
+                    binding.filterVan.setText(filter.text1)
+                }
+                "Noemnaam" -> {
+                    binding.filterNoemnaamCheck.isChecked = filter.checked
+                    setAutoCompleteText(binding.filterNoemnaamOpsies, filter.text3)
+                    binding.filterNoemnaam.setText(filter.text1)
+                }
+                "Nooiensvan" -> {
+                    binding.filterNooiensvanCheck.isChecked = filter.checked
+                    setAutoCompleteText(binding.filterNooiensvanOpsies, filter.text3)
+                    binding.filterNooiensvan.setText(filter.text1)
+                }
+                "Wyk" -> {
+                    binding.filterWykCheck.isChecked = filter.checked
+                    setAutoCompleteText(binding.filterWykOpsies, filter.text3)
+                    binding.filterWyk.setText(filter.text1)
+                }
+                "Ouderdom" -> {
+                    binding.filterOuderdomCheck.isChecked = filter.checked
+                    setAutoCompleteText(binding.filterOuderdomOpsies, filter.text3)
+                    binding.filterOuderdom1.setText(filter.text1)
+                    binding.filterOuderdom2.setText(filter.text2)
                 }
             }
         }
     }
 
     private fun setAutoCompleteText(view: MaterialAutoCompleteTextView, value: String) {
-        val adapter = view.adapter
-        if (adapter != null) {
-            for (i in 0 until adapter.count) {
-                if (adapter.getItem(i).toString() == value) {
-                    view.setText(value, false)
-                    break
-                }
+        val adapter = view.adapter ?: return
+        for (i in 0 until adapter.count) {
+            if (adapter.getItem(i).toString() == value) {
+                view.setText(value, false)
+                break
             }
         }
     }
 
     private fun setupListeners() {
-        // Enable/disable related fields when switches are toggled
+        // Enable/disable dependent fields when switches are toggled
         binding.filterVanCheck.setOnCheckedChangeListener { _, isChecked ->
             binding.filterVan.isEnabled = isChecked
             binding.filterVanOpsies.isEnabled = isChecked
         }
-
         binding.filterNoemnaamCheck.setOnCheckedChangeListener { _, isChecked ->
             binding.filterNoemnaam.isEnabled = isChecked
             binding.filterNoemnaamOpsies.isEnabled = isChecked
         }
-
         binding.filterNooiensvanCheck.setOnCheckedChangeListener { _, isChecked ->
             binding.filterNooiensvan.isEnabled = isChecked
             binding.filterNooiensvanOpsies.isEnabled = isChecked
         }
-
         binding.filterWykCheck.setOnCheckedChangeListener { _, isChecked ->
             binding.filterWyk.isEnabled = isChecked
             binding.filterWykOpsies.isEnabled = isChecked
         }
-
         binding.filterOuderdomCheck.setOnCheckedChangeListener { _, isChecked ->
             binding.filterOuderdom1.isEnabled = isChecked
             binding.filterOuderdom2.isEnabled = isChecked
             binding.filterOuderdomOpsies.isEnabled = isChecked
         }
-
         binding.filterGeslagCheck.setOnCheckedChangeListener { _, isChecked ->
             binding.filterGeslagOpsies.isEnabled = isChecked
         }
-
         binding.filterHuwelikstatusCheck.setOnCheckedChangeListener { _, isChecked ->
             binding.filterHuwelikstatusOpsies.isEnabled = isChecked
         }
-
         binding.filterLidmaatskapCheck.setOnCheckedChangeListener { _, isChecked ->
             binding.filterLidmaatskapOpsies.isEnabled = isChecked
         }
     }
 
+    // -------------------------------------------------------------------------
+    // Filter application
+    // -------------------------------------------------------------------------
+
     private fun applyFilters() {
-        filterList.clear()
+        val filterList = mutableListOf<FilterBox>()
 
         if (BuildConfig.DEBUG) Log.d(TAG, "Applying filters...")
 
-        // 1. Status - get from ChipGroup
+        // 1. Status
         val status = when (binding.filterStatusChipGroup.checkedChipId) {
             R.id.filter_status_aktief -> "0"
             R.id.filter_status_onaktief -> "2"
@@ -320,65 +257,27 @@ class FilterBottomSheet : BottomSheetDialogFragment() {
         }
         viewModel.recordStatus = status
 
-        // 2. Simple switch filters
-        addSwitchFilter("Selfoon", binding.filterSelfoon)
-        addSwitchFilter("Landlyn", binding.filterLandlyn)
-        addSwitchFilter("E-pos", binding.filterEpos)
-        addSwitchFilter("Gesinshoof", binding.filterGesinshoof)
+        // 2. Simple switches
+        addSwitchFilter("Selfoon", binding.filterSelfoon, filterList)
+        addSwitchFilter("Landlyn", binding.filterLandlyn, filterList)
+        addSwitchFilter("E-pos", binding.filterEpos, filterList)
+        addSwitchFilter("Gesinshoof", binding.filterGesinshoof, filterList)
 
-        // 3. Complex filters with AutoCompleteTextViews
-        addComplexFilter(
-            "Geslag",
-            binding.filterGeslagCheck,
-            binding.filterGeslagOpsies.text.toString()
-        )
-
-        addComplexFilter(
-            "Huwelikstatus",
-            binding.filterHuwelikstatusCheck,
-            binding.filterHuwelikstatusOpsies.text.toString()
-        )
-
-        addComplexFilter(
-            "Lidmaatskap",
-            binding.filterLidmaatskapCheck,
-            binding.filterLidmaatskapOpsies.text.toString()
-        )
+        // 3. Complex filters (select list)
+        addComplexFilter("Geslag", binding.filterGeslagCheck, binding.filterGeslagOpsies.text.toString(), filterList)
+        addComplexFilter("Huwelikstatus", binding.filterHuwelikstatusCheck, binding.filterHuwelikstatusOpsies.text.toString(), filterList)
+        addComplexFilter("Lidmaatskap", binding.filterLidmaatskapCheck, binding.filterLidmaatskapOpsies.text.toString(), filterList)
 
         // 4. Text filters
-        addTextFilter(
-            "Van",
-            binding.filterVanCheck,
-            binding.filterVanOpsies.text.toString(),
-            binding.filterVan.text.toString()
-        )
-
-        addTextFilter(
-            "Noemnaam",
-            binding.filterNoemnaamCheck,
-            binding.filterNoemnaamOpsies.text.toString(),
-            binding.filterNoemnaam.text.toString()
-        )
-
-        addTextFilter(
-            "Nooiensvan",
-            binding.filterNooiensvanCheck,
-            binding.filterNooiensvanOpsies.text.toString(),
-            binding.filterNooiensvan.text.toString()
-        )
-
-        addTextFilter(
-            "Wyk",
-            binding.filterWykCheck,
-            binding.filterWykOpsies.text.toString(),
-            binding.filterWyk.text.toString()
-        )
+        addTextFilter("Van", binding.filterVanCheck, binding.filterVanOpsies.text.toString(), binding.filterVan.text.toString(), filterList)
+        addTextFilter("Noemnaam", binding.filterNoemnaamCheck, binding.filterNoemnaamOpsies.text.toString(), binding.filterNoemnaam.text.toString(), filterList)
+        addTextFilter("Nooiensvan", binding.filterNooiensvanCheck, binding.filterNooiensvanOpsies.text.toString(), binding.filterNooiensvan.text.toString(), filterList)
+        addTextFilter("Wyk", binding.filterWykCheck, binding.filterWykOpsies.text.toString(), binding.filterWyk.text.toString(), filterList)
 
         // 5. Ouderdom
         val ouderdomSpinner = binding.filterOuderdomOpsies.text.toString()
         val ouderdom1 = binding.filterOuderdom1.text.toString()
         val ouderdom2 = binding.filterOuderdom2.text.toString()
-
         if (binding.filterOuderdomCheck.isChecked) {
             filterList.add(
                 FilterBox(
@@ -391,97 +290,31 @@ class FilterBottomSheet : BottomSheetDialogFragment() {
             )
         }
 
-        // Apply filters to ViewModel
         val hasActiveFilter = filterList.any { it.checked }
-
         val activity = activity as? MainActivity
 
         if (hasActiveFilter) {
-            val filterArrayList = ArrayList(filterList)
-
-            // Save original layout before filter
-            val currentSortOrder = viewModel.sortOrder
-            if (activity != null) {
-                if (activity.searchFilterCoordinator.originalLayoutBeforeFilter.isEmpty() &&
-                    activity.searchFilterCoordinator.originalLayoutBeforeSearch.isEmpty() &&
-                    currentSortOrder != "Filter" && currentSortOrder != "FILTER_DATA"
-                ) {
-                    activity.searchFilterCoordinator.originalLayoutBeforeFilter = currentSortOrder
-                    if (BuildConfig.DEBUG) {
-                        Log.d(TAG, "Saved original sort order: $currentSortOrder")
-                    }
-                }
-            }
-
-            viewModel.updateFilter(filterArrayList)
-            if (BuildConfig.DEBUG) Log.d(TAG, "Applied ${filterArrayList.size} filters")
-
-            viewModel.refresh()
-
+            // Apply via coordinator
+            activity?.searchFilterCoordinator?.applyFilterResult(ArrayList(filterList), viewModel.sortOrder)
+            activity?.searchFilterCoordinator?.updateSummaryView()
         } else {
-            // No active filters - clear everything and restore
-            if (BuildConfig.DEBUG) Log.d(TAG, "No active filters - clearing")
-
-            viewModel.updateFilter(ArrayList())
-            viewModel.recordStatus = "0"
-
-            if (activity != null && activity.searchFilterCoordinator.originalLayoutBeforeFilter.isNotEmpty()) {
-                val restoreSort = activity.searchFilterCoordinator.originalLayoutBeforeFilter
-                if (BuildConfig.DEBUG) Log.d(TAG, "Restoring sort order to: $restoreSort")
-
-                activity.updateSortOrder(restoreSort)
-
-                activity.searchFilterCoordinator.originalLayoutBeforeFilter = ""
-                activity.searchFilterCoordinator.filterList = null
-
-                activity.binding.searchItemBlock.visibility = View.GONE
-                activity.binding.searchText.text = ""
-                activity.binding.mainSearchTextClose.visibility = View.GONE
-                viewModel.clearFilterSummary()
-
-                activity.memberListAdapter.updateState(
-                    listView = activity.settingsManager.listView,
-                    soekList = viewModel.soekList,
-                    soek = viewModel.soek,
-                    recordStatus = viewModel.recordStatus,
-                    sortOrder = restoreSort,
-                    useCongregationIndicator = activity.settingsManager.useCongregationIndicator
-                )
-            }
-
-            viewModel.refresh()
+            // No filters → clear everything and restore original sort
+            activity?.searchFilterCoordinator?.clearAndRestore()
         }
 
-        activity?.updateFilterSummary()
-        activity?.recomputeBirthdayOffset()
+        // Dismiss is handled by the button click listener
     }
 
-    private fun addSwitchFilter(title: String, switch: MaterialSwitch) {
+    private fun addSwitchFilter(title: String, switch: MaterialSwitch, list: MutableList<FilterBox>) {
         if (switch.isChecked) {
-            filterList.add(
-                FilterBox(
-                    title = title,
-                    text1 = "",
-                    text2 = "",
-                    text3 = "",
-                    checked = true
-                )
-            )
+            list.add(FilterBox(title = title, text1 = "", text2 = "", text3 = "", checked = true))
             if (BuildConfig.DEBUG) Log.d(TAG, "Added switch filter: $title")
         }
     }
 
-    private fun addComplexFilter(title: String, switch: MaterialSwitch, value: String) {
+    private fun addComplexFilter(title: String, switch: MaterialSwitch, value: String, list: MutableList<FilterBox>) {
         if (switch.isChecked) {
-            filterList.add(
-                FilterBox(
-                    title = title,
-                    text1 = "",
-                    text2 = "",
-                    text3 = value,
-                    checked = true
-                )
-            )
+            list.add(FilterBox(title = title, text1 = "", text2 = "", text3 = value, checked = true))
             if (BuildConfig.DEBUG) Log.d(TAG, "Added complex filter: $title = $value")
         }
     }
@@ -490,41 +323,32 @@ class FilterBottomSheet : BottomSheetDialogFragment() {
         title: String,
         switch: MaterialSwitch,
         operator: String,
-        value: String
+        value: String,
+        list: MutableList<FilterBox>
     ) {
-        if (switch.isChecked && value.isNotEmpty()) {
-            filterList.add(
-                FilterBox(
-                    title = title,
-                    text1 = value,
-                    text2 = "",
-                    text3 = operator,
-                    checked = true
-                )
-            )
-            if (BuildConfig.DEBUG) Log.d(TAG, "Added text filter: $title $operator '$value'")
-        } else if (switch.isChecked && value.isEmpty()) {
-            filterList.add(
-                FilterBox(
-                    title = title,
-                    text1 = "",
-                    text2 = "",
-                    text3 = "leeg",
-                    checked = true
-                )
-            )
-            if (BuildConfig.DEBUG) Log.d(TAG, "Added empty filter: $title is leeg")
+        if (switch.isChecked) {
+            if (value.isNotEmpty()) {
+                list.add(FilterBox(title = title, text1 = value, text2 = "", text3 = operator, checked = true))
+                if (BuildConfig.DEBUG) Log.d(TAG, "Added text filter: $title $operator '$value'")
+            } else {
+                list.add(FilterBox(title = title, text1 = "", text2 = "", text3 = "leeg", checked = true))
+                if (BuildConfig.DEBUG) Log.d(TAG, "Added empty filter: $title is leeg")
+            }
         }
     }
 
+    // -------------------------------------------------------------------------
+    // Reset (within sheet only)
+    // -------------------------------------------------------------------------
+
     private fun resetAllFilters() {
-        if (BuildConfig.DEBUG) Log.d(TAG, "Resetting all filters")
+        if (BuildConfig.DEBUG) Log.d(TAG, "Resetting all filters (local)")
 
         // Reset status chip to Aktief
         binding.filterStatusAktief.isChecked = true
 
         // Reset all switches
-        val allSwitches = listOf(
+        listOf(
             binding.filterSelfoon,
             binding.filterLandlyn,
             binding.filterEpos,
@@ -537,10 +361,9 @@ class FilterBottomSheet : BottomSheetDialogFragment() {
             binding.filterNooiensvanCheck,
             binding.filterWykCheck,
             binding.filterOuderdomCheck
-        )
-        allSwitches.forEach { it.isChecked = false }
+        ).forEach { it.isChecked = false }
 
-        // Clear all EditTexts
+        // Clear EditTexts
         listOf(
             binding.filterVan,
             binding.filterNoemnaam,
@@ -550,7 +373,7 @@ class FilterBottomSheet : BottomSheetDialogFragment() {
             binding.filterOuderdom2
         ).forEach { it.text?.clear() }
 
-        // Reset all AutoCompleteTextViews to first item
+        // Reset AutoCompleteTextViews to defaults
         resetAutoCompleteTextView(binding.filterGeslagOpsies, "manlik")
         resetAutoCompleteTextView(binding.filterHuwelikstatusOpsies, "Getroud")
         resetAutoCompleteTextView(binding.filterLidmaatskapOpsies, "Belydend")
@@ -560,7 +383,7 @@ class FilterBottomSheet : BottomSheetDialogFragment() {
         resetAutoCompleteTextView(binding.filterWykOpsies, "gelyk aan")
         resetAutoCompleteTextView(binding.filterOuderdomOpsies, "gelyk")
 
-        // Update enabled states
+        // Re‑enable/disable fields accordingly
         setupListeners()
     }
 
@@ -568,100 +391,20 @@ class FilterBottomSheet : BottomSheetDialogFragment() {
         view.setText(defaultText, false)
     }
 
-    /**
-     * ✅ FIXED: Restore original state when cancel is pressed
-     * This properly handles both cases:
-     * 1. Filter was already applied (originalLayoutBeforeFilter has the saved sort)
-     * 2. Filter was NEVER applied (use captured originalSortOrder)
-     */
+    // -------------------------------------------------------------------------
+    // Cancel – restore original state via coordinator
+    // -------------------------------------------------------------------------
+
     private fun restoreOriginalState() {
         if (BuildConfig.DEBUG) {
-            Log.d(TAG, "restoreOriginalState called")
-            if (BuildConfig.DEBUG) Log.d(TAG, "originalSortOrder = $originalSortOrder")
-            if (BuildConfig.DEBUG) Log.d(TAG, "originalRecordStatus = $originalRecordStatus")
-            if (BuildConfig.DEBUG) Log.d(
-                TAG,
-                "originalFilterList size = ${originalFilterList?.size ?: 0}"
-            )
+            Log.d(TAG, "restoreOriginalState: restoring via coordinator")
         }
-
         val activity = activity as? MainActivity
-
-        // ✅ Step 1: Restore the filter list to original (or clear if none)
-        if (originalFilterList != null && originalFilterList!!.isNotEmpty()) {
-            viewModel.updateFilter(originalFilterList!!)
-            if (BuildConfig.DEBUG) Log.d(
-                TAG,
-                "Restored filter list with ${originalFilterList!!.size} filters"
-            )
-        } else {
-            viewModel.updateFilter(ArrayList())
-            if (BuildConfig.DEBUG) Log.d(TAG, "Cleared filter list (no original filters)")
-        }
-
-        // ✅ Step 2: Restore the record status
-        viewModel.recordStatus = originalRecordStatus
-        if (BuildConfig.DEBUG) Log.d(TAG, "Restored record status: $originalRecordStatus")
-
-        // ✅ Step 3: Restore the sort order - THIS IS THE FIX
-        // If originalLayoutBeforeFilter has a value, use it (filter was applied)
-        // Otherwise, use the captured originalSortOrder (no filter was ever applied)
-        val restoreSort = if (activity != null &&
-            activity.searchFilterCoordinator.originalLayoutBeforeFilter.isNotEmpty()
-        ) {
-            val saved = activity.searchFilterCoordinator.originalLayoutBeforeFilter
-            if (BuildConfig.DEBUG) Log.d(TAG, "Using originalLayoutBeforeFilter: $saved")
-            saved
-        } else {
-            if (BuildConfig.DEBUG) Log.d(
-                TAG,
-                "Using captured originalSortOrder: $originalSortOrder"
-            )
-            originalSortOrder
-        }
-
-        // ✅ Step 4: Apply the restored sort order
-        if (activity != null) {
-            if (BuildConfig.DEBUG) Log.d(TAG, "Restoring sort order to: $restoreSort")
-
-            // Update the sort order in MainActivity
-            activity.updateSortOrder(restoreSort)
-
-            // Clear the saved state
-            activity.searchFilterCoordinator.originalLayoutBeforeFilter = ""
-            activity.searchFilterCoordinator.filterList = null
-        }
-
-        // ✅ Step 5: Clean up UI
-        activity?.let {
-            it.binding.searchItemBlock.visibility = View.GONE
-            it.binding.searchText.text = ""
-            it.binding.mainSearchTextClose.visibility = View.GONE
-        }
-        viewModel.clearFilterSummary()
-
-        // ✅ Step 6: Update adapter state
-        activity?.memberListAdapter?.updateState(
-            listView = activity.settingsManager.listView,
-            soekList = viewModel.soekList,
-            soek = viewModel.soek,
-            recordStatus = viewModel.recordStatus,
-            sortOrder = restoreSort,
-            useCongregationIndicator = activity.settingsManager.useCongregationIndicator
+        activity?.searchFilterCoordinator?.restoreOriginalState(
+            originalFilterList,
+            originalSortOrder,
+            originalRecordStatus
         )
-
-        // ✅ Step 7: Refresh the data
-        viewModel.refresh()
-
-        // ✅ Step 8: Update UI
-        activity?.updateFilterSummary()
-        activity?.recomputeBirthdayOffset()
-
-        if (BuildConfig.DEBUG) {
-            Log.d(
-                TAG,
-                "restoreOriginalState completed. Sort order: $restoreSort, Status: ${viewModel.recordStatus}"
-            )
-        }
+        // Coordinator already refreshes data and updates UI
     }
 }

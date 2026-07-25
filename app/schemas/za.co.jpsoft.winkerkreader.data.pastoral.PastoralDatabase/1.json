@@ -1,0 +1,370 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "7ca0a5653f8032bf29088ee35038d4f8",
+    "entities": [
+      {
+        "tableName": "pastoral_meta",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `schemaVersion` INTEGER NOT NULL, `deviceId` TEXT NOT NULL, `congregationName` TEXT, `lastBackupUtc` INTEGER, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "schemaVersion",
+            "columnName": "schemaVersion",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "deviceId",
+            "columnName": "deviceId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "congregationName",
+            "columnName": "congregationName",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "lastBackupUtc",
+            "columnName": "lastBackupUtc",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "reminder_templates",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`templateId` TEXT NOT NULL, `code` TEXT NOT NULL, `titleAf` TEXT NOT NULL, `descriptionAf` TEXT, `isSystem` INTEGER NOT NULL, `isActive` INTEGER NOT NULL, `sortOrder` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`templateId`))",
+        "fields": [
+          {
+            "fieldPath": "templateId",
+            "columnName": "templateId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "code",
+            "columnName": "code",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "titleAf",
+            "columnName": "titleAf",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "descriptionAf",
+            "columnName": "descriptionAf",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "isSystem",
+            "columnName": "isSystem",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isActive",
+            "columnName": "isActive",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sortOrder",
+            "columnName": "sortOrder",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "templateId"
+          ]
+        }
+      },
+      {
+        "tableName": "template_steps",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`stepId` TEXT NOT NULL, `templateId` TEXT NOT NULL, `stepOrder` INTEGER NOT NULL, `offsetDays` INTEGER NOT NULL, `offsetMonths` INTEGER NOT NULL, `defaultTitleAf` TEXT NOT NULL, `defaultNoteAf` TEXT, `scheduleType` TEXT NOT NULL, `defaultHour` INTEGER, `defaultMinute` INTEGER, PRIMARY KEY(`stepId`), FOREIGN KEY(`templateId`) REFERENCES `reminder_templates`(`templateId`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "stepId",
+            "columnName": "stepId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "templateId",
+            "columnName": "templateId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "stepOrder",
+            "columnName": "stepOrder",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "offsetDays",
+            "columnName": "offsetDays",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "offsetMonths",
+            "columnName": "offsetMonths",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "defaultTitleAf",
+            "columnName": "defaultTitleAf",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "defaultNoteAf",
+            "columnName": "defaultNoteAf",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "scheduleType",
+            "columnName": "scheduleType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "defaultHour",
+            "columnName": "defaultHour",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "defaultMinute",
+            "columnName": "defaultMinute",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "stepId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_template_steps_templateId",
+            "unique": false,
+            "columnNames": [
+              "templateId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_template_steps_templateId` ON `${TABLE_NAME}` (`templateId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "reminder_templates",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "templateId"
+            ],
+            "referencedColumns": [
+              "templateId"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "follow_up_reminders",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`reminderId` TEXT NOT NULL, `memberGuid` TEXT NOT NULL, `familyHeadGuid` TEXT, `templateId` TEXT, `templateStepId` TEXT, `anchorDateUtc` INTEGER, `title` TEXT NOT NULL, `note` TEXT, `scheduleType` TEXT NOT NULL, `dueDateUtc` INTEGER NOT NULL, `dueEndUtc` INTEGER, `status` TEXT NOT NULL, `completedAtUtc` INTEGER, `snoozedUntilUtc` INTEGER, `lastNotifiedDateUtc` INTEGER, `calendarEventId` INTEGER, `calendarSynced` INTEGER NOT NULL, `memberDisplayNameCache` TEXT, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`reminderId`))",
+        "fields": [
+          {
+            "fieldPath": "reminderId",
+            "columnName": "reminderId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "memberGuid",
+            "columnName": "memberGuid",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "familyHeadGuid",
+            "columnName": "familyHeadGuid",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "templateId",
+            "columnName": "templateId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "templateStepId",
+            "columnName": "templateStepId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "anchorDateUtc",
+            "columnName": "anchorDateUtc",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "note",
+            "columnName": "note",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "scheduleType",
+            "columnName": "scheduleType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dueDateUtc",
+            "columnName": "dueDateUtc",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dueEndUtc",
+            "columnName": "dueEndUtc",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "completedAtUtc",
+            "columnName": "completedAtUtc",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "snoozedUntilUtc",
+            "columnName": "snoozedUntilUtc",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "lastNotifiedDateUtc",
+            "columnName": "lastNotifiedDateUtc",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "calendarEventId",
+            "columnName": "calendarEventId",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "calendarSynced",
+            "columnName": "calendarSynced",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "memberDisplayNameCache",
+            "columnName": "memberDisplayNameCache",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "reminderId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_follow_up_reminders_memberGuid",
+            "unique": false,
+            "columnNames": [
+              "memberGuid"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_follow_up_reminders_memberGuid` ON `${TABLE_NAME}` (`memberGuid`)"
+          },
+          {
+            "name": "index_follow_up_reminders_dueDateUtc",
+            "unique": false,
+            "columnNames": [
+              "dueDateUtc"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_follow_up_reminders_dueDateUtc` ON `${TABLE_NAME}` (`dueDateUtc`)"
+          },
+          {
+            "name": "index_follow_up_reminders_status",
+            "unique": false,
+            "columnNames": [
+              "status"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_follow_up_reminders_status` ON `${TABLE_NAME}` (`status`)"
+          },
+          {
+            "name": "index_follow_up_reminders_calendarEventId",
+            "unique": false,
+            "columnNames": [
+              "calendarEventId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_follow_up_reminders_calendarEventId` ON `${TABLE_NAME}` (`calendarEventId`)"
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '7ca0a5653f8032bf29088ee35038d4f8')"
+    ]
+  }
+}

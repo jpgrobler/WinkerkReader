@@ -18,13 +18,14 @@ import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel
 import za.co.jpsoft.winkerkreader.utils.MainNavigationController
-
+import android.view.inputmethod.InputMethodManager
 class MainMenuController(
     private val activity: FragmentActivity,
     private val tag: String,
     private val viewModel: MemberViewModel,
     private val searchFilterCoordinator: MainSearchFilterCoordinator,
-    private val observeDataset: () -> Unit,
+    private val onAdapterStateChanged: () -> Unit,
+    private val onFilterDisplayChanged: () -> Unit,
     private val navigationController: MainNavigationController,
     private val onSortChanged: (String) -> Unit
 ) {
@@ -124,8 +125,9 @@ class MainMenuController(
                     val mode = searchFilterCoordinator.resolveQueryMode(viewModel.getEventType())
                     viewModel.loadData(mode)
 
-                    // ✅ Resync UI elements (banner, sort icon, birthday offset) immediately after filter change
-                    observeDataset()
+                    // Resync display banner and adapter state after filter change
+                    onFilterDisplayChanged()
+                    onAdapterStateChanged()
                 }
                 isUpdating = false
             }
@@ -153,6 +155,7 @@ class MainMenuController(
 
         searchView.setOnCloseListener {
             clearCallbacks()
+            hideKeyboardAndClearFocus()
             searchFilterCoordinator.onSearchClosed()
             activity.invalidateOptionsMenu()
             false
@@ -162,6 +165,7 @@ class MainMenuController(
             object : SearchView.OnQueryTextListener {
                 override fun onQueryTextSubmit(query: String): Boolean {
                     clearCallbacks()
+                    hideKeyboardAndClearFocus()
                     searchFilterCoordinator.performSearch(query)
                     return true
                 }
@@ -176,6 +180,14 @@ class MainMenuController(
             }
         )
     }
-
+    private fun hideKeyboardAndClearFocus() {
+        val searchView = findSearchView()
+        searchView?.clearFocus()
+        val view = activity.currentFocus
+        if (view != null) {
+            val imm = activity.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.hideSoftInputFromWindow(view.windowToken, 0)
+        }
+    }
 
 }

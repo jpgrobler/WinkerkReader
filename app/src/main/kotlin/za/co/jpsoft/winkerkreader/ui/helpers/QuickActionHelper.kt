@@ -250,6 +250,10 @@ class QuickActionHelper(
         val location = IntArray(2)
         anchor.getLocationOnScreen(location)
         val screenHeight = activity.resources.displayMetrics.heightPixels
+        popupView.measure(
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        )
         val popupHeight = popupView.measuredHeight.takeIf { it > 0 } ?: 10
 
         val yOffset = if (location[1] + anchor.height + popupHeight > screenHeight) {

@@ -1,0 +1,359 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 0,
+    "identityHash": "76e23d3313df1ef85bc7e923f8954e61",
+    "entities": [
+      {
+        "tableName": "Members",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`MemberGUID` TEXT NOT NULL, `Tag` INTEGER NOT NULL, `Noemnaam` TEXT, `Naam` TEXT, `Van` TEXT, `Nooiensvan` TEXT, `Geslag` TEXT, `Huwelikstatus` TEXT, `Geboortedatum` TEXT, `Selfoon` TEXT, `Landlyn` TEXT, `Werk tel` TEXT, `Epos` TEXT, `Wyk` TEXT, `Straatadres` TEXT, `Posadres` TEXT, `FamilyHeadGUID` TEXT, `Gesinsrol` TEXT, `Lidmaatstatus` TEXT, `Bewysstatus` TEXT, `Rekordstatus` TEXT NOT NULL, `Beroep` TEXT, `Werkgewer` TEXT, `Gemeente` TEXT, `Gemeente epos` TEXT, `Fotostoorplek` TEXT, `Doop Date` TEXT, `Doop Minister` TEXT, `Belydenisaflegging Date` TEXT, `Belydenisaflegging Minister` TEXT, `Huwelik Date` TEXT, `Huwelik Minister` TEXT, `ShortAddress` TEXT, `Voorletters` TEXT, `Titel` TEXT, PRIMARY KEY(`MemberGUID`))",
+        "fields": [
+          {
+            "fieldPath": "memberGuid",
+            "columnName": "MemberGUID",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tag",
+            "columnName": "Tag",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "givenName",
+            "columnName": "Noemnaam",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "fullNames",
+            "columnName": "Naam",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "surname",
+            "columnName": "Van",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "maidenName",
+            "columnName": "Nooiensvan",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "gender",
+            "columnName": "Geslag",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "maritalStatus",
+            "columnName": "Huwelikstatus",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "birthDate",
+            "columnName": "Geboortedatum",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "cellphone",
+            "columnName": "Selfoon",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "landline",
+            "columnName": "Landlyn",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "workPhone",
+            "columnName": "Werk tel",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "email",
+            "columnName": "Epos",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "ward",
+            "columnName": "Wyk",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "streetAddress",
+            "columnName": "Straatadres",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "postalAddress",
+            "columnName": "Posadres",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "familyHeadGuid",
+            "columnName": "FamilyHeadGUID",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "familyRole",
+            "columnName": "Gesinsrol",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "membershipStatus",
+            "columnName": "Lidmaatstatus",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "certificateStatus",
+            "columnName": "Bewysstatus",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "recordStatus",
+            "columnName": "Rekordstatus",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "profession",
+            "columnName": "Beroep",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "employer",
+            "columnName": "Werkgewer",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "congregationName",
+            "columnName": "Gemeente",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "congregationEmail",
+            "columnName": "Gemeente epos",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "photoStoragePath",
+            "columnName": "Fotostoorplek",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "baptismDate",
+            "columnName": "Doop Date",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "baptismMinister",
+            "columnName": "Doop Minister",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "confessionDate",
+            "columnName": "Belydenisaflegging Date",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "confessionMinister",
+            "columnName": "Belydenisaflegging Minister",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "marriageDate",
+            "columnName": "Huwelik Date",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "marriageMinister",
+            "columnName": "Huwelik Minister",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "shortAddress",
+            "columnName": "ShortAddress",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "initials",
+            "columnName": "Voorletters",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "Titel",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "MemberGUID"
+          ]
+        }
+      },
+      {
+        "tableName": "Argief",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `ArchiveGUID` TEXT, `MemberGUID` TEXT, `Surname` TEXT, `Name` TEXT, `MaidenName` TEXT, `Reason` TEXT, `DepartureDate` TEXT, `DepartureTo` TEXT, `DateOfBirth` TEXT, `Gender` TEXT, `MaritalStatus` TEXT, `Gemeente` TEXT, `Gemeente epos` TEXT, `BaptismDate` TEXT, `BaptismMinister` TEXT, `ConfessionDate` TEXT, `ConfessionMinister` TEXT, `Comment` TEXT, `ResignationDetail` TEXT, `OldAddress` TEXT, `NewAddress` TEXT, `ArchiveDate` TEXT, `User` TEXT)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "archiveGuid",
+            "columnName": "ArchiveGUID",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "memberGuid",
+            "columnName": "MemberGUID",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "surname",
+            "columnName": "Surname",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "givenName",
+            "columnName": "Name",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "maidenName",
+            "columnName": "MaidenName",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "reason",
+            "columnName": "Reason",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "departureDate",
+            "columnName": "DepartureDate",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "departureDestination",
+            "columnName": "DepartureTo",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "birthDate",
+            "columnName": "DateOfBirth",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "gender",
+            "columnName": "Gender",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "maritalStatus",
+            "columnName": "MaritalStatus",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "congregationName",
+            "columnName": "Gemeente",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "congregationEmail",
+            "columnName": "Gemeente epos",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "baptismDate",
+            "columnName": "BaptismDate",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "baptismMinister",
+            "columnName": "BaptismMinister",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "confessionDate",
+            "columnName": "ConfessionDate",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "confessionMinister",
+            "columnName": "ConfessionMinister",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "comment",
+            "columnName": "Comment",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "resignationDetail",
+            "columnName": "ResignationDetail",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "oldAddress",
+            "columnName": "OldAddress",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "newAddress",
+            "columnName": "NewAddress",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "archiveDate",
+            "columnName": "ArchiveDate",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "user",
+            "columnName": "User",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "_id"
+          ]
+        }
+      },
+      {
+        "tableName": "Datum",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `DataDatum` TEXT)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dataDate",
+            "columnName": "DataDatum",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "_id"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '76e23d3313df1ef85bc7e923f8954e61')"
+    ]
+  }
+}

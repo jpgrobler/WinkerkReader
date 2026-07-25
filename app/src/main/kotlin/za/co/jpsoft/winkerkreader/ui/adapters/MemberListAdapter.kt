@@ -31,6 +31,7 @@ import za.co.jpsoft.winkerkreader.data.models.MemberItem
 import za.co.jpsoft.winkerkreader.data.repositories.ContactRepository
 import za.co.jpsoft.winkerkreader.databinding.ListItem2Binding
 import za.co.jpsoft.winkerkreader.databinding.ListItemBinding
+import za.co.jpsoft.winkerkreader.utils.ColorUtils
 import za.co.jpsoft.winkerkreader.utils.PhotoHelper
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import za.co.jpsoft.winkerkreader.utils.Utils.fixphonenumber
@@ -345,7 +346,7 @@ class MemberListAdapter(
                             0.587 * Color.green(bgColor) +
                             0.114 * Color.blue(bgColor)
                     ) / 255
-            return if (darkness >= 0.5) Color.WHITE else Color.BLACK
+            return ColorUtils.contrastingTextColor(bgColor)
         }
 
         fun setItemBackgroundColor(color: Int) {
@@ -691,11 +692,12 @@ class MemberListAdapter(
                 cellTextView.text = ""
             }
 
-            val validSortOrder = sortOrder in listOf("VAN", "OUDERDOM", "VERJAAR", "HUWELIK")
-            if (item.ward.isNotEmpty() && settings.isListWyk && validSortOrder) {
+            val showWard = settings.isListWyk && sortOrder != "WYK"
+            if (item.ward.isNotEmpty() && showWard) {
                 wykTextView.visibility = View.VISIBLE
                 wykTextView.text = item.ward
             } else {
+                wykTextView.visibility = View.GONE
                 wykTextView.text = ""
             }
 

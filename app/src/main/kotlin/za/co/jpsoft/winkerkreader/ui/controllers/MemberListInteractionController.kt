@@ -23,8 +23,7 @@ class MemberListInteractionController(
     private val tag: String,
     private val settingsManager: SettingsManager,
     private val viewModel: MemberViewModel,
-    private val memberListAdapter: MemberListAdapter,
-    private val observeDataset: () -> Unit
+    private val memberListAdapter: MemberListAdapter
 ) {
 
     // ─── Quick Action Helper ──────────────────────────────────────────────────
