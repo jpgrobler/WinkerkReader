@@ -18,7 +18,6 @@ import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import java.net.Socket
 import java.net.SocketTimeoutException
-import java.security.MessageDigest
 import java.util.concurrent.atomic.AtomicInteger
 
 class FileDownloadWorkerOld(
@@ -224,9 +223,9 @@ class FileDownloadWorkerOld(
         }
     }
 
-    private fun calculateChecksum(data: ByteArray, offset: Int, length: Int): String {
-        val digest = MessageDigest.getInstance("SHA-256")
-        digest.update(data, offset, length)
-        return digest.digest().joinToString("") { "%02x".format(it) }
-    }
+//    private fun calculateChecksum(data: ByteArray, offset: Int, length: Int): String {
+//        val digest = MessageDigest.getInstance("SHA-256")
+//        digest.update(data, offset, length)
+//        return digest.digest().joinToString("") { "%02x".format(it) }
+//    }
 }

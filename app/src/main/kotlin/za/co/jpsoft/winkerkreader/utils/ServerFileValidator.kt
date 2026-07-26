@@ -1,5 +1,6 @@
 package za.co.jpsoft.winkerkreader.utils
 
+import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
 import android.util.Log
 import za.co.jpsoft.winkerkreader.BuildConfig
@@ -7,7 +8,6 @@ import za.co.jpsoft.winkerkreader.utils.ServerFileValidator.MIN_MEMBER_COUNT
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
-import java.sql.DriverManager
 
 /**
  * Validates files downloaded from a server, ensuring they are genuine SQLite databases.
@@ -173,14 +173,22 @@ object ServerFileValidator {
      * Counts the number of rows in the `Members` table of an SQLite database.
      * Returns 0 if the query fails or the table does not exist.
      */
+    /**
+     * Counts rows in the Members table using the Android SQLite API.
+     *
+     * Previously used java.sql.DriverManager (JDBC), which requires a separate
+     * SQLite JDBC driver and does not work reliably on Android. The Android
+     * SQLiteDatabase API is the correct approach on this platform.
+     */
     private fun countMembersInDatabase(file: File): Int {
         return try {
-            DriverManager.getConnection("jdbc:sqlite:${file.absolutePath}").use { conn ->
-                conn.createStatement().use { stmt ->
-                    val rs = stmt.executeQuery("SELECT COUNT(*) FROM Members")
-                    if (rs.next()) {
-                        rs.getInt(1)
-                    } else 0
+            SQLiteDatabase.openDatabase(
+                file.absolutePath,
+                null,
+                SQLiteDatabase.OPEN_READONLY or SQLiteDatabase.NO_LOCALIZED_COLLATORS
+            ).use { db ->
+                db.rawQuery("SELECT COUNT(*) FROM Members", null).use { cursor ->
+                    if (cursor.moveToFirst()) cursor.getInt(0) else 0
                 }
             }
         } catch (e: Exception) {

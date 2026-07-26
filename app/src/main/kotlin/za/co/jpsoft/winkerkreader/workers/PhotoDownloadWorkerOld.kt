@@ -15,8 +15,6 @@ import za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase
 import java.io.File
 import java.io.FileOutputStream
 import java.net.Socket
-import java.security.MessageDigest
-
 
 class PhotoDownloadWorkerOld(
     context: Context,
@@ -184,9 +182,9 @@ class PhotoDownloadWorkerOld(
             }
         }
 
-    private fun calculateChecksum(data: ByteArray, offset: Int, length: Int): String {
-        val digest = MessageDigest.getInstance("SHA-256")
-        digest.update(data, offset, length)
-        return digest.digest().joinToString("") { "%02x".format(it) }
-    }
+//    private fun calculateChecksum(data: ByteArray, offset: Int, length: Int): String {
+//        val digest = MessageDigest.getInstance("SHA-256")
+//        digest.update(data, offset, length)
+//        return digest.digest().joinToString("") { "%02x".format(it) }
+//    }
 }

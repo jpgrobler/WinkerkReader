@@ -14,10 +14,9 @@ import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.WINKERK_DB
 import za.co.jpsoft.winkerkreader.data.WinkerkDbHelper
 import java.io.BufferedInputStream
 import java.io.File
-import java.io.InputStream
 import java.net.Socket
 import java.net.SocketTimeoutException
-import java.security.MessageDigest
+
 
 class PhotoDownloadWorker(context: Context, params: WorkerParameters) :
     CoroutineWorker(context, params) {
@@ -306,22 +305,22 @@ class PhotoDownloadWorker(context: Context, params: WorkerParameters) :
 
     // ── BufferedInputStream line reader ───────────────────────────────────
 
-    private fun BufferedInputStream.readLine(): String? {
-        val sb = StringBuilder()
-        while (true) {
-            val b = read()
-            if (b < 0) return if (sb.isEmpty()) null else sb.toString()
-            val c = b.toChar()
-            if (c == '\n') return sb.trimEnd('\r').toString()
-            sb.append(c)
-        }
-    }
-
-    private fun InputStream.sha256Hex(): String {
-        val digest = MessageDigest.getInstance("SHA-256")
-        val buf = ByteArray(8192)
-        var read: Int
-        while (this.read(buf).also { read = it } > 0) digest.update(buf, 0, read)
-        return digest.digest().joinToString("") { "%02x".format(it) }
-    }
+//    private fun BufferedInputStream.readLine(): String? {
+//        val sb = StringBuilder()
+//        while (true) {
+//            val b = read()
+//            if (b < 0) return if (sb.isEmpty()) null else sb.toString()
+//            val c = b.toChar()
+//            if (c == '\n') return sb.trimEnd('\r').toString()
+//            sb.append(c)
+//        }
+//    }
+//
+//    private fun InputStream.sha256Hex(): String {
+//        val digest = MessageDigest.getInstance("SHA-256")
+//        val buf = ByteArray(8192)
+//        var read: Int
+//        while (this.read(buf).also { read = it } > 0) digest.update(buf, 0, read)
+//        return digest.digest().joinToString("") { "%02x".format(it) }
+//    }
 }

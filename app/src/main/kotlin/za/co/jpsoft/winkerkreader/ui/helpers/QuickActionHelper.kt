@@ -105,7 +105,7 @@ class QuickActionHelper(
         }
 
         // 0. Details
-        if (settingsManager.quickActionDetail && hasPhone) {
+        if (settingsManager.quickActionDetail) {
             addActionButton(
                 iconText = "ℹ\uFE0F",
                 label = "Detail",

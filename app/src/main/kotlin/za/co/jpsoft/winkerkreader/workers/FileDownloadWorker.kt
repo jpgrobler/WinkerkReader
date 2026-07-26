@@ -214,21 +214,21 @@ class FileDownloadWorker(context: Context, params: WorkerParameters) :
     private fun parseHex(hex: String): ByteArray =
         ByteArray(hex.length / 2) { hex.substring(it * 2, it * 2 + 2).toInt(16).toByte() }
 
-    private fun ByteArray.sha256Hex(): String {
-        val digest = MessageDigest.getInstance("SHA-256")
-        return digest.digest(this).joinToString("") { "%02x".format(it) }
-    }
+//    private fun ByteArray.sha256Hex(): String {
+//        val digest = MessageDigest.getInstance("SHA-256")
+//        return digest.digest(this).joinToString("") { "%02x".format(it) }
+//    }
 
     // ── BufferedInputStream line reader (no read-ahead leak) ─────────────
 
-    private fun BufferedInputStream.readLine(): String? {
-        val sb = StringBuilder()
-        while (true) {
-            val b = read()
-            if (b < 0) return if (sb.isEmpty()) null else sb.toString()
-            val c = b.toChar()
-            if (c == '\n') return sb.trimEnd('\r').toString()
-            sb.append(c)
-        }
-    }
+//    private fun BufferedInputStream.readLine(): String? {
+//        val sb = StringBuilder()
+//        while (true) {
+//            val b = read()
+//            if (b < 0) return if (sb.isEmpty()) null else sb.toString()
+//            val c = b.toChar()
+//            if (c == '\n') return sb.trimEnd('\r').toString()
+//            sb.append(c)
+//        }
+//    }
 }

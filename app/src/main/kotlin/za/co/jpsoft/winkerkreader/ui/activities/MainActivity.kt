@@ -18,7 +18,6 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.widget.SearchView
-import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Lifecycle
@@ -33,14 +32,12 @@ import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.work.WorkInfo
-import com.google.android.material.chip.Chip
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
-import za.co.jpsoft.winkerkreader.data.models.FilterBox
 import za.co.jpsoft.winkerkreader.data.pastoral.PastoralDatabase
 import za.co.jpsoft.winkerkreader.data.repositories.ContactRepository
 import za.co.jpsoft.winkerkreader.databinding.ActivityMainBinding
@@ -72,7 +69,6 @@ import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import za.co.jpsoft.winkerkreader.utils.WhatsAppContactLoader
 import za.co.jpsoft.winkerkreader.utils.WorkScheduler
 import za.co.jpsoft.winkerkreader.workers.PastoralBackupWorker
-import za.co.jpsoft.winkerkreader.utils.ColorUtils
 
 /**
  * The main container Activity of the application. Displays the search interface,
@@ -411,9 +407,10 @@ class MainActivity : BaseActivity() {
             startupCoordinator.runOnResume()
             pastoralBadgeController.refresh()
             searchFilterCoordinator.updateSummaryView()//updateFilterSummary()
-
-            loadInitialData()
             sortController.syncWithSettings(initState == InitState.Ready)
+            viewModel.refresh()
+            loadInitialData()
+            viewModel.refresh()
             binding.lidmaatList.post { restoreListScrollIfNeeded() }
         }
     }
