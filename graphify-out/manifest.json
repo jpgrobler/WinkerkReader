@@ -460,9 +460,9 @@
     "semantic_hash": "1068590f9785c35098e7d6d7da0b3949"
   },
   "app/src/main/kotlin/za/co/jpsoft/winkerkreader/ui/activities/LaaiDatabasisActivity.kt": {
-    "mtime": 1784886065.4362428,
-    "ast_hash": "c6477125de1f171e193a3c96b08b4d39",
-    "semantic_hash": "c6477125de1f171e193a3c96b08b4d39"
+    "mtime": 1785066775.3160872,
+    "ast_hash": "da87966b06244a91ca41a201181f1ed2",
+    "semantic_hash": ""
   },
   "app/src/main/kotlin/za/co/jpsoft/winkerkreader/ui/activities/LidmaatDetailActivity.kt": {
     "mtime": 1784883897.4756544,
@@ -470,9 +470,9 @@
     "semantic_hash": "f9466986d2366fcb3aa5cf5f30942603"
   },
   "app/src/main/kotlin/za/co/jpsoft/winkerkreader/ui/activities/MainActivity.kt": {
-    "mtime": 1784997202.8794615,
-    "ast_hash": "d8dd86f1d7d732fb16bf8c01de630073",
-    "semantic_hash": "d8dd86f1d7d732fb16bf8c01de630073"
+    "mtime": 1785066795.8976867,
+    "ast_hash": "99e8f0e998fae45ef6cc05334d0b6521",
+    "semantic_hash": ""
   },
   "app/src/main/kotlin/za/co/jpsoft/winkerkreader/ui/activities/PastoralBackupActivity.kt": {
     "mtime": 1784886065.3999586,
@@ -740,9 +740,9 @@
     "semantic_hash": "6bc594d9f0c5cb3a3d591b2f763ee473"
   },
   "app/src/main/kotlin/za/co/jpsoft/winkerkreader/ui/helpers/QuickActionHelper.kt": {
-    "mtime": 1784971384.2558897,
-    "ast_hash": "20f50793d0cd2a4f4fd5e31241085e74",
-    "semantic_hash": "20f50793d0cd2a4f4fd5e31241085e74"
+    "mtime": 1785038259.5043113,
+    "ast_hash": "03bc553220cce216ee0c74da7e939a60",
+    "semantic_hash": ""
   },
   "app/src/main/kotlin/za/co/jpsoft/winkerkreader/ui/models/MainQueryMode.kt": {
     "mtime": 1777348569.3628876,
@@ -1005,9 +1005,9 @@
     "semantic_hash": "1be8489ee60ec90667124cc5701a61cf"
   },
   "app/src/main/kotlin/za/co/jpsoft/winkerkreader/utils/PhotoSyncManager.kt": {
-    "mtime": 1783943260.5863833,
-    "ast_hash": "c1c98b22f6a8a582cdc9c3257fac5d36",
-    "semantic_hash": "c1c98b22f6a8a582cdc9c3257fac5d36"
+    "mtime": 1785066795.9125643,
+    "ast_hash": "f74e303f7dd316c35cc46a1e0586922f",
+    "semantic_hash": ""
   },
   "app/src/main/kotlin/za/co/jpsoft/winkerkreader/utils/PopupMenuHelper.kt": {
     "mtime": 1783866995.8979805,
@@ -1035,9 +1035,9 @@
     "semantic_hash": "f3930050b0323f2ff237fa9a814ca9b9"
   },
   "app/src/main/kotlin/za/co/jpsoft/winkerkreader/utils/ServerFileValidator.kt": {
-    "mtime": 1783765560.3364258,
-    "ast_hash": "8d243269513031680785af15034634e2",
-    "semantic_hash": "8d243269513031680785af15034634e2"
+    "mtime": 1785066795.9547083,
+    "ast_hash": "e74d105250505c09fbe9aeab90aecb68",
+    "semantic_hash": ""
   },
   "app/src/main/kotlin/za/co/jpsoft/winkerkreader/utils/ServiceUtils.kt": {
     "mtime": 1784303721.641248,
@@ -1125,14 +1125,14 @@
     "semantic_hash": "569c172015883c81b4d43fb7fd0c9ed2"
   },
   "app/src/main/kotlin/za/co/jpsoft/winkerkreader/workers/FileDownloadWorker.kt": {
-    "mtime": 1784303781.8893163,
-    "ast_hash": "9f9fcb311c58c96fe17f7f951ce15c5c",
-    "semantic_hash": "9f9fcb311c58c96fe17f7f951ce15c5c"
+    "mtime": 1785066795.9772708,
+    "ast_hash": "16c27ca3556486ca2a39475a197c3555",
+    "semantic_hash": ""
   },
   "app/src/main/kotlin/za/co/jpsoft/winkerkreader/workers/FileDownloadWorkerOld.kt": {
-    "mtime": 1784358447.2433639,
-    "ast_hash": "538a2f0da8a4a5a56d43fe12bb7afa8c",
-    "semantic_hash": "538a2f0da8a4a5a56d43fe12bb7afa8c"
+    "mtime": 1785066795.987787,
+    "ast_hash": "e44a465c215300d69e95a8eb958b1b3a",
+    "semantic_hash": ""
   },
   "app/src/main/kotlin/za/co/jpsoft/winkerkreader/workers/FollowUpReminderWorker.kt": {
     "mtime": 1783867054.5823863,
@@ -1150,14 +1150,14 @@
     "semantic_hash": "9f819a580f338c7057d7705b560c1978"
   },
   "app/src/main/kotlin/za/co/jpsoft/winkerkreader/workers/PhotoDownloadWorker.kt": {
-    "mtime": 1784303721.7911987,
-    "ast_hash": "b0751e454e029d0ef5f58775bb788a48",
-    "semantic_hash": "b0751e454e029d0ef5f58775bb788a48"
+    "mtime": 1785066795.9256144,
+    "ast_hash": "b19fc169813f8db42251c9cfceb3d728",
+    "semantic_hash": ""
   },
   "app/src/main/kotlin/za/co/jpsoft/winkerkreader/workers/PhotoDownloadWorkerOld.kt": {
-    "mtime": 1784256582.1456318,
-    "ast_hash": "2cae148d404c089a0db12643ab211c2b",
-    "semantic_hash": "2cae148d404c089a0db12643ab211c2b"
+    "mtime": 1785066795.8831658,
+    "ast_hash": "2b536df09b83a2e6b278286e9cbfb6ed",
+    "semantic_hash": ""
   },
   "app/src/main/kotlin/za/co/jpsoft/winkerkreader/workers/WidgetRefreshWorker.kt": {
     "mtime": 1784303056.0910106,
@@ -1352,6 +1352,51 @@
   "app/src/main/res/ic_launcher_round.png": {
     "mtime": 1771330816.0,
     "ast_hash": "0ebcc83cc0ac3180c4b072d1ac5c2c4a",
+    "semantic_hash": ""
+  },
+  "app/src/main/kotlin/za/co/jpsoft/winkerkreader/ui/controllers/Collapsiblecardcontroller.kt": {
+    "mtime": 1785066764.9142454,
+    "ast_hash": "61526ebd16128da6c0b4ddef097e4de0",
+    "semantic_hash": ""
+  },
+  "app/src/main/kotlin/za/co/jpsoft/winkerkreader/ui/controllers/Databaseimportcontroller.kt": {
+    "mtime": 1785066764.9498365,
+    "ast_hash": "3848f306e0d6e03d203f3937dcbb1008",
+    "semantic_hash": ""
+  },
+  "app/src/main/kotlin/za/co/jpsoft/winkerkreader/ui/controllers/Dropboxdownloadcontroller.kt": {
+    "mtime": 1785066764.9037144,
+    "ast_hash": "7d2ccf399fcb5f19ed11dc5269b86813",
+    "semantic_hash": ""
+  },
+  "app/src/main/kotlin/za/co/jpsoft/winkerkreader/ui/controllers/Localdatabasefilecontroller.kt": {
+    "mtime": 1785064443.227615,
+    "ast_hash": "0bd2c498bc91b0898ec56f9d69333009",
+    "semantic_hash": ""
+  },
+  "app/src/main/kotlin/za/co/jpsoft/winkerkreader/ui/controllers/Networktransfercontroller.kt": {
+    "mtime": 1785066795.9441748,
+    "ast_hash": "7611357e1106ee89fd969eb8cf901635",
+    "semantic_hash": ""
+  },
+  "app/src/main/kotlin/za/co/jpsoft/winkerkreader/ui/controllers/Photosynccontroller.kt": {
+    "mtime": 1785064474.500113,
+    "ast_hash": "55503fcf57c55ce9d470c9ae3388ed87",
+    "semantic_hash": ""
+  },
+  "app/src/main/kotlin/za/co/jpsoft/winkerkreader/utils/Cloudurltransformer.kt": {
+    "mtime": 1785066764.8822198,
+    "ast_hash": "68a5c43b68601fd929e643bcf58dd5ed",
+    "semantic_hash": ""
+  },
+  "app/src/main/kotlin/za/co/jpsoft/winkerkreader/utils/Databasemigrationhelper.kt": {
+    "mtime": 1785066795.8626978,
+    "ast_hash": "cb37128b60bc29e92f2679a9ad4e0433",
+    "semantic_hash": ""
+  },
+  "app/src/main/kotlin/za/co/jpsoft/winkerkreader/workers/SocketUtils.kt": {
+    "mtime": 1785033084.013646,
+    "ast_hash": "c5ef0bda9c65c9073d28ad40dd2909f3",
     "semantic_hash": ""
   }
 }

@@ -132,21 +132,47 @@ class OproepDetailService : Service() {
         }
 
         serviceScope.launch {
-            val result = if (callerId.isNotEmpty()) {
-                CallerInfoResolver.resolve(callerId, contentResolver)
+            val lookupKey = if (callerId.isNotEmpty() && callerId != "Unknown" && callerId != "XXXXXXXXXX") {
+                callerId
+            } else {
+                displayNameExtra
+            }
+
+            val result = if (lookupKey.isNotEmpty()) {
+                CallerInfoResolver.resolve(lookupKey, contentResolver)
             } else {
                 CallerInfoResult.Unknown
             }
 
             val finalName = when (result) {
-                is CallerInfoResult.Member -> result.name
+                is CallerInfoResult.Member -> {
+                    buildString {
+                        append(result.name)
+                        val details = mutableListOf<String>()
+                        if (!result.gemeente.isNullOrBlank()) details.add(result.gemeente)
+                        if (details.isNotEmpty()) {
+                            append(" (")
+                            append(details.joinToString(", "))
+                            append(")")
+                        }
+                    }
+                }
                 is CallerInfoResult.Contact -> result.name
-                is CallerInfoResult.MultipleMembers -> result.members.joinToString(", ") { it.name }
+                is CallerInfoResult.MultipleMembers -> {
+                    result.members.joinToString(", ") { member ->
+                        buildString {
+                            append(member.name)
+                            if (!member.gemeente.isNullOrBlank()) {
+                                append(" (${member.gemeente})")
+                            }
+                        }
+                    }
+                }
                 CallerInfoResult.Unknown -> {
                     // If we have an explicit name from the notification, use it
                     if (displayNameExtra.isNotEmpty()) displayNameExtra
                     // FALLBACK: use the raw number if available
-                    else if (callerId.isNotEmpty()) callerId
+                    else if (callerId.isNotEmpty() && callerId != "Unknown" && callerId != "XXXXXXXXXX") callerId
                     else null
                 }
             }

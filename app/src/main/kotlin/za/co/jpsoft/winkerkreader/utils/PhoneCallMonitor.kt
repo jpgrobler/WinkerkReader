@@ -195,7 +195,7 @@ class PhoneCallMonitor(
 
             monitorScope.launch {
                 val number = phoneNumber ?: "Unknown Number"
-                val displayName = resolveName(number, context.contentResolver) ?: number
+                val displayName = CallerNameResolver.resolve(number, context.contentResolver) ?: number
                 unifiedMonitor?.onCallDetected(
                     callId = callId,
                     number = number,
@@ -218,7 +218,7 @@ class PhoneCallMonitor(
                 val number = currentIncomingNumber ?: currentOutgoingNumber ?: "Unknown Number"
 
                 monitorScope.launch {
-                    val displayName = resolveName(number, context.contentResolver) ?: number
+                    val displayName = CallerNameResolver.resolve(number, context.contentResolver) ?: number
                     unifiedMonitor?.onCallDetected(
                         callId = callId,
                         number = number,
@@ -235,7 +235,7 @@ class PhoneCallMonitor(
                 // Missed call
                 val number = currentIncomingNumber!!
                 monitorScope.launch {
-                    val displayName = resolveName(number, context.contentResolver) ?: number
+                    val displayName = CallerNameResolver.resolve(number, context.contentResolver) ?: number
                     unifiedMonitor?.onCallDetected(
                         callId = callId,
                         number = number,
@@ -313,43 +313,6 @@ class PhoneCallMonitor(
                 "Failed to stop caller identification service: ${e.message}"
             )
         }
-    }
-
-    fun resolveName(number: String, contentResolver: ContentResolver): String? {
-        if (number.isBlank() || number == "Unknown Number") return null
-
-        // 1. Try app's member database
-        val result = CallerInfoResolver.resolve(number, contentResolver)
-        when (result) {
-            is CallerInfoResult.Member -> return result.name
-            is CallerInfoResult.Contact -> return result.name
-            is CallerInfoResult.MultipleMembers -> {
-                // If multiple members match, return a concatenated name (optional)
-                return result.members.joinToString(", ") { it.name }
-            }
-
-            CallerInfoResult.Unknown -> { /* fall through to system contacts */
-            }
-        }
-
-        // 2. Fallback to system contacts
-        return resolveFromSystemContacts(number, contentResolver)
-    }
-
-    private fun resolveFromSystemContacts(
-        number: String,
-        contentResolver: ContentResolver
-    ): String? {
-        val uri = ContactsContract.PhoneLookup.CONTENT_FILTER_URI.buildUpon()
-            .appendPath(number)
-            .build()
-        val projection = arrayOf(ContactsContract.PhoneLookup.DISPLAY_NAME)
-        contentResolver.query(uri, projection, null, null, null)?.use { cursor ->
-            if (cursor.moveToFirst()) {
-                return cursor.getString(0)
-            }
-        }
-        return null
     }
 
     companion object {

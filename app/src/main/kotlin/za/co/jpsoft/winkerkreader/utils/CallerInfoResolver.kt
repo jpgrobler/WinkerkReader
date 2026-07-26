@@ -11,11 +11,16 @@ object CallerInfoResolver {
     private const val TAG = "CallerInfoResolver"
 
     fun resolve(phoneNumber: String, contentResolver: ContentResolver): CallerInfoResult {
-        if (BuildConfig.DEBUG) Log.d(TAG, "Resolving phone number: $phoneNumber")
+        if (BuildConfig.DEBUG) Log.d(TAG, "Resolving phone/name: $phoneNumber")
 
         if (phoneNumber.isEmpty() || phoneNumber == "Unknown Number" || phoneNumber == "null") {
-            if (BuildConfig.DEBUG) Log.d(TAG, "Invalid phone number, skipping resolve")
+            if (BuildConfig.DEBUG) Log.d(TAG, "Invalid query, skipping resolve")
             return CallerInfoResult.Unknown
+        }
+
+        // If the query contains letters, treat it as a display name resolution
+        if (phoneNumber.any { it.isLetter() }) {
+            return resolveByName(phoneNumber, contentResolver)
         }
 
         // Keep the original cleaned number (spaces/punctuation removed, but leading zeros preserved)
@@ -46,15 +51,29 @@ object CallerInfoResolver {
             }
         }
 
-        // Contact lookup now tries both the original cleaned number and the normalized one
+        // Contact lookup tries both the original cleaned number and the normalized one
         val contactResult = resolveContact(cleanedOriginal, normalized, contentResolver)
         if (contactResult != null) {
             if (BuildConfig.DEBUG) Log.d(TAG, "Found contact: ${contactResult.name}")
+            // Check if this contact name matches a member in our database
+            val memberByName = resolveByName(contactResult.name, contentResolver)
+            if (memberByName is CallerInfoResult.Member || memberByName is CallerInfoResult.MultipleMembers) {
+                if (BuildConfig.DEBUG) Log.d(TAG, "Mapped contact name to member: ${contactResult.name}")
+                return memberByName
+            }
             return contactResult
         }
 
         if (BuildConfig.DEBUG) Log.d(TAG, "No match found for: $phoneNumber")
         return CallerInfoResult.Unknown
+    }
+
+    /**
+     * Builds SQLite SQL to strip formatting characters (spaces, dashes, parentheses, dots, plus signs)
+     * from database columns for robust comparison.
+     */
+    private fun cleanPhoneColumnSql(columnName: String): String {
+        return "REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE([$columnName], ' ', ''), '-', ''), '(', ''), ')', ''), '+', ''), '.', '')"
     }
 
     /**
@@ -78,7 +97,7 @@ object CallerInfoResolver {
                         if (digitsOnly.startsWith("27") && digitsOnly.length > 2) {
                             digitsOnly.substring(2)
                         } else {
-                        digitsOnly
+                            digitsOnly
                         }
                     add(localSubscriber) // 810000008
                     add("0$localSubscriber") // 0810000008
@@ -98,79 +117,141 @@ object CallerInfoResolver {
             val args = mutableListOf<String>()
 
             for (format in formats) {
-                if (format.isNotEmpty()) {
-                    conditions.add("[${winkerkEntry.LIDMATE_SELFOON}] LIKE ?")
-                    args.add("%$format%")
-                    conditions.add("[${winkerkEntry.LIDMATE_LANDLYN}] LIKE ?")
-                    args.add("%$format%")
-                    conditions.add("[${winkerkEntry.LIDMATE_WERKFOON}] LIKE ?")
-                    args.add("%$format%")
+                // To match against the cleaned DB column, we strip formatting from the query argument too
+                val digitsOnlyFormat = format.replace(Regex("[^0-9]"), "")
+                if (digitsOnlyFormat.length >= 7) { // Safeguard against short substring matches
+                    conditions.add("${cleanPhoneColumnSql(winkerkEntry.LIDMATE_SELFOON)} LIKE ?")
+                    args.add("%$digitsOnlyFormat%")
+                    conditions.add("${cleanPhoneColumnSql(winkerkEntry.LIDMATE_LANDLYN)} LIKE ?")
+                    args.add("%$digitsOnlyFormat%")
+                    conditions.add("${cleanPhoneColumnSql(winkerkEntry.LIDMATE_WERKFOON)} LIKE ?")
+                    args.add("%$digitsOnlyFormat%")
                 }
             }
 
             if (conditions.isEmpty()) return null
 
-            // Build a complete SELECT statement because the provider expects a full SQL query.
             val whereClause = conditions.joinToString(" OR ")
             val fullQuery = "SELECT * FROM Members WHERE $whereClause"
 
             if (BuildConfig.DEBUG) {
                 Log.d(TAG, "Full query: $fullQuery")
-                if (BuildConfig.DEBUG) Log.d(TAG, "Args: ${args.joinToString()}")
+                Log.d(TAG, "Args: ${args.joinToString()}")
             }
 
-            val projection = arrayOf(
-                winkerkEntry.LIDMATE_VAN,
-                winkerkEntry.LIDMATE_NOEMNAAM,
-                winkerkEntry.LIDMATE_VOORNAME,
-                winkerkEntry.LIDMATE_LIDMAATGUID,
-                winkerkEntry.LIDMATE_SELFOON,
-                winkerkEntry.LIDMATE_GEMEENTE
-            )
-
-            val cursor = contentResolver.query(
-                winkerkEntry.CONTENT_URI,
-                projection,
-                fullQuery,
-                args.toTypedArray(),
-                null
-            )
-
-            val members = mutableListOf<CallerInfoResult.Member>()
-            cursor?.use {
-                while (it.moveToNext()) {
-                    val surname =
-                        it.getString(it.getColumnIndexOrThrow(winkerkEntry.LIDMATE_VAN)) ?: ""
-                    val noemnaam =
-                        it.getString(it.getColumnIndexOrThrow(winkerkEntry.LIDMATE_NOEMNAAM)) ?: ""
-                    val voorname =
-                        it.getString(it.getColumnIndexOrThrow(winkerkEntry.LIDMATE_VOORNAME)) ?: ""
-                    val guid =
-                        it.getString(it.getColumnIndexOrThrow(winkerkEntry.LIDMATE_LIDMAATGUID))
-                            ?: ""
-                    val phone =
-                        it.getString(it.getColumnIndexOrThrow(winkerkEntry.LIDMATE_SELFOON)) ?: ""
-                    val gemeente =
-                        it.getString(it.getColumnIndexOrThrow(winkerkEntry.LIDMATE_GEMEENTE)) ?: ""
-                    val displayName = buildMemberDisplayName(noemnaam, surname)
-                    members.add(
-                        CallerInfoResult.Member(
-                            name = displayName,
-                            guid = guid,
-                            surname = surname,
-                            firstName = noemnaam,
-                            phone = phone,
-                            memberType = "Lidmaat",
-                            gemeente = gemeente
-                        )
-                    )
-                }
-            }
-            return if (members.isNotEmpty()) members else null
+            return queryMembers(fullQuery, args.toTypedArray(), contentResolver)
         } catch (e: Exception) {
             if (BuildConfig.DEBUG) Log.e(TAG, "Error resolving member", e)
             return null
         }
+    }
+
+    /**
+     * Resolves a member from the database based on their display name (e.g. from WhatsApp notifications).
+     */
+    fun resolveByName(displayName: String, contentResolver: ContentResolver): CallerInfoResult {
+        val name = displayName.trim()
+        if (name.isEmpty() || name == "Unknown Contact" || name == "Unknown") {
+            return CallerInfoResult.Unknown
+        }
+
+        try {
+            // 1. Try exact match on concatenated names (Noemnaam + Van) or (Voorname + Van)
+            val exactWhere = "(${winkerkEntry.LIDMATE_NOEMNAAM} || ' ' || ${winkerkEntry.LIDMATE_VAN}) = ? OR (${winkerkEntry.LIDMATE_VOORNAME} || ' ' || ${winkerkEntry.LIDMATE_VAN}) = ? OR (${winkerkEntry.LIDMATE_NOEMNAAM} = ? AND ${winkerkEntry.LIDMATE_VAN} IS NULL)"
+            val exactQuery = "SELECT * FROM Members WHERE $exactWhere"
+            val exactArgs = arrayOf(name, name, name)
+
+            val exactMembers = queryMembers(exactQuery, exactArgs, contentResolver)
+            if (!exactMembers.isNullOrEmpty()) {
+                return when (exactMembers.size) {
+                    1 -> exactMembers.first()
+                    else -> CallerInfoResult.MultipleMembers(exactMembers)
+                }
+            }
+
+            // 2. Try split name match if there are multiple words (first word and last word matching Noemnaam/Van)
+            val parts = name.split(Regex("\\s+"))
+            if (parts.size >= 2) {
+                val firstName = parts.first()
+                val lastName = parts.last()
+                val splitWhere = "(${winkerkEntry.LIDMATE_NOEMNAAM} LIKE ? AND ${winkerkEntry.LIDMATE_VAN} LIKE ?) OR (${winkerkEntry.LIDMATE_VOORNAME} LIKE ? AND ${winkerkEntry.LIDMATE_VAN} LIKE ?)"
+                val splitQuery = "SELECT * FROM Members WHERE $splitWhere"
+                val splitArgs = arrayOf("%$firstName%", "%$lastName%", "%$firstName%", "%$lastName%")
+
+                val splitMembers = queryMembers(splitQuery, splitArgs, contentResolver)
+                if (!splitMembers.isNullOrEmpty()) {
+                    return when (splitMembers.size) {
+                        1 -> splitMembers.first()
+                        else -> CallerInfoResult.MultipleMembers(splitMembers)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error resolving member by name", e)
+        }
+        return CallerInfoResult.Unknown
+    }
+
+    /**
+     * Executes the given raw query and parses the cursor into Member objects.
+     */
+    private fun queryMembers(
+        fullQuery: String,
+        args: Array<String>,
+        contentResolver: ContentResolver
+    ): List<CallerInfoResult.Member>? {
+        val projection = arrayOf(
+            winkerkEntry.LIDMATE_VAN,
+            winkerkEntry.LIDMATE_NOEMNAAM,
+            winkerkEntry.LIDMATE_VOORNAME,
+            winkerkEntry.LIDMATE_LIDMAATGUID,
+            winkerkEntry.LIDMATE_SELFOON,
+            winkerkEntry.LIDMATE_GEMEENTE
+        )
+
+        var cursor = try {
+            contentResolver.query(
+                winkerkEntry.CONTENT_URI,
+                projection,
+                fullQuery,
+                args,
+                null
+            )
+        } catch (e: Exception) {
+            if (BuildConfig.DEBUG) Log.e(TAG, "Database query failed", e)
+            null
+        }
+
+        val members = mutableListOf<CallerInfoResult.Member>()
+        cursor?.use {
+            while (it.moveToNext()) {
+                val surname =
+                    it.getString(it.getColumnIndexOrThrow(winkerkEntry.LIDMATE_VAN)) ?: ""
+                val noemnaam =
+                    it.getString(it.getColumnIndexOrThrow(winkerkEntry.LIDMATE_NOEMNAAM)) ?: ""
+                val voorname =
+                    it.getString(it.getColumnIndexOrThrow(winkerkEntry.LIDMATE_VOORNAME)) ?: ""
+                val guid =
+                    it.getString(it.getColumnIndexOrThrow(winkerkEntry.LIDMATE_LIDMAATGUID)) ?: ""
+                val phone =
+                    it.getString(it.getColumnIndexOrThrow(winkerkEntry.LIDMATE_SELFOON)) ?: ""
+                val gemeente =
+                    it.getString(it.getColumnIndexOrThrow(winkerkEntry.LIDMATE_GEMEENTE)) ?: ""
+                val displayName = buildMemberDisplayName(noemnaam, surname)
+                members.add(
+                    CallerInfoResult.Member(
+                        name = displayName,
+                        guid = guid,
+                        surname = surname,
+                        firstName = noemnaam,
+                        phone = phone,
+                        memberType = "Lidmaat",
+                        gemeente = gemeente
+                    )
+                )
+            }
+        }
+        return if (members.isNotEmpty()) members else null
     }
 
     /**
