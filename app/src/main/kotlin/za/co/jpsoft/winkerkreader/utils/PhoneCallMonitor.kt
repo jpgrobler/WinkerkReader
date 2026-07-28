@@ -1,13 +1,11 @@
 package za.co.jpsoft.winkerkreader.utils
 
 import android.Manifest
-import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Handler
 import android.os.Looper
-import android.provider.ContactsContract
 import android.telephony.PhoneStateListener
 import android.telephony.TelephonyManager
 import android.util.Log
@@ -195,7 +193,7 @@ class PhoneCallMonitor(
 
             monitorScope.launch {
                 val number = phoneNumber ?: "Unknown Number"
-                val displayName = CallerNameResolver.resolve(number, context.contentResolver) ?: number
+                val displayName = CallerNameResolver.resolve(number, this as Context) ?: number
                 unifiedMonitor?.onCallDetected(
                     callId = callId,
                     number = number,
@@ -218,7 +216,7 @@ class PhoneCallMonitor(
                 val number = currentIncomingNumber ?: currentOutgoingNumber ?: "Unknown Number"
 
                 monitorScope.launch {
-                    val displayName = CallerNameResolver.resolve(number, context.contentResolver) ?: number
+                    val displayName = CallerNameResolver.resolve(number, this as Context) ?: number
                     unifiedMonitor?.onCallDetected(
                         callId = callId,
                         number = number,
@@ -235,7 +233,7 @@ class PhoneCallMonitor(
                 // Missed call
                 val number = currentIncomingNumber!!
                 monitorScope.launch {
-                    val displayName = CallerNameResolver.resolve(number, context.contentResolver) ?: number
+                    val displayName = CallerNameResolver.resolve(number, this as Context) ?: number
                     unifiedMonitor?.onCallDetected(
                         callId = callId,
                         number = number,

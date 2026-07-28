@@ -8,7 +8,6 @@ import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Outline
-import android.net.Uri
 import android.os.Bundle
 import android.provider.CalendarContract
 import android.text.Html
@@ -65,8 +64,6 @@ class LidmaatDetailActivity : BaseActivity() {
         private const val STATE_IMAGE_URI = "image_uri"
 
         const val EXTRA_MEMBER_GUID = "memberGUID"
-
-
     }
 
     private val navigationController by lazy { MainNavigationController(this) }
@@ -87,7 +84,6 @@ class LidmaatDetailActivity : BaseActivity() {
 
     private var mGeslagB = ""
     private var mHuwelikstatus = "Ongetroud"
-    private lateinit var mCurrentLidmaatUri: Uri
     private lateinit var photoController: MemberPhotoController
     private lateinit var pastoralSectionController: LidmaatPastoralSectionController
 
@@ -134,32 +130,21 @@ class LidmaatDetailActivity : BaseActivity() {
         binding.detailPassieBlock.visibility = View.GONE
         binding.detailGawesBlock.visibility = View.GONE
 
-        mCurrentLidmaatUri = intent.data ?: run {
-            val guid = intent.getStringExtra(EXTRA_MEMBER_GUID)
-                ?: intent.getStringExtra("MEMBER_GUID")
-            if (guid != null) {
-                val id = getIdFromGuid(guid)
-                if (id != -1L) {
-                    ContentUris.withAppendedId(winkerkEntry.CONTENT_URI, id)
-                } else {
-                    throw IllegalArgumentException("Cannot resolve member GUID: $guid")
-                }
-            } else {
-                throw IllegalArgumentException("No data URI and no MEMBER_GUID provided")
-            }
-        }
-
         recordStatus = intent.getStringExtra("RECORD_STATUS") ?: "0"
 
         viewModel = ViewModelProvider(this)[LidmaatDetailViewModel::class.java]
 
+        // ── Route to the appropriate Room-backed load method ────────────────
+        // Primary path: GUID (all normal in-app navigation).
+        // Fallback path: content:// URI (legacy deep-links / shortcuts).
         val guid = intent.getStringExtra(EXTRA_MEMBER_GUID) ?: intent.getStringExtra("MEMBER_GUID")
-        if (!guid.isNullOrEmpty()) {
-            viewModel.loadMemberByGuid(guid, recordStatus)
-        } else if (intent.data != null) {
-            viewModel.loadMember(intent.data!!, recordStatus)
-        } else {
-            throw IllegalArgumentException("No MEMBER_GUID provided")
+        val idFromUri = intent.data?.lastPathSegment?.toLongOrNull()
+        when {
+            !guid.isNullOrEmpty() -> viewModel.loadMemberByGuid(guid, recordStatus)
+            idFromUri != null -> viewModel.loadMember(intent.data!!, recordStatus)
+            else -> throw IllegalArgumentException(
+                "LidmaatDetailActivity requires MEMBER_GUID extra or a valid content:// URI"
+            )
         }
 
         viewModel.isLoading.observe(this) { loading ->
@@ -236,25 +221,6 @@ class LidmaatDetailActivity : BaseActivity() {
         return false
     }
 
-    // ─── Helper: get member ID from GUID ─────────────────────────────────────
-
-    private fun getIdFromGuid(memberGuid: String): Long {
-        val fullQuery = """
-            SELECT _rowid_ FROM ${winkerkEntry.LIDMATE_TABLE_NAME}
-            WHERE ${winkerkEntry.LIDMATE_LIDMAATGUID} = ?
-        """.trimIndent()
-        val cursor = contentResolver.query(
-            winkerkEntry.CONTENT_URI,
-            null,
-            fullQuery,
-            arrayOf(memberGuid),
-            null
-        )
-        return cursor?.use {
-            if (it.moveToFirst()) it.getLong(0) else -1L
-        } ?: -1L
-    }
-
     // ─── UI Initialisation ────────────────────────────────────────────────────
 
     private fun initializeViews() {
@@ -294,7 +260,7 @@ class LidmaatDetailActivity : BaseActivity() {
 
         binding.detailStraatadresBlock.setOnClickListener { openMapForAddress() }
 
-        // ─── Quick action row (new) ──────────────────────────────────────────
+        // ─── Quick action row ────────────────────────────────────────────────
         binding.quickActionBel.setOnClickListener {
             MemberUtils.callPhone(this, binding.detailSelfoon.text.toString())
         }
@@ -340,7 +306,8 @@ class LidmaatDetailActivity : BaseActivity() {
                 }
             }
         }
-// ✅ Pastoral Reminder quick action
+
+        // Pastoral quick actions
         binding.quickActionHerinnering.setOnClickListener {
             mLidmaatGUID?.let { guid ->
                 StelHerinneringBottomSheet.newInstance(guid)
@@ -350,22 +317,17 @@ class LidmaatDetailActivity : BaseActivity() {
             }
         }
 
-        // ✅ Notes quick action
         binding.quickActionNotas.setOnClickListener {
             mLidmaatGUID?.let { guid ->
-                // Expand the notes section if collapsed
                 expandNotasSection()
-
-                // Focus on the notes section
                 binding.layoutDetailNotasHeader.performClick()
-
-                // Open new note dialog
                 VoegNotaByBottomSheet.newInstance(guid)
                     .show(supportFragmentManager, VoegNotaByBottomSheet.TAG)
             } ?: run {
                 Toast.makeText(this, "Geen lidmaat GUID beskikbaar", Toast.LENGTH_SHORT).show()
             }
         }
+
         // ─── Collapsible Mylpale section ─────────────────────────────────────
         binding.cardMylpaleHeader.setOnClickListener {
             toggleMylpaleSection()
@@ -390,7 +352,8 @@ class LidmaatDetailActivity : BaseActivity() {
 
         setupCopyOnLongClick()
     }
-// ─── Helper to expand notes section ────────────────────────────────────
+
+    // ─── Helper to expand notes section ────────────────────────────────────
 
     private fun expandNotasSection() {
         val content = binding.layoutDetailNotasInhoud
@@ -469,9 +432,9 @@ class LidmaatDetailActivity : BaseActivity() {
         binding.quickActionWhatsapp.isEnabled = item.cellphone.isNotEmpty()
         binding.quickActionSms.isEnabled = item.cellphone.isNotEmpty()
         binding.quickActionEpos.isEnabled = item.email.isNotEmpty()
-        // ✅ Pastoral actions - always enabled since they open dialogs
         binding.quickActionHerinnering.isEnabled = true
         binding.quickActionNotas.isEnabled = true
+
         // ─── Fill fields ──────────────────────────────────
         binding.detailNoemnaam.setText(item.name)
         binding.detailVan.setText(item.surname)
@@ -487,68 +450,37 @@ class LidmaatDetailActivity : BaseActivity() {
         binding.detailEpos.setText(item.email)
         binding.detailBeroep.setText(item.profession)
         binding.detailWerkgewer.setText(item.employer)
-//        binding.detailLidmaatstatus.setText(item.memberStatus)
-//
-//        binding.detailLidmaatstatus.setBackgroundColor(
-//            when (item.certificateStatus) {
-//                "Ontvang" -> Color.WHITE
-//                "Aangevra" -> Color.GREEN
-//                "Nie Aangevra" -> Color.CYAN
-//                else -> Color.WHITE
-//            }
-//        )
-// In displayMemberData()
+
         when (item.certificateStatus) {
             "Ontvang" -> {
                 binding.detailLidmaatstatus.setText("✓ " + item.memberStatus)
                 binding.detailLidmaatstatus.setTextColor(
-                    ContextCompat.getColor(
-                        this,
-                        R.color.md_theme_primary
-                    )
+                    ContextCompat.getColor(this, R.color.md_theme_primary)
                 )
-//                binding.detailLidmaatstatus.setCompoundDrawablesWithIntrinsicBounds(
-//                    R.drawable.ic_check_circle, 0, 0, 0
-//                )
             }
 
             "Aangevra" -> {
                 binding.detailLidmaatstatus.setText("⏳ " + item.memberStatus)
                 binding.detailLidmaatstatus.setTextColor(
-                    ContextCompat.getColor(
-                        this,
-                        R.color.md_theme_secondary
-                    )
+                    ContextCompat.getColor(this, R.color.md_theme_secondary)
                 )
-//                binding.detailLidmaatstatus.setCompoundDrawablesWithIntrinsicBounds(
-//                    R.drawable.ic_pending, 0, 0, 0
-//                )
             }
 
             "Nie Aangevra" -> {
                 binding.detailLidmaatstatus.setText("✕ " + item.memberStatus)
                 binding.detailLidmaatstatus.setTextColor(
-                    ContextCompat.getColor(
-                        this,
-                        R.color.md_theme_error
-                    )
+                    ContextCompat.getColor(this, R.color.md_theme_error)
                 )
-//                binding.detailLidmaatstatus.setCompoundDrawablesWithIntrinsicBounds(
-//                    R.drawable.ic_error, 0, 0, 0
-//                )
             }
 
             else -> {
                 binding.detailLidmaatstatus.setText("? " + item.memberStatus)
                 binding.detailLidmaatstatus.setTextColor(
-                    ContextCompat.getColor(
-                        this,
-                        R.color.md_theme_onSurface
-                    )
+                    ContextCompat.getColor(this, R.color.md_theme_onSurface)
                 )
-//                binding.detailLidmaatstatus.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0)
             }
         }
+
         // ─── Block visibility (with address duplication fix) ──
         val street = item.streetAddress ?: ""
         val postal = item.postalAddress ?: ""
@@ -567,7 +499,7 @@ class LidmaatDetailActivity : BaseActivity() {
             if (item.employer.isNotEmpty()) View.VISIBLE else View.GONE
         binding.detailStraatadresBlock.visibility =
             if (street.isNotEmpty()) View.VISIBLE else View.GONE
-        // Show postal only if it exists and is different from street
+        // Show postal only if it exists and differs from street
         binding.detailPosadresBlock.visibility =
             if (postal.isNotEmpty() && postal != street) View.VISIBLE else View.GONE
 
@@ -606,7 +538,7 @@ class LidmaatDetailActivity : BaseActivity() {
     private fun displayFamily(members: List<FamilyMemberItem>) {
         val container = binding.detailGesinContent
 
-        // Remove all views except the header (which is at index 0)
+        // Remove all views except the header (index 0)
         val childCount = container.childCount
         if (childCount > 1) {
             container.removeViews(1, childCount - 1)
@@ -658,9 +590,8 @@ class LidmaatDetailActivity : BaseActivity() {
                 text = gesinString
                 setPadding(32, 0, 0, 0)
                 TextViewCompat.setTextAppearance(this, android.R.style.TextAppearance_Medium)
-                tag = member.id // member.id is Int
+                tag = member.id
                 setOnClickListener {
-                    // Safely retrieve as Int, convert to Long
                     val gId = (tag as? Int)?.toLong()
                     val guid = member.guid
                     navigationController.navigateToLidmaatDetail(guid, recordStatus, gId)
@@ -678,13 +609,12 @@ class LidmaatDetailActivity : BaseActivity() {
     }
 
     private fun loadMilestones(item: MemberDetailItem) {
-        // Use binding fields instead of findViewById
-        val mylpaleBlock = binding.detailMylpaleBlock          // LinearLayout
-        val mylpaleBlock2 = binding.detailMylpaleBlock2        // MaterialCardView
+        val mylpaleBlock = binding.detailMylpaleBlock
+        val mylpaleBlock2 = binding.detailMylpaleBlock2
 
         mylpaleBlock.removeAllViews()
         mylpaleBlock2.visibility = View.GONE
-        mylpaleBlock.visibility = View.GONE   // hide content initially
+        mylpaleBlock.visibility = View.GONE
 
         var hasMilestones = false
 
@@ -743,7 +673,7 @@ class LidmaatDetailActivity : BaseActivity() {
 
         if (hasMilestones) {
             mylpaleBlock2.visibility = View.VISIBLE
-            mylpaleBlock.visibility = View.VISIBLE   // show content
+            mylpaleBlock.visibility = View.VISIBLE
             binding.cardMylpaleChevron.rotation = 180f
         } else {
             mylpaleBlock2.visibility = View.GONE
@@ -751,6 +681,8 @@ class LidmaatDetailActivity : BaseActivity() {
     }
 
     // ─── Edit / update member ─────────────────────────────────────────────────
+    // Write path intentionally kept via ContentProvider → WinkerkProvider.update()
+    // which already routes to Room's openHelper.writableDatabase internally.
 
     private fun onWysigClick() {
         if (binding.buttonWysig.text == getString(R.string.wysig)) {
@@ -992,6 +924,7 @@ class LidmaatDetailActivity : BaseActivity() {
         imm.showSoftInput(view, 0)
     }
 
+    @Suppress("unused") // kept for potential future use
     private fun buildEventDescription(member: MemberDetailItem): String {
         return buildString {
             member.birthday?.takeIf { it.isNotEmpty() }?.let { append("Geboortedatum: $it\n") }

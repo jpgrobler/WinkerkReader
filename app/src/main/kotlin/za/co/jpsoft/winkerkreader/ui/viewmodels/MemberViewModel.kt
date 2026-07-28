@@ -388,7 +388,10 @@ class MemberViewModel(
     }.flatMapLatest { params ->
         Pager(pagingConfig) {
             MemberPagingSource(
-                contentResolver = getApplication<Application>().contentResolver,
+                memberDao = za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase.getInstance(
+                    getApplication()
+                ).memberDao(),
+                memberRepository = repository,
                 eventType = params.eventType,
                 recordStatus = params.status,
                 soek = params.search,

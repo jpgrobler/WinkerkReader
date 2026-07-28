@@ -2,6 +2,7 @@
 package za.co.jpsoft.winkerkreader.utils
 
 import android.content.ContentResolver
+import android.content.Context
 import android.provider.ContactsContract
 import android.util.Log
 import za.co.jpsoft.winkerkreader.BuildConfig
@@ -20,43 +21,19 @@ object CallerNameResolver {
      * @param contentResolver The ContentResolver to query contacts
      * @return The best display name, or null if none found
      */
-    fun resolve(number: String?, contentResolver: ContentResolver): String? {
+    fun resolve(number: String?, context: Context): String? {
         if (number.isNullOrBlank() || number == "Unknown Number" || number == "null") {
             if (BuildConfig.DEBUG) Log.d(TAG, "Invalid number, skipping resolution")
             return null
         }
 
-        // 1. Try app's member database
-        val result = CallerInfoResolver.resolve(number, contentResolver)
-        when (result) {
-            is CallerInfoResult.Member -> {
-                if (BuildConfig.DEBUG) Log.d(TAG, "Resolved as member: ${result.name}")
-                return result.name
-            }
-
-            is CallerInfoResult.Contact -> {
-                if (BuildConfig.DEBUG) Log.d(TAG, "Resolved as contact: ${result.name}")
-                return result.name
-            }
-
-            is CallerInfoResult.MultipleMembers -> {
-                // If multiple members match, return a concatenated name (optional)
-                val combined = result.members.joinToString(", ") { it.name }
-                if (BuildConfig.DEBUG) Log.d(TAG, "Resolved as multiple members: $combined")
-                return combined
-            }
-
-            CallerInfoResult.Unknown -> {
-                if (BuildConfig.DEBUG) Log.d(
-                    TAG,
-                    "Not found in member database, trying system contacts"
-                )
-                // fall through to system contacts
-            }
+        val result = CallerInfoResolver.resolve(number, context)
+        return when (result) {
+            is CallerInfoResult.Member -> result.name
+            is CallerInfoResult.Contact -> result.name
+            is CallerInfoResult.MultipleMembers -> result.members.joinToString(", ") { it.name }
+            CallerInfoResult.Unknown -> null
         }
-
-        // 2. Fallback to system contacts (requires READ_CONTACTS permission)
-        return resolveFromSystemContacts(number, contentResolver)
     }
 
     private fun resolveFromSystemContacts(

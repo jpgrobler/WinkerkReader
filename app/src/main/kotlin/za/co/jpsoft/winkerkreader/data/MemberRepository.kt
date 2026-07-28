@@ -2,25 +2,21 @@ package za.co.jpsoft.winkerkreader.data
 
 import android.content.ContentResolver
 import android.content.Context
-import android.database.Cursor
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.BuildConfig
-import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
 import za.co.jpsoft.winkerkreader.data.models.FilterBox
 import za.co.jpsoft.winkerkreader.data.models.MemberItem
 import za.co.jpsoft.winkerkreader.utils.SQLiteStatementValidator
-import za.co.jpsoft.winkerkreader.utils.getIntOrDefault
-import za.co.jpsoft.winkerkreader.utils.getStringOrEmpty
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 class MemberRepository(private val context: Context) {
 
     private val contentResolver: ContentResolver = context.applicationContext.contentResolver
+    private val memberDao =
+        za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase.getInstance(context).memberDao()
     private val queryCache = mutableMapOf<String, MemberQueryBuilder.SqlRequest>()
 
     suspend fun loadMembers(
@@ -108,45 +104,26 @@ class MemberRepository(private val context: Context) {
         args: Array<String>,
         sortOrder: String
     ): List<MemberItem> {
-        return suspendCoroutine { continuation ->
+        return withContext(Dispatchers.IO) {
             try {
-                val cursor = contentResolver.query(
-                    winkerkEntry.CONTENT_URI,
-                    null,
-                    sql,
-                    args,
-                    sortOrder
-                )
-                val items = cursor?.use { cursorToList(it, sortOrder) } ?: emptyList()
-                continuation.resume(items)
+                val query = androidx.sqlite.db.SimpleSQLiteQuery(sql, args as Array<Any>?)
+                val entities = memberDao.getMembersRaw(query)
+                val rawItems = entities.map { mapEntityToItem(it) }
+                MemberItemSeparator.applySeparators(rawItems, sortOrder)
             } catch (e: Exception) {
                 if (BuildConfig.DEBUG) Log.e("MemberRepository", "Query failed", e)
-                continuation.resume(emptyList())
+                emptyList()
             }
         }
     }
 
     // -------------------------------------------------------------------------
-    // Cursor conversion - uses MemberItemSeparator for separator logic
+    // Entity mapping - uses MemberItemSeparator for separator logic
     // -------------------------------------------------------------------------
 
-    private fun cursorToList(cursor: Cursor, sortOrder: String): List<MemberItem> {
-        if (cursor.count == 0) return emptyList()
-
-        val rawItems = mutableListOf<MemberItem>()
-        cursor.moveToFirst()
-        while (!cursor.isAfterLast) {
-            rawItems.add(extractMemberItem(cursor))
-            cursor.moveToNext()
-        }
-
-        // ✅ Use MemberItemSeparator for all separator logic
-        return MemberItemSeparator.applySeparators(rawItems, sortOrder)
-    }
-
-    private fun extractMemberItem(cursor: Cursor): MemberItem {
-        val birthday = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_GEBOORTEDATUM)
-        val weddingDate = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_HUWELIKSDATUM)
+    fun mapEntityToItem(entity: za.co.jpsoft.winkerkreader.data.room.MemberEntity): MemberItem {
+        val birthday = entity.geboortedatum ?: ""
+        val weddingDate = entity.huwelikDate ?: ""
 
         var age = "?"
         var weddingYears = "?"
@@ -170,32 +147,29 @@ class MemberRepository(private val context: Context) {
             }
         }
 
-        val idIdx = cursor.getColumnIndex("_id")
-        val id = if (idIdx != -1) cursor.getLong(idIdx) else 0L
-
         return MemberItem(
-            id = id,
-            name = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_NOEMNAAM),
-            surname = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_VAN),
-            gender = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_GESLAG),
-            congregation = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_GEMEENTE),
-            familyHead = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_GESINSHOOFGUID),
-            cellphone = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_SELFOON),
-            landline = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_LANDLYN),
-            email = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_EPOS),
-            ward = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_WYK),
-            address = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_STRAATADRES)
-                .takeIf { it.isNotEmpty() } ?: "GEEN",
+            id = entity.id,
+            name = entity.noemnaam ?: "",
+            surname = entity.van ?: "",
+            gender = entity.geslag ?: "",
+            congregation = entity.gemeente ?: "",
+            familyHead = entity.familyHeadGUID ?: "",
+            cellphone = entity.selfoon ?: "",
+            landline = entity.landlyn ?: "",
+            email = entity.epos ?: "",
+            ward = entity.wyk ?: "",
+            address = (entity.straatadres ?: "").takeIf { it.isNotEmpty() } ?: "GEEN",
             birthday = birthday,
             weddingDate = weddingDate,
-            picturePath = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_PICTUREPATH),
-            tag = cursor.getIntOrDefault(winkerkEntry.LIDMATE_TAG, 0),
-            guid = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_LIDMAATGUID),
+            picturePath = entity.fotostoorplek ?: "",
+            tag = entity.tag?.toIntOrNull() ?: 0,
+            guid = entity.memberGUID ?: "",
             age = age,
             weddingYears = weddingYears,
-            recordstatus = cursor.getStringOrEmpty(winkerkEntry.LIDMATE_REKORDSTATUS)
+            recordstatus = entity.rekordstatus ?: ""
         )
     }
+
 
     private fun parseDate(dateStr: String): LocalDate? = try {
         val parts = dateStr.split("-", "/")
@@ -220,17 +194,12 @@ class MemberRepository(private val context: Context) {
         val (sql, args) = MemberQueryBuilder.buildCountQuery(
             eventType, recordStatus, soek, filterList, sortOrder, congregations
         )
-        val cursor = contentResolver.query(
-            WinkerkContract.winkerkEntry.CONTENT_URI,
-            null,
-            sql,
-            args,
-            null
-        )
-        cursor?.use {
-            if (it.moveToFirst()) return it.getInt(0)
+        return try {
+            memberDao.countRaw(androidx.sqlite.db.SimpleSQLiteQuery(sql, args as Array<Any>?))
+        } catch (e: Exception) {
+            if (BuildConfig.DEBUG) Log.e("MemberRepository", "Count failed", e)
+            0
         }
-        return 0
     }
 
     suspend fun countMembersBeforeBirthday(
@@ -254,16 +223,12 @@ class MemberRepository(private val context: Context) {
             congregations
         )
         return withContext(Dispatchers.IO) {
-            val cursor = contentResolver.query(
-                WinkerkContract.winkerkEntry.CONTENT_URI,
-                null,
-                sql,
-                args,
-                null
-            )
-            cursor?.use {
-                if (it.moveToFirst()) it.getInt(0) else 0
-            } ?: 0
+            try {
+                memberDao.countRaw(androidx.sqlite.db.SimpleSQLiteQuery(sql, args as Array<Any>?))
+            } catch (e: Exception) {
+                if (BuildConfig.DEBUG) Log.e("MemberRepository", "Count birthday failed", e)
+                0
+            }
         }
     }
 }

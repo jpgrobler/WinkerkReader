@@ -6,12 +6,16 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import androidx.sqlite.db.SimpleSQLiteQuery
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
+import za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase
 
 class ArgiefViewModel(application: Application) : AndroidViewModel(application) {
+
+    // Direct DAO access — no ContentProvider round-trip.
+    private val argiefDao = WinkerkDatabase.getInstance(application).argiefDao()
 
     private val _archiveCursor = MutableLiveData<Cursor?>()
     val archiveCursor: LiveData<Cursor?> = _archiveCursor
@@ -24,7 +28,6 @@ class ArgiefViewModel(application: Application) : AndroidViewModel(application) 
     private var isFirstLoad = true
 
     fun loadArchive(sortBy: String, searchTerm: String? = null) {
-        // If we're already loading the same data, skip
         if (!isFirstLoad && currentSortBy == sortBy && currentSearchTerm == searchTerm) {
             return
         }
@@ -36,19 +39,9 @@ class ArgiefViewModel(application: Application) : AndroidViewModel(application) 
         _isLoading.postValue(true)
 
         viewModelScope.launch(Dispatchers.IO) {
-            val selection = buildQuery(sortBy, searchTerm)
-            val contentResolver = getApplication<Application>().contentResolver
+            val (sql, args) = buildQuery(sortBy, searchTerm)
+            val newCursor = argiefDao.queryRaw(SimpleSQLiteQuery(sql, args))
 
-            // Query on background thread
-            val newCursor = contentResolver.query(
-                winkerkEntry.ARGIEF_URI,
-                null,
-                selection,
-                null,
-                null
-            )
-
-            // Close old cursor and update LiveData on main thread
             withContext(Dispatchers.Main) {
                 val oldCursor = _archiveCursor.value
                 if (oldCursor != null && !oldCursor.isClosed) {
@@ -60,26 +53,49 @@ class ArgiefViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    private fun buildQuery(sortBy: String, searchTerm: String?): String {
-        val baseQuery = "Select Argief._rowid_ as _id, * from Argief"
-        val whereClause = if (!searchTerm.isNullOrBlank()) {
-            " WHERE (Surname LIKE '%$searchTerm%') OR (Name LIKE '%$searchTerm%')"
-        } else ""
-        val orderClause = when (sortBy) {
-            "Van" -> " ORDER BY Surname, Name, DepartureDate"
-            "Rede" -> " ORDER BY Reason, Surname, Name, DepartureDate"
-            "Datum" -> " ORDER BY substr(DepartureDate,7,4), substr(DepartureDate,4,2), substr(DepartureDate,1,2), Surname, Name"
-            else -> ""
-        }
-        return baseQuery + whereClause + orderClause
-    }
-
+    /**
+     * Force-reloads the current data set (e.g. after a database sync).
+     * Resets the deduplication guard so the same sort/search params trigger a real query.
+     */
     fun refresh() {
+        isFirstLoad = true
         loadArchive(currentSortBy, currentSearchTerm)
     }
 
     override fun onCleared() {
         _archiveCursor.value?.close()
         super.onCleared()
+    }
+
+    // ─── Query builder ────────────────────────────────────────────────────────
+
+    /**
+     * Builds a parameterised query safe against SQL injection.
+     * Search terms are bound as positional args, never interpolated into the SQL string.
+     */
+    private fun buildQuery(sortBy: String, searchTerm: String?): Pair<String, Array<Any>> {
+        val sql = StringBuilder("SELECT Argief._rowid_ AS _id, * FROM Argief")
+        val args = mutableListOf<Any>()
+
+        if (!searchTerm.isNullOrBlank()) {
+            sql.append(" WHERE (Surname LIKE ? OR Name LIKE ?)")
+            val pattern = "%$searchTerm%"
+            args.add(pattern)
+            args.add(pattern)
+        }
+
+        sql.append(
+            when (sortBy) {
+                "Rede" -> " ORDER BY Reason, Surname, Name, DepartureDate"
+                "Datum" -> " ORDER BY substr(DepartureDate,7,4)," +
+                        " substr(DepartureDate,4,2)," +
+                        " substr(DepartureDate,1,2)," +
+                        " Surname, Name"
+
+                else -> " ORDER BY Surname, Name, DepartureDate"  // "Van" + fallback
+            }
+        )
+
+        return sql.toString() to args.toTypedArray()
     }
 }

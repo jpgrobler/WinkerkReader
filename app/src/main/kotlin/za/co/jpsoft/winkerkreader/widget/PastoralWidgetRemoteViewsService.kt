@@ -15,9 +15,9 @@ import android.widget.RemoteViewsService
 import androidx.core.content.ContextCompat
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
-import za.co.jpsoft.winkerkreader.data.WinkerkContract
 import za.co.jpsoft.winkerkreader.data.pastoral.PastoralDatabase
 import za.co.jpsoft.winkerkreader.data.pastoral.entities.FollowUpReminderEntity
+import za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import za.co.jpsoft.winkerkreader.utils.Utils.toLocalDateSafe
 import java.time.LocalDate
@@ -64,16 +64,10 @@ class PastoralWidgetRemoteViewsService : RemoteViewsService() {
                 if (BuildConfig.DEBUG) {
                     Log.d(TAG, "✅ Loaded ${reminders.size} pastoral reminders")
                     if (reminders.isEmpty()) {
-                        if (BuildConfig.DEBUG) Log.w(
-                            TAG,
-                            "⚠️ No pastoral reminders found - widget will show empty state"
-                        )
+                        Log.w(TAG, "⚠️ No pastoral reminders found - widget will show empty state")
                     } else {
                         reminders.take(3).forEach { reminder ->
-                            if (BuildConfig.DEBUG) Log.d(
-                                TAG,
-                                "  Reminder: ${reminder.title} due ${reminder.dueDateUtc}"
-                            )
+                            Log.d(TAG, "  Reminder: ${reminder.title} due ${reminder.dueDateUtc}")
                         }
                     }
                 }
@@ -140,6 +134,7 @@ class PastoralWidgetRemoteViewsService : RemoteViewsService() {
             // Set row background: primary container for today, otherwise surface
             val bgColor = if (isToday) primaryContainerColor else surfaceColor
             views.setInt(R.id.widget_pastoral_item_root, "setBackgroundColor", bgColor)
+
             // --- Congregation colour indicator ---
             val congregationName = getMemberCongregationCached(reminder.memberGuid, context)
             val settingsManager = SettingsManager.getInstance(context)
@@ -154,6 +149,7 @@ class PastoralWidgetRemoteViewsService : RemoteViewsService() {
                 "setColorFilter",
                 congregationColor
             )
+
             // Build display text
             val displayName =
                 reminder.memberDisplayNameCache?.takeIf { it.isNotBlank() } ?: "Lidmaat"
@@ -173,10 +169,7 @@ class PastoralWidgetRemoteViewsService : RemoteViewsService() {
             val dateEnd = dateStr.length
             if (dateEnd <= textLength) {
                 spannable.setSpan(
-                    RelativeSizeSpan(0.8f),
-                    0,
-                    dateEnd,
-                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                    RelativeSizeSpan(0.8f), 0, dateEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                 )
                 if (isToday) {
                     spannable.setSpan(
@@ -186,10 +179,7 @@ class PastoralWidgetRemoteViewsService : RemoteViewsService() {
                         Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                     )
                     spannable.setSpan(
-                        StyleSpan(Typeface.BOLD),
-                        0,
-                        dateEnd,
-                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                        StyleSpan(Typeface.BOLD), 0, dateEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                     )
                 } else {
                     spannable.setSpan(
@@ -206,10 +196,7 @@ class PastoralWidgetRemoteViewsService : RemoteViewsService() {
             val nameEnd = nameStart + displayName.length
             if (nameEnd <= textLength) {
                 spannable.setSpan(
-                    RelativeSizeSpan(1.25f),
-                    nameStart,
-                    nameEnd,
-                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                    RelativeSizeSpan(1.25f), nameStart, nameEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                 )
                 spannable.setSpan(
                     ForegroundColorSpan(onSurfaceColor),
@@ -235,17 +222,13 @@ class PastoralWidgetRemoteViewsService : RemoteViewsService() {
                     symbolEnd,
                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                 )
-                // Keep symbol color as onSurface (or maybe primary? leave as onSurface)
             }
 
             // Title part
             val titleStart = if (symbol.isNotEmpty()) symbolEnd + 1 else nameEnd + 1
             if (titleStart < textLength) {
                 spannable.setSpan(
-                    RelativeSizeSpan(1f),
-                    titleStart,
-                    textLength,
-                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                    RelativeSizeSpan(1f), titleStart, textLength, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                 )
                 spannable.setSpan(
                     ForegroundColorSpan(onSurfaceColor),
@@ -264,25 +247,26 @@ class PastoralWidgetRemoteViewsService : RemoteViewsService() {
             )
         }
 
+        /**
+         * Resolves the congregation name for a member by GUID.
+         * Queries MemberDao directly — no ContentProvider round-trip.
+         * No record-status filter: pastoral reminders can target any member record.
+         */
         private fun getMemberCongregation(memberGuid: String?, context: Context): String? {
             if (memberGuid.isNullOrEmpty()) return null
             return try {
-                val projection = arrayOf(WinkerkContract.winkerkEntry.LIDMATE_GEMEENTE)
-                val selection = "${WinkerkContract.winkerkEntry.LIDMATE_LIDMAATGUID} = ?"
-                context.contentResolver.query(
-                    WinkerkContract.winkerkEntry.CONTENT_URI,
-                    projection,
-                    selection,
-                    arrayOf(memberGuid),
-                    null
-                )?.use { cursor ->
-                    if (cursor.moveToFirst()) {
-                        cursor.getString(cursor.getColumnIndexOrThrow(WinkerkContract.winkerkEntry.LIDMATE_GEMEENTE))
-                    } else null
-                }
+                WinkerkDatabase.getInstance(context).memberDao()
+                    .getCongregationByGuid(memberGuid)
             } catch (e: Exception) {
                 if (BuildConfig.DEBUG) Log.e(TAG, "Error fetching congregation for $memberGuid", e)
                 null
+            }
+        }
+
+        private fun getMemberCongregationCached(memberGuid: String?, context: Context): String? {
+            if (memberGuid.isNullOrEmpty()) return null
+            return congregationCache.getOrPut(memberGuid) {
+                getMemberCongregation(memberGuid, context)
             }
         }
 
@@ -294,7 +278,6 @@ class PastoralWidgetRemoteViewsService : RemoteViewsService() {
             )
             views.setViewVisibility(R.id.widget_pastoral_item_overdue, View.GONE)
             views.setViewVisibility(R.id.widget_pastoral_congregation_indicator, View.GONE)
-            // Set background to surface (or surfaceContainerHighest)
             views.setInt(
                 R.id.widget_pastoral_item_root, "setBackgroundColor",
                 ContextCompat.getColor(context, R.color.md_theme_surface)
@@ -302,12 +285,6 @@ class PastoralWidgetRemoteViewsService : RemoteViewsService() {
             return views
         }
 
-        private fun getMemberCongregationCached(memberGuid: String?, context: Context): String? {
-            if (memberGuid.isNullOrEmpty()) return null
-            return congregationCache.getOrPut(memberGuid) {
-                getMemberCongregation(memberGuid, context)
-            }
-        }
         override fun getLoadingView(): RemoteViews? = null
         override fun getViewTypeCount(): Int = 1
         override fun getItemId(position: Int): Long =

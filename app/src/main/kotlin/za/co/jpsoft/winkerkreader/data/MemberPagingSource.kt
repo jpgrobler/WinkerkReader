@@ -1,6 +1,5 @@
 package za.co.jpsoft.winkerkreader.data
 
-import android.content.ContentResolver
 import android.util.Log
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
@@ -9,9 +8,11 @@ import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.models.FilterBox
 import za.co.jpsoft.winkerkreader.data.models.MemberItem
+import za.co.jpsoft.winkerkreader.data.room.MemberDao
 
 class MemberPagingSource(
-    private val contentResolver: ContentResolver,
+    private val memberDao: MemberDao,
+    private val memberRepository: MemberRepository,
     private val eventType: String,
     private val recordStatus: String,
     private val soek: String,
@@ -52,21 +53,11 @@ class MemberPagingSource(
             if (BuildConfig.DEBUG) Log.d(TAG, "Args: ${sqlRequest.args.joinToString()}")
 
             try {
-                val cursor = contentResolver.query(
-                    WinkerkContract.winkerkEntry.CONTENT_URI,
-                    null,
-                    finalSql,
-                    sqlRequest.args,
-                    null
-                )
-                    ?: return@withContext LoadResult.Error(IllegalStateException("Query returned null cursor"))
+                val query =
+                    androidx.sqlite.db.SimpleSQLiteQuery(finalSql, sqlRequest.args as Array<Any>?)
+                val entities = memberDao.getMembersRaw(query)
 
-                val items = mutableListOf<MemberItem>()
-                cursor.use {
-                    while (it.moveToNext()) {
-                        items.add(MemberItem.fromCursor(it))
-                    }
-                }
+                val items = entities.map { memberRepository.mapEntityToItem(it) }
                 if (BuildConfig.DEBUG) Log.d(TAG, "Loaded ${items.size} items")
 
                 // ✅ MOVED logging here - after items is defined

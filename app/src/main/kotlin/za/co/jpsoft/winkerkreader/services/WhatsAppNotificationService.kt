@@ -323,7 +323,7 @@ class WhatsAppNotificationService : NotificationListenerService() {
                 val finalNumber = if (number.isNotBlank()) number else "Unknown"
                 val finalName = if (number.isNotBlank()) {
                     // Try to resolve using CallerNameResolver (app members + system contacts)
-                    CallerNameResolver.resolve(number, contentResolver) ?: displayName
+                    CallerNameResolver.resolve(number, this) ?: displayName
                 } else {
                     displayName
                 }
@@ -389,7 +389,7 @@ class WhatsAppNotificationService : NotificationListenerService() {
                         extras.getString(Notification.EXTRA_SUB_TEXT) ?: ""
                     )
                 val displayName = if (number.isNotBlank()) {
-                    CallerNameResolver.resolve(number, contentResolver)
+                    CallerNameResolver.resolve(number, this)
                 } else {
                     extractCallerInfo(
                         title, text,
@@ -454,7 +454,7 @@ class WhatsAppNotificationService : NotificationListenerService() {
                         extras.getString(Notification.EXTRA_SUB_TEXT) ?: ""
                     )
                 val displayName = if (number.isNotBlank()) {
-                    CallerNameResolver.resolve(number, contentResolver)
+                    CallerNameResolver.resolve(number, this)
                 } else {
                     extractCallerInfo(
                         title, text,

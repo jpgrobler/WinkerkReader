@@ -139,7 +139,7 @@ class OproepDetailService : Service() {
             }
 
             val result = if (lookupKey.isNotEmpty()) {
-                CallerInfoResolver.resolve(lookupKey, contentResolver)
+                CallerInfoResolver.resolve(lookupKey, this as Context)
             } else {
                 CallerInfoResult.Unknown
             }

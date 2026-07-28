@@ -73,12 +73,13 @@ object WidgetDataRepository {
         val settings = SettingsManager.getInstance(context)
 
         try {
-            val db = WinkerkDatabase.getInstance(context).openHelper.writableDatabase
+            // Use the DAO directly — no openHelper.writableDatabase needed.
+            val memberDao = WinkerkDatabase.getInstance(context).memberDao()
             val query = WidgetQueryBuilder.buildCombinedQuery()
 
             if (BuildConfig.DEBUG) Log.d(TAG, "Executing query: $query")
 
-            db.query(SimpleSQLiteQuery(query)).use { cursor ->
+            memberDao.queryRaw(SimpleSQLiteQuery(query)).use { cursor ->
                 if (BuildConfig.DEBUG) Log.d(TAG, "Cursor has ${cursor.count} rows")
 
                 // Pre-cache column indices — getColumnIndex is O(n) on the column list.
