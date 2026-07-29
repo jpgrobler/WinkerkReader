@@ -15,7 +15,6 @@ interface MemberDao {
     @RawQuery(observedEntities = [MemberEntity::class])
     fun queryRaw(query: SupportSQLiteQuery): Cursor
 
-    // Used by WinkerkProvider / legacy Cursor-based callers — kept as-is.
     @Query(
         """
         SELECT * FROM Members
@@ -47,26 +46,18 @@ interface MemberDao {
     @Query("SELECT COUNT(*) FROM Members")
     fun getCount(): Int
 
-    // ── Detail-screen queries (Room-direct, replaces ContentProvider round-trip) ──
+    // ── New method for photo sync ──────────────────────────────
+    @Query("SELECT MemberGUID FROM Members WHERE MemberGUID IS NOT NULL AND MemberGUID != ''")
+    fun getAllMemberGuids(): List<String>
 
-    /**
-     * Loads a single member by GUID and record-status.
-     * Primary entry point for [LidmaatDetailViewModel.loadMemberByGuid].
-     */
+    // ── Existing detail‑screen queries ────────────────────────
+
     @Query("SELECT * FROM Members WHERE MemberGUID = :guid AND Rekordstatus = :recordStatus LIMIT 1")
     fun getByGuid(guid: String, recordStatus: String): MemberEntity?
 
-    /**
-     * Loads a single member by primary-key ID and record-status.
-     * Used by [LidmaatDetailViewModel.loadMember] when the caller supplies a content URI.
-     */
     @Query("SELECT * FROM Members WHERE _id = :id AND Rekordstatus = :recordStatus LIMIT 1")
     fun getByIdAndStatus(id: Long, recordStatus: String): MemberEntity?
 
-    /**
-     * Returns all family members for a given family-head GUID as entities.
-     * Replaces the Cursor-returning [getFamilyMembers] in the detail-screen path.
-     */
     @Query(
         """
         SELECT * FROM Members
@@ -77,14 +68,6 @@ interface MemberDao {
     )
     fun getFamilyMembersEntities(familyHeadGuid: String, recordStatus: String): List<MemberEntity>
 
-    // ── Widget queries ────────────────────────────────────────────────────────
-
-    /**
-     * Returns only the Gemeente column for a given MemberGUID.
-     * Used by [PastoralWidgetRemoteViewsService] to colour the congregation indicator
-     * without loading the full entity.
-     * No record-status filter — pastoral reminders may target any member.
-     */
     @Query("SELECT Gemeente FROM Members WHERE MemberGUID = :guid LIMIT 1")
     fun getCongregationByGuid(guid: String): String?
 }

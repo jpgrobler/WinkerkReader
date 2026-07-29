@@ -10,32 +10,6 @@ import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.utils.ColorUtils
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
 
-/**
- * Builds and manages the congregation filter [ChipGroup] on the main screen.
- *
- * Extracted from MainActivity. Responsibilities:
- *  - Creating one [Chip] per configured congregation
- *  - Applying checked/unchecked colour styling
- *  - Reporting selection changes via [onFilterChanged]
- *  - Providing [reset] so callers (e.g. cancelFilter) can de-select all chips
- *
- * MainActivity wiring:
- *
- *   chipController = CongregationChipController(
- *       context      = this,
- *       chipGroup    = binding.congregationChipGroup,
- *       loadingBar   = binding.indeterminateBar,
- *       settings     = settingsManager,
- *       onFilterChanged = { selected ->
- *           viewModel.setCongregationFilter(selected)
- *           viewModel.refresh()
- *       }
- *   )
- *   chipController.setup()          // replaces setupFilterChips()
- *
- *   // in cancelFilter():
- *   chipController.reset()          // replaces resetChipSelection()
- */
 class CongregationChipController(
     private val context: Context,
     private val chipGroup: ChipGroup,
@@ -44,21 +18,17 @@ class CongregationChipController(
     private val onFilterChanged: (selected: Set<String>) -> Unit
 ) {
 
-    // ── Public API ────────────────────────────────────────────────────────────
+    private var isUpdating = false
 
-    /**
-     * Clears and rebuilds the chip group from the current [SettingsManager] values.
-     * Call once after auth, and again if congregation settings change at runtime.
-     */
     fun setup() {
         chipGroup.removeAllViews()
         chipGroup.isSingleSelection = false
         chipGroup.isSelectionRequired = false
 
         val congregations = listOfNotNull(
-            settings.gemeenteNaam.takeIf   { it.isNotBlank() },
-            settings.gemeente2Naam.takeIf  { it.isNotBlank() },
-            settings.gemeente3Naam.takeIf  { it.isNotBlank() }
+            settings.gemeenteNaam.takeIf { it.isNotBlank() },
+            settings.gemeente2Naam.takeIf { it.isNotBlank() },
+            settings.gemeente3Naam.takeIf { it.isNotBlank() }
         )
 
         congregations.forEach { name ->
@@ -66,18 +36,36 @@ class CongregationChipController(
             chipGroup.addView(buildChip(name, color))
         }
 
-        // Hide the loading bar once chips are laid out
         loadingBar.post { loadingBar.visibility = View.GONE }
     }
 
     /**
-     * De-selects all chips and fires [onFilterChanged] with an empty set.
-     * Replaces MainActivity.resetChipSelection().
+     * Select all chips and apply filter with all congregations.
      */
-    fun reset() {
+    fun selectAll() {
+        isUpdating = true
         for (i in 0 until chipGroup.childCount) {
-            (chipGroup.getChildAt(i) as? Chip)?.isChecked = false
+            val chip = chipGroup.getChildAt(i) as? Chip ?: continue
+            chip.isChecked = true
+            val name = chip.text.toString()
+            val color = congregationColor(name)
+            chip.applyCheckedStyle(color)
         }
+        isUpdating = false
+        applyFilter()
+    }
+
+    /**
+     * Deselect all chips (clear congregation filter).
+     */
+    fun deselectAll() {
+        isUpdating = true
+        for (i in 0 until chipGroup.childCount) {
+            val chip = chipGroup.getChildAt(i) as? Chip ?: continue
+            chip.isChecked = false
+            chip.applyUncheckedStyle()
+        }
+        isUpdating = false
         applyFilter()
     }
 
@@ -99,8 +87,10 @@ class CongregationChipController(
         applyCheckedStyle(color)
 
         setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) applyCheckedStyle(color) else applyUncheckedStyle()
-            applyFilter()
+            if (!isUpdating) {
+                if (isChecked) applyCheckedStyle(color) else applyUncheckedStyle()
+                applyFilter()
+            }
         }
     }
 

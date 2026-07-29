@@ -138,8 +138,10 @@ class OproepDetailService : Service() {
                 displayNameExtra
             }
 
+            // ✅ Use service's context explicitly
+            val context = this@OproepDetailService
             val result = if (lookupKey.isNotEmpty()) {
-                CallerInfoResolver.resolve(lookupKey, this as Context)
+                CallerInfoResolver.resolve(lookupKey, context)   // ← fixed
             } else {
                 CallerInfoResult.Unknown
             }

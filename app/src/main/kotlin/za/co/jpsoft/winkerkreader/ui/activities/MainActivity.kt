@@ -76,7 +76,7 @@ import za.co.jpsoft.winkerkreader.workers.PastoralBackupWorker
  */
 class MainActivity : BaseActivity() {
 
-    // ─── View Binding & Adapters ─────────────────────────────────────────────
+    // ─── View Binding & Adapters ─────────────────────────────────────────────In th
 
     /** View binding containing layout elements. */
     lateinit var binding: ActivityMainBinding
@@ -267,7 +267,9 @@ class MainActivity : BaseActivity() {
             findSearchView = ::findSearchView,
             hideFilterPanel = {},
             onUpdateSortOrder = { sortController.update(it) },
-            onRecomputeBirthdayOffset = { sortController.recomputeBirthdayOffset() }
+            onRecomputeBirthdayOffset = { sortController.recomputeBirthdayOffset() },
+            selectAllChips = { chipController.selectAll() },
+            deselectChips = { chipController.deselectAll() }
         ).apply {
             onFilterRestored = { sortController.recomputeBirthdayOffset() }
             onFilterCancelled = {
@@ -275,7 +277,6 @@ class MainActivity : BaseActivity() {
                     val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
                     imm.hideSoftInputFromWindow(view.windowToken, 0)
                 }
-                chipController.reset()
             }
         }
 
@@ -338,7 +339,6 @@ class MainActivity : BaseActivity() {
             },
             onFilterResult = { list ->
                 searchFilterCoordinator.applyFilterResult(list, viewModel.sortOrder)
-                searchFilterCoordinator.updateSummaryView()
             },
             onCancelled = ::handleResultCancelled
         )
@@ -352,6 +352,7 @@ class MainActivity : BaseActivity() {
             onFilterChanged = { selected ->
                 viewModel.setCongregationFilter(selected)
                 viewModel.refresh()
+                searchFilterCoordinator.updateSummaryView()
             }
         )
         chipController.setup()
@@ -633,26 +634,7 @@ class MainActivity : BaseActivity() {
      * Called directly by MainMenuController via [onFilterDisplayChanged].
      */
     private fun onFilterDisplayChanged() {
-        val filterList = viewModel.getCurrentFilterList()
-        val hasFilter = filterList != null && filterList.any { it.checked }
-        val hasSearch = viewModel.soekList && viewModel.soek.isNotEmpty()
-
-        when {
-            hasFilter -> searchFilterCoordinator.updateSummaryView()
-            hasSearch -> {
-                binding.searchItemBlock.visibility = View.VISIBLE
-                binding.searchText.text = viewModel.soek
-                binding.mainSearchTextClose.visibility = View.VISIBLE
-                binding.mainSearchTextClose.setOnClickListener {
-                    searchFilterCoordinator.onSearchClosed()
-                }
-            }
-            else -> {
-                binding.searchItemBlock.visibility = View.GONE
-                binding.searchText.text = ""
-                binding.mainSearchTextClose.visibility = View.GONE
-            }
-        }
+        searchFilterCoordinator.updateSummaryView()
     }
 
     /**
@@ -764,7 +746,7 @@ class MainActivity : BaseActivity() {
     }
 
     private fun setupEventHandlers() {
-        setupSearchCloseHandler()
+        //setupSearchCloseHandler()
         binding.sortorder.setOnClickListener {}
 
         binding.lidmaatList.addOnItemTouchListener(object : RecyclerView.SimpleOnItemTouchListener() {
@@ -775,12 +757,6 @@ class MainActivity : BaseActivity() {
                 return false   // never intercept — scrolling and clicks pass through normally
             }
         })
-    }
-
-    private fun setupSearchCloseHandler() {
-        binding.mainSearchTextClose.setOnClickListener {
-            searchFilterCoordinator.resetAllFiltersAndSearch()
-        }
     }
 
     private fun setupPermissions() {

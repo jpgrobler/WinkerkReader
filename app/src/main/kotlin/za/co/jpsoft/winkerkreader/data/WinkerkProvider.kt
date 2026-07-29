@@ -163,8 +163,8 @@ class WinkerkProvider : ContentProvider() {
                     // ← Debug logging must be inside try, where `rows` is in scope
                     if (BuildConfig.DEBUG) {
                         Log.d(tag, "update() SQL: $sql")
-                        Log.d(tag, "update() args: $args")
-                        Log.d(tag, "update() rows affected: $rows")
+                        if (BuildConfig.DEBUG) Log.d(tag, "update() args: $args")
+                        if (BuildConfig.DEBUG) Log.d(tag, "update() rows affected: $rows")
                     }
 
                     if (rows > 0) {

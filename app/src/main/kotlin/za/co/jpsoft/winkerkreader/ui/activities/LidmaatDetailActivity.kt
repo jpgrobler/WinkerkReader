@@ -51,8 +51,10 @@ import za.co.jpsoft.winkerkreader.ui.controllers.MemberPhotoController
 import za.co.jpsoft.winkerkreader.ui.viewmodels.LidmaatDetailPastoralViewModel
 import za.co.jpsoft.winkerkreader.ui.viewmodels.LidmaatDetailPastoralViewModelFactory
 import za.co.jpsoft.winkerkreader.ui.viewmodels.LidmaatDetailViewModel
+import za.co.jpsoft.winkerkreader.ui.viewmodels.LidmaatDetailViewModelFactory
 import za.co.jpsoft.winkerkreader.utils.MainNavigationController
 import za.co.jpsoft.winkerkreader.utils.MemberUtils
+import za.co.jpsoft.winkerkreader.utils.PhotoHelper
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import java.io.File
 
@@ -132,7 +134,10 @@ class LidmaatDetailActivity : BaseActivity() {
 
         recordStatus = intent.getStringExtra("RECORD_STATUS") ?: "0"
 
-        viewModel = ViewModelProvider(this)[LidmaatDetailViewModel::class.java]
+        viewModel = ViewModelProvider(
+            this,
+            LidmaatDetailViewModelFactory(application)
+        )[LidmaatDetailViewModel::class.java]
 
         // ── Route to the appropriate Room-backed load method ────────────────
         // Primary path: GUID (all normal in-app navigation).
@@ -558,25 +563,24 @@ class LidmaatDetailActivity : BaseActivity() {
             val fotoFrame = FrameLayout(this)
             val imageView = ImageView(this).apply {
                 layoutParams = LinearLayout.LayoutParams(256, 256)
-                scaleType = ImageView.ScaleType.FIT_XY
-                if (member.picturePath.isNotEmpty()) {
-                    val file =
-                        File(winkerkEntry.getCacheDir(this@LidmaatDetailActivity) + member.picturePath)
-                    if (file.exists()) {
-                        Glide.with(binding.detailKontakFoto)
-                            .load(file)
-                            .override(256, 256)
-                            .centerCrop()
-                            .placeholder(R.drawable.clipboard)
-                            .error(R.drawable.clipboard)
-                            .into(binding.detailKontakFoto)
-                    } else {
-                        setImageResource(R.drawable.clipboard)
-                    }
-                } else {
-                    setImageResource(R.drawable.clipboard)
-                }
+                scaleType = ImageView.ScaleType.CENTER_CROP
             }
+
+            // ─── Load photo using PhotoHelper ──────────────────────────────
+            val photoFile = PhotoHelper.getSyncedPhotoFile(this, member.guid)
+            if (photoFile != null && photoFile.exists()) {
+                Glide.with(this)
+                    .load(photoFile)
+                    .override(256, 256)
+                    .centerCrop()
+                    .placeholder(R.drawable.kontak)
+                    .error(R.drawable.kontak)
+                    .into(imageView)
+            } else {
+                // Fallback to a default image (you could use gender‑specific)
+                imageView.setImageResource(R.drawable.kontak)
+            }
+
             // Circular crop
             imageView.outlineProvider = object : ViewOutlineProvider() {
                 override fun getOutline(view: View, outline: Outline) {
@@ -604,7 +608,6 @@ class LidmaatDetailActivity : BaseActivity() {
             container.addView(rowLayout)
         }
 
-        // Show the card only if there are other family members (excluding self)
         binding.detailGesinBlock.visibility = if (members.size > 1) View.VISIBLE else View.GONE
     }
 

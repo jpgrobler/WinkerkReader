@@ -1,9 +1,7 @@
 package za.co.jpsoft.winkerkreader.workers
 
-
 import android.content.Context
 import android.util.Log
-import androidx.sqlite.db.SimpleSQLiteQuery
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
@@ -21,19 +19,15 @@ class PhotoDownloadWorkerOld(
     params: WorkerParameters
 ) : CoroutineWorker(context, params) {
 
+    // ─── Replace the old DB query with Room ──────────────────────
     private fun getAllMemberGuids(): List<String> {
-        val guids = mutableListOf<String>()
-        try {
-            val db = WinkerkDatabase.getInstance(applicationContext).openHelper.writableDatabase
-            db.query(SimpleSQLiteQuery("SELECT MemberGUID FROM Members")).use { cursor ->
-                while (cursor.moveToNext()) {
-                    cursor.getString(0)?.takeIf { it.isNotEmpty() }?.let { guids.add(it) }
-                }
-            }
+        return try {
+            val dao = WinkerkDatabase.getInstance(applicationContext).memberDao()
+            dao.getAllMemberGuids()
         } catch (e: Exception) {
-            if (BuildConfig.DEBUG) Log.e("PhotoDownloadWorker", "Failed to query database", e)
+            if (BuildConfig.DEBUG) Log.e("PhotoDownloadWorkerOld", "Failed to query database", e)
+            emptyList()
         }
-        return guids
     }
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
@@ -41,7 +35,7 @@ class PhotoDownloadWorkerOld(
         if (serverIp.isNullOrEmpty()) {
             return@withContext Result.failure(workDataOf("ERROR" to "Geen IP adres"))
         }
-        if (BuildConfig.DEBUG) Log.d("PhotoDownloadWorker", "Server IP: $serverIp")
+        if (BuildConfig.DEBUG) Log.d("PhotoDownloadWorkerOld", "Server IP: $serverIp")
 
         val availableGuids = mutableSetOf<String>()
         try {
@@ -54,11 +48,11 @@ class PhotoDownloadWorkerOld(
                 }
             }
             if (BuildConfig.DEBUG) Log.d(
-                "PhotoDownloadWorker",
+                "PhotoDownloadWorkerOld",
                 "PC has ${availableGuids.size} photos available"
             )
         } catch (e: Exception) {
-            if (BuildConfig.DEBUG) Log.e("PhotoDownloadWorker", "Failed to get photo list", e)
+            if (BuildConfig.DEBUG) Log.e("PhotoDownloadWorkerOld", "Failed to get photo list", e)
             return@withContext Result.failure(workDataOf("ERROR" to "Could not retrieve photo list"))
         }
 
@@ -82,7 +76,7 @@ class PhotoDownloadWorkerOld(
                 countSocket.getOutputStream().write("COUNT ${toDownload.size}\n".toByteArray())
             }
         } catch (e: Exception) {
-            if (BuildConfig.DEBUG) Log.e("PhotoDownloadWorker", "Failed to send count", e)
+            if (BuildConfig.DEBUG) Log.e("PhotoDownloadWorkerOld", "Failed to send count", e)
         }
 
         var successCount = guidsToDownload.size - toDownload.size // already present count
@@ -134,8 +128,7 @@ class PhotoDownloadWorkerOld(
                 ackOut.flush()
 
                 val bufferSizeStr = ackIn.readLine() ?: throw Exception("No buffer size")
-                val bufferSize =
-                    bufferSizeStr.toIntOrNull() ?: throw Exception("Invalid buffer size")
+                val bufferSize = bufferSizeStr.toIntOrNull() ?: throw Exception("Invalid buffer size")
                 ackOut.write("ACK\n".toByteArray())
                 ackOut.flush()
 
@@ -173,7 +166,7 @@ class PhotoDownloadWorkerOld(
                 }
                 true
             } catch (e: Exception) {
-                if (BuildConfig.DEBUG) Log.e("PhotoDownload", "Error for $guid", e)
+                if (BuildConfig.DEBUG) Log.e("PhotoDownloadOld", "Error for $guid", e)
                 false
             } finally {
                 dataSocket?.close()
@@ -181,10 +174,4 @@ class PhotoDownloadWorkerOld(
                 checksumSocket?.close()
             }
         }
-
-//    private fun calculateChecksum(data: ByteArray, offset: Int, length: Int): String {
-//        val digest = MessageDigest.getInstance("SHA-256")
-//        digest.update(data, offset, length)
-//        return digest.digest().joinToString("") { "%02x".format(it) }
-//    }
 }

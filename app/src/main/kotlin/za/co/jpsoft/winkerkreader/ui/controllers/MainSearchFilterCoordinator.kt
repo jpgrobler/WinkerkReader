@@ -19,9 +19,12 @@ class MainSearchFilterCoordinator(
     private val memberListAdapter: MemberListAdapter,
     private val findSearchView: () -> SearchView?,
     private val hideFilterPanel: () -> Unit,
-    // ─── callbacks ─────────────────────────────────────────────
     private val onUpdateSortOrder: (String) -> Unit,
-    private val onRecomputeBirthdayOffset: () -> Unit
+    private val onRecomputeBirthdayOffset: () -> Unit,
+    // Close button → select all chips
+    private val selectAllChips: () -> Unit,
+    // Cancel/back → deselect all chips
+    private val deselectChips: () -> Unit
 ) {
     var originalLayoutBeforeSearch: String = ""
     var originalLayoutBeforeFilter: String = ""
@@ -40,6 +43,7 @@ class MainSearchFilterCoordinator(
         viewModel.updateFilter(list)
         viewModel.refresh()
         onRecomputeBirthdayOffset()
+        updateSummaryView()
     }
 
     fun handleResultCancelled() {
@@ -50,24 +54,34 @@ class MainSearchFilterCoordinator(
         filterList = null
         viewModel.clearFilterSummary()
         refresh()
+        updateSummaryView()
     }
 
+    /**
+     * Clears search, filters, and resets status to "Aktief",
+     * then selects all congregation chips.
+     */
     fun resetAllFiltersAndSearch() {
         val restoreSort = if (originalLayoutBeforeFilter.isNotEmpty()) originalLayoutBeforeFilter
         else if (originalLayoutBeforeSearch.isNotEmpty()) originalLayoutBeforeSearch
-        else "VAN"
+        else "GESINNE"
+
+        // Clear search and filters
+        viewModel.recordStatus = "0"
         viewModel.resetToSort(restoreSort)
+
         originalLayoutBeforeFilter = ""
         originalLayoutBeforeSearch = ""
         filterList = null
         hideFilterPanel()
-        binding.searchItemBlock.visibility = View.GONE
-        binding.searchText.text = ""
         viewModel.clearFilterSummary()
+
         val searchView = findSearchView()
         searchView?.setQuery("", false)
         searchView?.clearFocus()
-        refresh()
+
+        // Select all congregation chips (this will trigger a refresh via its callback)
+        selectAllChips()
     }
 
     fun onSearchClosed() {
@@ -75,10 +89,10 @@ class MainSearchFilterCoordinator(
             if (originalLayoutBeforeSearch.isNotEmpty()) originalLayoutBeforeSearch else "VAN"
         viewModel.resetToSort(restoreSort)
         originalLayoutBeforeSearch = ""
-        binding.searchItemBlock.visibility = View.GONE
-        binding.searchText.text = ""
         viewModel.clearFilterSummary()
         refresh()
+        updateSummaryView()
+        selectAllChips()
     }
 
     fun performSearch(query: String) {
@@ -88,20 +102,18 @@ class MainSearchFilterCoordinator(
                 if (originalLayoutBeforeSearch.isNotEmpty()) originalLayoutBeforeSearch else "VAN"
             viewModel.resetToSort(restoreSort)
             originalLayoutBeforeSearch = ""
-            binding.searchItemBlock.visibility = View.GONE
-            binding.searchText.text = ""
+            viewModel.clearFilterSummary()
             viewModel.refresh()
+            updateSummaryView()
         } else {
             if (originalLayoutBeforeSearch.isEmpty() && originalLayoutBeforeFilter.isEmpty()) {
                 originalLayoutBeforeSearch = viewModel.sortOrder
             } else if (originalLayoutBeforeFilter.isNotEmpty() && originalLayoutBeforeSearch.isEmpty()) {
                 originalLayoutBeforeSearch = "Filter"
             }
-            binding.searchItemBlock.visibility = View.VISIBLE
-            val searchText = if (viewModel.recordStatus == "2") "Onaktief $query" else query
-            binding.searchText.text = searchText
             viewModel.updateSearch(query.trim())
             onRecomputeBirthdayOffset()
+            updateSummaryView()
         }
     }
 
@@ -122,18 +134,68 @@ class MainSearchFilterCoordinator(
         else -> MainQueryMode.Raw(layout)
     }
 
-    /**
-     * Updates the filter summary chip/bar with current active filters.
-     */
     fun updateSummaryView() {
         val filterList = viewModel.getCurrentFilterList()
-        if (filterList != null && filterList.any { it.checked }) {
-            val summary = buildFilterSummary(filterList)
+        val isSearchActive = viewModel.soekList && viewModel.soek.isNotEmpty()
+        val hasFilters = filterList != null && filterList.any { it.checked }
+
+        val parts = mutableListOf<String>()
+
+        if (isSearchActive) {
+            parts.add("Soek: ${viewModel.soek}")
+        }
+
+        if (hasFilters) {
+            val filterParts = mutableListOf<String>()
+            filterList!!.filter { it.checked }.forEach { filter ->
+                when {
+                    filter.title == "Selfoon" -> filterParts.add("Met Selfoon")
+                    filter.title == "Landlyn" -> filterParts.add("Met Landlyn")
+                    filter.title == "E-pos" -> filterParts.add("Met E-pos")
+                    filter.title == "Gesinshoof" -> filterParts.add("Gesinshoofde")
+                    filter.title == "Geslag" -> {
+                        val value = when (filter.text3) {
+                            "manlik" -> "Manlik"
+                            "vroulik" -> "Vroulik"
+                            else -> filter.text3
+                        }
+                        filterParts.add("Geslag: $value")
+                    }
+
+                    filter.title == "Huwelikstatus" -> filterParts.add("Huwelik: ${filter.text3}")
+                    filter.title == "Lidmaatskap" -> filterParts.add("Lidmaatskap: ${filter.text3}")
+                    filter.title == "Ouderdom" -> {
+                        when (filter.text3) {
+                            "gelyk" -> filterParts.add("Ouderdom: ${filter.text1}")
+                            "kleiner as" -> filterParts.add("Ouderdom < ${filter.text1}")
+                            "groter as" -> filterParts.add("Ouderdom > ${filter.text1}")
+                            "tussen" -> filterParts.add("Ouderdom: ${filter.text1}-${filter.text2}")
+                        }
+                    }
+
+                    filter.text3 == "leeg" -> filterParts.add("${filter.title} is leeg")
+                    filter.text1.isNotEmpty() -> {
+                        when (filter.text3) {
+                            "gelyk aan" -> filterParts.add("${filter.title}: ${filter.text1}")
+                            "nie gelyk aan" -> filterParts.add("${filter.title} ≠ ${filter.text1}")
+                            "begin met" -> filterParts.add("${filter.title} begin met ${filter.text1}")
+                            "eindig met" -> filterParts.add("${filter.title} eindig met ${filter.text1}")
+                        }
+                    }
+                }
+            }
+            if (filterParts.isNotEmpty()) {
+                parts.add(filterParts.joinToString(" • "))
+            }
+        }
+
+        val summary = parts.joinToString(" • ")
+        if (summary.isNotEmpty()) {
             binding.searchText.text = summary
             binding.searchItemBlock.visibility = View.VISIBLE
             binding.mainSearchTextClose.visibility = View.VISIBLE
             binding.mainSearchTextClose.setOnClickListener {
-                clearAndRestore()
+                resetAllFiltersAndSearch()
             }
         } else {
             binding.searchItemBlock.visibility = View.GONE
@@ -142,154 +204,65 @@ class MainSearchFilterCoordinator(
         }
     }
 
-    private fun buildFilterSummary(filterList: ArrayList<FilterBox>): String {
-        val parts = mutableListOf<String>()
-
-        val status = when (viewModel.recordStatus) {
-            "0" -> "Aktief"
-            "2" -> "Onaktief"
-            "*" -> "Almal"
-            else -> "Aktief"
-        }
-        parts.add("Status: $status")
-
-        filterList.filter { it.checked }.forEach { filter ->
-            when {
-                filter.title == "Selfoon" -> parts.add("Met Selfoon")
-                filter.title == "Landlyn" -> parts.add("Met Landlyn")
-                filter.title == "E-pos" -> parts.add("Met E-pos")
-                filter.title == "Gesinshoof" -> parts.add("Gesinshoofde")
-
-                filter.title == "Geslag" -> {
-                    val value = when (filter.text3) {
-                        "manlik" -> "Manlik"
-                        "vroulik" -> "Vroulik"
-                        else -> filter.text3
-                    }
-                    parts.add("Geslag: $value")
-                }
-
-                filter.title == "Huwelikstatus" -> parts.add("Huwelik: ${filter.text3}")
-                filter.title == "Lidmaatskap" -> parts.add("Lidmaatskap: ${filter.text3}")
-
-                filter.title == "Ouderdom" -> {
-                    when (filter.text3) {
-                        "gelyk" -> parts.add("Ouderdom: ${filter.text1}")
-                        "kleiner as" -> parts.add("Ouderdom < ${filter.text1}")
-                        "groter as" -> parts.add("Ouderdom > ${filter.text1}")
-                        "tussen" -> parts.add("Ouderdom: ${filter.text1}-${filter.text2}")
-                    }
-                }
-
-                filter.text3 == "leeg" -> parts.add("${filter.title} is leeg")
-                filter.text1.isNotEmpty() -> {
-                    when (filter.text3) {
-                        "gelyk aan" -> parts.add("${filter.title}: ${filter.text1}")
-                        "nie gelyk aan" -> parts.add("${filter.title} ≠ ${filter.text1}")
-                        "begin met" -> parts.add("${filter.title} begin met ${filter.text1}")
-                        "eindig met" -> parts.add("${filter.title} eindig met ${filter.text1}")
-                    }
-                }
-            }
-        }
-
-        return parts.joinToString(" • ")
-    }
-
-    /**
-     * Clears filters and restores original sort (X on summary).
-     */
     fun clearAndRestore() {
         if (BuildConfig.DEBUG) Log.d(tag, "clearAndRestore called")
-
         val restoreSort = if (originalLayoutBeforeFilter.isNotEmpty()) {
             originalLayoutBeforeFilter
         } else {
             "VAN"
         }
-
         viewModel.clearFilters()
         viewModel.recordStatus = "0"
-
         originalLayoutBeforeFilter = ""
         filterList = null
-
-        binding.searchItemBlock.visibility = View.GONE
-        binding.searchText.text = ""
-        binding.mainSearchTextClose.visibility = View.GONE
         viewModel.clearFilterSummary()
-
-        // Delegate sort update to activity
         onUpdateSortOrder(restoreSort)
-
         viewModel.refresh()
         onFilterRestored?.invoke()
+        updateSummaryView()
     }
 
-    /**
-     * Cancels filters + search (back button).
-     */
     fun cancelAndRestore() {
         if (BuildConfig.DEBUG) Log.d(tag, "cancelAndRestore called")
-
         val restoreSort = if (originalLayoutBeforeFilter.isNotEmpty()) {
             originalLayoutBeforeFilter
         } else {
             "VAN"
         }
-
         filterList = null
         viewModel.soekList = false
-
-        binding.searchItemBlock.visibility = View.GONE
-        binding.searchText.text = ""
-        binding.mainSearchTextClose.visibility = View.GONE
         viewModel.clearFilterSummary()
-
-        // Delegate sort update to activity
         onUpdateSortOrder(restoreSort)
-
         originalLayoutBeforeFilter = ""
         viewModel.clearFilters()
         viewModel.recordStatus = "0"
-
+        // Deselect all chips (clear congregation filter)
+        deselectChips()
         onFilterCancelled?.invoke()
         viewModel.refresh()
+        updateSummaryView()
     }
 
-    /**
-     * Restores original state (Cancel in bottom sheet).
-     */
     fun restoreOriginalState(
         originalFilterList: ArrayList<FilterBox>?,
         originalSortOrder: String,
         originalRecordStatus: String
     ) {
         if (BuildConfig.DEBUG) Log.d(tag, "restoreOriginalState called")
-
         viewModel.updateFilter(originalFilterList ?: ArrayList())
         viewModel.recordStatus = originalRecordStatus
-
         val restoreSort = if (originalLayoutBeforeFilter.isNotEmpty()) {
             originalLayoutBeforeFilter
         } else {
             originalSortOrder
         }
-
-        // Delegate sort update to activity
         onUpdateSortOrder(restoreSort)
-
         originalLayoutBeforeFilter = ""
         filterList = null
-
-        binding.searchItemBlock.visibility = View.GONE
-        binding.searchText.text = ""
-        binding.mainSearchTextClose.visibility = View.GONE
         viewModel.clearFilterSummary()
-
         viewModel.refresh()
         onRecomputeBirthdayOffset()
-
+        updateSummaryView()
         if (BuildConfig.DEBUG) Log.d(tag, "restoreOriginalState completed, sort=$restoreSort")
     }
 }

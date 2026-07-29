@@ -11,6 +11,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.data.models.FamilyMemberItem
 import za.co.jpsoft.winkerkreader.data.models.MemberDetailItem
+import za.co.jpsoft.winkerkreader.data.pastoral.model.FamilyMember
+import za.co.jpsoft.winkerkreader.data.pastoral.repository.FamilyMemberRepository
 import za.co.jpsoft.winkerkreader.data.room.MemberEntity
 import za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase
 import za.co.jpsoft.winkerkreader.utils.Utils.fixphonenumber
@@ -18,7 +20,10 @@ import za.co.jpsoft.winkerkreader.utils.Utils.parseDate
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
-class LidmaatDetailViewModel(application: Application) : AndroidViewModel(application) {
+class LidmaatDetailViewModel(
+    application: Application,
+    private val familyRepo: FamilyMemberRepository
+) : AndroidViewModel(application) {
 
     // Direct DAO access — no ContentProvider round-trip.
     private val memberDao = WinkerkDatabase.getInstance(application).memberDao()
@@ -65,14 +70,43 @@ class LidmaatDetailViewModel(application: Application) : AndroidViewModel(applic
 
     fun loadFamily(familyHeadGuid: String, recordStatus: String) {
         viewModelScope.launch {
-            val result = withContext(Dispatchers.IO) {
-                memberDao.getFamilyMembersEntities(familyHeadGuid, recordStatus)
-                    .map { entityToFamilyMember(it) }
+            val members = withContext(Dispatchers.IO) {
+                familyRepo.getFamilyMembers(
+                    memberGuid = "",
+                    familyHeadGuid = familyHeadGuid,
+                    recordStatus = recordStatus
+                )
             }
-            _familyMembers.postValue(result)
+            val items = members.map { domain ->
+                entityToFamilyMemberItem(domain)
+            }
+            _familyMembers.postValue(items)
         }
     }
 
+    // Helper to convert domain → FamilyMemberItem
+    private fun entityToFamilyMemberItem(domain: FamilyMember): FamilyMemberItem {
+        val birthday = domain.birthday
+        val age = if (birthday.isNotEmpty()) {
+            try {
+                parseDate(birthday)?.let {
+                    ChronoUnit.YEARS.between(it, LocalDate.now())
+                } ?: -1
+            } catch (_: Exception) {
+                -1
+            }
+        } else -1
+
+        return FamilyMemberItem(
+            id = 0,   // domain doesn't have DB id; activity uses it only for click navigation
+            name = domain.displayName.split(' ').firstOrNull() ?: "",
+            surname = domain.displayName.split(' ').drop(1).joinToString(" "),
+            birthday = birthday,
+            age = age,
+            picturePath = "", // will be loaded by PhotoHelper using guid
+            guid = domain.guid
+        )
+    }
     // -------------------------------------------------------------------------
     // Entity → model conversion  (identical field logic to the old cursor path)
     // -------------------------------------------------------------------------
@@ -148,28 +182,6 @@ class LidmaatDetailViewModel(application: Application) : AndroidViewModel(applic
             marriageDate = huwelikDatum,
             marriageYears = huwelikYears,
             gemeente = entity.gemeente ?: ""
-        )
-    }
-
-    private fun entityToFamilyMember(entity: MemberEntity): FamilyMemberItem {
-        val bDayRaw = entity.geboortedatum ?: ""
-        val bDay = if (bDayRaw.length >= 10) bDayRaw.substring(0, 10) else bDayRaw
-        var age = -1L
-        if (bDay.isNotEmpty()) {
-            try {
-                parseDate(bDay)?.let { age = ChronoUnit.YEARS.between(it, LocalDate.now()) }
-            } catch (_: Exception) {
-            }
-        }
-
-        return FamilyMemberItem(
-            id = entity.id.toInt(),
-            name = entity.noemnaam ?: "",
-            surname = entity.van ?: "",
-            birthday = bDay,
-            age = age,
-            picturePath = entity.fotostoorplek ?: "",
-            guid = entity.memberGUID ?: ""
         )
     }
 }

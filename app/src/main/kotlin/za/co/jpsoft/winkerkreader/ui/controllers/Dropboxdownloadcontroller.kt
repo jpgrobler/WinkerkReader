@@ -274,7 +274,7 @@ class DropboxDownloadController(
         val manager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
         manager.query(DownloadManager.Query().setFilterById(id)).use { cursor ->
             if (!cursor.moveToFirst()) {
-                Log.e(tag, "No download found for ID $id"); return
+                if (BuildConfig.DEBUG) Log.e(tag, "No download found for ID $id"); return
             }
             val status = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS))
             val reason = try {
@@ -294,7 +294,7 @@ class DropboxDownloadController(
                 DownloadManager.STATUS_FAILED -> "Failed (reason=$reason)"
                 else -> "Unknown ($status)"
             }
-            Log.d(tag, "Poll: $text, $bytes/$total bytes")
+            if (BuildConfig.DEBUG) Log.d(tag, "Poll: $text, $bytes/$total bytes")
         }
     }
 

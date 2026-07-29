@@ -10,8 +10,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.WinkerkContract
-import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.WINKERK_DB
-import za.co.jpsoft.winkerkreader.data.WinkerkDbHelper
+import za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase
 import java.io.BufferedInputStream
 import java.io.File
 import java.net.Socket
@@ -274,22 +273,13 @@ class PhotoDownloadWorker(context: Context, params: WorkerParameters) :
     }
 
     private fun getAllMemberGuids(): List<String> {
-        val guids = mutableListOf<String>()
-        try {
-            val db = WinkerkDbHelper.getInstance(applicationContext, WINKERK_DB).readableDatabase
-            db.rawQuery(
-                "SELECT MemberGUID FROM Members WHERE MemberGUID IS NOT NULL AND MemberGUID != ''",
-                null
-            ).use { cursor ->
-                while (cursor.moveToNext()) {
-                    cursor.getString(0)?.takeIf { it.isNotEmpty() }?.let { guids.add(it) }
-                }
-            }
-            if (BuildConfig.DEBUG) Log.d(TAG, "✅ Retrieved ${guids.size} member GUIDs from DB")
+        return try {
+            val dao = WinkerkDatabase.getInstance(applicationContext).memberDao()
+            dao.getAllMemberGuids()
         } catch (e: Exception) {
             if (BuildConfig.DEBUG) Log.e(TAG, "Failed to query member GUIDs", e)
+            emptyList()
         }
-        return guids
     }
 
     private suspend fun notifyPhotoCount(serverIp: String, port: Int, count: Int) {
@@ -303,24 +293,4 @@ class PhotoDownloadWorker(context: Context, params: WorkerParameters) :
         }
     }
 
-    // ── BufferedInputStream line reader ───────────────────────────────────
-
-//    private fun BufferedInputStream.readLine(): String? {
-//        val sb = StringBuilder()
-//        while (true) {
-//            val b = read()
-//            if (b < 0) return if (sb.isEmpty()) null else sb.toString()
-//            val c = b.toChar()
-//            if (c == '\n') return sb.trimEnd('\r').toString()
-//            sb.append(c)
-//        }
-//    }
-//
-//    private fun InputStream.sha256Hex(): String {
-//        val digest = MessageDigest.getInstance("SHA-256")
-//        val buf = ByteArray(8192)
-//        var read: Int
-//        while (this.read(buf).also { read = it } > 0) digest.update(buf, 0, read)
-//        return digest.digest().joinToString("") { "%02x".format(it) }
-//    }
 }

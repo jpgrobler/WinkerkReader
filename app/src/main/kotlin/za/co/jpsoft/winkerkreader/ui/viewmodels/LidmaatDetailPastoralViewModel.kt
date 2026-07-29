@@ -2,7 +2,9 @@ package za.co.jpsoft.winkerkreader.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -10,14 +12,18 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.data.pastoral.entities.FollowUpReminderEntity
+import za.co.jpsoft.winkerkreader.data.pastoral.model.FamilyMember
 import za.co.jpsoft.winkerkreader.data.pastoral.model.ScheduleType
 import za.co.jpsoft.winkerkreader.data.pastoral.model.TemplateWithSteps
+import za.co.jpsoft.winkerkreader.data.pastoral.repository.FamilyMemberRepository
 import za.co.jpsoft.winkerkreader.data.pastoral.repository.PastoralReminderRepository
 import java.time.LocalDate
 import java.time.LocalTime
 
 class LidmaatDetailPastoralViewModel(
+    private val familyRepo: FamilyMemberRepository,
     private val repository: PastoralReminderRepository,
     val memberGuid: String
 ) : ViewModel() {
@@ -53,6 +59,18 @@ class LidmaatDetailPastoralViewModel(
 
     private val _error = MutableSharedFlow<String>(extraBufferCapacity = 1)
     val error: SharedFlow<String> = _error.asSharedFlow()
+
+    private val _familyMembers = MutableStateFlow<List<FamilyMember>>(emptyList())
+    val familyMembers: StateFlow<List<FamilyMember>> = _familyMembers
+
+    fun loadFamilyMembers(memberGuid: String, familyHeadGuid: String?) {
+        viewModelScope.launch {
+            val list = withContext(Dispatchers.IO) {
+                familyRepo.getFamilyMembers(memberGuid, familyHeadGuid)
+            }
+            _familyMembers.value = list
+        }
+    }
 
     // -------------------------------------------------------------------------
     // Actions

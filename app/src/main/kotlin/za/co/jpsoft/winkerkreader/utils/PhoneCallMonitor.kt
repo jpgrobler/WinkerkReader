@@ -193,7 +193,7 @@ class PhoneCallMonitor(
 
             monitorScope.launch {
                 val number = phoneNumber ?: "Unknown Number"
-                val displayName = CallerNameResolver.resolve(number, this as Context) ?: number
+                val displayName = CallerNameResolver.resolve(number, context) ?: number  // changed
                 unifiedMonitor?.onCallDetected(
                     callId = callId,
                     number = number,
@@ -216,7 +216,8 @@ class PhoneCallMonitor(
                 val number = currentIncomingNumber ?: currentOutgoingNumber ?: "Unknown Number"
 
                 monitorScope.launch {
-                    val displayName = CallerNameResolver.resolve(number, this as Context) ?: number
+                    val displayName =
+                        CallerNameResolver.resolve(number, context) ?: number  // changed
                     unifiedMonitor?.onCallDetected(
                         callId = callId,
                         number = number,
@@ -225,7 +226,6 @@ class PhoneCallMonitor(
                         timestamp = startTime,
                         displayName = displayName
                     )
-                    unifiedMonitor?.onCallEnded(callId, System.currentTimeMillis())
                 }
             }
 
@@ -233,7 +233,7 @@ class PhoneCallMonitor(
                 // Missed call
                 val number = currentIncomingNumber!!
                 monitorScope.launch {
-                    val displayName = CallerNameResolver.resolve(number, this as Context) ?: number
+                    val displayName = CallerNameResolver.resolve(number, context) ?: number
                     unifiedMonitor?.onCallDetected(
                         callId = callId,
                         number = number,

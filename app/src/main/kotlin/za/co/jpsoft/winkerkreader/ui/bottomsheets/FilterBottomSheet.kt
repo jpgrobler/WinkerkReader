@@ -74,8 +74,11 @@ class FilterBottomSheet : BottomSheetDialogFragment() {
 
         if (BuildConfig.DEBUG) {
             Log.d(TAG, "Original sort order: $originalSortOrder")
-            Log.d(TAG, "Original record status: $originalRecordStatus")
-            Log.d(TAG, "Original filter list size: ${originalFilterList?.size ?: 0}")
+            if (BuildConfig.DEBUG) Log.d(TAG, "Original record status: $originalRecordStatus")
+            if (BuildConfig.DEBUG) Log.d(
+                TAG,
+                "Original filter list size: ${originalFilterList?.size ?: 0}"
+            )
         }
 
         setupAutoCompleteTextViews()

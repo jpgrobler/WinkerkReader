@@ -444,7 +444,7 @@ class MemberViewModel(
         soekList = false
         soek = ""
         // Clear any active congregation filter when using advanced filters
-        _congregationFilter.value = emptySet()
+        //_congregationFilter.value = emptySet()
 
         currentFilterList = filters
         textLiveData.value = buildFilterText()
@@ -461,7 +461,7 @@ class MemberViewModel(
         sortOrder = "SOEK_DATA"
         _filterList.value = null
         // Clear any active congregation filter when searching
-        _congregationFilter.value = emptySet()
+        //_congregationFilter.value = emptySet()
         textLiveData.value = searchTerm
     }
 
@@ -477,7 +477,7 @@ class MemberViewModel(
         soek = ""
         soekList = false
         _filterList.value = null
-        _congregationFilter.value = emptySet()  // ✅ Clear congregation filters
+        //_congregationFilter.value = emptySet()  // ✅ Clear congregation filters
         val newEventType = when (sort) {
             "ADRES" -> "LIDMAAT_DATA_ADRES"
             "GESINNE" -> "GESINNE_DATA"
@@ -492,21 +492,38 @@ class MemberViewModel(
         refresh()
     }
 
-    /**
-     * Set the congregation filter to a set of congregation names.
-     * Empty set means "show all".
-     */
+    private fun updateEventTypeFromSortOrder() {
+        _eventType.value = when (sortOrder) {
+            "ADRES" -> "LIDMAAT_DATA_ADRES"
+            "GESINNE" -> "GESINNE_DATA"
+            "WYK" -> "LIDMAAT_DATA_WYK"
+            "VERJAAR" -> "LIDMAAT_DATA_VERJAAR"
+            "OUDERDOM" -> "OUDERDOM_DATA"
+            "HUWELIK" -> "HUWELIK_DATA"
+            else -> "LIDMAAT_DATA"
+        }
+    }
+
     fun setCongregationFilter(congregations: Set<String>) {
         _congregationFilter.value = congregations
-        // Clear any advanced filter to avoid conflicts
+
+        // If search is active, keep it.
+        if (soekList && soek.isNotEmpty()) {
+            refresh()
+            return
+        }
+
+        // If filter is active, keep it.
+        if (_filterList.value != null && _filterList.value!!.any { it.checked }) {
+            refresh()
+            return
+        }
+
+        // No active search/filter – use the sort-based event type.
         _filterList.value = null
         currentFilterList = null
-        _eventType.value = "LIDMAAT_DATA"
+        updateEventTypeFromSortOrder()
         refresh()
-
-        if (BuildConfig.DEBUG) {
-            Log.d(TAG, "setCongregationFilter: ${congregations.size} congregations selected")
-        }
     }
 
     fun getEventType(): String = _eventType.value
@@ -528,7 +545,7 @@ class MemberViewModel(
         _filterList.value = null
         currentFilterList = null
         _eventType.value = "LIDMAAT_DATA"
-        _congregationFilter.value = emptySet()  // ✅ Clear congregation filters
+//        _congregationFilter.value = emptySet()  // ✅ Clear congregation filters
         refresh()
     }
 

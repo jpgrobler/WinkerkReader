@@ -26,9 +26,8 @@ import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.WinkerkContract
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
-import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.WINKERK_DB
-import za.co.jpsoft.winkerkreader.data.WinkerkDbHelper
 import za.co.jpsoft.winkerkreader.data.pastoral.PastoralDatabase
+import za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase
 import za.co.jpsoft.winkerkreader.databinding.LaaidatabasisBinding
 import za.co.jpsoft.winkerkreader.ui.controllers.CollapsibleCardController
 import za.co.jpsoft.winkerkreader.ui.controllers.DatabaseImportController
@@ -43,13 +42,14 @@ import za.co.jpsoft.winkerkreader.utils.ServerFileValidator
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import java.io.File
 import java.util.regex.Pattern
-
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class LaaiDatabasisActivity : BaseActivity() {
 
     companion object {
         private const val TAG = "LaaiDatabasisActivity"
-        const val DB_NAME = WINKERK_DB
+        const val DB_NAME = WinkerkContract.winkerkEntry.WINKERK_DB
         const val EXTRA_PROMPT_RESTORE = "pastoral_prompt_restore"
         private val CURRENT_PASTORAL_SCHEMA_VERSION
             get() = PastoralDatabaseBackup.CURRENT_PASTORAL_SCHEMA_VERSION
@@ -126,6 +126,7 @@ class LaaiDatabasisActivity : BaseActivity() {
         dropboxController.cancel()
         networkController.cancel()
     }
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == android.R.id.home) {
             navigateBackToMain()
@@ -141,21 +142,30 @@ class LaaiDatabasisActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         binding = LaaidatabasisBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
         ViewCompat.setOnApplyWindowInsetsListener(binding.laaiScroll) { view, insets ->
             val navBar = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
             view.updatePadding(bottom = navBar.bottom)
             insets
         }
+
         settings = getSharedPreferences(WinkerkContract.PREFS_USER_INFO, MODE_PRIVATE)
         settingsManager = SettingsManager.getInstance(this)
+
         importController = DatabaseImportController(
             context = this,
             onError = { msg -> showError(msg) },
             onReloadDone = { navigateBackToMain() }
         )
-        refreshDatabaseDate()
+
+        // ─── Load the database date asynchronously ──────────────────────────────
+        lifecycleScope.launch {
+            refreshDatabaseDateSuspend()
+            updateDateDisplay()
+        }
 
         initializeSettings()
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
@@ -179,7 +189,6 @@ class LaaiDatabasisActivity : BaseActivity() {
 
         binding.serverIp.setText(settings.getString("IP", ""))
 
-        //binding.startPhotoSync.setOnClickListener { startPhotoSync() }
         photoSyncController = PhotoSyncController(
             lifecycleOwner = this,
             workManager = WorkManager.getInstance(this),
@@ -192,7 +201,6 @@ class LaaiDatabasisActivity : BaseActivity() {
         )
         binding.startPhotoSync.setOnClickListener { photoSyncController.startSync() }
 
-        // Dropbox controller
         dropboxController = DropboxDownloadController(
             context = this,
             lifecycleScope = lifecycleScope,
@@ -204,7 +212,6 @@ class LaaiDatabasisActivity : BaseActivity() {
             }
         )
 
-        // Network transfer controller
         networkController = NetworkTransferController(
             lifecycleOwner = this,
             lifecycleScope = lifecycleScope,
@@ -226,6 +233,7 @@ class LaaiDatabasisActivity : BaseActivity() {
         collapsibleCardController.setupAll(binding)
         initializeProgressBars()
         initializeDataInfo()
+
         fileListController = LocalDatabaseFileController(
             activity = this,
             fileListGroup = binding.laaiFilelist,
@@ -233,6 +241,7 @@ class LaaiDatabasisActivity : BaseActivity() {
         )
         fileListController.scan(winkerkEntry.getWkrDir(this))
         fileListController.setupUI()
+
         handleIntentExtras()
 
         syncPhotosAfterDb = settings.getBoolean("SYNC_PHOTOS", false)
@@ -241,8 +250,6 @@ class LaaiDatabasisActivity : BaseActivity() {
             settings.edit { putBoolean("SYNC_PHOTOS", isChecked) }
             syncPhotosAfterDb = isChecked
         }
-
-
 
         handleAutomaticDownload()
     }
@@ -277,7 +284,6 @@ class LaaiDatabasisActivity : BaseActivity() {
         binding.laaiUSB.setOnClickListener { networkController.handleUSBClick() }
     }
 
-
     private fun navigateToMainActivity() {
         settingsManager.defLayout = "VERJAAR"
         val extras = Bundle().apply {
@@ -296,7 +302,6 @@ class LaaiDatabasisActivity : BaseActivity() {
             )
         )
         val downloadUrl = CloudUrlTransformer.transform(binding.dbLink.text.toString())
-        //downloadFromDropBoxUrl(downloadUrl)
         dropboxController.startDownload(downloadUrl)
         settings.edit { putString("DropBox", downloadUrl) }
         binding.laaiBoodskap.text = getString(R.string.db_dropbox_downloading)
@@ -305,14 +310,6 @@ class LaaiDatabasisActivity : BaseActivity() {
     }
 
     private fun handleLoadDatabase() {
-//        val radioButtonID = binding.laaiFilelist.checkedRadioButtonId
-//        if (radioButtonID == -1) {
-//            Toast.makeText(this, "Kies asseblief 'n databasis", Toast.LENGTH_SHORT).show()
-//            return
-//        }
-//
-//        delete = binding.laaiWisuit.isChecked
-//        val filePath = fileList[radioButtonID]["Path"] ?: return
         val filePath = fileListController.getSelectedPath() ?: run {
             Toast.makeText(this, "Kies asseblief 'n databasis", Toast.LENGTH_SHORT).show()
             return
@@ -324,7 +321,13 @@ class LaaiDatabasisActivity : BaseActivity() {
             binding.laaiIndeterminateBar.visibility = View.VISIBLE
             val success = importController.importFromFile(File(filePath), deleteSource = delete)
             binding.laaiIndeterminateBar.visibility = View.GONE
+
             if (success) {
+                // ─── Force Room to reopen and refresh the date ────────────────
+                WinkerkDatabase.getInstance(this@LaaiDatabasisActivity) // ensures instance is open
+                refreshDatabaseDateSuspend()  // ← waits for the query to complete
+                updateDateDisplay()           // ← updates UI on main thread
+
                 Toast.makeText(
                     this@LaaiDatabasisActivity,
                     "Databasis suksesvol gelaai",
@@ -340,7 +343,7 @@ class LaaiDatabasisActivity : BaseActivity() {
                 binding.laaiBoodskap.text = "Laai misluk"
             }
             binding.laaiWisuit.isChecked = false
-            fileListController.clearSelection()//binding.laaiFilelist.clearCheck()
+            fileListController.clearSelection()
         }
     }
 
@@ -368,8 +371,10 @@ class LaaiDatabasisActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
-        refreshDatabaseDate()
-        updateDateDisplay()
+        lifecycleScope.launch {
+            refreshDatabaseDateSuspend()
+            updateDateDisplay()
+        }
     }
 
     private fun initializeDataInfo() {
@@ -389,30 +394,20 @@ class LaaiDatabasisActivity : BaseActivity() {
         }
     }
 
-    private fun refreshDatabaseDate() {
-        try {
-            WinkerkDbHelper.closeInstance(WinkerkContract.winkerkEntry.WINKERK_DB)
-            val db = WinkerkDbHelper.getInstance(
-                this,
-                WinkerkContract.winkerkEntry.WINKERK_DB
-            ).readableDatabase
-            val cursor = db.rawQuery("SELECT DataDatum FROM Datum", null)
-            cursor.use {
-                if (it.moveToFirst()) {
-                    val dateIdx = it.getColumnIndex("DataDatum")
-                    if (dateIdx >= 0) {
-                        val date = it.getString(dateIdx) ?: ""
-                        settingsManager.dataDatum = date
-                        if (BuildConfig.DEBUG) Log.d(TAG, "Database date loaded: $date")
-                    }
-                } else {
-                    settingsManager.dataDatum = ""
-                    if (BuildConfig.DEBUG) Log.d(TAG, "No date found in Datum table")
+    private suspend fun refreshDatabaseDateSuspend() {
+        withContext(Dispatchers.IO) {
+            try {
+                val date = WinkerkDatabase.getInstance(this@LaaiDatabasisActivity)
+                    .datumDao()
+                    .getDataDatum()
+                settingsManager.dataDatum = date ?: ""
+                if (BuildConfig.DEBUG) {
+                    Log.d(TAG, "Database date loaded via Room: '${settingsManager.dataDatum}'")
                 }
+            } catch (e: Exception) {
+                if (BuildConfig.DEBUG) Log.e(TAG, "Error reading database date from Room", e)
+                settingsManager.dataDatum = ""
             }
-        } catch (e: Exception) {
-            if (BuildConfig.DEBUG) Log.e(TAG, "Error reading database date", e)
-            settingsManager.dataDatum = ""
         }
     }
 
@@ -533,6 +528,4 @@ class LaaiDatabasisActivity : BaseActivity() {
         }
     }
 
-    private fun isValidDatabaseFile(file: File): Boolean =
-        ServerFileValidator.checkSingleFile(file).success
 }

@@ -10,8 +10,8 @@ android {
     defaultConfig {
         applicationId = "za.co.jpsoft.winkerkreader"
         minSdk = 28
-        versionCode = 119
-        versionName = "4.2 test r019"
+        versionCode = 122
+        versionName = "4.2 test r022"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         targetSdk = 37
         vectorDrawables.useSupportLibrary = true
