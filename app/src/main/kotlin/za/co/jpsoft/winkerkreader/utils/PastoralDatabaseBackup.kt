@@ -111,10 +111,10 @@ object PastoralDatabaseBackup {
             destDir = destDir,
             fixedFilename = BACKUP_FILENAME,
             baseName = BACKUP_BASENAME,
-            retentionDays = settings.backupRetentionDays,
+            retentionDays = settings.backup.backupRetentionDays,
             tag = TAG
         )
-        settings.lastPastoralBackupTimestamp = System.currentTimeMillis()
+        settings.backup.lastPastoralBackupTimestamp = System.currentTimeMillis()
     }
 
     // -------------------------------------------------------------------------

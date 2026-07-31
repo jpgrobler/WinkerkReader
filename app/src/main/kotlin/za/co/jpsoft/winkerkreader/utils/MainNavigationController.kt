@@ -8,6 +8,7 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import androidx.core.net.toUri
+import za.co.jpsoft.winkerkreader.receivers.PastoralReminderActionReceiver
 import za.co.jpsoft.winkerkreader.ui.activities.ArgiefListActivity
 import za.co.jpsoft.winkerkreader.ui.activities.BedieningActivity
 import za.co.jpsoft.winkerkreader.ui.activities.CallLogActivity
@@ -21,6 +22,7 @@ import za.co.jpsoft.winkerkreader.ui.activities.TemplateEditorActivity
 import za.co.jpsoft.winkerkreader.ui.activities.TemplateManagerActivity
 import za.co.jpsoft.winkerkreader.ui.activities.UitlegActivity
 import za.co.jpsoft.winkerkreader.ui.activities.VerjaarSmsActivity
+import za.co.jpsoft.winkerkreader.ui.activities.PastoralBackupActivity
 
 /**
  * Centralised navigation for the entire app.
@@ -54,12 +56,20 @@ class MainNavigationController(private val context: Context) {
     // Bediening (Pastoral)
     // ============================================================
 
-    fun navigateToBediening() {
-        BedieningActivity.launch(context)
+    fun navigateToBediening(reminderId: String? = null) {
+        if (reminderId == null) {
+            BedieningActivity.launch(context)
+        } else {
+            BedieningActivity.launch(context, reminderId)
+        }
     }
 
-    fun navigateToBediening(reminderId: String) {
-        BedieningActivity.launch(context, reminderId)
+    // ============================================================
+    // Pastoral Backup
+    // ============================================================
+
+    fun navigateToPastoralBackup() {
+        context.startActivity(Intent(context, PastoralBackupActivity::class.java))
     }
 
     // ============================================================
@@ -90,7 +100,7 @@ class MainNavigationController(private val context: Context) {
 
     fun navigateToVerjaarSms() {
         val settings = SettingsManager.getInstance(context)
-        settings.fromMenu = true
+        settings.memberList.fromMenu = true
         context.startActivity(Intent(context, VerjaarSmsActivity::class.java))
     }
 
@@ -151,11 +161,14 @@ class MainNavigationController(private val context: Context) {
     // ============================================================
 
     fun navigateToTemplateManager() {
-        TemplateManagerActivity.launch(context)
+        context.startActivity(Intent(context, TemplateManagerActivity::class.java))
     }
 
     fun navigateToTemplateEditor(templateId: String) {
-        TemplateEditorActivity.launch(context, templateId)
+        context.startActivity(
+            Intent(context, TemplateEditorActivity::class.java)
+                .putExtra("extra_template_id", templateId)
+        )
     }
 
     // ============================================================

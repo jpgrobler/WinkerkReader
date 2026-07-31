@@ -16,7 +16,7 @@ import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import za.co.jpsoft.winkerkreader.widget.PastoralWidgetProvider
 import za.co.jpsoft.winkerkreader.widget.WidgetDataRepository
 import za.co.jpsoft.winkerkreader.widget.WinkerkReaderWidgetProvider
-
+import za.co.jpsoft.winkerkreader.utils.prefs.AppearancePrefs.ThemeMode
 /**
  * Interface for LeakCanary setup – implemented in debug builds only.
  * Release builds use the no‑op implementation.
@@ -58,10 +58,10 @@ open class WinkerkReader : Application() {
 
         // Theme setup
         val settingsManager = SettingsManager.getInstance(this)
-        when (settingsManager.themeMode) {
-            SettingsManager.ThemeMode.LIGHT -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-            SettingsManager.ThemeMode.DARK -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-            SettingsManager.ThemeMode.SYSTEM -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+        when (settingsManager.appearance.themeMode) {
+            ThemeMode.LIGHT -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+            ThemeMode.DARK -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+            ThemeMode.SYSTEM -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
         }
 
         AppInitializer.initializeApp(this)

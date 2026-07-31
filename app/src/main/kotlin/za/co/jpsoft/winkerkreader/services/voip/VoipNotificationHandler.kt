@@ -1,3 +1,4 @@
+// VoipNotificationHandler.kt
 package za.co.jpsoft.winkerkreader.services.voip
 
 import android.content.Context
@@ -294,11 +295,12 @@ class VoipNotificationHandler(
             )
     }
 
+
     /**
      * Trigger the popup overlay for VoIP calls.
      */
     private fun triggerVoipCallerPopup(number: String, displayName: String) {
-        if (!settingsManager.callMonitorEnabled) return
+        if (!settingsManager.callMonitor.callMonitorEnabled) return
         if (displayName.isBlank()) return
 
         val serviceIntent = Intent(context, OproepDetailService::class.java).apply {
@@ -306,5 +308,15 @@ class VoipNotificationHandler(
             putExtra(OproepDetailService.EXTRA_DISPLAY_NAME, displayName)
         }
         context.startForegroundService(serviceIntent)
+    }
+
+    // ─── NEW: Reconcile orphaned calls after listener rebind ────────────────
+
+    /**
+     * Closes out any active VoIP calls left over from a previous listener session.
+     * Delegates to UnifiedCallMonitor to log them as ended now.
+     */
+    suspend fun reconcileStaleActiveCalls() {
+        unifiedMonitor.endActiveVoipCallsFromOtherSources()
     }
 }

@@ -15,7 +15,7 @@ object CallLogImporter {
 
     suspend fun importIfNeeded(context: Context, pastoralDb: CallLogDatabase) {
         val settings = SettingsManager.getInstance(context)
-        if (settings.callLogImportedToRoom) return
+        if (settings.callMonitor.callLogImportedToRoom) return
 
         val legacyHelper = DatabaseHelper.getInstance(context)
         val dao = pastoralDb.callLogDao()
@@ -55,7 +55,7 @@ object CallLogImporter {
                 )
             }
 
-            settings.callLogImportedToRoom = true
+            settings.callMonitor.callLogImportedToRoom = true
             if (BuildConfig.DEBUG) Log.d(
                 TAG,
                 "Imported ${legacyLogs.size} call log(s) and ${legacyActive.size} active call(s) into Room"

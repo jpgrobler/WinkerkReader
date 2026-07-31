@@ -23,7 +23,7 @@ import za.co.jpsoft.winkerkreader.ui.viewmodels.BedieningViewModelFactory
 import za.co.jpsoft.winkerkreader.utils.MainNavigationController
 import za.co.jpsoft.winkerkreader.utils.PastoralDatabaseBackup
 
-class BedieningActivity : BaseActivity() {
+class BedieningActivity : AuthBaseActivity() {
 
     private val navigationController by lazy { MainNavigationController(this) }
     private lateinit var binding: ActivityBedieningBinding
@@ -115,7 +115,7 @@ class BedieningActivity : BaseActivity() {
             }
             R.id.action_backup_restore -> {
                 // Open die nuwe aktiwiteit
-                startActivity(Intent(this, PastoralBackupActivity::class.java))
+                MainNavigationController(this).navigateToPastoralBackup()
                 true
             }
             else -> super.onOptionsItemSelected(item)

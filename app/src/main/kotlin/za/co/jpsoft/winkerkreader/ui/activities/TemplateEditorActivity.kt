@@ -23,7 +23,7 @@ import za.co.jpsoft.winkerkreader.databinding.ActivityTemplateEditorBinding
 import za.co.jpsoft.winkerkreader.ui.adapters.StepEditorAdapter
 import za.co.jpsoft.winkerkreader.ui.dialogs.StepEditorDialog
 
-class TemplateEditorActivity : BaseActivity() {
+class TemplateEditorActivity : AuthBaseActivity() {
 
     private lateinit var binding: ActivityTemplateEditorBinding
     private lateinit var repository: PastoralReminderRepository
@@ -224,11 +224,5 @@ class TemplateEditorActivity : BaseActivity() {
     companion object {
         private const val EXTRA_TEMPLATE_ID = "extra_template_id"
 
-        fun launch(context: Context, templateId: String) {
-            context.startActivity(
-                Intent(context, TemplateEditorActivity::class.java)
-                    .putExtra(EXTRA_TEMPLATE_ID, templateId)
-            )
-        }
     }
 }

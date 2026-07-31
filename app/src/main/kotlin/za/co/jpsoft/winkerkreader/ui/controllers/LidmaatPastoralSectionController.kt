@@ -7,9 +7,11 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.R
+import za.co.jpsoft.winkerkreader.data.models.PendingReminderUiItem
 import za.co.jpsoft.winkerkreader.data.pastoral.entities.FollowUpReminderEntity
 import za.co.jpsoft.winkerkreader.data.pastoral.entities.PastoralNoteEntity
 import za.co.jpsoft.winkerkreader.data.pastoral.model.TemplateContext
@@ -21,6 +23,7 @@ import za.co.jpsoft.winkerkreader.ui.bottomsheets.StelHerinneringBottomSheet
 import za.co.jpsoft.winkerkreader.ui.bottomsheets.VoegNotaByBottomSheet
 import za.co.jpsoft.winkerkreader.ui.viewmodels.LidmaatDetailPastoralViewModel
 import za.co.jpsoft.winkerkreader.utils.NoteAuthManager
+import za.co.jpsoft.winkerkreader.utils.ReminderUiMapper
 import za.co.jpsoft.winkerkreader.utils.Utils.toLocalDateSafe
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -54,7 +57,7 @@ class LidmaatPastoralSectionController(
     // ─── Adapters ────────────────────────────────────────────────────────────
     private val miniAdapter = PendingReminderMiniAdapter(
         onComplete = { reminderId -> pastoralViewModel.completeReminder(reminderId) },
-        onClick = { reminder -> showReminderDetailsDialog(reminder) }
+        onClick = { reminderId -> showReminderDetailsDialog(reminderId) }   // passes ID
     )
 
     private val notaAdapter = PastoralNoteAdapter(
@@ -78,7 +81,6 @@ class LidmaatPastoralSectionController(
         },
         onConfidentialTap = { note ->
             if (!NoteAuthManager.isAuthAvailable(activity)) {
-                // Geen biometrie/PIN – wys direk (toestel is nie beveilig nie)
                 revealNoteTemporarily(note.noteId)
                 return@PastoralNoteAdapter
             }
@@ -92,7 +94,7 @@ class LidmaatPastoralSectionController(
     )
 
     // ─── State ───────────────────────────────────────────────────────────────
-    private var allPendingReminders: List<FollowUpReminderEntity> = emptyList()
+    private var allPendingUiItems: List<PendingReminderUiItem> = emptyList()
     private var allNotes: List<PastoralNoteEntity> = emptyList()
     private val autoHideTokens = mutableMapOf<String, Runnable>()
 
@@ -127,7 +129,6 @@ class LidmaatPastoralSectionController(
             setHasFixedSize(false)
             isNestedScrollingEnabled = false
         }
-        // By default, notes are collapsed
         binding.layoutDetailNotasInhoud.visibility = View.GONE
         binding.ivDetailNotasChevron.rotation = 0f
     }
@@ -143,7 +144,7 @@ class LidmaatPastoralSectionController(
         // ── Wys al herinneringe ─────────────────────────────────────────────
         binding.btnWysAlHerinneringe.setOnClickListener {
             binding.btnWysAlHerinneringe.tag = "expanded"
-            miniAdapter.submitList(allPendingReminders)
+            miniAdapter.submitList(allPendingUiItems)   // list of UI items
             binding.btnWysAlHerinneringe.visibility = View.GONE
         }
 
@@ -156,7 +157,6 @@ class LidmaatPastoralSectionController(
             } else {
                 binding.layoutDetailNotasInhoud.visibility = View.VISIBLE
                 binding.ivDetailNotasChevron.animate().rotation(180f).setDuration(200).start()
-                // Render existing notes when expanded
                 renderNotes(allNotes, showAll = false)
             }
         }
@@ -185,45 +185,43 @@ class LidmaatPastoralSectionController(
     private fun observeData() {
         val scope = activity.lifecycleScope
 
-        // Pending reminders
+        // Pending reminders → map to UI items
         scope.launch {
-            pastoralViewModel.pendingReminders.collect { reminders ->
-                allPendingReminders = reminders
+            pastoralViewModel.pendingReminders
+                .map { entities -> entities.map { ReminderUiMapper.toUiItem(it) } }
+                .collect { uiItems ->
+                    allPendingUiItems = uiItems
+                    val showAll = binding.btnWysAlHerinneringe.tag == "expanded"
+                    val toDisplay = if (showAll) uiItems else uiItems.take(3)
+                    miniAdapter.submitList(toDisplay)
 
-                val showAll = binding.btnWysAlHerinneringe.tag == "expanded"
-                val toDisplay = if (showAll) reminders else reminders.take(3)
+                    binding.detailPendingReminders.visibility =
+                        if (uiItems.isEmpty()) View.GONE else View.VISIBLE
 
-                miniAdapter.submitList(toDisplay)
+                    binding.btnWysAlHerinneringe.visibility =
+                        if (!showAll && uiItems.size > 3) View.VISIBLE else View.GONE
+                    binding.btnWysAlHerinneringe.text =
+                        "Wys al ${uiItems.size} herinneringe…"
 
-                binding.detailPendingReminders.visibility =
-                    if (toDisplay.isEmpty()) View.GONE else View.VISIBLE
-
-                binding.btnWysAlHerinneringe.visibility =
-                    if (!showAll && reminders.size > 3) View.VISIBLE else View.GONE
-                binding.btnWysAlHerinneringe.text =
-                    "Wys al ${reminders.size} herinneringe…"
-
-                binding.detailHerinneringCount.visibility =
-                    if (reminders.isEmpty()) View.GONE else View.VISIBLE
-                binding.detailHerinneringCount.text =
-                    activity.resources.getQuantityString(
-                        R.plurals.herinnering_created_count,
-                        reminders.size,
-                        reminders.size
-                    )
-            }
+                    binding.detailHerinneringCount.visibility =
+                        if (uiItems.isEmpty()) View.GONE else View.VISIBLE
+                    binding.detailHerinneringCount.text =
+                        activity.resources.getQuantityString(
+                            R.plurals.herinnering_created_count,
+                            uiItems.size,
+                            uiItems.size
+                        )
+                }
         }
 
         // Notes
         scope.launch {
             noteRepo.observeForMember(memberGuid).collect { notes ->
                 allNotes = notes
-
                 binding.tvDetailNotaCount.visibility =
                     if (notes.isEmpty()) View.GONE else View.VISIBLE
                 binding.tvDetailNotaCount.text = "(${notes.size})"
 
-                // Only render if notes section is expanded
                 if (binding.layoutDetailNotasInhoud.visibility == View.VISIBLE) {
                     renderNotes(notes, showAll = binding.btnDetailWysAlNotas.tag == "expanded")
                 }
@@ -240,7 +238,7 @@ class LidmaatPastoralSectionController(
             }
         }
 
-        // Errors from pastoralViewModel
+        // Errors
         scope.launch {
             pastoralViewModel.error.collect { message ->
                 Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
@@ -270,45 +268,55 @@ class LidmaatPastoralSectionController(
             if (notes.size > 3) "Wys al ${notes.size} notas…" else "Wys al ${notes.size} notas…"
     }
 
-    // ─── Dialogs ─────────────────────────────────────────────────────────────
+    // ─── Dialog ──────────────────────────────────────────────────────────────
 
-    private fun showReminderDetailsDialog(reminder: FollowUpReminderEntity) {
-        val dueDate = reminder.dueDateUtc.toLocalDateSafe() ?: LocalDate.now()
-        val dateStr = DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault()).format(dueDate)
-        val isOverdue = dueDate.isBefore(LocalDate.now())
+    /**
+     * Fetches the full reminder entity by ID and shows the detail dialog.
+     * This is called from the adapter's `onClick` which now passes only the ID.
+     */
+    private fun showReminderDetailsDialog(reminderId: String) {
+        activity.lifecycleScope.launch {
+            val reminder = pastoralViewModel.getReminderById(reminderId)
+            if (reminder == null) {
+                Snackbar.make(binding.root, "Herinnering nie gevind nie", Snackbar.LENGTH_SHORT)
+                    .show()
+                return@launch
+            }
 
-        val details = buildString {
-            append("Titel: ${reminder.title}")
-            append("\nDatum: $dateStr")
-            if (isOverdue) append(" (Agterstallig)")
-            if (!reminder.note.isNullOrBlank()) {
-                append("\n\nNota:\n${reminder.note}")
+            val dueDate = reminder.dueDateUtc.toLocalDateSafe() ?: LocalDate.now()
+            val dateStr =
+                DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault()).format(dueDate)
+            val isOverdue = dueDate.isBefore(LocalDate.now())
+
+            val details = buildString {
+                append("Titel: ${reminder.title}")
+                append("\nDatum: $dateStr")
+                if (isOverdue) append(" (Agterstallig)")
+                if (!reminder.note.isNullOrBlank()) {
+                    append("\n\nNota:\n${reminder.note}")
+                }
+                val contextLine = TemplateContext.from(reminder.contextJson).toDisplayLine()
+                if (contextLine != null) {
+                    append("\n\nKontekst: $contextLine")
+                }
+                append("\n\nSkema: ${reminder.scheduleType}")
+                append("\nStatus: ${reminder.status}")
             }
-            val contextLine = TemplateContext.from(reminder.contextJson).toDisplayLine()
-            if (contextLine != null) {
-                append("\n\nKontekst: $contextLine")
-            }
-            append("\n\nSkema: ${reminder.scheduleType}")
-            append("\nStatus: ${reminder.status}")
+
+            MaterialAlertDialogBuilder(activity)
+                .setTitle("Herinnering besonderhede")
+                .setMessage(details)
+                .setPositiveButton("Sluit", null)
+                .show()
         }
-
-        MaterialAlertDialogBuilder(activity)
-            .setTitle("Herinnering besonderhede")
-            .setMessage(details)
-            .setPositiveButton("Sluit", null)
-            .show()
     }
 
     // ─── Biometric reveal ────────────────────────────────────────────────────
 
     private fun revealNoteTemporarily(noteId: String) {
-        // Cancel existing timer for this note
         autoHideTokens[noteId]?.let { authManager.cancelAutoHide(it) }
-
-        // Reveal the note
         notaAdapter.revealNote(noteId)
 
-        // Schedule auto-hide after 30 seconds
         val token = authManager.scheduleAutoHide {
             notaAdapter.hideNote(noteId)
             autoHideTokens.remove(noteId)

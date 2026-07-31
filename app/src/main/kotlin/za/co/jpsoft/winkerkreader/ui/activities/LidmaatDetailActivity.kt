@@ -59,7 +59,7 @@ import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import java.io.File
 
 
-class LidmaatDetailActivity : BaseActivity() {
+class LidmaatDetailActivity : AuthBaseActivity() {
 
     companion object {
         private const val TAG = "LidmaatDetailActivity"
@@ -430,7 +430,7 @@ class LidmaatDetailActivity : BaseActivity() {
 
         // Gemeente – use member's own gemeente, fallback to user's
         binding.detailGemeentenaam.text = item.gemeente?.takeIf { it.isNotEmpty() }
-            ?: settingsManager.gemeenteNaam
+            ?: settingsManager.congregation.gemeenteNaam
 
         // ─── Quick actions enable ──────────────────────────
         binding.quickActionBel.isEnabled = item.cellphone.isNotEmpty()
@@ -867,9 +867,9 @@ class LidmaatDetailActivity : BaseActivity() {
         var emailUrl = ""
         val gemeente = item.gemeente
         emailUrl = when (gemeente) {
-            settingsManager.gemeenteNaam -> settingsManager.gemeenteEpos
-            settingsManager.gemeente2Naam -> settingsManager.gemeente2Epos
-            settingsManager.gemeente3Naam -> settingsManager.gemeente3Epos
+            settingsManager.congregation.gemeenteNaam -> settingsManager.congregation.gemeenteEpos
+            settingsManager.congregation.gemeente2Naam -> settingsManager.congregation.gemeente2Epos
+            settingsManager.congregation.gemeente3Naam -> settingsManager.congregation.gemeente3Epos
             else -> ""
         }
 

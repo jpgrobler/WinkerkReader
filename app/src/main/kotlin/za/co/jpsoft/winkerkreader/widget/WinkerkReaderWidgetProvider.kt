@@ -142,7 +142,7 @@ class WinkerkReaderWidgetProvider : AppWidgetProvider() {
                     data = Uri.parse(toUri(Intent.URI_INTENT_SCHEME))
                 }
                 @Suppress("DEPRECATION")
-                setRemoteAdapter(R.id.words, svcIntent)
+                setRemoteAdapter(appWidgetId, R.id.words, svcIntent)
 
                 val listClickIntent = Intent(context, VerjaarSmsActivity::class.java)
                 val listClickPI = PendingIntent.getActivity(
@@ -199,10 +199,10 @@ class WinkerkReaderWidgetProvider : AppWidgetProvider() {
             emojis.add("🎂")
 
             // Add other events based on user settings
-            if (settings.widgetDoop) emojis.add("💧")
-            if (settings.widgetHuwelik) emojis.add("💍")
-            if (settings.widgetBelydenis) emojis.add("⛪")
-            if (settings.widgetSterf) emojis.add("🪦")
+            if (settings.widget.widgetDoop) emojis.add("💧")
+            if (settings.widget.widgetHuwelik) emojis.add("💍")
+            if (settings.widget.widgetBelydenis) emojis.add("⛪")
+            if (settings.widget.widgetSterf) emojis.add("🪦")
 
             return emojis.joinToString(" ")
         }

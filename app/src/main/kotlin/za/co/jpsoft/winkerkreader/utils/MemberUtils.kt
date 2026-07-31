@@ -1,6 +1,7 @@
 package za.co.jpsoft.winkerkreader.utils
 
 
+import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -194,7 +195,10 @@ object MemberUtils {
         }
     }
 
-    // MemberUtils.kt – add these methods
+
+    fun sendWhatsApp(activity: Activity, phone: String, method: Int) {
+        WhatsAppMessageSender.send(activity, phone, method)
+    }
 
     /**
      * Send a WhatsApp message using the selected method.
@@ -209,57 +213,7 @@ object MemberUtils {
     ): Boolean {
         if (phoneNumber.isNullOrEmpty()) return false
         val phone = fixphonenumber(phoneNumber) ?: return false
-        return try {
-            when (method) {
-                1 -> sendWhatsAppMethod1(context, phone, message)
-                2 -> sendWhatsAppMethod2(context, phone, message)
-                3 -> sendWhatsAppMethod3(context, phone, message)
-                else -> false
-            }
-        } catch (e: Exception) {
-            if (BuildConfig.DEBUG) Log.e(TAG, "WhatsApp send failed", e)
-            Toast.makeText(context, "WhatsApp not installed or error occurred", Toast.LENGTH_SHORT)
-                .show()
-            false
-        }
-    }
-
-    private fun sendWhatsAppMethod1(context: Context, phone: String, message: String?): Boolean {
-        val uri = "smsto: $phone".toUri()
-        val intent = Intent(Intent.ACTION_SENDTO, uri).apply {
-            `package` = "com.whatsapp"
-            if (!message.isNullOrEmpty()) {
-                putExtra("sms_body", message)
-                putExtra(Intent.EXTRA_TEXT, message)
-            }
-        }
-        context.startActivity(Intent.createChooser(intent, ""))
-        return true
-    }
-
-    private fun sendWhatsAppMethod2(context: Context, phone: String, message: String?): Boolean {
-        val encoded = if (!message.isNullOrEmpty()) URLEncoder.encode(message, "UTF-8") else ""
-        val url =
-            "https://api.whatsapp.com/send?phone=$phone${if (encoded.isNotEmpty()) "&text=$encoded" else ""}"
-        val intent = Intent(Intent.ACTION_VIEW, url.toUri()).apply { `package` = "com.whatsapp" }
-        if (intent.resolveActivity(context.packageManager) != null) {
-            context.startActivity(intent)
-            return true
-        }
-        return false
-    }
-
-    private fun sendWhatsAppMethod3(context: Context, phone: String, message: String?): Boolean {
-        val intent = Intent(Intent.ACTION_SEND).apply {
-            `package` = "com.whatsapp"
-            type = "text/plain"
-            if (!message.isNullOrEmpty()) {
-                putExtra(Intent.EXTRA_TEXT, message)
-            }
-            putExtra("jid", "${phone}@s.whatsapp.net")
-        }
-        context.startActivity(intent)
-        return true
+        return WhatsAppMessageSender.send(context, phone, method, message ?: "")
     }
 
     fun sendEmail(context: Context, email: String?) {

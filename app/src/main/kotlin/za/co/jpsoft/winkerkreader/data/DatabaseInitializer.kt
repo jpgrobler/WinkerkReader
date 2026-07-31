@@ -20,15 +20,15 @@ object DatabaseInitializer {
         val settingsManager = SettingsManager.getInstance(context)
 
         // ── If already fully initialized, just check if migration is needed ──
-        if (settingsManager.isDatabaseInitialized()) {
+        if (settingsManager.sync.isDatabaseInitialized) {
             if (BuildConfig.DEBUG) Log.d(TAG, "Database already initialized")
 
             // Only run schema repair if we haven't already applied it
-            if (settingsManager.databaseSchemaVersion < CURRENT_SCHEMA_VERSION) {
+            if (settingsManager.sync.databaseSchemaVersion < CURRENT_SCHEMA_VERSION) {
                 // Idempotent – repairs only if needed, does nothing otherwise
                 migrateIfNeeded(context)
                 // Mark that we've handled this schema version
-                settingsManager.databaseSchemaVersion = CURRENT_SCHEMA_VERSION
+                settingsManager.sync.databaseSchemaVersion = CURRENT_SCHEMA_VERSION
             }
 
             listener?.onInitializationComplete(true)
@@ -47,8 +47,8 @@ object DatabaseInitializer {
             db.openHelper.writableDatabase
 
             // 3. Mark as fully initialized
-            settingsManager.setDatabaseInitialized(true)
-            settingsManager.databaseSchemaVersion = CURRENT_SCHEMA_VERSION
+            settingsManager.sync.isDatabaseInitialized = true
+            settingsManager.sync.databaseSchemaVersion = CURRENT_SCHEMA_VERSION
 
             if (BuildConfig.DEBUG) Log.d(TAG, "Database initialized successfully")
             listener?.onInitializationComplete(true)

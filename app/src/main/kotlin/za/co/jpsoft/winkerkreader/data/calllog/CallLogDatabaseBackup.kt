@@ -22,7 +22,7 @@ import java.io.File
  * Mirrors [za.co.jpsoft.winkerkreader.utils.PastoralDatabaseBackup] for the
  * call-log database.
  *
- * Backup is **opt-in** via [SettingsManager.callLogBackupEnabled] — call
+ * Backup is **opt-in** via [SettingsManager.backup.callLogBackupEnabled] — call
  * history is more sensitive than reminders/notes (it can reveal contact
  * patterns even without any note content), so it shouldn't start landing in
  * a PC-accessible folder without the pastor deliberately choosing that. Both
@@ -46,7 +46,7 @@ object CallLogDatabaseBackup {
      * PastoralDatabaseBackup. No-ops immediately if the user hasn't opted in.
      */
     fun backupDebounced(context: Context) {
-        if (!SettingsManager.getInstance(context).callLogBackupEnabled) return
+        if (!SettingsManager.getInstance(context).backup.callLogBackupEnabled) return
 
         debounceJob?.cancel()
         debounceJob = scope.launch {
@@ -57,7 +57,7 @@ object CallLogDatabaseBackup {
 
     /** Runs a backup immediately (blocking on IO). No-ops if not opted in. */
     suspend fun backupNow(context: Context) {
-        if (!SettingsManager.getInstance(context).callLogBackupEnabled) return
+        if (!SettingsManager.getInstance(context).backup.callLogBackupEnabled) return
         withContext(Dispatchers.IO) {
             runBackup(context.applicationContext)
         }
@@ -77,10 +77,10 @@ object CallLogDatabaseBackup {
                 destDir = destDir,
                 fixedFilename = BACKUP_FILENAME,
                 baseName = BACKUP_BASENAME,
-                retentionDays = settings.backupRetentionDays,
+                retentionDays = settings.backup.backupRetentionDays,
                 tag = TAG
             )
-            settings.lastCallLogBackupTimestamp = System.currentTimeMillis()
+            settings.backup.lastCallLogBackupTimestamp = System.currentTimeMillis()
         } catch (e: Exception) {
             if (BuildConfig.DEBUG) Log.e(TAG, "Call log DB backup failed", e)
         }

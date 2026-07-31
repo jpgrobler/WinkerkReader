@@ -23,7 +23,7 @@ object CallNotificationDiagnostics {
         subText: String
     ) {
         val settings = SettingsManager.getInstance(context)
-        if (!settings.diagnosticCallCaptureEnabled) return
+        if (!settings.callMonitor.diagnosticCallCaptureEnabled) return
 
         val prefs = context.getSharedPreferences(WinkerkContractPrefsName(), Context.MODE_PRIVATE)
         val existing = JSONArray(prefs.getString(PREF_KEY, "[]"))

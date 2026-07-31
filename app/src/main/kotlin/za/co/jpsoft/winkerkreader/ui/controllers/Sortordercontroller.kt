@@ -107,19 +107,19 @@ class SortOrderController(
             "SortOrderController.update: new=$newSort current=$currentSort")
 
         memberListAdapter.updateState(
-            listView = settings.listView,
+            listView = settings.memberList.listView,
             soekList = viewModel.soekList,
             soek = viewModel.soek,
             recordStatus = viewModel.recordStatus,
             sortOrder = newSort,
-            useCongregationIndicator = settings.useCongregationIndicator
+            useCongregationIndicator = settings.congregation.useCongregationIndicator
         )
         sortLabel.text = iconFor(newSort)
 
         if (newSort == currentSort) return   // label + adapter updated; nothing else needed
 
         currentSort = newSort
-        settings.defLayout = newSort
+        settings.memberList.defLayout = newSort
         mainViewModel.setSortOrder(newSort)
         viewModel.updateSortOrder(newSort)
 
@@ -138,7 +138,7 @@ class SortOrderController(
      */
     fun syncWithSettings(isReady: Boolean) {
         if (!isReady) return
-        update(settings.defLayout)
+        update(settings.memberList.defLayout)
     }
 
     /**
@@ -226,7 +226,7 @@ class SortOrderController(
      * Was `recomputeBirthdayOffset()` in MainActivity.
      */
     fun recomputeBirthdayOffset() {
-        val sort = settings.defLayout
+        val sort = settings.memberList.defLayout
         if (!isBirthdaySort(sort)) return
         lifecycleScope.launch {
             val offset = viewModel.getBirthdayOffset(sort)

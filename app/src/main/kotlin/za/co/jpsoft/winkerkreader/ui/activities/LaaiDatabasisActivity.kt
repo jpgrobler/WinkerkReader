@@ -285,7 +285,7 @@ class LaaiDatabasisActivity : BaseActivity() {
     }
 
     private fun navigateToMainActivity() {
-        settingsManager.defLayout = "VERJAAR"
+        settingsManager.memberList.defLayout = "VERJAAR"
         val extras = Bundle().apply {
             putString("SENDER_CLASS_NAME", "WysVerjaar")
         }
@@ -386,7 +386,7 @@ class LaaiDatabasisActivity : BaseActivity() {
     }
 
     private fun updateDateDisplay() {
-        val date = settingsManager.dataDatum
+        val date = settingsManager.congregation.dataDatum
         if (date.isNotEmpty()) {
             binding.datadate.text = getString(R.string.current_data_info, date)
         } else {
@@ -400,13 +400,16 @@ class LaaiDatabasisActivity : BaseActivity() {
                 val date = WinkerkDatabase.getInstance(this@LaaiDatabasisActivity)
                     .datumDao()
                     .getDataDatum()
-                settingsManager.dataDatum = date ?: ""
+                settingsManager.congregation.dataDatum = date ?: ""
                 if (BuildConfig.DEBUG) {
-                    Log.d(TAG, "Database date loaded via Room: '${settingsManager.dataDatum}'")
+                    Log.d(
+                        TAG,
+                        "Database date loaded via Room: '${settingsManager.congregation.dataDatum}'"
+                    )
                 }
             } catch (e: Exception) {
                 if (BuildConfig.DEBUG) Log.e(TAG, "Error reading database date from Room", e)
-                settingsManager.dataDatum = ""
+                settingsManager.congregation.dataDatum = ""
             }
         }
     }

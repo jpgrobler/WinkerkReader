@@ -135,6 +135,9 @@ class PastoralReminderRepository(
     suspend fun syncToGoogleTasksViaScript(reminderId: String): Boolean =
         taskSync.syncToGoogleTasksViaScript(reminderId)
 
+    suspend fun getReminderById(reminderId: String): FollowUpReminderEntity? =
+        crud.getReminderById(reminderId)
+
     // ---- Companion factory ----
 
     companion object {

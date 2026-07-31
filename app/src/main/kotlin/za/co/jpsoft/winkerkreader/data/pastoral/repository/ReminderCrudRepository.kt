@@ -281,4 +281,6 @@ class ReminderCrudRepository(
             updatedAt = now
         )
     }
+    suspend fun getReminderById(reminderId: String): FollowUpReminderEntity? =
+        reminderDao.getById(reminderId)
 }

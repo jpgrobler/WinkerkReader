@@ -48,8 +48,8 @@ object AppInitializer {
                 ActiveCallReconciler.reconcile(callLogDb.callLogDao())
 
                 val settings = SettingsManager.getInstance(appContext)
-                settings.ensureDefaultColors()
-                if (!settings.isDatabaseInitialized()) {
+                settings.congregation.ensureDefaultColors()
+                if (!settings.sync.isDatabaseInitialized) {
                     DatabaseInitializer.initializeDatabase(
                         context = appContext,
                         listener = object : DatabaseInitializer.ProgressListener {
@@ -59,7 +59,7 @@ object AppInitializer {
 
                             override fun onInitializationComplete(success: Boolean) {
                                 if (success) {
-                                    settings.setDatabaseInitialized(true)
+                                    settings.sync.isDatabaseInitialized = true
                                     if (BuildConfig.DEBUG) Log.d(TAG, "Database initialised")
                                 } else {
                                     if (BuildConfig.DEBUG) Log.e(
@@ -82,7 +82,7 @@ object AppInitializer {
             // 2. Start monitoring service if enabled (after DB init)
             withContext(Dispatchers.Main) {
                 val settings = SettingsManager.getInstance(appContext)
-                if (settings.autoStartEnabled) {
+                if (settings.callMonitor.autoStartEnabled) {
                     try {
                         val intent =
                             android.content.Intent(appContext, CallMonitoringService::class.java)

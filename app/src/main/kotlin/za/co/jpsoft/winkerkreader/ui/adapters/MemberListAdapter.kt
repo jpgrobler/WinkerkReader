@@ -254,6 +254,7 @@ class MemberListAdapter(
         this.soek = soek
         this.recordStatus = recordStatus
 
+        // ✅ Only update local fields – do NOT modify SettingsManager here
         if (this.listView != listView) {
             this.listView = listView
             if (itemCount > 0) notifyItemRangeChanged(0, itemCount)
@@ -261,8 +262,6 @@ class MemberListAdapter(
         if (this.useCongregationIndicator != useCongregationIndicator) {
             this.useCongregationIndicator = useCongregationIndicator
             if (itemCount > 0) notifyItemRangeChanged(0, itemCount)
-        } else {
-            this.useCongregationIndicator = useCongregationIndicator
         }
     }
 
@@ -331,7 +330,6 @@ class MemberListAdapter(
                     typedValue,
                     true
                 )
-                // If it's a resource reference, resolve it to an actual color
                 return if (typedValue.resourceId != 0) {
                     androidx.core.content.ContextCompat.getColor(
                         itemView.context,
@@ -359,9 +357,9 @@ class MemberListAdapter(
             var congregationColor = Int.MIN_VALUE
             if (!soekList) {
                 congregationColor = when (item.congregation) {
-                    settings.gemeenteNaam -> settings.gemeenteKleur
-                    settings.gemeente2Naam -> settings.gemeente2Kleur
-                    settings.gemeente3Naam -> settings.gemeente3Kleur
+                    settings.congregation.gemeenteNaam -> settings.congregation.gemeenteKleur
+                    settings.congregation.gemeente2Naam -> settings.congregation.gemeente2Kleur
+                    settings.congregation.gemeente3Naam -> settings.congregation.gemeente3Kleur
                     else -> Int.MIN_VALUE
                 }
             }
@@ -377,14 +375,11 @@ class MemberListAdapter(
             // Handle visibility based on collapse state
             // ============================================================
             if (item.showSeparator) {
-                // This is a separator row - show the separator, hide the card if collapsed
-                // Reset the item view to visible (separator should always be visible)
                 itemView.layoutParams = itemView.layoutParams.apply {
                     height = ViewGroup.LayoutParams.WRAP_CONTENT
                 }
                 itemView.visibility = View.VISIBLE
 
-                // Debug logging for WYK sort
                 if (sortOrder == "WYK") {
                     if (BuildConfig.DEBUG) {
                         Log.d(
@@ -394,7 +389,6 @@ class MemberListAdapter(
                     }
                 }
             } else {
-                // This is a regular item - hide it if its section is collapsed
                 if (isSectionCollapsed) {
                     itemView.layoutParams = itemView.layoutParams.apply {
                         height = 0
@@ -417,23 +411,20 @@ class MemberListAdapter(
             if (soekList) {
                 finalBgColor = Color.LTGRAY
             } else {
-                // Only apply congregation background if indicator is OFF
                 if (!useCongregationIndicator && congregationColor != Int.MIN_VALUE) {
                     finalBgColor = congregationColor
                 }
 
-                // Override for tag / recordstatus (these take precedence)
                 when {
                     item.tag == 1 -> {
                         finalBgColor = ContextCompat.getColor(context, R.color.selected_view)
                     }
                     item.recordstatus == "2" -> {
-                        val inactiveColor = settings.inactiveBackgroundColor
+                        val inactiveColor = settings.congregation.inactiveBackgroundColor
                         if (inactiveColor != Int.MIN_VALUE) finalBgColor = inactiveColor
                     }
                 }
             }
-            // Apply the final background once
             setItemBackgroundColor(finalBgColor)
 
             // ------------------------------------------------------------
@@ -535,24 +526,19 @@ class MemberListAdapter(
 
             // ============================================================
             // COLLAPSE BUTTON - ALWAYS show on separator rows
-            // regardless of collapse state
             // ============================================================
             if (item.showSeparator) {
-                // The button should ALWAYS be visible on separator rows
                 updownContainer.visibility = View.VISIBLE
 
-                // Set the icon based on collapse state
                 val isGroupCollapsed = collapsedGroups.contains(key)
                 updownIcon.setImageResource(
                     if (isGroupCollapsed) R.drawable.ic_chevron_down else R.drawable.ic_chevron_up
                 )
-                // Force tint to be visible
                 updownIcon.setColorFilter(
                     ContextCompat.getColor(context, R.color.text_secondary_light),
                     android.graphics.PorterDuff.Mode.SRC_IN
                 )
                 updownContainer.setOnLongClickListener {
-                    // Vibrate briefly (if hardware supports)
                     val vibrator = itemView.context.getSystemService(Vibrator::class.java)
                     vibrator?.vibrate(
                         VibrationEffect.createOneShot(
@@ -581,13 +567,11 @@ class MemberListAdapter(
 
             // ---- Ring on photo ----
             if (useCongregationIndicator && congregationColor != Int.MIN_VALUE) {
-                // Set stroke width (e.g. 4dp)
                 val strokeWidthPx = (4 * context.resources.displayMetrics.density + 0.5f).toInt()
                 fotoImageView.strokeWidth = strokeWidthPx.toFloat()
                 fotoImageView.strokeColor =
                     android.content.res.ColorStateList.valueOf(congregationColor)
             } else {
-                // Remove any existing ring
                 fotoImageView.strokeWidth = 0f
                 fotoImageView.strokeColor =
                     android.content.res.ColorStateList.valueOf(Color.TRANSPARENT)
@@ -597,12 +581,15 @@ class MemberListAdapter(
         // -------- Helper methods --------
 
         private fun applyVisibilitySettings(settings: SettingsManager) {
-            fotoFrame.visibility = if (settings.isListFoto) View.VISIBLE else View.GONE
-            ouderdomTextView.visibility = if (settings.isListOuderdom) View.VISIBLE else View.GONE
-            wykTextView.visibility = if (settings.isListWyk) View.VISIBLE else View.GONE
-            huwelikTextView.visibility = if (settings.isListHuwelikBlok) View.VISIBLE else View.GONE
-            eposImageView.visibility = if (settings.isListEpos) View.VISIBLE else View.GONE
-            if (settings.isListVerjaarBlok) {
+            fotoFrame.visibility = if (settings.memberList.isListFoto) View.VISIBLE else View.GONE
+            ouderdomTextView.visibility =
+                if (settings.memberList.isListOuderdom) View.VISIBLE else View.GONE
+            wykTextView.visibility = if (settings.memberList.isListWyk) View.VISIBLE else View.GONE
+            huwelikTextView.visibility =
+                if (settings.memberList.isListHuwelikBlok) View.VISIBLE else View.GONE
+            eposImageView.visibility =
+                if (settings.memberList.isListEpos) View.VISIBLE else View.GONE
+            if (settings.memberList.isListVerjaarBlok) {
                 koekImageView.visibility = View.VISIBLE
                 verjaarTextView.visibility = View.VISIBLE
             } else {
@@ -629,13 +616,11 @@ class MemberListAdapter(
             val strokeWidthPx = (RING_STROKE_WIDTH_DP * density + 0.5f).toInt()
             val totalSizePx = if (useRing) imageSizePx + strokeWidthPx else imageSizePx
 
-            // ---- Set ShapeableImageView size ----
             val imageParams = FrameLayout.LayoutParams(totalSizePx, totalSizePx)
             imageParams.gravity = android.view.Gravity.CENTER
             fotoImageView.layoutParams = imageParams
             fotoImageView.requestLayout()
 
-            // ---- Set FrameLayout (kontak_frame) size ----
             val frameParams = fotoFrame.layoutParams as? ConstraintLayout.LayoutParams
             frameParams?.let {
                 it.width = totalSizePx
@@ -643,7 +628,6 @@ class MemberListAdapter(
                 fotoFrame.requestLayout()
             }
 
-            // ---- Choose placeholder drawable based on gender ----
             val defaultDrawable = when (item.gender) {
                 "Manlik" -> ContextCompat.getDrawable(view.context, R.drawable.gender_male)
                 else -> ContextCompat.getDrawable(view.context, R.drawable.gender_female)
@@ -652,7 +636,6 @@ class MemberListAdapter(
             val photoFile = PhotoHelper.getSyncedPhotoFile(view.context, item.guid)
 
             if (photoFile != null && photoFile.exists()) {
-                // Load actual photo – clear any tint
                 fotoImageView.clearColorFilter()
                 fotoImageView.imageTintList = null
                 Glide.with(view)
@@ -663,7 +646,6 @@ class MemberListAdapter(
                     .override(totalSizePx, totalSizePx)
                     .into(fotoImageView)
             } else {
-                // Use placeholder with text-colour tint
                 fotoImageView.setImageDrawable(defaultDrawable)
                 fotoImageView.imageTintList = android.content.res.ColorStateList.valueOf(textColor)
             }
@@ -677,13 +659,13 @@ class MemberListAdapter(
         private fun bindContactInfo(item: MemberItem, settings: SettingsManager) {
             if (item.cellphone.isNotEmpty()) {
                 val formattedCell = fixphonenumber(item.cellphone) ?: item.cellphone
-                if (settings.isListSelfoon) {
+                if (settings.memberList.isListSelfoon) {
                     selBlock.visibility = View.VISIBLE
                     cellTextView.text = formattedCell
                 } else {
                     selBlock.visibility = View.GONE
                 }
-                if (settings.isListWhatsapp) {
+                if (settings.memberList.isListWhatsapp) {
                     if (ContactRepository.isWhatsAppContact(formattedCell)) {
                         whatsappImageView.visibility = View.VISIBLE
                     }
@@ -692,7 +674,7 @@ class MemberListAdapter(
                 cellTextView.text = ""
             }
 
-            val showWard = settings.isListWyk && sortOrder != "WYK"
+            val showWard = settings.memberList.isListWyk && sortOrder != "WYK"
             if (item.ward.isNotEmpty() && showWard) {
                 wykTextView.visibility = View.VISIBLE
                 wykTextView.text = item.ward
@@ -703,7 +685,8 @@ class MemberListAdapter(
 
             if (item.landline.isNotEmpty()) {
                 val formattedLandline = fixphonenumber(item.landline) ?: item.landline
-                telBlock.visibility = if (settings.isListTelefoon) View.VISIBLE else View.GONE
+                telBlock.visibility =
+                    if (settings.memberList.isListTelefoon) View.VISIBLE else View.GONE
                 telTextView.text = formattedLandline
             } else {
                 telTextView.text = ""
@@ -711,7 +694,7 @@ class MemberListAdapter(
         }
 
         private fun bindAgeInfo(item: MemberItem, settings: SettingsManager) {
-            if (item.birthday.isNotEmpty() && settings.isListOuderdom && item.birthday.length >= 10) {
+            if (item.birthday.isNotEmpty() && settings.memberList.isListOuderdom && item.birthday.length >= 10) {
                 var txt = "(${item.age})"
                 ouderdomTextView.text = txt
                 ouderdomTextView.visibility = View.VISIBLE
@@ -723,7 +706,7 @@ class MemberListAdapter(
                 val today = java.time.LocalDate.now()
                 val bMonth = item.birthday.substring(3, 5).trimStart('0').toIntOrNull() ?: 0
                 val bDay = item.birthday.substring(0, 2).trimStart('0').toIntOrNull() ?: 0
-                if (bMonth == today.monthValue && bDay == today.dayOfMonth && settings.isListVerjaarBlok) {
+                if (bMonth == today.monthValue && bDay == today.dayOfMonth && settings.memberList.isListVerjaarBlok) {
                     koekImageView.visibility = View.VISIBLE
                 } else {
                     koekImageView.visibility = View.GONE
@@ -735,7 +718,7 @@ class MemberListAdapter(
 
         private fun bindWeddingInfo(item: MemberItem, settings: SettingsManager) {
             huwelikTextView.visibility = View.GONE
-            if (item.weddingDate.isNotEmpty() && settings.isListHuwelikBlok && item.weddingDate.length > 6) {
+            if (item.weddingDate.isNotEmpty() && settings.memberList.isListHuwelikBlok && item.weddingDate.length > 6) {
                 ringImageView.visibility = View.VISIBLE
                 val day = item.weddingDate.substring(0, 2)
                 val month = item.weddingDate.substring(3, 5)
@@ -747,7 +730,7 @@ class MemberListAdapter(
 
         private fun bindEmailIndicator(item: MemberItem, settings: SettingsManager) {
             eposImageView.visibility =
-                if (item.email.isNotEmpty() && settings.isListEpos) View.VISIBLE else View.GONE
+                if (item.email.isNotEmpty() && settings.memberList.isListEpos) View.VISIBLE else View.GONE
         }
 
         private fun bindSeparator(item: MemberItem) {
@@ -759,8 +742,6 @@ class MemberListAdapter(
                 separatorTextView.text = item.separatorLabel
                 separatorWykTextView.text = item.separatorWykLabel
 
-                // For WYK view, we show "Wyk: [ward]" in the left text
-                // Hide the right text completely in WYK view
                 if (sortOrder == "WYK") {
                     separatorWykTextView.visibility = View.GONE
                 } else {
@@ -769,7 +750,6 @@ class MemberListAdapter(
 
                 separatorBlock.visibility = View.VISIBLE
 
-                // Only set address click for ADRES and GESINNE sorts (not WYK)
                 val isAddressSort = sortOrder == "ADRES" || sortOrder == "GESINNE"
                 if (isAddressSort && item.address.isNotEmpty()) {
                     separatorTextView.setOnClickListener { view ->
@@ -793,7 +773,6 @@ class MemberListAdapter(
          * Collapses all groups if any are expanded, otherwise expands all groups.
          */
         private fun toggleAllGroups(sortOrder: String) {
-            // Collect all group keys from the current visible items that have separators
             val allGroupKeys = mutableSetOf<String>()
             for (i in 0 until itemCount) {
                 val item = getItem(i) ?: continue
@@ -804,18 +783,14 @@ class MemberListAdapter(
             }
             if (allGroupKeys.isEmpty()) return
 
-            // Check if any group is currently expanded (i.e., not in collapsedGroups)
             val anyExpanded = allGroupKeys.any { !collapsedGroups.contains(it) }
 
             if (anyExpanded) {
-                // Collapse all groups
                 collapsedGroups.addAll(allGroupKeys)
             } else {
-                // Expand all groups
                 collapsedGroups.removeAll(allGroupKeys)
             }
 
-            // Refresh the whole list to update chevrons and visibility
             notifyDataSetChanged()
         }
 

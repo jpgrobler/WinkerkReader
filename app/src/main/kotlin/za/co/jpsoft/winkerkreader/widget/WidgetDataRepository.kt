@@ -132,10 +132,10 @@ object WidgetDataRepository {
 
                         // Filter by user settings before doing any further work.
                         when (reason) {
-                            "Doop" -> if (!settings.widgetDoop) continue
-                            "Huwelik" -> if (!settings.widgetHuwelik) continue
-                            "Belydenis" -> if (!settings.widgetBelydenis) continue
-                            "Oorlede" -> if (!settings.widgetSterf) continue
+                            "Doop" -> if (!settings.widget.widgetDoop) continue
+                            "Huwelik" -> if (!settings.widget.widgetHuwelik) continue
+                            "Belydenis" -> if (!settings.widget.widgetBelydenis) continue
+                            "Oorlede" -> if (!settings.widget.widgetSterf) continue
                         }
 
                         val eventDate = try {

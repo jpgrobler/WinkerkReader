@@ -24,7 +24,7 @@ import za.co.jpsoft.winkerkreader.ui.viewmodels.ArgiefViewModel
 import za.co.jpsoft.winkerkreader.utils.getStringOrEmpty
 import za.co.jpsoft.winkerkreader.utils.getStringOrNull
 
-class ArgiefListActivity : BaseActivity() {
+class ArgiefListActivity : AuthBaseActivity() {
 
     private lateinit var binding: ArgiefBinding
     private lateinit var mCursorAdapter: ArgiefLysAdapter

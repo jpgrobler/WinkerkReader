@@ -23,14 +23,17 @@ import za.co.jpsoft.winkerkreader.ui.fragments.UitlegWidgetFragment
 import za.co.jpsoft.winkerkreader.utils.CalendarManager
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
 
-class UitlegActivity : BaseActivity(), UitlegCalendarSelectionListener {
+class UitlegActivity : AuthBaseActivity(), UitlegCalendarSelectionListener {
 
     private lateinit var binding: ActivityUitlegBinding
     private lateinit var settingsManager: SettingsManager
     private var calendarManager: CalendarManager? = null
     private var availableCalendars: List<CalendarInfo> = emptyList()
-    private var selectedCalendarId: Long = -1
-    private var selectedPastoralCalendarId: Long = -1
+
+    // Changed to nullable to match SettingsManager's nullable properties
+    private var selectedCalendarId: Long? = -1L
+    private var selectedPastoralCalendarId: Long? = -1L
+
     private val PERMISSION_REQUEST_CALENDAR = 102
     private var retryCount = 0
     private val MAX_RETRIES = 10
@@ -44,14 +47,14 @@ class UitlegActivity : BaseActivity(), UitlegCalendarSelectionListener {
 
         val pagerAdapter = UitlegPagerAdapter(this)
         binding.viewPager.adapter = pagerAdapter
-        binding.viewPager.offscreenPageLimit = 3 // <-- voeg hierdie lyn by
+        binding.viewPager.offscreenPageLimit = 3
 
         TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->
             tab.text = when (position) {
                 0 -> "Vertoon"
                 1 -> "Pastoraal"
                 2 -> "Funksies"
-                3 -> "Widget"   // voorheen "Kleure"
+                3 -> "Widget"
                 else -> ""
             }
         }.attach()
@@ -74,7 +77,6 @@ class UitlegActivity : BaseActivity(), UitlegCalendarSelectionListener {
         if (BuildConfig.DEBUG) {
             Log.d("UitlegActivity", "Available calendars: ${availableCalendars.size}")
         }
-        // Wag totdat die ViewPager sy fragmente geskep het
         binding.viewPager.post {
             findAndSetFragments()
         }
@@ -98,11 +100,10 @@ class UitlegActivity : BaseActivity(), UitlegCalendarSelectionListener {
         }
 
         if (pastoraal != null && funksies != null) {
-            // Albei fragmente gevind – stel die spinners
             if (availableCalendars.isNotEmpty()) {
                 val adapter = createCalendarAdapter()
-                pastoraal.setPastoralCalendarSpinner(adapter, selectedPastoralCalendarId)
-                funksies.setCallCalendarSpinner(adapter, selectedCalendarId)
+                pastoraal.setPastoralCalendarSpinner(adapter, selectedPastoralCalendarId ?: -1L)
+                funksies.setCallCalendarSpinner(adapter, selectedCalendarId ?: -1L)
             } else {
                 val emptyAdapter = ArrayAdapter(
                     this,
@@ -113,9 +114,8 @@ class UitlegActivity : BaseActivity(), UitlegCalendarSelectionListener {
                 pastoraal.setPastoralCalendarSpinner(emptyAdapter, -1L)
                 funksies.setCallCalendarSpinner(emptyAdapter, -1L)
             }
-            retryCount = 0 // sukses – stel terug
+            retryCount = 0
         } else {
-            // Nog nie gevind nie – probeer weer met 'n vertraging
             retryCount++
             if (retryCount <= MAX_RETRIES) {
                 if (BuildConfig.DEBUG) {
@@ -128,14 +128,12 @@ class UitlegActivity : BaseActivity(), UitlegCalendarSelectionListener {
                     findAndSetFragments()
                 }, 500)
             } else {
-                // Gee op – stel leë spinners
                 val emptyAdapter = ArrayAdapter(
                     this,
                     android.R.layout.simple_spinner_item,
                     listOf("Foute: kon fragmente nie vind nie")
                 )
                 emptyAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-                // Probeer nog een keer om die fragmente te kry, maar as dit nie werk nie, is daar niks
                 val lastTry = supportFragmentManager.fragments
                 for (f in lastTry) {
                     when (f) {
@@ -143,7 +141,6 @@ class UitlegActivity : BaseActivity(), UitlegCalendarSelectionListener {
                             emptyAdapter,
                             -1L
                         )
-
                         is UitlegFunksiesFragment -> f.setCallCalendarSpinner(emptyAdapter, -1L)
                     }
                 }
@@ -174,7 +171,6 @@ class UitlegActivity : BaseActivity(), UitlegCalendarSelectionListener {
                             emptyAdapter,
                             -1L
                         )
-
                         is UitlegFunksiesFragment -> f.setCallCalendarSpinner(emptyAdapter, -1L)
                     }
                 }
@@ -192,7 +188,7 @@ class UitlegActivity : BaseActivity(), UitlegCalendarSelectionListener {
     private fun initializeCalendarManager() {
         calendarManager = CalendarManager(this)
         selectedCalendarId = settingsManager.selectedCalendarId
-        selectedPastoralCalendarId = settingsManager.getPastoralCalendarId() ?: -1L
+        selectedPastoralCalendarId = settingsManager.pastoral.pastoralCalendarId
     }
 
     private fun hasCalendarPermissions(): Boolean {
@@ -215,9 +211,7 @@ class UitlegActivity : BaseActivity(), UitlegCalendarSelectionListener {
     }
 
     fun savePastoralCalendarId() {
-        settingsManager.setPastoralCalendarId(
-            if (selectedPastoralCalendarId != -1L) selectedPastoralCalendarId else null
-        )
+        settingsManager.pastoral.pastoralCalendarId = selectedPastoralCalendarId
     }
 
     fun saveCallCalendarId() {
@@ -239,7 +233,7 @@ class UitlegPagerAdapter(activity: AppCompatActivity) : FragmentStateAdapter(act
             0 -> UitlegVertoonFragment()
             1 -> UitlegPastoraalFragment()
             2 -> UitlegFunksiesFragment()
-            3 -> UitlegWidgetFragment()  // nuwe klas
+            3 -> UitlegWidgetFragment()
             else -> UitlegVertoonFragment()
         }
     }

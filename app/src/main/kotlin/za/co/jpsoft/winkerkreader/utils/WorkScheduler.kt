@@ -24,26 +24,26 @@ class WorkScheduler(
     }
 
     fun scheduleAutoDownload() {
-        if (settingsManager.autoDl || settingsManager.dlTimeUpdate) {
-            val hour = settingsManager.dlHour.toInt()
-            val minute = settingsManager.dlMinute.toInt()
-            val day = settingsManager.dlDay
+        if (settingsManager.sync.autoDl || settingsManager.sync.dlTimeUpdate) {
+            val hour = settingsManager.sync.dlHour.toInt()
+            val minute = settingsManager.sync.dlMinute.toInt()
+            val day = settingsManager.sync.dlDay
 
             WorkManagerHelper.scheduleDropboxDownload(context, hour, minute, day)
             // Reset flags after scheduling
-            settingsManager.dlTimeUpdate = false
-            settingsManager.fromMenu = false
+            settingsManager.sync.dlTimeUpdate = false
+            settingsManager.memberList.fromMenu = false
         }
     }
 
     fun scheduleReminder() {
-        if (settingsManager.herinner || settingsManager.smsTimeUpdate) {
-            val hour = settingsManager.smsHour.toInt()
-            val minute = settingsManager.smsMinute.toInt()
+        if (settingsManager.birthdaySms.herinner || settingsManager.birthdaySms.smsTimeUpdate) {
+            val hour = settingsManager.birthdaySms.smsHour.toInt()
+            val minute = settingsManager.birthdaySms.smsMinute.toInt()
 
             WorkManagerHelper.scheduleBirthdayReminder(context, hour, minute)
-            settingsManager.smsTimeUpdate = false
-            settingsManager.fromMenu = false
+            settingsManager.birthdaySms.smsTimeUpdate = false
+            settingsManager.memberList.fromMenu = false
         }
     }
 

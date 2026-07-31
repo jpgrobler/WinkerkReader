@@ -21,7 +21,7 @@ import za.co.jpsoft.winkerkreader.ui.adapters.TemplateManagerAdapter
 import za.co.jpsoft.winkerkreader.ui.viewmodels.TemplateManagerViewModel
 import za.co.jpsoft.winkerkreader.utils.MainNavigationController
 
-class TemplateManagerActivity : BaseActivity() {
+class TemplateManagerActivity : AuthBaseActivity() {
 
     private lateinit var binding: ActivityTemplateManagerBinding
     private lateinit var adapter: TemplateManagerAdapter
@@ -105,11 +105,5 @@ class TemplateManagerActivity : BaseActivity() {
             }
             .setNegativeButton(R.string.pastoral_import_nee, null)
             .show()
-    }
-
-    companion object {
-        fun launch(context: Context) {
-            context.startActivity(Intent(context, TemplateManagerActivity::class.java))
-        }
     }
 }

@@ -34,13 +34,13 @@ class MenuItemHandler(
                 true
             }
             R.id.laai -> {
-                settings.fromMenu = true
+                settings.memberList.fromMenu = true
                 navigationController.navigateToLaaiDatabasis(extras = null)
                 activity.finish()
                 true
             }
             R.id.sms_verjaar -> {
-                settings.fromMenu = true
+                settings.memberList.fromMenu = true
                 navigationController.navigateToVerjaarSms()
                 true
             }
@@ -84,49 +84,49 @@ class MenuItemHandler(
     fun handleAktiefRadioGroup(): Boolean = true
 
     private fun handleTagged(): Boolean {
-        settings.defLayout = "VAN"
+        settings.memberList.defLayout = "VAN"
         viewModel.soekList = false
         onSortOrderChanged("VAN")
         return true
     }
 
     private fun handleSortVan(): Boolean {
-        settings.defLayout = "VAN"
+        settings.memberList.defLayout = "VAN"
         viewModel.soekList = false
         onSortOrderChanged("VAN")
         return true
     }
 
     private fun handleSortWyk(): Boolean {
-        settings.defLayout = "WYK"
+        settings.memberList.defLayout = "WYK"
         viewModel.soekList = false
         onSortOrderChanged("WYK")
         return true
     }
 
     private fun handleSortOuderdom(): Boolean {
-        settings.defLayout = "OUDERDOM"
+        settings.memberList.defLayout = "OUDERDOM"
         viewModel.soekList = false
         onSortOrderChanged("OUDERDOM")
         return true
     }
 
     private fun handleVerjaar(): Boolean {
-        settings.defLayout = "VERJAAR"
+        settings.memberList.defLayout = "VERJAAR"
         viewModel.soekList = false
         onSortOrderChanged("VERJAAR")
         return true
     }
 
     private fun handleSortAdres(): Boolean {
-        settings.defLayout = "ADRES"
+        settings.memberList.defLayout = "ADRES"
         viewModel.soekList = false
         onSortOrderChanged("ADRES")
         return true
     }
 
     private fun handleSortGesin(): Boolean {
-        settings.defLayout = "GESINNE"
+        settings.memberList.defLayout = "GESINNE"
         viewModel.soekList = false
         onSortOrderChanged("GESINNE")
         return true

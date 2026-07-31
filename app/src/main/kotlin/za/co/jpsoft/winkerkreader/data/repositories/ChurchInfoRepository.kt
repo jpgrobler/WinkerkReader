@@ -30,12 +30,12 @@ object ChurchInfoRepository {
                         emails.add(it.getString(1) ?: "")
                     }
                     if (names.isNotEmpty()) {
-                        settingsManager.gemeenteNaam = names.getOrElse(0) { "" }
-                        settingsManager.gemeenteEpos = emails.getOrElse(0) { "" }
-                        settingsManager.gemeente2Naam = names.getOrElse(1) { "" }
-                        settingsManager.gemeente2Epos = emails.getOrElse(1) { "" }
-                        settingsManager.gemeente3Naam = names.getOrElse(2) { "" }
-                        settingsManager.gemeente3Epos = emails.getOrElse(2) { "" }
+                        settingsManager.congregation.gemeenteNaam = names.getOrElse(0) { "" }
+                        settingsManager.congregation.gemeenteEpos = emails.getOrElse(0) { "" }
+                        settingsManager.congregation.gemeente2Naam = names.getOrElse(1) { "" }
+                        settingsManager.congregation.gemeente2Epos = emails.getOrElse(1) { "" }
+                        settingsManager.congregation.gemeente3Naam = names.getOrElse(2) { "" }
+                        settingsManager.congregation.gemeente3Epos = emails.getOrElse(2) { "" }
                     }
                     if (BuildConfig.DEBUG) Log.d(TAG, "Loaded ${names.size} congregation(s)")
                 }

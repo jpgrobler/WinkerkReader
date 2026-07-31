@@ -7,6 +7,8 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import za.co.jpsoft.winkerkreader.R
+import android.Manifest
+
 
 object PermissionRationaleHelper {
 
@@ -74,6 +76,57 @@ object PermissionRationaleHelper {
             ActivityCompat.requestPermissions(activity, ungranted, requestCode)
             onComplete?.invoke()
         }
+    }
+
+    /**
+     * Returns the title and message string resource IDs for a rationale dialog
+     * about [permission].
+     *
+     * Extracted from PermissionsActivity.getRationaleTitle() and
+     * getRationaleMessage() — combines both into one call.
+     *
+     * Usage:
+     *   val (title, message) = PermissionRationaleHelper.getRationaleResIds(permission)
+     *   requestWithRationale(this, arrayOf(permission), RC, title, message)
+     */
+    fun getRationaleResIds(permission: String): Pair<Int, Int> {
+        val title = when (permission) {
+            Manifest.permission.READ_PHONE_STATE,
+            Manifest.permission.READ_CALL_LOG,
+            Manifest.permission.READ_PHONE_NUMBERS -> R.string.rationale_phone_title
+
+            Manifest.permission.READ_CONTACTS,
+            Manifest.permission.WRITE_CONTACTS -> R.string.rationale_contacts_title
+
+            Manifest.permission.SEND_SMS,
+            Manifest.permission.READ_SMS -> R.string.rationale_sms_title
+
+            Manifest.permission.READ_CALENDAR,
+            Manifest.permission.WRITE_CALENDAR -> R.string.rationale_calendar_title
+
+            Manifest.permission.POST_NOTIFICATIONS -> R.string.rationale_notifications_title
+            Manifest.permission.SCHEDULE_EXACT_ALARM -> R.string.rationale_exact_alarm_title
+            else -> R.string.rationale_generic_title
+        }
+        val message = when (permission) {
+            Manifest.permission.READ_PHONE_STATE,
+            Manifest.permission.READ_CALL_LOG,
+            Manifest.permission.READ_PHONE_NUMBERS -> R.string.rationale_phone_message
+
+            Manifest.permission.READ_CONTACTS,
+            Manifest.permission.WRITE_CONTACTS -> R.string.rationale_contacts_message
+
+            Manifest.permission.SEND_SMS,
+            Manifest.permission.READ_SMS -> R.string.rationale_sms_message
+
+            Manifest.permission.READ_CALENDAR,
+            Manifest.permission.WRITE_CALENDAR -> R.string.rationale_calendar_message
+
+            Manifest.permission.POST_NOTIFICATIONS -> R.string.rationale_notifications_message
+            Manifest.permission.SCHEDULE_EXACT_ALARM -> R.string.rationale_exact_alarm_message
+            else -> R.string.rationale_generic_message
+        }
+        return Pair(title, message)
     }
 
     /**

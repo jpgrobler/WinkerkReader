@@ -49,17 +49,17 @@ class UitlegWidgetFragment : Fragment() {
     }
 
     private fun loadPreferences() {
-        initialDoop = settingsManager.widgetDoop
+        initialDoop = settingsManager.widget.widgetDoop
         binding.widgetDoopSelect.isChecked = initialDoop
 
-        initialBelydenis = settingsManager.widgetBelydenis
+        initialBelydenis = settingsManager.widget.widgetBelydenis
         binding.widgetBelydenisSelect.isChecked = initialBelydenis
 
-        initialHuwelik = settingsManager.widgetHuwelik
+        initialHuwelik = settingsManager.widget.widgetHuwelik
         binding.widgetHuwelikSelect.isChecked = initialHuwelik
 
-        initialSterf = settingsManager.widgetSterf
-        binding.widgetSterf.isChecked = initialSterf
+        initialSterf = settingsManager.widget.widgetSterf
+        binding.widgetSterf.isChecked = initialSterf   // fixed: removed .widget
     }
 
     private fun setupListeners() {
@@ -67,7 +67,7 @@ class UitlegWidgetFragment : Fragment() {
             binding.widgetDoopSelect,
             binding.widgetBelydenisSelect,
             binding.widgetHuwelikSelect,
-            binding.widgetSterf
+            binding.widgetSterf                     // fixed: removed .widget
         )
         checkboxes.forEach { cb ->
             cb.setOnCheckedChangeListener { _, _ -> onUserChanged() }
@@ -89,25 +89,24 @@ class UitlegWidgetFragment : Fragment() {
         binding.saveWidget.alpha = if (enabled) 1.0f else 0.4f
     }
 
-
     private fun isAnySettingChanged(): Boolean {
         if (binding.widgetDoopSelect.isChecked != initialDoop) return true
         if (binding.widgetBelydenisSelect.isChecked != initialBelydenis) return true
         if (binding.widgetHuwelikSelect.isChecked != initialHuwelik) return true
-        if (binding.widgetSterf.isChecked != initialSterf) return true
+        if (binding.widgetSterf.isChecked != initialSterf) return true   // fixed
         return false
     }
 
     private fun saveWidgetSettings() {
-        settingsManager.widgetDoop = binding.widgetDoopSelect.isChecked
-        settingsManager.widgetBelydenis = binding.widgetBelydenisSelect.isChecked
-        settingsManager.widgetHuwelik = binding.widgetHuwelikSelect.isChecked
-        settingsManager.widgetSterf = binding.widgetSterf.isChecked
+        settingsManager.widget.widgetDoop = binding.widgetDoopSelect.isChecked
+        settingsManager.widget.widgetBelydenis = binding.widgetBelydenisSelect.isChecked
+        settingsManager.widget.widgetHuwelik = binding.widgetHuwelikSelect.isChecked
+        settingsManager.widget.widgetSterf = binding.widgetSterf.isChecked   // fixed
 
         initialDoop = binding.widgetDoopSelect.isChecked
         initialBelydenis = binding.widgetBelydenisSelect.isChecked
         initialHuwelik = binding.widgetHuwelikSelect.isChecked
-        initialSterf = binding.widgetSterf.isChecked
+        initialSterf = binding.widgetSterf.isChecked   // fixed
 
         isDirty = false
         updateSaveButtonState()

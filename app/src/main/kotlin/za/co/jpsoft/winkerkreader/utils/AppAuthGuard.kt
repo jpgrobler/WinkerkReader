@@ -59,10 +59,10 @@ class AppAuthGuard(
      *                        or immediately if auth is disabled / already done.
      */
     fun guardIfNeeded(onAuthenticated: () -> Unit) {
-        AppAuthState.backgroundTimeoutMs = settingsManager.appBiometricTimeoutMs
+        AppAuthState.backgroundTimeoutMs = settingsManager.security.biometricTimeoutMs
 
         // Skip if biometric app-lock is turned off in settings
-        if (!settingsManager.appBiometricEnabled) {
+        if (!settingsManager.security.biometricEnabled) {
             onAuthenticated()
             return
         }
@@ -109,10 +109,10 @@ class AppAuthGuard(
      */
     // AppAuthGuard.kt
     fun checkOnResume(onAuthenticated: () -> Unit) {
-        AppAuthState.backgroundTimeoutMs = settingsManager.appBiometricTimeoutMs
+        AppAuthState.backgroundTimeoutMs = settingsManager.security.biometricTimeoutMs
 
         // If lock is off, auth is not required – run the callback immediately.
-        if (!settingsManager.appBiometricEnabled) {
+        if (!settingsManager.security.biometricEnabled) {
             onAuthenticated()
             return
         }

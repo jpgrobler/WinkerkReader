@@ -35,9 +35,9 @@ class DeviceBootReceiver : BroadcastReceiver() {
 
                     if (BuildConfig.DEBUG) Log.d(TAG, "Boot/restart received")
 
-                    val settings = SettingsManager.getInstance(context) ?: return
+                    val settings = SettingsManager.getInstance(context)
 
-                    if (settings.autoStartEnabled) {
+                    if (settings.callMonitor.autoStartEnabled) {
                         // ✅ SINGLE ENTRY POINT: the bridge starts everything
                         ServiceUtils.startServiceIfNotRunning(
                             context,
@@ -66,14 +66,14 @@ class DeviceBootReceiver : BroadcastReceiver() {
     private fun setupBirthdayAlarmIfEnabled(context: Context, settings: SettingsManager) {
         try {
             val reminderEnabled = try {
-                settings.herinner
+                settings.birthdaySms.herinner
             } catch (e: Exception) {
                 if (BuildConfig.DEBUG) Log.e(TAG, "Error reading herinner", e)
                 false
             }
 
             val timeUpdate = try {
-                settings.smsTimeUpdate
+                settings.birthdaySms.smsTimeUpdate
             } catch (e: Exception) {
                 if (BuildConfig.DEBUG) Log.e(TAG, "Error reading smsTimeUpdate", e)
                 false
@@ -85,14 +85,14 @@ class DeviceBootReceiver : BroadcastReceiver() {
             }
 
             val hour = try {
-                settings.smsHour?.toIntOrNull() ?: 8
+                settings.birthdaySms.smsHour?.toIntOrNull() ?: 8
             } catch (e: Exception) {
                 if (BuildConfig.DEBUG) Log.e(TAG, "Error reading smsHour", e)
                 8
             }
 
             val minute = try {
-                settings.smsMinute?.toIntOrNull() ?: 0
+                settings.birthdaySms.smsMinute?.toIntOrNull() ?: 0
             } catch (e: Exception) {
                 if (BuildConfig.DEBUG) Log.e(TAG, "Error reading smsMinute", e)
                 0
@@ -108,8 +108,8 @@ class DeviceBootReceiver : BroadcastReceiver() {
             val now = Calendar.getInstance()
 
             try {
-                settings.smsTimeUpdate = false
-                settings.fromMenu = false
+                settings.birthdaySms.smsTimeUpdate = false
+                settings.memberList.fromMenu = false
             } catch (e: Exception) {
                 if (BuildConfig.DEBUG) Log.e(TAG, "Error clearing settings flags", e)
             }

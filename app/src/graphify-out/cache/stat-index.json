@@ -1,1 +1,2326 @@
-{"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\OneText.py":{"size":3592,"mtime_ns":1782963902925280200,"word_count":367},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\ToText.py":{"size":3354,"mtime_ns":1782637654537676500,"word_count":351},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\aggregate_kotlin_files.py":{"size":3354,"mtime_ns":1782637654228089600,"word_count":351},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\combined_code 23-7-2026.txt":{"size":2084553,"mtime_ns":1784801379918980000,"word_count":128997},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\combined_code 24-7-2026.txt":{"size":2103327,"mtime_ns":1784883059124673000,"word_count":129950},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\debug\\kotlin\\za\\co\\jpsoft\\winkerkreader\\DebugWinkerkReader.kt":{"size":1009,"mtime_ns":1784556128053280700,"word_count":75},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\dir_structure.py":{"size":3988,"mtime_ns":1782126237906092200,"word_count":410},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\fix_layout.py":{"size":8162,"mtime_ns":1783853341177652400,"word_count":653},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\WinkerkReader.kt":{"size":5216,"mtime_ns":1784556128040707100,"word_count":386},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\behaviors\\BottomCardBehavior.kt":{"size":845,"mtime_ns":1784003153417427600,"word_count":67},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\DatabaseHelper.kt":{"size":11251,"mtime_ns":1784086455545852200,"word_count":879},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\DatabaseInitializer.kt":{"size":7747,"mtime_ns":1782482962722836800,"word_count":758},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\MemberItemSeparator.kt":{"size":4800,"mtime_ns":1784132095805536300,"word_count":438},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\MemberPagingSource.kt":{"size":5024,"mtime_ns":1784303055918714500,"word_count":408},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\MemberQueryBuilder.kt":{"size":26191,"mtime_ns":1783941524583116900,"word_count":1483},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\MemberRepository.kt":{"size":10001,"mtime_ns":1784184521277522000,"word_count":656},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\WinkerkContract.kt":{"size":27101,"mtime_ns":1783866997217187600,"word_count":2548},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\WinkerkDbHelper.kt":{"size":6902,"mtime_ns":1784207699872815500,"word_count":609},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\WinkerkProvider.kt":{"size":8457,"mtime_ns":1784886023779771900,"word_count":611},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\calllog\\ActiveCallEntity.kt":{"size":415,"mtime_ns":1782989172231334800,"word_count":34},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\calllog\\CallLogDao.kt":{"size":1355,"mtime_ns":1783866997662360300,"word_count":127},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\calllog\\CallLogDatabase.kt":{"size":1005,"mtime_ns":1783444023540320600,"word_count":76},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\calllog\\CallLogDatabaseBackup.kt":{"size":3920,"mtime_ns":1783866996223510600,"word_count":328},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\calllog\\CallLogEntity.kt":{"size":581,"mtime_ns":1782990560662824300,"word_count":58},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\calllog\\CallLogImporter.kt":{"size":3034,"mtime_ns":1783866996253602300,"word_count":230},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\calllog\\Converters.kt":{"size":400,"mtime_ns":1782989686355015200,"word_count":27},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\models\\CalendarInfo.kt":{"size":266,"mtime_ns":1776161893526160900,"word_count":31},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\models\\CallLog.kt":{"size":288,"mtime_ns":1776161893531161500,"word_count":33},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\models\\CallRecord.kt":{"size":1408,"mtime_ns":1776168744173803600,"word_count":135},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\models\\CallType.kt":{"size":266,"mtime_ns":1782967480723731200,"word_count":27},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\models\\FilterBox.kt":{"size":1201,"mtime_ns":1776161893537692300,"word_count":118},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\models\\MemberDetailItem.kt":{"size":1401,"mtime_ns":1781981437341915700,"word_count":222},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\models\\MemberItem.kt":{"size":4743,"mtime_ns":1783866995760351300,"word_count":396},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\models\\SmsList.kt":{"size":1113,"mtime_ns":1776161893540218500,"word_count":102},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\PastoralDatabase.kt":{"size":8407,"mtime_ns":1784303055929716500,"word_count":607},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\PastoralDatabaseInitializer.kt":{"size":9440,"mtime_ns":1783866996478949600,"word_count":728},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\dao\\FollowUpReminderDao.kt":{"size":5586,"mtime_ns":1783866995778351800,"word_count":494},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\dao\\PastoralMetaDao.kt":{"size":607,"mtime_ns":1781269810524899900,"word_count":45},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\dao\\PastoralNoteDao.kt":{"size":2843,"mtime_ns":1783866997455484500,"word_count":214},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\dao\\ReminderTemplateDao.kt":{"size":3263,"mtime_ns":1781842480215347600,"word_count":261},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\entities\\FollowUpReminderEntity.kt":{"size":1252,"mtime_ns":1781950236915928800,"word_count":118},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\entities\\PastoralMetaEntity.kt":{"size":358,"mtime_ns":1781269737449368500,"word_count":33},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\entities\\PastoralNoteEntity.kt":{"size":1128,"mtime_ns":1782355509616572700,"word_count":113},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\entities\\ReminderTemplateEntity.kt":{"size":513,"mtime_ns":1781788970189267600,"word_count":52},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\entities\\TemplateStepEntity.kt":{"size":863,"mtime_ns":1781269743643163400,"word_count":77},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\model\\MemberDisplay.kt":{"size":599,"mtime_ns":1781950640545890400,"word_count":68},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\model\\NoteCategory.kt":{"size":552,"mtime_ns":1783866995868888900,"word_count":46},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\model\\ReminderStatus.kt":{"size":305,"mtime_ns":1781269728488327300,"word_count":28},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\model\\ReminderWithMember.kt":{"size":520,"mtime_ns":1781271182164843200,"word_count":44},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\model\\ScheduleType.kt":{"size":271,"mtime_ns":1781269729500457200,"word_count":26},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\model\\TemplateContext.kt":{"size":3277,"mtime_ns":1783866993048767600,"word_count":314},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\model\\TemplateContextSchema.kt":{"size":2654,"mtime_ns":1783866994204513100,"word_count":258},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\model\\TemplateWithSteps.kt":{"size":551,"mtime_ns":1781270000347402900,"word_count":32},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\model\\VandagDashboard.kt":{"size":302,"mtime_ns":1781271154294377200,"word_count":29},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\repository\\MemberGuidResolver.kt":{"size":7241,"mtime_ns":1784303055939731300,"word_count":538},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\repository\\PastoralNoteRepository.kt":{"size":3786,"mtime_ns":1783866997308457700,"word_count":249},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\repository\\PastoralReminderDates.kt":{"size":1562,"mtime_ns":1783866992893543700,"word_count":100},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\repository\\PastoralReminderRepository.kt":{"size":42678,"mtime_ns":1783940241710213000,"word_count":3118},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\repositories\\ChurchInfoRepository.kt":{"size":2107,"mtime_ns":1783481640384599900,"word_count":146},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\repositories\\ContactRepository.kt":{"size":1411,"mtime_ns":1783866996104644800,"word_count":124},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\room\\ArchiveEntity.kt":{"size":2730,"mtime_ns":1782451330272850000,"word_count":299},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\room\\ArgiefDao.kt":{"size":327,"mtime_ns":1782620385609556200,"word_count":22},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\room\\DatumDao.kt":{"size":219,"mtime_ns":1782449039655277200,"word_count":20},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\room\\DatumEntity.kt":{"size":361,"mtime_ns":1782188687176835800,"word_count":34},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\room\\MemberDao.kt":{"size":1155,"mtime_ns":1784295839218079300,"word_count":100},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\room\\MemberEntity.kt":{"size":6061,"mtime_ns":1782450892093914500,"word_count":680},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\room\\WinkerkDatabase.kt":{"size":8384,"mtime_ns":1783866995411244800,"word_count":562},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\services\\CallMonitoringService.kt":{"size":8144,"mtime_ns":1784047678935757500,"word_count":557},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\services\\ListViewWidgetService.kt":{"size":8234,"mtime_ns":1784303721670334900,"word_count":601},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\services\\OproepDetailService.kt":{"size":12773,"mtime_ns":1784886023711951500,"word_count":918},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\services\\ServiceKeepAlive.kt":{"size":6849,"mtime_ns":1784303055955958600,"word_count":480},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\services\\WhatsAppNotificationService.kt":{"size":56194,"mtime_ns":1784303055962000300,"word_count":4487},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\services\\receivers\\AlarmReceiver.kt":{"size":4310,"mtime_ns":1783866998035345600,"word_count":214},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\services\\receivers\\DeviceBootReceiver.kt":{"size":8875,"mtime_ns":1784303721819272600,"word_count":589},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\services\\receivers\\IncomingCall.kt":{"size":5746,"mtime_ns":1783866994504215000,"word_count":439},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\services\\receivers\\PastoralReminderActionReceiver.kt":{"size":3102,"mtime_ns":1783866995850420100,"word_count":197},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\activities\\ArgiefListActivity.kt":{"size":9622,"mtime_ns":1784884214000890700,"word_count":670},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\activities\\BaseActivity.kt":{"size":3775,"mtime_ns":1784882837718140700,"word_count":455},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\activities\\BedieningActivity.kt":{"size":6748,"mtime_ns":1784885206456387900,"word_count":395},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\activities\\CallLogActivity.kt":{"size":10481,"mtime_ns":1784883980677345400,"word_count":562},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\activities\\LaaiDatabasisActivity.kt":{"size":68245,"mtime_ns":1784886065436242700,"word_count":4594},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\activities\\LidmaatDetailActivity.kt":{"size":43529,"mtime_ns":1784883897475654400,"word_count":2599},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\activities\\MainActivity.kt":{"size":38885,"mtime_ns":1784997202879461500,"word_count":2583},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\activities\\PastoralBackupActivity.kt":{"size":8987,"mtime_ns":1784886065399958500,"word_count":542},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\activities\\PastoralCaseActivity.kt":{"size":78,"mtime_ns":1782540972482173200,"word_count":4},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\activities\\PermissionsActivity.kt":{"size":19101,"mtime_ns":1784886065390714100,"word_count":1071},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\activities\\RegistreerActivity.kt":{"size":8276,"mtime_ns":1784885645399694800,"word_count":539},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\activities\\SettingsActivity.kt":{"size":6846,"mtime_ns":1784884859137056100,"word_count":421},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\activities\\SplashActivity.kt":{"size":589,"mtime_ns":1784886065407562700,"word_count":42},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\activities\\TemplateEditorActivity.kt":{"size":9241,"mtime_ns":1784886065447419300,"word_count":502},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\activities\\TemplateManagerActivity.kt":{"size":4896,"mtime_ns":1784885236777152100,"word_count":271},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\activities\\UitlegActivity.kt":{"size":9876,"mtime_ns":1784202871335557600,"word_count":667},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\activities\\UitlegCalendarSelectionListener.kt":{"size":186,"mtime_ns":1781977841843665000,"word_count":12},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\activities\\VerjaarSmsActivity.kt":{"size":31150,"mtime_ns":1784884017583606700,"word_count":1983},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\activities\\diagnoseNetwork.kt":{"size":1654,"mtime_ns":1784303251086576000,"word_count":159},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\adapters\\BackupListAdapter.kt":{"size":2238,"mtime_ns":1784349986570238800,"word_count":159},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\adapters\\BedieningPagerAdapter.kt":{"size":717,"mtime_ns":1783866876932114100,"word_count":60},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\adapters\\BedieningReminderAdapter.kt":{"size":10502,"mtime_ns":1783866876301030600,"word_count":646},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\adapters\\CallLogAdapter.kt":{"size":2978,"mtime_ns":1783866876423029900,"word_count":216},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\adapters\\MemberListAdapter.kt":{"size":42549,"mtime_ns":1784980570127545200,"word_count":3156},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\adapters\\PastoralNoteAdapter.kt":{"size":6074,"mtime_ns":1783866875699404800,"word_count":432},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\adapters\\PendingReminderMiniAdapter.kt":{"size":3680,"mtime_ns":1783866876680573200,"word_count":256},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\adapters\\ReminderPreviewAdapter.kt":{"size":3102,"mtime_ns":1783866877595729900,"word_count":209},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\adapters\\SpinnerAdapter.kt":{"size":1967,"mtime_ns":1776161893773022500,"word_count":184},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\adapters\\StepEditorAdapter.kt":{"size":2363,"mtime_ns":1782540972311627100,"word_count":181},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\adapters\\TemplateManagerAdapter.kt":{"size":2625,"mtime_ns":1783866876692578000,"word_count":167},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\adapters\\TemplatePickerAdapter.kt":{"size":3395,"mtime_ns":1783866876496570700,"word_count":287},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\bottomsheets\\FilterBottomSheet.kt":{"size":17974,"mtime_ns":1784972443859144100,"word_count":1112},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\bottomsheets\\StelHerinneringBottomSheet.kt":{"size":33437,"mtime_ns":1784185738411568000,"word_count":2180},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\bottomsheets\\VoegNotaByBottomSheet.kt":{"size":14882,"mtime_ns":1783866876548572000,"word_count":895},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\common\\UiState.kt":{"size":422,"mtime_ns":1782655519901279800,"word_count":56},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\common\\UiStateExtensions.kt":{"size":986,"mtime_ns":1782655829896174000,"word_count":92},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\components\\FilterCheckBox.kt":{"size":1675,"mtime_ns":1783866876092485600,"word_count":198},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\components\\ListViewSelected.kt":{"size":394,"mtime_ns":1776161894083136700,"word_count":50},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\components\\SearchCheckBox.kt":{"size":1086,"mtime_ns":1776161894122413200,"word_count":92},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\components\\WellBehavedEditText.kt":{"size":1105,"mtime_ns":1783866877265191200,"word_count":99},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\controllers\\ActivityResultCoordinator.kt":{"size":4300,"mtime_ns":1783866877390189100,"word_count":321},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\controllers\\BedieningSeksieController.kt":{"size":11882,"mtime_ns":1783866877102649700,"word_count":761},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\controllers\\Congregationchipcontroller.kt":{"size":5147,"mtime_ns":1784965367862631300,"word_count":409},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\controllers\\LidmaatPastoralSectionController.kt":{"size":14870,"mtime_ns":1783866875922940800,"word_count":809},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\controllers\\MainMenuController.kt":{"size":7467,"mtime_ns":1784987817848757300,"word_count":486},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\controllers\\MainSearchFilterCoordinator.kt":{"size":11288,"mtime_ns":1784992808205466800,"word_count":784},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\controllers\\MainStartupCoordinator.kt":{"size":4395,"mtime_ns":1784184521265349400,"word_count":249},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\controllers\\MainSwipeGestureController.kt":{"size":3947,"mtime_ns":1784963979872480900,"word_count":396},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\controllers\\MemberListInteractionController.kt":{"size":7706,"mtime_ns":1784987800534074400,"word_count":458},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\controllers\\MemberPhotoController.kt":{"size":10338,"mtime_ns":1783999828557381100,"word_count":829},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\controllers\\PastoralReminderBadgeController.kt":{"size":5841,"mtime_ns":1783866875681409600,"word_count":409},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\controllers\\Sortordercontroller.kt":{"size":11977,"mtime_ns":1784980712726592200,"word_count":1036},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\dialogs\\StepEditorDialog.kt":{"size":4635,"mtime_ns":1783866875774939700,"word_count":333},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\fragments\\BedieningVandagFragment.kt":{"size":9008,"mtime_ns":1784884129040752700,"word_count":506},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\fragments\\UitlegFunksiesFragment.kt":{"size":16260,"mtime_ns":1784885074938181900,"word_count":1073},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\fragments\\UitlegPastoraalFragment.kt":{"size":23166,"mtime_ns":1784886023722984300,"word_count":1811},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\fragments\\UitlegVertoonFragment.kt":{"size":14390,"mtime_ns":1784381780401109700,"word_count":1003},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\fragments\\UitlegWidgetFragment.kt":{"size":4162,"mtime_ns":1782049086261924000,"word_count":291},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\helpers\\BirthdayScrollHelper.kt":{"size":4911,"mtime_ns":1783866877277188300,"word_count":510},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\helpers\\MemberListScrollHelper.kt":{"size":2091,"mtime_ns":1783004065179792500,"word_count":183},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\helpers\\QuickActionHelper.kt":{"size":16058,"mtime_ns":1784971384255889700,"word_count":1208},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\models\\MainQueryMode.kt":{"size":610,"mtime_ns":1777348569362887600,"word_count":63},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\viewmodels\\ArgiefViewModel.kt":{"size":3070,"mtime_ns":1782700028433306900,"word_count":259},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\viewmodels\\BedieningViewModel.kt":{"size":8400,"mtime_ns":1783866876763113300,"word_count":565},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\viewmodels\\BedieningViewModelFactory.kt":{"size":907,"mtime_ns":1781757022734279500,"word_count":51},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\viewmodels\\EventViewModel.kt":{"size":7532,"mtime_ns":1783866875784947300,"word_count":450},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\viewmodels\\LidmaatDetailPastoralViewModel.kt":{"size":6179,"mtime_ns":1783866876782113400,"word_count":439},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\viewmodels\\LidmaatDetailPastoralViewModelFactory.kt":{"size":900,"mtime_ns":1783866876859113100,"word_count":55},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\viewmodels\\LidmaatDetailViewModel.kt":{"size":10617,"mtime_ns":1783866876077480600,"word_count":649},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\viewmodels\\MainViewModel.kt":{"size":3776,"mtime_ns":1783866875660413000,"word_count":256},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\viewmodels\\MemberViewModel.kt":{"size":21959,"mtime_ns":1783942069120699300,"word_count":1732},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\viewmodels\\PastoralDashboardViewModel.kt":{"size":84,"mtime_ns":1782540972398170300,"word_count":4},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\viewmodels\\TemplateManagerViewModel.kt":{"size":3368,"mtime_ns":1783866875556407000,"word_count":234},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\ActiveCallReconciler.kt":{"size":2135,"mtime_ns":1783866996163891700,"word_count":187},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\AppAuthGuard.kt":{"size":7468,"mtime_ns":1784203042439033000,"word_count":715},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\AppAuthState.kt":{"size":3256,"mtime_ns":1784207699826595200,"word_count":389},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\AppInitializer.kt":{"size":5166,"mtime_ns":1783866995518812100,"word_count":341},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\BackPressHandler.kt":{"size":1471,"mtime_ns":1782110017193083500,"word_count":143},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\BatteryOptimizationHelper.kt":{"size":3081,"mtime_ns":1782620386541175400,"word_count":226},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\BootForegroundServiceStarter.kt":{"size":4699,"mtime_ns":1784303056026971900,"word_count":335},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\CalendarManager.kt":{"size":21384,"mtime_ns":1783866997790836800,"word_count":1556},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\CallLogExporter.kt":{"size":6364,"mtime_ns":1783866996517133500,"word_count":505},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\CallNotificationDiagnostics.kt":{"size":2299,"mtime_ns":1783866994238613300,"word_count":190},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\CallerInfoResolver.kt":{"size":10126,"mtime_ns":1784303056032974900,"word_count":721},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\CallerInfoResult.kt":{"size":1454,"mtime_ns":1784219276799932400,"word_count":180},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\CallerNameResolver.kt":{"size":3490,"mtime_ns":1784262399088810600,"word_count":310},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\ChecksumSocketTransfer.kt":{"size":14895,"mtime_ns":1783998207274297100,"word_count":1572},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\ColorObserver.kt":{"size":465,"mtime_ns":1776161894293532800,"word_count":62},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\ColorUtils.kt":{"size":1529,"mtime_ns":1784963931810519800,"word_count":185},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\CursorAdapterExt.kt":{"size":378,"mtime_ns":1777362121660431900,"word_count":34},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\CursorDataExtractor.kt":{"size":11373,"mtime_ns":1783866997969574900,"word_count":1277},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\CursorExtensions.kt":{"size":1113,"mtime_ns":1776168744509962000,"word_count":114},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\DatabaseBackupHelper.kt":{"size":4725,"mtime_ns":1783866995663349800,"word_count":460},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\DeviceIdManager.kt":{"size":3362,"mtime_ns":1782620386480005900,"word_count":363},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\EncryptedPrefsManager.kt":{"size":1184,"mtime_ns":1783481586829037600,"word_count":64},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\ForegroundServiceHelper.kt":{"size":1499,"mtime_ns":1783939508120966400,"word_count":122},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\Installation.kt":{"size":2106,"mtime_ns":1783866996036349000,"word_count":171},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\MainNavigationController.kt":{"size":14799,"mtime_ns":1784185738527425800,"word_count":1048},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\MemberActionHandler.kt":{"size":3249,"mtime_ns":1784796407864657900,"word_count":176},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\MemberItemMapper.kt":{"size":70,"mtime_ns":1782540972495171200,"word_count":4},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\MemberUtils.kt":{"size":14479,"mtime_ns":1784886023769671700,"word_count":1017},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\MenuItemHandler.kt":{"size":5023,"mtime_ns":1784988114174224400,"word_count":324},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\MessageComposer.kt":{"size":2239,"mtime_ns":1783444024167247400,"word_count":302},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\NoteAuthManager.kt":{"size":4019,"mtime_ns":1784203887319257000,"word_count":351},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\OproepUtils.kt":{"size":8604,"mtime_ns":1783866995609351100,"word_count":636},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\PastoralDatabaseBackup.kt":{"size":12781,"mtime_ns":1784358447257201600,"word_count":1148},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\PastoralNotificationHelper.kt":{"size":8674,"mtime_ns":1783866998170825300,"word_count":501},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\PastoralTaskScriptManager.kt":{"size":5338,"mtime_ns":1783866995636349500,"word_count":485},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\PastoralTaskShareHelper.kt":{"size":1775,"mtime_ns":1783866994626778200,"word_count":138},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\PermissionHelper.kt":{"size":3789,"mtime_ns":1783866994361086800,"word_count":304},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\PermissionManager.kt":{"size":12875,"mtime_ns":1783866996909120800,"word_count":726},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\PhoneCallMonitor.kt":{"size":14280,"mtime_ns":1784520158519835500,"word_count":1100},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\PhotoHelper.kt":{"size":2310,"mtime_ns":1783866994002739900,"word_count":224},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\PhotoSyncManager.kt":{"size":7894,"mtime_ns":1783943260586383300,"word_count":614},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\PopupMenuHelper.kt":{"size":1964,"mtime_ns":1783866995897980500,"word_count":159},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\RealPathUtil.kt":{"size":1417,"mtime_ns":1776161894423887600,"word_count":135},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\ReminderEventBus.kt":{"size":454,"mtime_ns":1782705641504660300,"word_count":29},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\SQLiteStatementValidator.kt":{"size":18798,"mtime_ns":1783866995493813400,"word_count":1683},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\SearchCheckBoxPreferences.kt":{"size":1648,"mtime_ns":1782620386691081100,"word_count":126},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\ServerFileValidator.kt":{"size":7401,"mtime_ns":1783765560336425900,"word_count":699},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\ServiceUtils.kt":{"size":6480,"mtime_ns":1784303721641247900,"word_count":490},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\SettingsManager.kt":{"size":22229,"mtime_ns":1784886023735525400,"word_count":1473},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\UnifiedCallMonitor.kt":{"size":10432,"mtime_ns":1783866992821709900,"word_count":883},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\Utils.kt":{"size":1653,"mtime_ns":1783866992931243200,"word_count":134},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\WhatsAppContactLoader.kt":{"size":3803,"mtime_ns":1783866995539809100,"word_count":313},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\WorkManagerHelper.kt":{"size":7733,"mtime_ns":1783866995449806200,"word_count":544},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\WorkScheduler.kt":{"size":2086,"mtime_ns":1782109693582434100,"word_count":165},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\widget\\PastoralWidgetKeyguardProvider.kt":{"size":2153,"mtime_ns":1783866995293395900,"word_count":118},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\widget\\PastoralWidgetKeyguardRemoteViewsService.kt":{"size":3402,"mtime_ns":1783866996068467600,"word_count":257},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\widget\\PastoralWidgetProvider.kt":{"size":11132,"mtime_ns":1784303056061060700,"word_count":707},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\widget\\PastoralWidgetRemoteViewsService.kt":{"size":13355,"mtime_ns":1784303721694440900,"word_count":830},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\widget\\WidgetDataRepository.kt":{"size":8791,"mtime_ns":1784303056069009600,"word_count":660},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\widget\\WidgetQueryBuilder.kt":{"size":6814,"mtime_ns":1784184521392426400,"word_count":611},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\widget\\WidgetRow.kt":{"size":196,"mtime_ns":1782235590425060000,"word_count":21},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\widget\\WinkerkReaderWidgetProvider.kt":{"size":21065,"mtime_ns":1784303721743600800,"word_count":1530},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\workers\\BirthdayReminderWorker.kt":{"size":727,"mtime_ns":1782620386588561000,"word_count":65},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\workers\\DropboxDownloadWorker.kt":{"size":1331,"mtime_ns":1783867054556299600,"word_count":113},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\workers\\FileDownloadWorker.kt":{"size":10373,"mtime_ns":1784303781889316300,"word_count":774},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\workers\\FileDownloadWorkerOld.kt":{"size":9422,"mtime_ns":1784358447243363800,"word_count":701},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\workers\\FollowUpReminderWorker.kt":{"size":4154,"mtime_ns":1783867054582386300,"word_count":288},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\workers\\PastoralBackupWorker.kt":{"size":5418,"mtime_ns":1783867054620167500,"word_count":352},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\workers\\PastoralDailyDigestWorker.kt":{"size":77,"mtime_ns":1782540972508174600,"word_count":4},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\workers\\PhotoDownloadWorker.kt":{"size":13597,"mtime_ns":1784303721791198700,"word_count":1054},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\workers\\PhotoDownloadWorkerOld.kt":{"size":8222,"mtime_ns":1784256582145631700,"word_count":606},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\workers\\WidgetRefreshWorker.kt":{"size":5598,"mtime_ns":1784303056091010600,"word_count":431},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\bdaysms.png":{"size":34290,"mtime_ns":1771330816000000000,"word_count":1163},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\bdayw.png":{"size":3407,"mtime_ns":1771330814993628500,"word_count":123},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\bel.png":{"size":2652,"mtime_ns":1771330806000000000,"word_count":85},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\bely.png":{"size":27220,"mtime_ns":1771330816000000000,"word_count":994},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\clipboard.png":{"size":41109,"mtime_ns":1771330816000000000,"word_count":1499},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\doop.png":{"size":25889,"mtime_ns":1771330806000000000,"word_count":978},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\doopsms.png":{"size":37094,"mtime_ns":1771330816000000000,"word_count":1309},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\family_roofw.png":{"size":74240,"mtime_ns":1771330816000000000,"word_count":2605},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\huweliksms.png":{"size":22353,"mtime_ns":1771330816000000000,"word_count":820},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\ic_close2.png":{"size":23970,"mtime_ns":1771330816000000000,"word_count":900},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\ic_launcher_round.png":{"size":28007,"mtime_ns":1771330816000000000,"word_count":1057},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\ic_launcher_roundw.png":{"size":30048,"mtime_ns":1782718949985416600,"word_count":1084},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\ic_overdue.png":{"size":135446,"mtime_ns":1781436978000000000,"word_count":5117},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\kalender.png":{"size":3230,"mtime_ns":1771330808000000000,"word_count":110},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\kalenders.png":{"size":1085,"mtime_ns":1771330816000000000,"word_count":26},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\married.png":{"size":2331,"mtime_ns":1771330816000000000,"word_count":81},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\oldphone.png":{"size":20943,"mtime_ns":1771330816000000000,"word_count":780},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\sms_empty.png":{"size":11591,"mtime_ns":1771330808000000000,"word_count":420},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\updatew.png":{"size":1935,"mtime_ns":1771330815445097900,"word_count":64},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\whatsapp.png":{"size":9008,"mtime_ns":1771330816000000000,"word_count":320},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\whatsapps.png":{"size":1948,"mtime_ns":1771330816000000000,"word_count":72},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\family_roof.png":{"size":67168,"mtime_ns":1771330816000000000,"word_count":2514},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\ic_launcher_round.png":{"size":111023,"mtime_ns":1771330816000000000,"word_count":894},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\test\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\repository\\CalendarManagerPastoralTest.kt":{"size":1153,"mtime_ns":1781363327107736800,"word_count":156},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\test\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\repository\\PastoralReminderRepositoryCalendarTest.kt":{"size":1410,"mtime_ns":1781363327097185300,"word_count":163},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\test\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\repository\\PastoralReminderRepositoryTest.kt":{"size":3893,"mtime_ns":1781363177380508500,"word_count":273},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\vector_size_check.py":{"size":6284,"mtime_ns":1782794043085827200,"word_count":600},"C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\wrap_logs.py":{"size":8117,"mtime_ns":1781953320217997700,"word_count":986}}
+{
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\OneText.py": {
+    "size": 3592,
+    "mtime_ns": 1782963902925280200,
+    "word_count": 367,
+    "hashes": {
+      "onetext.py": "476a4d786c3ca60a5bc2e08842e9f032c47f6cbea4b9756aafb2bf8faf71c8f3"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\ToText.py": {
+    "size": 3354,
+    "mtime_ns": 1782637654537676500,
+    "word_count": 351,
+    "hashes": {
+      "totext.py": "27b0756eab08cf9dd2ea01bbcade002d62cc40ce6041c94b967a8d8e34dce0b9"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\aggregate_kotlin_files.py": {
+    "size": 3354,
+    "mtime_ns": 1782637654228089600,
+    "word_count": 351,
+    "hashes": {
+      "aggregate_kotlin_files.py": "eca755d82475238f405a39bc78ba2a4cd8c0ea3de6294faf6cf786e4c790c2d7"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\combined_code 23-7-2026.txt": {
+    "size": 2084553,
+    "mtime_ns": 1784801379918980000,
+    "word_count": 128997
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\combined_code 24-7-2026.txt": {
+    "size": 2103327,
+    "mtime_ns": 1784883059124673000,
+    "word_count": 129950
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\debug\\kotlin\\za\\co\\jpsoft\\winkerkreader\\DebugWinkerkReader.kt": {
+    "size": 1009,
+    "mtime_ns": 1784556128053280700,
+    "word_count": 75,
+    "hashes": {
+      "debug/kotlin/za/co/jpsoft/winkerkreader/debugwinkerkreader.kt": "d496516eca3d6307b267dc8265abfa532697b51306b1522de080893629c08c5f"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\dir_structure.py": {
+    "size": 3988,
+    "mtime_ns": 1782126237906092200,
+    "word_count": 410,
+    "hashes": {
+      "dir_structure.py": "56c5ebf8cde3cc6793633dff7d1805970cae94e47f9e9907991ac5a551c06bad"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\fix_layout.py": {
+    "size": 8162,
+    "mtime_ns": 1783853341177652400,
+    "word_count": 653,
+    "hashes": {
+      "fix_layout.py": "a494b1eb513afca6e94ecd9730349773a89dc3b42ee08bc731edcafff740a1e6"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\WinkerkReader.kt": {
+    "size": 5250,
+    "mtime_ns": 1785469767648892300,
+    "word_count": 388,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/winkerkreader.kt": "84053d18fa7d4a2a6f1ad9fe867cacf1ff4002e892044d2929f0d06419f11dc9"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\behaviors\\BottomCardBehavior.kt": {
+    "size": 845,
+    "mtime_ns": 1784003153417427600,
+    "word_count": 67,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/behaviors/bottomcardbehavior.kt": "d86d086bdc4fdfff82d212eba384abc59900928911ceeeb7ae53487374cc1d53"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\DatabaseHelper.kt": {
+    "size": 11251,
+    "mtime_ns": 1784086455545852200,
+    "word_count": 879,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/databasehelper.kt": "c0565ad06ddd3604887d7ca1a39e314adc1cda8007d113fcc3dfaf2597c75c50"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\DatabaseInitializer.kt": {
+    "size": 7770,
+    "mtime_ns": 1785486996526587400,
+    "word_count": 760,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/databaseinitializer.kt": "564819de9f469dffe6079cfd9d8590d8848022b7cafb6c826ce1bc2556091fc2"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\MemberItemSeparator.kt": {
+    "size": 4800,
+    "mtime_ns": 1784132095805536300,
+    "word_count": 438,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/memberitemseparator.kt": "75893747713805a78345599b580cb5796a30182436732f2d0210b175ef85435c"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\MemberPagingSource.kt": {
+    "size": 4732,
+    "mtime_ns": 1785488008764116000,
+    "word_count": 400,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/memberpagingsource.kt": "62080a27634756fbdfe4840f8635d0cfa49c90627716b9af216c9c7f0f4b6c65"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\MemberQueryBuilder.kt": {
+    "size": 26191,
+    "mtime_ns": 1783941524583116900,
+    "word_count": 1483,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/memberquerybuilder.kt": "c213a1a82b8cea693faba47e75e0d3e1a2801d9c39fcfbb3f70aaa9c911b6be7"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\MemberRepository.kt": {
+    "size": 8518,
+    "mtime_ns": 1785488008742150100,
+    "word_count": 621,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/memberrepository.kt": "0cab2e8d4e517a95237a1675025154e016c1b1e4cc283999bf6ddb760dd3005b"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\WinkerkContract.kt": {
+    "size": 27101,
+    "mtime_ns": 1783866997217187600,
+    "word_count": 2548,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/winkerkcontract.kt": "37f3398c36fac50432833072c96a054b3de752fb526ae748de6147569454e05b"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\WinkerkDbHelper.kt": {
+    "size": 6902,
+    "mtime_ns": 1784207699872815500,
+    "word_count": 609
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\WinkerkProvider.kt": {
+    "size": 8503,
+    "mtime_ns": 1785221907369056900,
+    "word_count": 615,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/winkerkprovider.kt": "5dfcee618e31e6b2270bccc3335f70275d8aa61aa28b8d40da2c99039fb143d8"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\calllog\\ActiveCallEntity.kt": {
+    "size": 415,
+    "mtime_ns": 1782989172231334800,
+    "word_count": 34,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/calllog/activecallentity.kt": "7ccba51331a5e8fc466c9dd57be7ea916ae538f9eaa3a68939c358dcd833a065"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\calllog\\CallLogDao.kt": {
+    "size": 1355,
+    "mtime_ns": 1783866997662360300,
+    "word_count": 127,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/calllog/calllogdao.kt": "820cdba43eff5bcec5f05e1e481a4633cbfa75c5dcb9ba38c115ea55d2432423"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\calllog\\CallLogDatabase.kt": {
+    "size": 1005,
+    "mtime_ns": 1783444023540320600,
+    "word_count": 76,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/calllog/calllogdatabase.kt": "a13306b7d10594f651387e7c5e5e07fc2eafb4a51958e9045ae686666a9eafd1"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\calllog\\CallLogDatabaseBackup.kt": {
+    "size": 3955,
+    "mtime_ns": 1785486875669471900,
+    "word_count": 328,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/calllog/calllogdatabasebackup.kt": "8c33ac5f287147fd3f3e6cb29d507da0c5b2955e7bd7fcfe4c25cca436f61f29"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\calllog\\CallLogEntity.kt": {
+    "size": 581,
+    "mtime_ns": 1782990560662824300,
+    "word_count": 58,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/calllog/calllogentity.kt": "e8e6de6db6d017cc789b35efbd1889e1a60fa7c1b2caf03995a95cef076f2f6e"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\calllog\\CallLogImporter.kt": {
+    "size": 3058,
+    "mtime_ns": 1785486996532546300,
+    "word_count": 230,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/calllog/calllogimporter.kt": "3ab0dbb5823d2ab29f46b66c20debfdd64d3660490184d9a68fcff87d33325b8"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\calllog\\Converters.kt": {
+    "size": 400,
+    "mtime_ns": 1782989686355015200,
+    "word_count": 27,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/calllog/converters.kt": "6bac22788f822c2c5bbdc14c6e071c8a682772219aabb1dbf02ff8607c2d9d63"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\models\\CalendarInfo.kt": {
+    "size": 266,
+    "mtime_ns": 1776161893526160900,
+    "word_count": 31,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/models/calendarinfo.kt": "af9cd4567adaa193d753428fb0e87e02f2d192df7e0162022f93b694d4dfc957"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\models\\CallLog.kt": {
+    "size": 288,
+    "mtime_ns": 1776161893531161500,
+    "word_count": 33,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/models/calllog.kt": "675c8e94efa5481a230233ff0fb75ff83b4e284fc8b09528fbf647330267cb01"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\models\\CallRecord.kt": {
+    "size": 1408,
+    "mtime_ns": 1776168744173803600,
+    "word_count": 135,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/models/callrecord.kt": "5253603ffd49dc4c09eea5e2590e8e1b2a72e555690095b313ade4b68f6bbf75"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\models\\CallType.kt": {
+    "size": 266,
+    "mtime_ns": 1782967480723731200,
+    "word_count": 27,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/models/calltype.kt": "47d8b18a51bbd831d9efe22b597e4380ea5a741f7772336380245f0893c5d023"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\models\\FilterBox.kt": {
+    "size": 1201,
+    "mtime_ns": 1776161893537692300,
+    "word_count": 118,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/models/filterbox.kt": "45a7a29cb757901f9965ccf59fc6252037857b2a82da9665c0df739a9e1f9c34"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\models\\MemberDetailItem.kt": {
+    "size": 1401,
+    "mtime_ns": 1781981437341915700,
+    "word_count": 222,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/models/memberdetailitem.kt": "5b59b7753bec8beba9893a93531484700e3a454619e7f071df6688c8e603ec05"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\models\\MemberItem.kt": {
+    "size": 4743,
+    "mtime_ns": 1783866995760351300,
+    "word_count": 396,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/models/memberitem.kt": "e9ca674a59590e420ba970c6b7cc3a037bf192721998a50cb27824043b684b02"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\models\\SmsList.kt": {
+    "size": 1113,
+    "mtime_ns": 1776161893540218500,
+    "word_count": 102,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/models/smslist.kt": "90cef43c05b94b14c6100c10c047328869112112016b95bb63cabdd9698f4f8e"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\PastoralDatabase.kt": {
+    "size": 8407,
+    "mtime_ns": 1784303055929716500,
+    "word_count": 607,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/pastoral/pastoraldatabase.kt": "3ffa40265d888ddcf74c0d27fb654db7d7336633d461aa987979acdb3e74af1d"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\PastoralDatabaseInitializer.kt": {
+    "size": 9440,
+    "mtime_ns": 1783866996478949600,
+    "word_count": 728,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/pastoral/pastoraldatabaseinitializer.kt": "abeaea5f32497cd3411889b3968d23172426c9384428bbedfc9490bdc042fbe1"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\dao\\FollowUpReminderDao.kt": {
+    "size": 5586,
+    "mtime_ns": 1783866995778351800,
+    "word_count": 494,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/pastoral/dao/followupreminderdao.kt": "b10e22c33108fa6f4746d91c3b1f5c03df33ec295fe2236c5d32c46aeb414270"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\dao\\PastoralMetaDao.kt": {
+    "size": 607,
+    "mtime_ns": 1781269810524899900,
+    "word_count": 45,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/pastoral/dao/pastoralmetadao.kt": "3bc30e1324803b803018611f9890670cc62f8e1ff882fae60d49bd8852b3a8c4"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\dao\\PastoralNoteDao.kt": {
+    "size": 2843,
+    "mtime_ns": 1783866997455484500,
+    "word_count": 214,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/pastoral/dao/pastoralnotedao.kt": "46f0aae3bafd2097785580ed953845d912d5c213bbb66882c436d58fea222d30"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\dao\\ReminderTemplateDao.kt": {
+    "size": 3263,
+    "mtime_ns": 1781842480215347600,
+    "word_count": 261,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/pastoral/dao/remindertemplatedao.kt": "e3cb0a1766b0654f2ece4b1d59403f1fd95603ff9653b5de3b817a6b66751625"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\entities\\FollowUpReminderEntity.kt": {
+    "size": 1252,
+    "mtime_ns": 1781950236915928800,
+    "word_count": 118,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/pastoral/entities/followupreminderentity.kt": "77eceb4d1ee92ab479dc6cbb09bc6a0e2415c65a0f6641601e58790050703ec7"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\entities\\PastoralMetaEntity.kt": {
+    "size": 358,
+    "mtime_ns": 1781269737449368500,
+    "word_count": 33,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/pastoral/entities/pastoralmetaentity.kt": "3eccac9e8f0d2cac516e0139016cbc19a902279e5735173e1534bc09ab143530"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\entities\\PastoralNoteEntity.kt": {
+    "size": 1128,
+    "mtime_ns": 1782355509616572700,
+    "word_count": 113,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/pastoral/entities/pastoralnoteentity.kt": "55e613969f6f360e76fcc38c7bec6119d1411a5e40528d808429e9bc72980964"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\entities\\ReminderTemplateEntity.kt": {
+    "size": 513,
+    "mtime_ns": 1781788970189267600,
+    "word_count": 52,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/pastoral/entities/remindertemplateentity.kt": "a3c9c1603be09e98769a50875a1993c1e1f323f7c955dd75ace96963876153b2"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\entities\\TemplateStepEntity.kt": {
+    "size": 863,
+    "mtime_ns": 1781269743643163400,
+    "word_count": 77,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/pastoral/entities/templatestepentity.kt": "f467616ffa29b5730faff931e23ebb30a8c845262f8d7e5eb6cb3901791afa86"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\model\\MemberDisplay.kt": {
+    "size": 599,
+    "mtime_ns": 1781950640545890400,
+    "word_count": 68,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/pastoral/model/memberdisplay.kt": "cb45399df8cc8acd60742d9c4e6bd3b5e0ff81627429d52adbd14edfcc4ee82b"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\model\\NoteCategory.kt": {
+    "size": 552,
+    "mtime_ns": 1783866995868888900,
+    "word_count": 46,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/pastoral/model/notecategory.kt": "82e43d8dc11ca7fc9f8de7f782d74480775cdb4d817c868b94b165dc7e0ee8ef"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\model\\ReminderStatus.kt": {
+    "size": 305,
+    "mtime_ns": 1781269728488327300,
+    "word_count": 28,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/pastoral/model/reminderstatus.kt": "c60d7abd4c25c8c498cbe118bc222406f1cd597022290bded0cbda0994c46df1"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\model\\ReminderWithMember.kt": {
+    "size": 520,
+    "mtime_ns": 1781271182164843200,
+    "word_count": 44,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/pastoral/model/reminderwithmember.kt": "5404c970621add4e4a332c2e62e682ba33ce664af9187d45bcf17f24f23d5788"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\model\\ScheduleType.kt": {
+    "size": 271,
+    "mtime_ns": 1781269729500457200,
+    "word_count": 26,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/pastoral/model/scheduletype.kt": "7585545a1de419cdfb27733c3b879c58169335098e67b21224a7a3c562a6918b"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\model\\TemplateContext.kt": {
+    "size": 3277,
+    "mtime_ns": 1783866993048767600,
+    "word_count": 314,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/pastoral/model/templatecontext.kt": "3c9c7b7c6c34eb13a08ebff032582fbdd13704b4e1b6b590051fed505a9c74d7"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\model\\TemplateContextSchema.kt": {
+    "size": 2654,
+    "mtime_ns": 1783866994204513100,
+    "word_count": 258,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/pastoral/model/templatecontextschema.kt": "ac83e7452ff6e04021151ffb2d6d40aa95ef4eab8b6a30ed69c470e15c92ec0e"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\model\\TemplateWithSteps.kt": {
+    "size": 551,
+    "mtime_ns": 1781270000347402900,
+    "word_count": 32,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/pastoral/model/templatewithsteps.kt": "62b6eb7794dab42754f50325e5c029a30e28949ead20feaf7eb0fa72c056b34a"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\model\\VandagDashboard.kt": {
+    "size": 302,
+    "mtime_ns": 1781271154294377200,
+    "word_count": 29,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/pastoral/model/vandagdashboard.kt": "e1cc5244d8dbff003f7db9e32aff844edad87b4278bf406d640681122fa0ee7c"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\repository\\MemberGuidResolver.kt": {
+    "size": 7241,
+    "mtime_ns": 1784303055939731300,
+    "word_count": 538,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/pastoral/repository/memberguidresolver.kt": "aa1f407444bb5b769bce9516e02ca7350bdceb78b98792829f8af0ce30267781"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\repository\\PastoralNoteRepository.kt": {
+    "size": 3786,
+    "mtime_ns": 1783866997308457700,
+    "word_count": 249,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/pastoral/repository/pastoralnoterepository.kt": "351e57d007ccd72928853b10b5984864a12540f073c96bca541086ffab48159f"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\repository\\PastoralReminderDates.kt": {
+    "size": 1562,
+    "mtime_ns": 1783866992893543700,
+    "word_count": 100,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/pastoral/repository/pastoralreminderdates.kt": "bd111ee183cac77557e566bc5fc7b73a2e8b04bfd537453497d7272d74471bc8"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\repository\\PastoralReminderRepository.kt": {
+    "size": 7042,
+    "mtime_ns": 1785428958306615500,
+    "word_count": 461,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/pastoral/repository/pastoralreminderrepository.kt": "5ef999a883b2f8f50fc2a021313696ee2f0f1a53d4dc07c87d06c406ed30139c"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\repositories\\ChurchInfoRepository.kt": {
+    "size": 2185,
+    "mtime_ns": 1785487156365157700,
+    "word_count": 146,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/repositories/churchinforepository.kt": "4cd43300607deb32c5e5d6bc2e66d6df04ac77f47e1d33d13a3f859b0b275422"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\repositories\\ContactRepository.kt": {
+    "size": 1411,
+    "mtime_ns": 1783866996104644800,
+    "word_count": 124,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/repositories/contactrepository.kt": "912ddbcbd267a0538d3d2e8b780bd995187a33b93cccd88437a3d28e6b230e7d"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\room\\ArchiveEntity.kt": {
+    "size": 2730,
+    "mtime_ns": 1782451330272850000,
+    "word_count": 299,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/room/archiveentity.kt": "219bba9f38f1177e1b49c1c6f7f4544cd04d9a90c55850303665a6d9990bbe28"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\room\\ArgiefDao.kt": {
+    "size": 327,
+    "mtime_ns": 1782620385609556200,
+    "word_count": 22,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/room/argiefdao.kt": "9d0c64db44cc131414bdd2819d4d7e544c490aec5f548e7e82cb5144b10fc0f3"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\room\\DatumDao.kt": {
+    "size": 219,
+    "mtime_ns": 1782449039655277200,
+    "word_count": 20,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/room/datumdao.kt": "76450eb1b5bca73f1bea7f9f609989835c351b594705aa76b4142e6adfab81d3"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\room\\DatumEntity.kt": {
+    "size": 361,
+    "mtime_ns": 1782188687176835800,
+    "word_count": 34,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/room/datumentity.kt": "bfc17143208457452e046b99a8aaaffee476a9614dd539fca319423c3107d0be"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\room\\MemberDao.kt": {
+    "size": 2521,
+    "mtime_ns": 1785260711759365400,
+    "word_count": 222,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/room/memberdao.kt": "a05a83f196799ac2817be4ef00570b3692ffa77d6f6aebf4d4123cc3a7d4124e"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\room\\MemberEntity.kt": {
+    "size": 6061,
+    "mtime_ns": 1782450892093914500,
+    "word_count": 680,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/room/memberentity.kt": "62116bfa0c3cff70b5cb8176081cb3d3ff4372407c857092da926e52ef497618"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\room\\WinkerkDatabase.kt": {
+    "size": 8428,
+    "mtime_ns": 1785261118757576600,
+    "word_count": 560,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/room/winkerkdatabase.kt": "fad2eaf386397b3a28f26aa55ee12c5f479e67b6c275af75d39fb09ad3e2d186"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\services\\CallMonitoringService.kt": {
+    "size": 8144,
+    "mtime_ns": 1784047678935757500,
+    "word_count": 557,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/services/callmonitoringservice.kt": "4eae3833375bb3715284fec7cd4374340fc30505c3c404bb4c9cc0769d790059"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\services\\ListViewWidgetService.kt": {
+    "size": 8312,
+    "mtime_ns": 1785487156369212800,
+    "word_count": 601,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/services/listviewwidgetservice.kt": "c778560b0b6d732acac413688a1d7eef1fe7aee5196ff724551d893f8f1d826f"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\services\\OproepDetailService.kt": {
+    "size": 13989,
+    "mtime_ns": 1785229079117264400,
+    "word_count": 993,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/services/oproepdetailservice.kt": "4e6aac23ae5794208eeb96d498a3a02aa0e669cdc45c28c6eac62f1e9c1fea44"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\services\\ServiceKeepAlive.kt": {
+    "size": 6849,
+    "mtime_ns": 1784303055955958600,
+    "word_count": 480,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/services/servicekeepalive.kt": "bd9c7884b2fd54e2f4e2934153f0024c2d7fc9e037710a41871eb9f81f17e534"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\services\\WhatsAppNotificationService.kt": {
+    "size": 11092,
+    "mtime_ns": 1785487426407599700,
+    "word_count": 697,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/services/whatsappnotificationservice.kt": "ca74482d0b91c29655524cf2cd397218939e81a386e6787ad5f83943616ccdf0"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\services\\receivers\\AlarmReceiver.kt": {
+    "size": 4310,
+    "mtime_ns": 1783866998035345600,
+    "word_count": 214,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/services/receivers/alarmreceiver.kt": "e2f1bd8658526d94cc55f8a8bee4f0af46a0b662470137909eca6b2156e32893"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\services\\receivers\\DeviceBootReceiver.kt": {
+    "size": 8948,
+    "mtime_ns": 1785487769422043800,
+    "word_count": 587,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/services/receivers/devicebootreceiver.kt": "4e49db0bce3567c359f058865e6be6fe6c289570f0f9da77ef0424ab2694d176"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\services\\receivers\\IncomingCall.kt": {
+    "size": 5746,
+    "mtime_ns": 1783866994504215000,
+    "word_count": 439,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/services/receivers/incomingcall.kt": "9e378161ddda8c40c0914d7166b49e138a6ab54276af2fa471b1a12fe4e9f115"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\services\\receivers\\PastoralReminderActionReceiver.kt": {
+    "size": 3102,
+    "mtime_ns": 1783866995850420100,
+    "word_count": 197,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/services/receivers/pastoralreminderactionreceiver.kt": "2c3e882ec2453d16f04dfcb11072811d0cc567e1a329eb760c82e497bb1962a8"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\activities\\ArgiefListActivity.kt": {
+    "size": 9626,
+    "mtime_ns": 1785491189224193000,
+    "word_count": 670,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/activities/argieflistactivity.kt": "69d77c82a0cf606173170265c77e806406b0f7f29cd54f572944ef28983b954a"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\activities\\BaseActivity.kt": {
+    "size": 626,
+    "mtime_ns": 1785490983493536600,
+    "word_count": 58,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/activities/baseactivity.kt": "282d6592698bcea77daa238a6320a553ae65d542fb1dff4f674ab31184fe7e65"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\activities\\BedieningActivity.kt": {
+    "size": 6746,
+    "mtime_ns": 1785491440056604100,
+    "word_count": 394,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/activities/bedieningactivity.kt": "e6eafd5250d55ab76d8e585958a07e1d0d1c76e2f72c1b29bfcd6bd8a33b3c01"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\activities\\CallLogActivity.kt": {
+    "size": 10485,
+    "mtime_ns": 1785491189254412800,
+    "word_count": 562,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/activities/calllogactivity.kt": "80ec415773f99c804cf63191064f667df4b2b8ddfc1b5fb87e7b17d02f1b3b4c"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\activities\\LaaiDatabasisActivity.kt": {
+    "size": 21453,
+    "mtime_ns": 1785487156379173000,
+    "word_count": 1339,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/activities/laaidatabasisactivity.kt": "41ef148783f0b7289e705c61ee436b5229360e147e686410269db93459e85cd2"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\activities\\LidmaatDetailActivity.kt": {
+    "size": 41077,
+    "mtime_ns": 1785491189294075000,
+    "word_count": 2413,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/activities/lidmaatdetailactivity.kt": "933bb8b9ed182f2bbfddf6e502b0d29b4a8fb9b23329858e3034d83cdabc2b28"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\activities\\MainActivity.kt": {
+    "size": 12999,
+    "mtime_ns": 1785491189282037300,
+    "word_count": 908,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/activities/mainactivity.kt": "23afa951c018c8821c2407a535af8a33c61a68ab3ae8ad813625f8e200f72eeb"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\activities\\PastoralBackupActivity.kt": {
+    "size": 8987,
+    "mtime_ns": 1784886065399958500,
+    "word_count": 542,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/activities/pastoralbackupactivity.kt": "d00e7a1797e9203001c178759ba6ada868a6983286a14fd9b1f73896c2f04d53"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\activities\\PastoralCaseActivity.kt": {
+    "size": 78,
+    "mtime_ns": 1782540972482173200,
+    "word_count": 4,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/activities/pastoralcaseactivity.kt": "96cdc2ae0d7c090130beebf83030ba9842fb800d9868f63e283afa6e9390e272"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\activities\\PermissionsActivity.kt": {
+    "size": 6753,
+    "mtime_ns": 1785383934595785800,
+    "word_count": 350,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/activities/permissionsactivity.kt": "da07694a4428f9b870ba7f2f8beb33bc225aa9537207ca74aed9ee6892526f63"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\activities\\RegistreerActivity.kt": {
+    "size": 8358,
+    "mtime_ns": 1785491189318146000,
+    "word_count": 539,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/activities/registreeractivity.kt": "fbcf8dfd36f16d85efc2bd0f7743b59a893fd9c703b0ba40ae28eeb60221ca58"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\activities\\SettingsActivity.kt": {
+    "size": 6850,
+    "mtime_ns": 1785491189310648800,
+    "word_count": 421,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/activities/settingsactivity.kt": "50e12b2834af671ecae8d16703d31a38db8428d543de74541adeb2f5ff542a1d"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\activities\\SplashActivity.kt": {
+    "size": 589,
+    "mtime_ns": 1784886065407562700,
+    "word_count": 42,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/activities/splashactivity.kt": "3f4ac04cd0682ced06912c0556f22baa7de5c3d38e2f692a98340f04f8ee49ce"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\activities\\TemplateEditorActivity.kt": {
+    "size": 8992,
+    "mtime_ns": 1785491665172990000,
+    "word_count": 489,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/activities/templateeditoractivity.kt": "7ab615bf5cfadaebf76ab9aa663033ab3a9fdc51224a9edc29979bb4e64b1ef0"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\activities\\TemplateManagerActivity.kt": {
+    "size": 4727,
+    "mtime_ns": 1785491634684939200,
+    "word_count": 260,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/activities/templatemanageractivity.kt": "40bd04ad71e53af94df406b9842d6df1a1bf51989ef184906e1f5d11e356ef82"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\activities\\UitlegActivity.kt": {
+    "size": 9468,
+    "mtime_ns": 1785491189265425400,
+    "word_count": 601,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/activities/uitlegactivity.kt": "673085e2694f3a503a650661737a593d996d40d47287048ec110224fe433cd63"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\activities\\UitlegCalendarSelectionListener.kt": {
+    "size": 186,
+    "mtime_ns": 1781977841843665000,
+    "word_count": 12,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/activities/uitlegcalendarselectionlistener.kt": "bd20b00464cd8fa58aab553adf0a6cefebccca22d77a4f9efcd17b41046e435d"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\activities\\VerjaarSmsActivity.kt": {
+    "size": 23536,
+    "mtime_ns": 1785491189244904000,
+    "word_count": 1404,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/activities/verjaarsmsactivity.kt": "dd18e8266103a0a1b5e7daa5d12901e1bf2850a103b246b75ee900008249ed1b"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\activities\\diagnoseNetwork.kt": {
+    "size": 1654,
+    "mtime_ns": 1784303251086576000,
+    "word_count": 159,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/activities/diagnosenetwork.kt": "5a5b0a3fb52472f52a427824bd7592269afeb917620154cd7d3259784454980f"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\adapters\\BackupListAdapter.kt": {
+    "size": 2238,
+    "mtime_ns": 1784349986570238800,
+    "word_count": 159,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/adapters/backuplistadapter.kt": "7ef02beac459fa79768effa4900a88d42635eb8fb7be74b83793ef487d0ed592"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\adapters\\BedieningPagerAdapter.kt": {
+    "size": 717,
+    "mtime_ns": 1783866876932114100,
+    "word_count": 60,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/adapters/bedieningpageradapter.kt": "80a713dbbe43559457638da1a42eeb1871a6f6bc35b8d57feaa6f0b00c39e9b2"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\adapters\\BedieningReminderAdapter.kt": {
+    "size": 10502,
+    "mtime_ns": 1783866876301030600,
+    "word_count": 646,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/adapters/bedieningreminderadapter.kt": "ca40ee13101b8c5ee0348c96a2b6b8b043db78e53b4ae7aa11b7efc3fd9549d3"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\adapters\\CallLogAdapter.kt": {
+    "size": 2978,
+    "mtime_ns": 1783866876423029900,
+    "word_count": 216,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/adapters/calllogadapter.kt": "389373ec929448c79ab984cf5dfd9eca0a85b11b908bf2f734d877911756e1d4"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\adapters\\MemberListAdapter.kt": {
+    "size": 40936,
+    "mtime_ns": 1785487641156586000,
+    "word_count": 2919,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/adapters/memberlistadapter.kt": "39e641eca81c4641bd2b469c8fd34c3f1adc3ee4e71cc488871841008fba4718"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\adapters\\PastoralNoteAdapter.kt": {
+    "size": 6074,
+    "mtime_ns": 1783866875699404800,
+    "word_count": 432,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/adapters/pastoralnoteadapter.kt": "517ab09d8d917a51d1cbc0f610bf38b5f7d0a9c5cd31e9c6226fe3a1ec594517"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\adapters\\PendingReminderMiniAdapter.kt": {
+    "size": 2963,
+    "mtime_ns": 1785428475079976800,
+    "word_count": 206,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/adapters/pendingreminderminiadapter.kt": "50e0d81df406bad06512000cf2d00fd902e3764d1d39d02c42e0bdeaf6df0c3a"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\adapters\\ReminderPreviewAdapter.kt": {
+    "size": 3102,
+    "mtime_ns": 1783866877595729900,
+    "word_count": 209,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/adapters/reminderpreviewadapter.kt": "449148db7aab08be9071b66208d4b78dddac4c5324f56e657a5b89cd71ac4648"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\adapters\\SpinnerAdapter.kt": {
+    "size": 1967,
+    "mtime_ns": 1776161893773022500,
+    "word_count": 184,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/adapters/spinneradapter.kt": "a765b56c6b00dc1b50027fc5f310ee2b46e0c8afcd81c6f754e78e669b49f6d5"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\adapters\\StepEditorAdapter.kt": {
+    "size": 2363,
+    "mtime_ns": 1782540972311627100,
+    "word_count": 181,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/adapters/stepeditoradapter.kt": "7ec959f18e3158e8c9a69c34417f3eef80f9cfd0b2a03f6e44d46d2a44825800"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\adapters\\TemplateManagerAdapter.kt": {
+    "size": 2625,
+    "mtime_ns": 1783866876692578000,
+    "word_count": 167,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/adapters/templatemanageradapter.kt": "fb402ca57ddedbee66d8098e1b726563c8243f411d9eabef04e48acd39adea76"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\adapters\\TemplatePickerAdapter.kt": {
+    "size": 3395,
+    "mtime_ns": 1783866876496570700,
+    "word_count": 287,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/adapters/templatepickeradapter.kt": "d899016e07463a4b4b93525a91210cfa37f37af6bfcc1e27e272e8ce101ab590"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\bottomsheets\\FilterBottomSheet.kt": {
+    "size": 18069,
+    "mtime_ns": 1785227517715920500,
+    "word_count": 1118,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/bottomsheets/filterbottomsheet.kt": "7af30a5d7e503461760b949508c9c874e17799b496dabfa8507a7f490ba52b77"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\bottomsheets\\StelHerinneringBottomSheet.kt": {
+    "size": 18793,
+    "mtime_ns": 1785227517747916300,
+    "word_count": 1151,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/bottomsheets/stelherinneringbottomsheet.kt": "826517ef91caaaa1b290a249bfb59dd881f23c911f377f5b68eb7133c3fc20bd"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\bottomsheets\\VoegNotaByBottomSheet.kt": {
+    "size": 14882,
+    "mtime_ns": 1783866876548572000,
+    "word_count": 895,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/bottomsheets/voegnotabybottomsheet.kt": "fe255a1f188089114e325ba4f96bd694d6b5f18a0c2a1fde547da4beaa46966d"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\common\\UiState.kt": {
+    "size": 422,
+    "mtime_ns": 1782655519901279800,
+    "word_count": 56,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/common/uistate.kt": "2197d09c9b745f968bbfa01018b88178a021a4a1ded94ee0890859e2a7c08d23"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\common\\UiStateExtensions.kt": {
+    "size": 986,
+    "mtime_ns": 1782655829896174000,
+    "word_count": 92,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/common/uistateextensions.kt": "81a04aaa195828b9d555c30894ed75d4ea4746f93bd6a9515ad1b05766f5f37d"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\components\\FilterCheckBox.kt": {
+    "size": 1675,
+    "mtime_ns": 1783866876092485600,
+    "word_count": 198,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/components/filtercheckbox.kt": "fd6c85a08c205d8fe6c1a36e2b2ba02bdcbc0d37e9efef9e95c285a38eea2062"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\components\\ListViewSelected.kt": {
+    "size": 394,
+    "mtime_ns": 1776161894083136700,
+    "word_count": 50,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/components/listviewselected.kt": "fbf5158c74080893e4698d9311e7b92ad4676aa118e5aa56d763a66d5e359186"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\components\\SearchCheckBox.kt": {
+    "size": 1086,
+    "mtime_ns": 1776161894122413200,
+    "word_count": 92,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/components/searchcheckbox.kt": "62fb134aea7701ceb30c17ae3d52ad971507e9495d23de039372e125fb7cbf9d"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\components\\WellBehavedEditText.kt": {
+    "size": 1105,
+    "mtime_ns": 1783866877265191200,
+    "word_count": 99,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/components/wellbehavededittext.kt": "2e72d909580c9b84a3a21cdfe1194cd736e41d4f08ac569ebca5cdc9eba82455"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\controllers\\ActivityResultCoordinator.kt": {
+    "size": 4300,
+    "mtime_ns": 1783866877390189100,
+    "word_count": 321,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/controllers/activityresultcoordinator.kt": "0a007a29e180881b0c89eb5f84b973010f6481bc8e0978be812d22d3101f570e"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\controllers\\BedieningSeksieController.kt": {
+    "size": 11882,
+    "mtime_ns": 1783866877102649700,
+    "word_count": 761,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/controllers/bedieningseksiecontroller.kt": "17325c5fcf731b2a0cf8d3d275f097fb483ddb194cdb1580d2dfd64836bb02ce"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\controllers\\Congregationchipcontroller.kt": {
+    "size": 4490,
+    "mtime_ns": 1785487156405475000,
+    "word_count": 326,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/controllers/congregationchipcontroller.kt": "a025369f3d0675c3649eb9cdfbae9204c147626a18b38949dfd48a76c9a3212f"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\controllers\\LidmaatPastoralSectionController.kt": {
+    "size": 15416,
+    "mtime_ns": 1785429341353895700,
+    "word_count": 837,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/controllers/lidmaatpastoralsectioncontroller.kt": "9945f5d04aa7820d0d2a1b9f7468241ee332776a0e71a54334232576c6ddb331"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\controllers\\MainMenuController.kt": {
+    "size": 7467,
+    "mtime_ns": 1784987817848757300,
+    "word_count": 486,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/controllers/mainmenucontroller.kt": "56bbd9416c5bf80b605d6fd17dba8eb2fb0f81dc88893443417d1abe5dcca7a6"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\controllers\\MainSearchFilterCoordinator.kt": {
+    "size": 10870,
+    "mtime_ns": 1785227517767041000,
+    "word_count": 739,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/controllers/mainsearchfiltercoordinator.kt": "82c2353b6a0c2c01a38a6465c6ae0f42cca05570385caff04f9b3ece99d0afcc"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\controllers\\MainStartupCoordinator.kt": {
+    "size": 4395,
+    "mtime_ns": 1784184521265349400,
+    "word_count": 249,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/controllers/mainstartupcoordinator.kt": "2e30110749e08ecdcb9cbea735112418475559f223ed2128e703514d00d7f004"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\controllers\\MainSwipeGestureController.kt": {
+    "size": 3947,
+    "mtime_ns": 1784963979872480900,
+    "word_count": 396,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/controllers/mainswipegesturecontroller.kt": "f29765b46d334de7057962a0fdf59ad4cc674cf4fb112104e5afaf9260cfecd9"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\controllers\\MemberListInteractionController.kt": {
+    "size": 7752,
+    "mtime_ns": 1785487156412473100,
+    "word_count": 458,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/controllers/memberlistinteractioncontroller.kt": "17162f3c5e733c991446baff39ed7a3c62c37a29e278a768aa55c487b464df68"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\controllers\\MemberPhotoController.kt": {
+    "size": 10338,
+    "mtime_ns": 1783999828557381100,
+    "word_count": 829,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/controllers/memberphotocontroller.kt": "ca39ebe853e1c308652f3fbcc42a6ae06c3a4594d3d10b19739a13ae6f1ec91b"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\controllers\\PastoralReminderBadgeController.kt": {
+    "size": 5841,
+    "mtime_ns": 1783866875681409600,
+    "word_count": 409,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/controllers/pastoralreminderbadgecontroller.kt": "a72e0b4111fec501dd28ae14f02a26d4669f8bbb9a8c03c63237f61c8e2a29d6"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\controllers\\Sortordercontroller.kt": {
+    "size": 12034,
+    "mtime_ns": 1785487156416109900,
+    "word_count": 1036,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/controllers/sortordercontroller.kt": "32819befedde690f8fc6d93b1a90b1b504ade1522e5df96f12eb7fe660df8974"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\dialogs\\StepEditorDialog.kt": {
+    "size": 4635,
+    "mtime_ns": 1783866875774939700,
+    "word_count": 333,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/dialogs/stepeditordialog.kt": "4661590c86ffeccd78815e31d294a95f767ec9447e7755b9b22da5294ee3a043"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\fragments\\BedieningVandagFragment.kt": {
+    "size": 9008,
+    "mtime_ns": 1784884129040752700,
+    "word_count": 506,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/fragments/bedieningvandagfragment.kt": "e912117a00ec4aa8aecd8f9eea6c4c09dd48ab55c1511e3aa057fa3ca094572a"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\fragments\\UitlegFunksiesFragment.kt": {
+    "size": 18363,
+    "mtime_ns": 1785486733483094700,
+    "word_count": 1072,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/fragments/uitlegfunksiesfragment.kt": "967939789aa53049044f6becfebc2ca5e6be34417d2713f87f733b78d650b8dd"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\fragments\\UitlegPastoraalFragment.kt": {
+    "size": 22789,
+    "mtime_ns": 1785486875698492800,
+    "word_count": 1746,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/fragments/uitlegpastoraalfragment.kt": "3e8f4fd5278fa06bd685676543f063766c656a2c8ee5d5ea8316c4c30681be28"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\fragments\\UitlegVertoonFragment.kt": {
+    "size": 14210,
+    "mtime_ns": 1785487641145031600,
+    "word_count": 961,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/fragments/uitlegvertoonfragment.kt": "8d051981cce8bbc6f7913cea9be3cc4ec8f1f8734c25bfcd9fdce3f81a131cc0"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\fragments\\UitlegWidgetFragment.kt": {
+    "size": 4323,
+    "mtime_ns": 1785470824750130500,
+    "word_count": 305,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/fragments/uitlegwidgetfragment.kt": "09693d99d2a17d4ed2bb36e39d555ca240f77e4142ededb4d20a374067fa4236"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\helpers\\BirthdayScrollHelper.kt": {
+    "size": 4911,
+    "mtime_ns": 1783866877277188300,
+    "word_count": 510,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/helpers/birthdayscrollhelper.kt": "0cfae5ce48c7f4c0d18382c3e624629797153babf338fbf1c5eddc0a7870a6ae"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\helpers\\MemberListScrollHelper.kt": {
+    "size": 2091,
+    "mtime_ns": 1783004065179792500,
+    "word_count": 183,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/helpers/memberlistscrollhelper.kt": "daded8af84c34b6392b402c27d4dd4bfb90470e785a16761c6b16816efaab7e9"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\helpers\\QuickActionHelper.kt": {
+    "size": 16209,
+    "mtime_ns": 1785487156424163000,
+    "word_count": 1206,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/helpers/quickactionhelper.kt": "1107894a41eff20402792cee7b449a13266e076cbbdbb1d32e8c54598e7cf900"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\models\\MainQueryMode.kt": {
+    "size": 610,
+    "mtime_ns": 1777348569362887600,
+    "word_count": 63,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/models/mainquerymode.kt": "1256ebd52c5451e55c14f46b54d1d7c901358c867b0cfeb267f832e1843d9c6f"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\viewmodels\\ArgiefViewModel.kt": {
+    "size": 3721,
+    "mtime_ns": 1785209456890031800,
+    "word_count": 312,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/viewmodels/argiefviewmodel.kt": "dffbe8be4b46314ee242c873d0d17ca1508892d9d27dc6d9124a0d9f200f674c"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\viewmodels\\BedieningViewModel.kt": {
+    "size": 8412,
+    "mtime_ns": 1785487156426163700,
+    "word_count": 565,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/viewmodels/bedieningviewmodel.kt": "94922f7ddec3644ffff215e6a47f3937126bb57fd9d3ddc68075308f3f94b4ad"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\viewmodels\\BedieningViewModelFactory.kt": {
+    "size": 907,
+    "mtime_ns": 1781757022734279500,
+    "word_count": 51,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/viewmodels/bedieningviewmodelfactory.kt": "99009ed81e3ec00ad9aea171e10f53e28fb484ffd4030aa5c2d5d4eb309b6cc2"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\viewmodels\\EventViewModel.kt": {
+    "size": 7532,
+    "mtime_ns": 1783866875784947300,
+    "word_count": 450,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/viewmodels/eventviewmodel.kt": "76e81c984783f69cbc05dc8e5d99e741f92495073c8083b8dd11bddf4ef70d80"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\viewmodels\\LidmaatDetailPastoralViewModel.kt": {
+    "size": 7107,
+    "mtime_ns": 1785429059871677500,
+    "word_count": 491,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/viewmodels/lidmaatdetailpastoralviewmodel.kt": "605133e98882540a720231c8d365921a3945ec20cd883ea3c625c3cae4502a1e"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\viewmodels\\LidmaatDetailPastoralViewModelFactory.kt": {
+    "size": 1446,
+    "mtime_ns": 1785226939326390300,
+    "word_count": 92,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/viewmodels/lidmaatdetailpastoralviewmodelfactory.kt": "75854ffb4f2da806dac75e9c4ce247b1c1bedec5e32471cfc33411b6786e08f2"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\viewmodels\\LidmaatDetailViewModel.kt": {
+    "size": 7824,
+    "mtime_ns": 1785295290653725100,
+    "word_count": 639,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/viewmodels/lidmaatdetailviewmodel.kt": "9be70dc49e31940c238c3087e3f934e472ea9cd994ec9102bc0268ed0ff5faa5"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\viewmodels\\MainViewModel.kt": {
+    "size": 3811,
+    "mtime_ns": 1785487156429151000,
+    "word_count": 256,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/viewmodels/mainviewmodel.kt": "29092e2471633fd36dba5b33afdc69c902844a23cf88f9b7443f4181f176137d"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\viewmodels\\MemberViewModel.kt": {
+    "size": 22586,
+    "mtime_ns": 1785210994812304700,
+    "word_count": 1777,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/viewmodels/memberviewmodel.kt": "6131b79257db6fc6947a7d6655bc04d4242391bf2565857585af5ebc3f506572"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\viewmodels\\PastoralDashboardViewModel.kt": {
+    "size": 84,
+    "mtime_ns": 1782540972398170300,
+    "word_count": 4,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/viewmodels/pastoraldashboardviewmodel.kt": "80233208ed053f654919b4d61f8cb1baa5adb129a046ef9e01c0836d5d5cabbf"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\viewmodels\\TemplateManagerViewModel.kt": {
+    "size": 3368,
+    "mtime_ns": 1783866875556407000,
+    "word_count": 234,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/viewmodels/templatemanagerviewmodel.kt": "0828fb98fd5bf8044c05c1ee9cfeed9fffa001d1d25d36b6ed433208f533a459"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\ActiveCallReconciler.kt": {
+    "size": 2135,
+    "mtime_ns": 1783866996163891700,
+    "word_count": 187,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/activecallreconciler.kt": "2747cf8ff98f8993ec7ec982388063677c3a27db67ef64b94ba27cca404d5f4a"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\AppAuthGuard.kt": {
+    "size": 7677,
+    "mtime_ns": 1785487156432786200,
+    "word_count": 715,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/appauthguard.kt": "f4f614e4e7166b62c44f3c9c433cf160264fc971954b0e0d4fc855f9fa2da3bc"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\AppAuthState.kt": {
+    "size": 3256,
+    "mtime_ns": 1784207699826595200,
+    "word_count": 389,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/appauthstate.kt": "e09fea212046efc26bb184927935789092483c5ffe9f8701b1511bb670273a46"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\AppInitializer.kt": {
+    "size": 5199,
+    "mtime_ns": 1785487156433788000,
+    "word_count": 343,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/appinitializer.kt": "58d9ac5d7b0b117c400ae3559ca5f5b01fa95674011304991e64289d4efb8f60"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\BackPressHandler.kt": {
+    "size": 1471,
+    "mtime_ns": 1782110017193083500,
+    "word_count": 143,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/backpresshandler.kt": "8a6587ca9418118805cd930d1ff823dff7629494e4c14720276a891bebdb7fbe"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\BatteryOptimizationHelper.kt": {
+    "size": 3081,
+    "mtime_ns": 1782620386541175400,
+    "word_count": 226,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/batteryoptimizationhelper.kt": "65a453191d5caf106822351d455080a90ae05b2b93240f9e10feb2fe90ca1657"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\BootForegroundServiceStarter.kt": {
+    "size": 4699,
+    "mtime_ns": 1784303056026971900,
+    "word_count": 335,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/bootforegroundservicestarter.kt": "29db341a0d71b865d0b4a06cdcfecf5f914e950e44760825f36e968ef9ea67f0"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\CalendarManager.kt": {
+    "size": 21384,
+    "mtime_ns": 1783866997790836800,
+    "word_count": 1556,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/calendarmanager.kt": "8d9b8dd583fd921102282d79d352d554db6163c24723f5b1fc03e5eb8920b7b2"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\CallLogExporter.kt": {
+    "size": 6364,
+    "mtime_ns": 1783866996517133500,
+    "word_count": 505,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/calllogexporter.kt": "b840dbde244a2a9aa9c5686081dd447b28426a314fcb26a540fd86db7719bad1"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\CallNotificationDiagnostics.kt": {
+    "size": 2311,
+    "mtime_ns": 1785486996605113900,
+    "word_count": 190,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/callnotificationdiagnostics.kt": "19c7613abd1e451b25218d1bd9a307d6de4adcf5d0f0cb53ef17859826faa94c"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\CallerInfoResolver.kt": {
+    "size": 14299,
+    "mtime_ns": 1785221907622146200,
+    "word_count": 1123,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/callerinforesolver.kt": "83f6614941cbf1f08e9de98badc6c11507b8e113405feaf1b2253b7e1065fad0"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\CallerInfoResult.kt": {
+    "size": 1454,
+    "mtime_ns": 1784219276799932400,
+    "word_count": 180,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/callerinforesult.kt": "c5f3d831f612e034cc4a94e5863218f8efd35b7f29f53b2308758d36e377d431"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\CallerNameResolver.kt": {
+    "size": 2556,
+    "mtime_ns": 1785208451363414800,
+    "word_count": 230,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/callernameresolver.kt": "a439381e04bbdbf7f04465c750ac3a30b57929d891aa06910d5c2e0349c948a7"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\ChecksumSocketTransfer.kt": {
+    "size": 14895,
+    "mtime_ns": 1783998207274297100,
+    "word_count": 1572,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/checksumsockettransfer.kt": "33ac6e2c0be33a1627f1016192415e88393c11485f4b8877259a16b79dc8ee4b"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\ColorObserver.kt": {
+    "size": 465,
+    "mtime_ns": 1776161894293532800,
+    "word_count": 62,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/colorobserver.kt": "badec631e46390261c847b9d9042c04743f6b4f924f5e07bc31f5b19034a41fe"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\ColorUtils.kt": {
+    "size": 1529,
+    "mtime_ns": 1784963931810519800,
+    "word_count": 185,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/colorutils.kt": "e73dc48d9795ac0e15a3635941fc417b871e920d42a4042807dafb8186ced1ee"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\CursorAdapterExt.kt": {
+    "size": 378,
+    "mtime_ns": 1777362121660431900,
+    "word_count": 34,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/cursoradapterext.kt": "30e138ea8367378e7695f7283b429baff5a562bce1d06b8b90547fc59b706316"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\CursorDataExtractor.kt": {
+    "size": 11373,
+    "mtime_ns": 1783866997969574900,
+    "word_count": 1277,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/cursordataextractor.kt": "6bd56deebc83925be0f707662b90051500a977a669b5a34a649c6a31c3c0b99c"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\CursorExtensions.kt": {
+    "size": 1113,
+    "mtime_ns": 1776168744509962000,
+    "word_count": 114,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/cursorextensions.kt": "dd45ee264a7095e871280a1df5b6ea3920baa7849be4376d8b6db9a4ac78fcdb"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\DatabaseBackupHelper.kt": {
+    "size": 4725,
+    "mtime_ns": 1783866995663349800,
+    "word_count": 460,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/databasebackuphelper.kt": "bb56bc61f962a615714c39af21561e2303e359861091a36dc24c3a7f2e28e107"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\DeviceIdManager.kt": {
+    "size": 3362,
+    "mtime_ns": 1782620386480005900,
+    "word_count": 363,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/deviceidmanager.kt": "deefa3c0a3913363fca4082e40d7d889b3542a97f42fb8ad366bbd0fef7f531c"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\EncryptedPrefsManager.kt": {
+    "size": 1551,
+    "mtime_ns": 1785488237311811200,
+    "word_count": 108,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/encryptedprefsmanager.kt": "0dc7df079ce5fa13520e9bbd027bdeecad8d4d6d3702db06c17ace8a32660218"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\ForegroundServiceHelper.kt": {
+    "size": 1499,
+    "mtime_ns": 1783939508120966400,
+    "word_count": 122,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/foregroundservicehelper.kt": "00ccadd473867e3371ef2aae52f52e83a358aad0374229aba88ddadb9e514989"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\Installation.kt": {
+    "size": 2106,
+    "mtime_ns": 1783866996036349000,
+    "word_count": 171,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/installation.kt": "b6010b317b19cd3eab5e501e4bd353dfcea06d5f309cdd3b7bf417a7bd72edbf"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\MainNavigationController.kt": {
+    "size": 15817,
+    "mtime_ns": 1785491875917204300,
+    "word_count": 1098,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/mainnavigationcontroller.kt": "1569f6d10d8f5e7374d858329aad27d9bfa4c29674ec0bcddd59ca55b41294be"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\MemberActionHandler.kt": {
+    "size": 3249,
+    "mtime_ns": 1784796407864657900,
+    "word_count": 176,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/memberactionhandler.kt": "76e51026c908eb2241c819402ac24bb85dbfca85c5195233f5e8c92db1e383fe"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\MemberItemMapper.kt": {
+    "size": 70,
+    "mtime_ns": 1782540972495171200,
+    "word_count": 4,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/memberitemmapper.kt": "c0c9fbe59a00f0a7d57bea2c657e885e4f720bbd5370f0689ce304845a832be3"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\MemberUtils.kt": {
+    "size": 12527,
+    "mtime_ns": 1785427912392461500,
+    "word_count": 863,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/memberutils.kt": "4e508f1386353a3baca94c13f8b2130ddfbee85bdf90f47b1604d2d2eea728ba"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\MenuItemHandler.kt": {
+    "size": 5122,
+    "mtime_ns": 1785469608041330200,
+    "word_count": 324,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/menuitemhandler.kt": "a6bbc2d925d2feb8505c701c1530f0639721d38746cdbad35b6772de1e13dc28"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\MessageComposer.kt": {
+    "size": 2239,
+    "mtime_ns": 1783444024167247400,
+    "word_count": 302,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/messagecomposer.kt": "a8ab3d898d16c2ef570fbc7b2d6922905e53125a275586b03d300d9aa2ecac69"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\NoteAuthManager.kt": {
+    "size": 4019,
+    "mtime_ns": 1784203887319257000,
+    "word_count": 351,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/noteauthmanager.kt": "79bd319297f49d6f24371f5b8e6247d37be8fe0aae3266f6e1eaff4050d48132"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\OproepUtils.kt": {
+    "size": 8604,
+    "mtime_ns": 1783866995609351100,
+    "word_count": 636,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/oproeputils.kt": "065276f313b68c54b6dbb4c3054e530cfaf9f067b376affc5a14f5227840d441"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\PastoralDatabaseBackup.kt": {
+    "size": 12795,
+    "mtime_ns": 1785486875709011200,
+    "word_count": 1148,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/pastoraldatabasebackup.kt": "155e8da3970b9623a8dab7a709a683b1e41728e7c5b0274d0870e2e166fb7392"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\PastoralNotificationHelper.kt": {
+    "size": 8674,
+    "mtime_ns": 1783866998170825300,
+    "word_count": 501,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/pastoralnotificationhelper.kt": "723e8b556831208d5ea8a27b69d69082298e540e3ae2a337bd8f3e1a090d8ba3"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\PastoralTaskScriptManager.kt": {
+    "size": 5338,
+    "mtime_ns": 1783866995636349500,
+    "word_count": 485,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/pastoraltaskscriptmanager.kt": "c4befecdc416520717b814f5950fe8814ad3e262aa7ade964086d9925e245b9d"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\PastoralTaskShareHelper.kt": {
+    "size": 1775,
+    "mtime_ns": 1783866994626778200,
+    "word_count": 138,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/pastoraltasksharehelper.kt": "f72273c09f199489e2f9cc099cf01706b90fe5fa8a6dbfecc2de7dce7bfd8c55"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\PermissionHelper.kt": {
+    "size": 6270,
+    "mtime_ns": 1785383903739225800,
+    "word_count": 429,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/permissionhelper.kt": "7adedf3ff7d4fe4fe5eda870992a4794684b6f189bf7c58f3d40b7f0a7dab29b"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\PermissionManager.kt": {
+    "size": 12875,
+    "mtime_ns": 1783866996909120800,
+    "word_count": 726,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/permissionmanager.kt": "fea05ba2cac02f15a04ba2563a93af9a7a4c7d7d9e3cbf7d4355234a00c210a6"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\PhoneCallMonitor.kt": {
+    "size": 12719,
+    "mtime_ns": 1785227517825666100,
+    "word_count": 977,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/phonecallmonitor.kt": "df01a557d5691919422fba09123fcc8bc1fc2756c7ca60f7737d9b03f57e2d2e"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\PhotoHelper.kt": {
+    "size": 2310,
+    "mtime_ns": 1783866994002739900,
+    "word_count": 224,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/photohelper.kt": "1340eae63b70ef2eeee3abfb0dc9e8f8c6dce637096ec386ded1a20b942c2bce"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\PhotoSyncManager.kt": {
+    "size": 7929,
+    "mtime_ns": 1785066795912564200,
+    "word_count": 619,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/photosyncmanager.kt": "280ca96920b18be1d9460fb494304c7e1bf60a17abc9031aced9959f327a1cbb"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\PopupMenuHelper.kt": {
+    "size": 1964,
+    "mtime_ns": 1783866995897980500,
+    "word_count": 159,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/popupmenuhelper.kt": "5ac65b0a8be46bcdd055dd4951945d3157244376f1ed3d5c7bac5f4cc1a8af56"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\RealPathUtil.kt": {
+    "size": 1417,
+    "mtime_ns": 1776161894423887600,
+    "word_count": 135,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/realpathutil.kt": "5e1a6227a09ac366c06be3fdc17274118324099b35b2e0a73140bac79a5f2d81"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\ReminderEventBus.kt": {
+    "size": 454,
+    "mtime_ns": 1782705641504660300,
+    "word_count": 29,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/remindereventbus.kt": "85c13ea7723d7c14e0aacc49afe7a10042d106039cd564b21734e8e88726ec8d"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\SQLiteStatementValidator.kt": {
+    "size": 18798,
+    "mtime_ns": 1783866995493813400,
+    "word_count": 1683,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/sqlitestatementvalidator.kt": "65a420ac1fb4a026412b54f706a6f457aff83ff59fe443bd66773bc45b969fc1"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\SearchCheckBoxPreferences.kt": {
+    "size": 1648,
+    "mtime_ns": 1782620386691081100,
+    "word_count": 126,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/searchcheckboxpreferences.kt": "b7a52aa5572288d9f896da8cd92de9d7db778fb446642bcd6187cfa4df1c05e8"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\ServerFileValidator.kt": {
+    "size": 7780,
+    "mtime_ns": 1785066795954708300,
+    "word_count": 747,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/serverfilevalidator.kt": "63a95bea608f332eaedc48d582a79c88820c67a17ce9ff47e46330c6bec9d254"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\ServiceUtils.kt": {
+    "size": 6480,
+    "mtime_ns": 1784303721641247900,
+    "word_count": 490,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/serviceutils.kt": "94d71663c30c49092bef30765e9dc9ff8c6fcb31bec5ed13c5848e1cfb34277f"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\SettingsManager.kt": {
+    "size": 2640,
+    "mtime_ns": 1785488942401871800,
+    "word_count": 213,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/settingsmanager.kt": "6ec5b7f782d28cf94de1131f64b0ad15d755a1426674ec70d43f13385db9485d"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\UnifiedCallMonitor.kt": {
+    "size": 10444,
+    "mtime_ns": 1785486996621107100,
+    "word_count": 883,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/unifiedcallmonitor.kt": "9d0c3cb87d424765312a91e638f7481d804bed0d9bcb33ac344aa02d0cbc0782"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\Utils.kt": {
+    "size": 1653,
+    "mtime_ns": 1783866992931243200,
+    "word_count": 134,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/utils.kt": "38e15c03f001152bed94dd0b31a7f8cf5fea7162f7be70ca909bda3ae178741d"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\WhatsAppContactLoader.kt": {
+    "size": 3803,
+    "mtime_ns": 1783866995539809100,
+    "word_count": 313,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/whatsappcontactloader.kt": "f59fa6edacf8a6a97834cc27557ba332afa4ca9a247c0a69a79327afff5b32f1"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\WorkManagerHelper.kt": {
+    "size": 7733,
+    "mtime_ns": 1783866995449806200,
+    "word_count": 544,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/workmanagerhelper.kt": "f43c2c6e8d60bbb93a5733535c6ad4d52974526ac26214e1d029bcd71202ce18"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\WorkScheduler.kt": {
+    "size": 2198,
+    "mtime_ns": 1785486996624103300,
+    "word_count": 165,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/workscheduler.kt": "0411b4753bc34228a87fe181142057360b9480e608f7a7647183c052492212ab"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\widget\\PastoralWidgetKeyguardProvider.kt": {
+    "size": 2166,
+    "mtime_ns": 1785488908768547800,
+    "word_count": 119,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/widget/pastoralwidgetkeyguardprovider.kt": "5599ab944e7627d390a33a67248e19e8e0b8d113e0ff1ae000dfe1264a4d77ee"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\widget\\PastoralWidgetKeyguardRemoteViewsService.kt": {
+    "size": 3402,
+    "mtime_ns": 1783866996068467600,
+    "word_count": 257,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/widget/pastoralwidgetkeyguardremoteviewsservice.kt": "9edfb98d717ef795856d753cb93039d4d8c21059601e2f9c176746bf506cd7ad"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\widget\\PastoralWidgetProvider.kt": {
+    "size": 11145,
+    "mtime_ns": 1785488729878272800,
+    "word_count": 708,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/widget/pastoralwidgetprovider.kt": "81185fb7134b53936fced89208a32fd82b79adf16a61109347df2b569d868b4e"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\widget\\PastoralWidgetRemoteViewsService.kt": {
+    "size": 12712,
+    "mtime_ns": 1785487156461078100,
+    "word_count": 816,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/widget/pastoralwidgetremoteviewsservice.kt": "3b5e0e70a4aaa35b020bc84b032865c80245e68da815a6274393b7d48d11da42"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\widget\\WidgetDataRepository.kt": {
+    "size": 8900,
+    "mtime_ns": 1785469609015124100,
+    "word_count": 669,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/widget/widgetdatarepository.kt": "4d46f78cd00ee445ca5adce79bc6db4d6893a13e70f33553d75389493181d97d"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\widget\\WidgetQueryBuilder.kt": {
+    "size": 6814,
+    "mtime_ns": 1784184521392426400,
+    "word_count": 611,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/widget/widgetquerybuilder.kt": "232de2b6e0010ea2ed6aff6cbed4551b31bf0dd9d0a9d64489cc58bd5f370f4c"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\widget\\WidgetRow.kt": {
+    "size": 196,
+    "mtime_ns": 1782235590425060000,
+    "word_count": 21,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/widget/widgetrow.kt": "c53ede1cdbf68e4091f11c01875c4226864fef890c53017c0bfc6f1d846b2615"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\widget\\WinkerkReaderWidgetProvider.kt": {
+    "size": 21106,
+    "mtime_ns": 1785488710239561600,
+    "word_count": 1531,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/widget/winkerkreaderwidgetprovider.kt": "d12d2038581267ba65d4fba402196f8a1bb856588305c547b2f0b16bd25923e0"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\workers\\BirthdayReminderWorker.kt": {
+    "size": 727,
+    "mtime_ns": 1782620386588561000,
+    "word_count": 65,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/workers/birthdayreminderworker.kt": "dbd0a1570135d7bea9cf233dcd0bfbba7a28b48b73448bdb6dfd914122cdcc36"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\workers\\DropboxDownloadWorker.kt": {
+    "size": 1331,
+    "mtime_ns": 1783867054556299600,
+    "word_count": 113,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/workers/dropboxdownloadworker.kt": "83b6047c0ab471c3474f447601cc121fd06e51eca78b687a3b3b891af4cf9e42"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\workers\\FileDownloadWorker.kt": {
+    "size": 9455,
+    "mtime_ns": 1785295726977654400,
+    "word_count": 698,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/workers/filedownloadworker.kt": "d5f443b819d976c7fd9831f22104cde6f0fa0db10a76441137d073036f33a2ca"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\workers\\FileDownloadWorkerOld.kt": {
+    "size": 9396,
+    "mtime_ns": 1785066795987786900,
+    "word_count": 704,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/workers/filedownloadworkerold.kt": "530d9d9eae512791e12e12d8ee0f41e290ca57cc9f61d9bec76e51d91731223d"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\workers\\FollowUpReminderWorker.kt": {
+    "size": 4154,
+    "mtime_ns": 1783867054582386300,
+    "word_count": 288,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/workers/followupreminderworker.kt": "3a3e083918d72f87291199ddf881b389784e1a4aedbac21803f4dd4e69acbae5"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\workers\\PastoralBackupWorker.kt": {
+    "size": 5418,
+    "mtime_ns": 1783867054620167500,
+    "word_count": 352,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/workers/pastoralbackupworker.kt": "4ef1851b71137f133fbaae4bc77a1d3c4b431f7a35968209bc4c1e39bc8b5f51"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\workers\\PastoralDailyDigestWorker.kt": {
+    "size": 77,
+    "mtime_ns": 1782540972508174600,
+    "word_count": 4,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/workers/pastoraldailydigestworker.kt": "308fcb9379f609e1779c18e6b583df8da27d1e2443b04fe2a530355e112ce7a1"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\workers\\PhotoDownloadWorker.kt": {
+    "size": 12151,
+    "mtime_ns": 1785295727097231100,
+    "word_count": 924,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/workers/photodownloadworker.kt": "ebd0f251c20943771d5efbfaadf3fac41f9ab9a29c3af6aaa9fa669d9ab1faa1"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\workers\\PhotoDownloadWorkerOld.kt": {
+    "size": 7705,
+    "mtime_ns": 1785295727057067000,
+    "word_count": 567,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/workers/photodownloadworkerold.kt": "d5305dc034ab7979d8a6fbe2ef59a20dd8d8cb3cded91f1bcaa0097026d11ba6"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\workers\\WidgetRefreshWorker.kt": {
+    "size": 5598,
+    "mtime_ns": 1784303056091010600,
+    "word_count": 431,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/workers/widgetrefreshworker.kt": "10bcc6f7ad520842d127a34bd935c067d933ed5aeb0f339e35e0f67d5ee70c35"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\bdaysms.png": {
+    "size": 34290,
+    "mtime_ns": 1771330816000000000,
+    "word_count": 1163
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\bdayw.png": {
+    "size": 3407,
+    "mtime_ns": 1771330814993628500,
+    "word_count": 123
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\bel.png": {
+    "size": 2652,
+    "mtime_ns": 1771330806000000000,
+    "word_count": 85
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\bely.png": {
+    "size": 27220,
+    "mtime_ns": 1771330816000000000,
+    "word_count": 994
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\clipboard.png": {
+    "size": 41109,
+    "mtime_ns": 1771330816000000000,
+    "word_count": 1499
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\doop.png": {
+    "size": 25889,
+    "mtime_ns": 1771330806000000000,
+    "word_count": 978
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\doopsms.png": {
+    "size": 37094,
+    "mtime_ns": 1771330816000000000,
+    "word_count": 1309
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\family_roofw.png": {
+    "size": 74240,
+    "mtime_ns": 1771330816000000000,
+    "word_count": 2605
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\huweliksms.png": {
+    "size": 22353,
+    "mtime_ns": 1771330816000000000,
+    "word_count": 820
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\ic_close2.png": {
+    "size": 23970,
+    "mtime_ns": 1771330816000000000,
+    "word_count": 900
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\ic_launcher_round.png": {
+    "size": 28007,
+    "mtime_ns": 1771330816000000000,
+    "word_count": 1057
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\ic_launcher_roundw.png": {
+    "size": 30048,
+    "mtime_ns": 1782718949985416600,
+    "word_count": 1084
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\ic_overdue.png": {
+    "size": 135446,
+    "mtime_ns": 1781436978000000000,
+    "word_count": 5117
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\kalender.png": {
+    "size": 3230,
+    "mtime_ns": 1771330808000000000,
+    "word_count": 110
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\kalenders.png": {
+    "size": 1085,
+    "mtime_ns": 1771330816000000000,
+    "word_count": 26
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\married.png": {
+    "size": 2331,
+    "mtime_ns": 1771330816000000000,
+    "word_count": 81
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\oldphone.png": {
+    "size": 20943,
+    "mtime_ns": 1771330816000000000,
+    "word_count": 780
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\sms_empty.png": {
+    "size": 11591,
+    "mtime_ns": 1771330808000000000,
+    "word_count": 420
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\updatew.png": {
+    "size": 1935,
+    "mtime_ns": 1771330815445097900,
+    "word_count": 64
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\whatsapp.png": {
+    "size": 9008,
+    "mtime_ns": 1771330816000000000,
+    "word_count": 320
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\drawable\\whatsapps.png": {
+    "size": 1948,
+    "mtime_ns": 1771330816000000000,
+    "word_count": 72
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\family_roof.png": {
+    "size": 67168,
+    "mtime_ns": 1771330816000000000,
+    "word_count": 2514
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\res\\ic_launcher_round.png": {
+    "size": 111023,
+    "mtime_ns": 1771330816000000000,
+    "word_count": 894
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\test\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\repository\\CalendarManagerPastoralTest.kt": {
+    "size": 1153,
+    "mtime_ns": 1781363327107736800,
+    "word_count": 156,
+    "hashes": {
+      "test/kotlin/za/co/jpsoft/winkerkreader/data/pastoral/repository/calendarmanagerpastoraltest.kt": "147aed2ae441bf0e0932d59e5c2a7e155f518b639a77faeac68d55ba1b55691f"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\test\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\repository\\PastoralReminderRepositoryCalendarTest.kt": {
+    "size": 1410,
+    "mtime_ns": 1781363327097185300,
+    "word_count": 163,
+    "hashes": {
+      "test/kotlin/za/co/jpsoft/winkerkreader/data/pastoral/repository/pastoralreminderrepositorycalendartest.kt": "71d0d2e6bb161b923737465a2a2026e1c7697bb30b43e76e5751c7a0ffe71cf1"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\test\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\repository\\PastoralReminderRepositoryTest.kt": {
+    "size": 3893,
+    "mtime_ns": 1781363177380508500,
+    "word_count": 273,
+    "hashes": {
+      "test/kotlin/za/co/jpsoft/winkerkreader/data/pastoral/repository/pastoralreminderrepositorytest.kt": "37a609bbf50a12bb6ec4184c7ef261e6eaad45da10fab31bb05ad29a3ed62dae"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\vector_size_check.py": {
+    "size": 6284,
+    "mtime_ns": 1782794043085827200,
+    "word_count": 600,
+    "hashes": {
+      "vector_size_check.py": "27225910c1dc02b885e46bd64f9077c645774e04ecd2b4bbe21512d2f8a27c53"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\wrap_logs.py": {
+    "size": 8117,
+    "mtime_ns": 1781953320217997700,
+    "word_count": 986,
+    "hashes": {
+      "wrap_logs.py": "c9994df1add22dd4c648207246373ba1d897fd728af98e5a6f0b8586106643e0"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\combined_code.txt": {
+    "size": 2142314,
+    "mtime_ns": 1785489244181284800,
+    "word_count": 133171
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\combined_code28-7-2026.txt": {
+    "size": 2231653,
+    "mtime_ns": 1785262417951032600,
+    "word_count": 142301
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\models\\FamilyMember.kt": {
+    "size": 180,
+    "mtime_ns": 1785225087230738100,
+    "word_count": 17,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/models/familymember.kt": "886ec668cf4dbb34ad57904f322a222c48b495eeac30d9e0b081375f1a909f12"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\models\\PendingReminderUiItem.kt": {
+    "size": 490,
+    "mtime_ns": 1785428441297981600,
+    "word_count": 57,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/models/pendingreminderuiitem.kt": "f951663f40b0f018d4aaca72b77a0893192c0325c476b6d7f848fd1039740f67"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\repository\\CalendarSyncManager.kt": {
+    "size": 9867,
+    "mtime_ns": 1785486996542544700,
+    "word_count": 715,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/pastoral/repository/calendarsyncmanager.kt": "a061c32f1ef1e17d3af61a96bf5d7d07cb7924a42c012a9bd91ce6e2deb7bd47"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\repository\\GoogleTaskSyncManager.kt": {
+    "size": 6196,
+    "mtime_ns": 1785487156361592400,
+    "word_count": 426,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/pastoral/repository/googletasksyncmanager.kt": "3ee29cd617c3f369f7e16189178eca843fded689816b931a1ffa106416545e06"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\repository\\ReminderBackupHelper.kt": {
+    "size": 519,
+    "mtime_ns": 1785260021882226500,
+    "word_count": 32,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/pastoral/repository/reminderbackuphelper.kt": "6e8605d2b82ae5dd3e590680d9d111e8a5875f153565faa51a42090c32c28f71"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\repository\\ReminderCrudRepository.kt": {
+    "size": 11340,
+    "mtime_ns": 1785428971662289500,
+    "word_count": 765,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/pastoral/repository/remindercrudrepository.kt": "73dc3143cca5673b95cc1d185ad32141d7179e649291db50bed0c7fed23b7f4a"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\repository\\ReminderQueryRepository.kt": {
+    "size": 4120,
+    "mtime_ns": 1785259949904612200,
+    "word_count": 286,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/pastoral/repository/reminderqueryrepository.kt": "aa9a54c06c125a1de630c99bdd4470f6e2f113f05dd3ef112c06bb49ed01265b"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\pastoral\\repository\\TemplateRepository.kt": {
+    "size": 6667,
+    "mtime_ns": 1785259965023922700,
+    "word_count": 427,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/pastoral/repository/templaterepository.kt": "e3f72832821b0cd0a8aa2be33c066eb56243407e4f08493d31a9d785e76501bf"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\data\\repositories\\FamilyMemberRepository.kt": {
+    "size": 1119,
+    "mtime_ns": 1785225757467353400,
+    "word_count": 87,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/data/repositories/familymemberrepository.kt": "8aa0bc7135d952c80e83268252b584542f5bdb64df5cc111fb3c51a54f778553"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\services\\voip\\VoipCallInfoExtractor.kt": {
+    "size": 11017,
+    "mtime_ns": 1785488640406571000,
+    "word_count": 886,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/services/voip/voipcallinfoextractor.kt": "62a48549aaf645a1c1be092cf5bf0782cadc468f58a61bbd351c6ef0b09d7217"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\services\\voip\\VoipCallStateDetector.kt": {
+    "size": 8397,
+    "mtime_ns": 1785429539174451900,
+    "word_count": 718,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/services/voip/voipcallstatedetector.kt": "4dc8255086b6a7845ee15ecd718247472560c72a1b546e3a32e7047dcc221215"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\services\\voip\\VoipCallTracker.kt": {
+    "size": 4227,
+    "mtime_ns": 1785260248797173000,
+    "word_count": 445,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/services/voip/voipcalltracker.kt": "1748cf4c381487b6a43ba92b54cb625aaadaf4ef65d04f4bba468f68177d31f1"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\services\\voip\\VoipNotificationHandler.kt": {
+    "size": 13263,
+    "mtime_ns": 1785486996557120900,
+    "word_count": 1035,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/services/voip/voipnotificationhandler.kt": "686d89f849be7e502cf250eb689c01e320315000dcf259a61f6c8c7dd233dd81"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\activities\\AuthBaseActivity.kt": {
+    "size": 1700,
+    "mtime_ns": 1785491000625565400,
+    "word_count": 188,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/activities/authbaseactivity.kt": "71781adf49c6965934121f042aa096a8575f9ff3fd54ba01704ff89be62ae534"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\adapters\\Permissionsadapter.kt": {
+    "size": 3435,
+    "mtime_ns": 1785383769070348300,
+    "word_count": 211,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/adapters/permissionsadapter.kt": "81eab5d92130b206b8d59a838a3b965f5d0308f4401cb235bc0ffb37398330c0"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\controllers\\Collapsiblecardcontroller.kt": {
+    "size": 2877,
+    "mtime_ns": 1785066764914245400,
+    "word_count": 201,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/controllers/collapsiblecardcontroller.kt": "c23b4dfff44d18b092b37bacab1c0094835ff3aba980bd974529c790fcd87226"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\controllers\\Databaseimportcontroller.kt": {
+    "size": 20192,
+    "mtime_ns": 1785262132563569400,
+    "word_count": 1799,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/controllers/databaseimportcontroller.kt": "74cd785892439e43b80fe4edbe77f03b2f42717f48fa4f5c7e586e43f48fe432"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\controllers\\Dropboxdownloadcontroller.kt": {
+    "size": 12498,
+    "mtime_ns": 1785221907574167900,
+    "word_count": 885,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/controllers/dropboxdownloadcontroller.kt": "f5c89d7abe0062a8ad851332bb08adc9a6d627ad979efaf03e2a6dd59275a87f"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\controllers\\FamilyMemberSpinnerController.kt": {
+    "size": 4640,
+    "mtime_ns": 1785227517729916100,
+    "word_count": 293,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/controllers/familymemberspinnercontroller.kt": "55c0112b7bf8eee1c150f0a9d3da84d1150a834ef46bb6bc747d87de09073ab0"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\controllers\\Localdatabasefilecontroller.kt": {
+    "size": 6100,
+    "mtime_ns": 1785064443227615200,
+    "word_count": 491,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/controllers/localdatabasefilecontroller.kt": "bc92de4e6160745a8b40121f8f3587d702fe174129f05c2cfb0800886c2728c3"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\controllers\\MainActivityInitializer.kt": {
+    "size": 21426,
+    "mtime_ns": 1785490837056658300,
+    "word_count": 1394,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/controllers/mainactivityinitializer.kt": "e37d17aac123b57cee10b15fb3c3be18c234b7b63791b0b20429fb6dd5a0780f"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\controllers\\MainUiBinder.kt": {
+    "size": 4685,
+    "mtime_ns": 1785490438345555700,
+    "word_count": 325,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/controllers/mainuibinder.kt": "0a9e54527c217a33cba101b7188f6e8f405c3d45d76f17d8e06d8be16abb7102"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\controllers\\Networktransfercontroller.kt": {
+    "size": 9517,
+    "mtime_ns": 1785066795944174800,
+    "word_count": 655,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/controllers/networktransfercontroller.kt": "f6368598ffc9df4d405ad3ec8f06f3433bc0ab000517d4d9bae4b5ed6e7433a9"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\controllers\\Photosynccontroller.kt": {
+    "size": 5930,
+    "mtime_ns": 1785064474500112900,
+    "word_count": 382,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/controllers/photosynccontroller.kt": "82f183d52d7458c88e6158829a4320a8a654a000a31414d6e071a6c63c9d4368"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\controllers\\TemplateContextFormBuilder.kt": {
+    "size": 4549,
+    "mtime_ns": 1785227517794584100,
+    "word_count": 308,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/controllers/templatecontextformbuilder.kt": "7e9e2401bcaa8399970a82b8aa4df1a2a1dd9ed5af3c194553cbee86b43a468f"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\ui\\viewmodels\\LidmaatDetailViewModelFactory.kt": {
+    "size": 929,
+    "mtime_ns": 1785226674056269200,
+    "word_count": 56,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/ui/viewmodels/lidmaatdetailviewmodelfactory.kt": "5cdbd13432ea6370483b249ca46a0319fe8f5d43173c452d60f59377ab0e73c6"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\Birthdayalarmscheduler.kt": {
+    "size": 2184,
+    "mtime_ns": 1785407024850698000,
+    "word_count": 181,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/birthdayalarmscheduler.kt": "061501786c96a6d7a25574ced91de6e252c48060bbe363bba856e93de44cef10"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\Birthdaysmssender.kt": {
+    "size": 4031,
+    "mtime_ns": 1785407141446725900,
+    "word_count": 351,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/birthdaysmssender.kt": "52319e6dc20e7b17064ee9da535dfe02ecadfa3c367007a20324b8e99f9467b9"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\Cloudurltransformer.kt": {
+    "size": 2836,
+    "mtime_ns": 1785066764882219700,
+    "word_count": 285,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/cloudurltransformer.kt": "5f782ad18d61597146a5f189ad4971f4680a6a6cae26e1a6bc0632c4d8161aad"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\Databasemigrationhelper.kt": {
+    "size": 8936,
+    "mtime_ns": 1785066795862697900,
+    "word_count": 783,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/databasemigrationhelper.kt": "801f199311572a00af53e32383063195d2dead66f5a7007615170eb794c8af3b"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\Eventmessagestore.kt": {
+    "size": 2855,
+    "mtime_ns": 1785407093535299000,
+    "word_count": 297,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/eventmessagestore.kt": "50d0b081ec32f2f9f68665c7f9d84da659413a6ab9e1d7f3efdd30ca1b30f637"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\Permissiondefinitions.kt": {
+    "size": 7090,
+    "mtime_ns": 1785383716454615100,
+    "word_count": 516,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/permissiondefinitions.kt": "cba03536297552f69f61a11ab775ce23533098feea76a9a28b33d04a0de54bc4"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\Permissionitem.kt": {
+    "size": 2530,
+    "mtime_ns": 1785383695233625200,
+    "word_count": 212,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/permissionitem.kt": "f72b9c8b6d10ee34ca9e8137d1fbb2697c8475496133b30d4da2b20b40016160"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\Permissiontype.kt": {
+    "size": 731,
+    "mtime_ns": 1785383676318700200,
+    "word_count": 89,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/permissiontype.kt": "81b9d12ceedaeca6d4fcf2e48b16bba205611badb4608105d34485e1f0e60351"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\ReminderUiMapper.kt": {
+    "size": 1239,
+    "mtime_ns": 1785428492430780000,
+    "word_count": 75,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/reminderuimapper.kt": "601b564aa29e5bc708265cc4ca0d1cf8ce03abbadc4bbd114f1a6a98f3831cfb"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\VoipDiagnosticHelper.kt": {
+    "size": 2500,
+    "mtime_ns": 1785429697506081500,
+    "word_count": 225,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/voipdiagnostichelper.kt": "7a5745932e7d9cdf373bec3101c6bf53ed26c0f4f1a2b5f14020fb3793e08fb9"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\WhatsappMessageSender.kt": {
+    "size": 3435,
+    "mtime_ns": 1785427804179212700,
+    "word_count": 308,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/whatsappmessagesender.kt": "a46a141d7eda4c1102ff3d5780c1085c81b6d31b5f963b5fc07be59de09c01a5"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\prefs\\AppearancePrefs.kt": {
+    "size": 1502,
+    "mtime_ns": 1785469608525716300,
+    "word_count": 96,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/prefs/appearanceprefs.kt": "4f10b604bbf667c7bc184144e08e43cb6ec2c2ea254034d43d18b52eb52f2489"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\prefs\\BackupPrefs.kt": {
+    "size": 1340,
+    "mtime_ns": 1785467550768923400,
+    "word_count": 77,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/prefs/backupprefs.kt": "11a37272b52718f5f2c183311cf41824bb0c75ff50d87d8facd8acf86a170d10"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\prefs\\BirthdaySmsPrefs.kt": {
+    "size": 1151,
+    "mtime_ns": 1785467604485801800,
+    "word_count": 84,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/prefs/birthdaysmsprefs.kt": "eabc3ffd7b292bed9a297377d49fd051ef566918de867544383827f519030d02"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\prefs\\CallMonitorPrefs.kt": {
+    "size": 1476,
+    "mtime_ns": 1785467586494448800,
+    "word_count": 79,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/prefs/callmonitorprefs.kt": "fc6206e5420be2c5517541febcbece294072412c2e975842d51ec144a4c71751"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\prefs\\CongregationPrefs.kt": {
+    "size": 3345,
+    "mtime_ns": 1785467666911170700,
+    "word_count": 233,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/prefs/congregationprefs.kt": "dc2f8fec66710f21465e180ff212e186403d36f65fb27da0250ed368dcf8460f"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\prefs\\MemberListPrefs.kt": {
+    "size": 2741,
+    "mtime_ns": 1785467634524473700,
+    "word_count": 160,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/prefs/memberlistprefs.kt": "8cf1a21c8464a82f7f279d295f727716290a6dc436e6831827f9ced1970e0966"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\prefs\\PastoralPrefs.kt": {
+    "size": 1126,
+    "mtime_ns": 1785467565098487900,
+    "word_count": 79,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/prefs/pastoralprefs.kt": "666dcc53a07f61068f6f28864ac2d278bcd0dab17217807152d8edc26ebe50b0"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\prefs\\QuickActionPrefs.kt": {
+    "size": 2386,
+    "mtime_ns": 1785467534901383400,
+    "word_count": 143,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/prefs/quickactionprefs.kt": "492da5457f4550afc8753e30e16857fdc11514b83d9dca0dc78a2ae0f2011307"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\prefs\\SecurityPrefs.kt": {
+    "size": 1548,
+    "mtime_ns": 1785467684303196400,
+    "word_count": 82,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/prefs/securityprefs.kt": "8b4ee1d05b1f31bd02a240411cb1618a38ec7d3dd5fef7de4a297f511af02864"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\prefs\\SyncPrefs.kt": {
+    "size": 1282,
+    "mtime_ns": 1785467618665097900,
+    "word_count": 92,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/prefs/syncprefs.kt": "5545e9519ca1adc4cddaa1f9c1fb24285b74316c9ff1cbd142bfd956e121e8e5"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\prefs\\TasksPrefs.kt": {
+    "size": 2934,
+    "mtime_ns": 1785469608997498600,
+    "word_count": 156,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/prefs/tasksprefs.kt": "43dc4e421de1627cb1f44d3bd6a309d02d78da13f1f425564e7938e0c0924368"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\utils\\prefs\\WidgetPrefs.kt": {
+    "size": 1029,
+    "mtime_ns": 1785467497028903800,
+    "word_count": 57,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/utils/prefs/widgetprefs.kt": "e4cce9f5cb27a15d946bf8b42f829ad88ca178da43eb056b8f8047e30fa64b73"
+    }
+  },
+  "C:\\Pieter Folders\\WinkerkReader\\Winkerk10Reader 2024\\app\\src\\main\\kotlin\\za\\co\\jpsoft\\winkerkreader\\workers\\SocketUtils.kt": {
+    "size": 2788,
+    "mtime_ns": 1785033084013646000,
+    "word_count": 328,
+    "hashes": {
+      "main/kotlin/za/co/jpsoft/winkerkreader/workers/socketutils.kt": "2b24215501fb10fa92aa4354437ff76b18c4c36b63f3263deb3e7579933ad36f"
+    }
+  }
+}

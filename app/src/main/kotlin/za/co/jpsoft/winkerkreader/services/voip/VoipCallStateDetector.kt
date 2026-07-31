@@ -51,6 +51,30 @@ class VoipCallStateDetector {
         return CallState.UNKNOWN
     }
 
+
+    fun looksLikeCallNotification(sbn: StatusBarNotification): Boolean {
+        val notification = sbn.notification
+        val extras = notification.extras ?: return false
+        val category = notification.category
+        val callTypeExtra = extras.getInt(Notification.EXTRA_CALL_TYPE, -1)
+
+        if (category == Notification.CATEGORY_CALL ||
+            category == Notification.CATEGORY_MISSED_CALL
+        ) return true
+        if (callTypeExtra in 1..3) return true
+        if ((notification.flags and Notification.FLAG_ONGOING_EVENT) != 0) return true
+
+        val title = extras.getString(Notification.EXTRA_TITLE) ?: ""
+        val text = extras.getString(Notification.EXTRA_TEXT) ?: ""
+        val bigText = extras.getString(Notification.EXTRA_BIG_TEXT) ?: ""
+        val subText = extras.getString(Notification.EXTRA_SUB_TEXT) ?: ""
+
+        return isCallEndedNotification(title, text, bigText, subText) ||
+                isMissedCall(title, text, bigText, subText) ||
+                isIncomingCall(title, text, bigText, subText) ||
+                isPossibleOutgoingCall(title, text, bigText, subText)
+    }
+
     /**
      * Fallback inference from extras when category is not explicit.
      */

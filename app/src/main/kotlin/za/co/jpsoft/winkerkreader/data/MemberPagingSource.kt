@@ -54,7 +54,7 @@ class MemberPagingSource(
 
             try {
                 val query =
-                    androidx.sqlite.db.SimpleSQLiteQuery(finalSql, sqlRequest.args as Array<Any>?)
+                    androidx.sqlite.db.SimpleSQLiteQuery(finalSql, sqlRequest.args)
                 val entities = memberDao.getMembersRaw(query)
 
                 val items = entities.map { memberRepository.mapEntityToItem(it) }

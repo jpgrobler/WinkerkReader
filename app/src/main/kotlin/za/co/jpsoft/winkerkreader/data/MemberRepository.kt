@@ -106,7 +106,7 @@ class MemberRepository(private val context: Context) {
     ): List<MemberItem> {
         return withContext(Dispatchers.IO) {
             try {
-                val query = androidx.sqlite.db.SimpleSQLiteQuery(sql, args as Array<Any>?)
+                val query = androidx.sqlite.db.SimpleSQLiteQuery(sql, args)
                 val entities = memberDao.getMembersRaw(query)
                 val rawItems = entities.map { mapEntityToItem(it) }
                 MemberItemSeparator.applySeparators(rawItems, sortOrder)
@@ -195,7 +195,7 @@ class MemberRepository(private val context: Context) {
             eventType, recordStatus, soek, filterList, sortOrder, congregations
         )
         return try {
-            memberDao.countRaw(androidx.sqlite.db.SimpleSQLiteQuery(sql, args as Array<Any>?))
+            memberDao.countRaw(androidx.sqlite.db.SimpleSQLiteQuery(sql, args))
         } catch (e: Exception) {
             if (BuildConfig.DEBUG) Log.e("MemberRepository", "Count failed", e)
             0
@@ -224,7 +224,7 @@ class MemberRepository(private val context: Context) {
         )
         return withContext(Dispatchers.IO) {
             try {
-                memberDao.countRaw(androidx.sqlite.db.SimpleSQLiteQuery(sql, args as Array<Any>?))
+                memberDao.countRaw(androidx.sqlite.db.SimpleSQLiteQuery(sql, args))
             } catch (e: Exception) {
                 if (BuildConfig.DEBUG) Log.e("MemberRepository", "Count birthday failed", e)
                 0

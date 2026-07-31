@@ -26,7 +26,7 @@ class UitlegFunksiesFragment : Fragment() {
     private lateinit var settingsManager: SettingsManager
     private var listener: UitlegCalendarSelectionListener? = null
 
-    // Initial values for all settings
+    // Initial values – all nullable where appropriate
     private var initialShowQuickActions = false
     private var initialMonitorOproepe = false
     private var initialLogOproepe = false
@@ -36,11 +36,11 @@ class UitlegFunksiesFragment : Fragment() {
     private var initialW2 = false
     private var initialW3 = false
     private var initialAutoStart = false
-    private var initialCalendarId: Long = -1L
+    private var initialCalendarId: Long? = -1L          // nullable to match SettingsManager
     private var initialBiometricLock = false
     private var initialBiometricTimeoutMs = Long.MAX_VALUE
 
-    // New quick‑action toggles
+    // Quick‑action toggles
     private var initialQaDetail = false
     private var initialQaSms = false
     private var initialQaWhatsApp = false
@@ -74,7 +74,6 @@ class UitlegFunksiesFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         settingsManager = SettingsManager.getInstance(requireContext())
 
-        // Temporary spinner adapter (will be replaced later)
         val tempAdapter = ArrayAdapter(
             requireContext(),
             android.R.layout.simple_spinner_item,
@@ -87,6 +86,7 @@ class UitlegFunksiesFragment : Fragment() {
         setupListeners()
         isInitializing = false
         isDirty = false
+
         ViewCompat.setOnApplyWindowInsetsListener(binding.nestedScrollView) { view, insets ->
             val navBar = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
             view.updatePadding(bottom = navBar.bottom)
@@ -99,77 +99,78 @@ class UitlegFunksiesFragment : Fragment() {
     }
 
     private fun loadPreferences() {
-        // Existing settings
-        initialShowQuickActions = settingsManager.showQuickActionBar
+        // ── Quick actions ──────────────────────────────────────────────────
+        initialShowQuickActions = settingsManager.quickActions.showQuickActionBar
         binding.uitlegShowQuickActions.isChecked = initialShowQuickActions
 
-        initialMonitorOproepe = settingsManager.callMonitorEnabled
+        // ── Call monitoring ──────────────────────────────────────────────
+        initialMonitorOproepe = settingsManager.callMonitor.callMonitorEnabled
         binding.uitlegMonitorOproepe.isChecked = initialMonitorOproepe
 
-        initialLogOproepe = settingsManager.callLogEnabled
+        initialLogOproepe = settingsManager.callMonitor.callLogEnabled
         binding.uitlegLogOproepe.isChecked = initialLogOproepe
 
-        initialLogVOIP = settingsManager.voipLogEnabled
+        initialLogVOIP = settingsManager.callMonitor.voipLogEnabled
         binding.uitlegLogVOIP.isChecked = initialLogVOIP
 
-        initialHtml = settingsManager.eposHtml
+        // ── Appearance (HTML email, WhatsApp methods) ───────────────────
+        initialHtml = settingsManager.appearance.eposHtml
         binding.uitlegHtml.isChecked = initialHtml
 
-        initialW1 = settingsManager.whatsapp1
+        initialW1 = settingsManager.appearance.whatsapp1
         binding.uitlegW1.isChecked = initialW1
-
-        initialW2 = settingsManager.whatsapp2
+        initialW2 = settingsManager.appearance.whatsapp2
         binding.uitlegW2.isChecked = initialW2
-
-        initialW3 = settingsManager.whatsapp3
+        initialW3 = settingsManager.appearance.whatsapp3
         binding.uitlegW3.isChecked = initialW3
 
-        initialAutoStart = settingsManager.autoStartEnabled
+        initialAutoStart = settingsManager.callMonitor.autoStartEnabled
         binding.autoStartSwitch.isChecked = initialAutoStart
 
-        initialBiometricLock = settingsManager.appBiometricEnabled
+        // ── Security ──────────────────────────────────────────────────────
+        initialBiometricLock = settingsManager.security.biometricEnabled
         binding.uitlegBiometricLock.isChecked = initialBiometricLock
 
-        initialBiometricTimeoutMs = settingsManager.appBiometricTimeoutMs
+        initialBiometricTimeoutMs = settingsManager.security.biometricTimeoutMs
         binding.biometricTimeoutSpinner.setSelection(if (initialBiometricTimeoutMs == Long.MAX_VALUE) 0 else 1)
         binding.biometricTimeoutSpinner.isEnabled = initialBiometricLock
 
-        initialCalendarId = settingsManager.selectedCalendarId
+        // ── Calendar ──────────────────────────────────────────────────────
+        initialCalendarId = settingsManager.selectedCalendarId   // now nullable
 
-        // New quick‑action toggles
-        initialQaDetail = settingsManager.quickActionDetail
+        // ── Quick action items ───────────────────────────────────────────
+        initialQaDetail = settingsManager.quickActions.quickActionDetail
         binding.qaDetail.isChecked = initialQaDetail
 
-        initialQaSms = settingsManager.quickActionSms
+        initialQaSms = settingsManager.quickActions.quickActionSms
         binding.qaSms.isChecked = initialQaSms
 
-        initialQaWhatsApp = settingsManager.quickActionWhatsApp
+        initialQaWhatsApp = settingsManager.quickActions.quickActionWhatsApp
         binding.qaWhatsapp.isChecked = initialQaWhatsApp
 
-        initialQaCall = settingsManager.quickActionCall
+        initialQaCall = settingsManager.quickActions.quickActionCall
         binding.qaCall.isChecked = initialQaCall
 
-        initialQaEmail = settingsManager.quickActionEmail
+        initialQaEmail = settingsManager.quickActions.quickActionEmail
         binding.qaEmail.isChecked = initialQaEmail
 
-        initialQaLandline = settingsManager.quickActionLandline
+        initialQaLandline = settingsManager.quickActions.quickActionLandline
         binding.qaLandline.isChecked = initialQaLandline
 
-        initialQaNote = settingsManager.quickActionNote
+        initialQaNote = settingsManager.quickActions.quickActionNote
         binding.qaNote.isChecked = initialQaNote
 
-        initialQaReminder = settingsManager.quickActionReminder
+        initialQaReminder = settingsManager.quickActions.quickActionReminder
         binding.qaReminder.isChecked = initialQaReminder
 
-        initialQaCopy = settingsManager.quickActionCopy
+        initialQaCopy = settingsManager.quickActions.quickActionCopy
         binding.qaCopy.isChecked = initialQaCopy
 
-        initialQaCopyContacts = settingsManager.quickActionCopyContacts
+        initialQaCopyContacts = settingsManager.quickActions.quickActionCopyContacts
         binding.qaCopyContacts.isChecked = initialQaCopyContacts
     }
 
     private fun setupListeners() {
-        // All checkboxes (including the new ones)
         val checkboxes = listOf(
             binding.uitlegMonitorOproepe,
             binding.uitlegLogOproepe,
@@ -180,7 +181,6 @@ class UitlegFunksiesFragment : Fragment() {
             binding.uitlegW3,
             binding.autoStartSwitch,
             binding.uitlegBiometricLock,
-            // New quick‑action toggles
             binding.qaDetail,
             binding.qaSms,
             binding.qaWhatsapp,
@@ -196,7 +196,6 @@ class UitlegFunksiesFragment : Fragment() {
             cb.setOnCheckedChangeListener { _, _ -> onUserChanged() }
         }
 
-        // Special handling for biometric lock: enable/disable timeout spinner
         binding.uitlegBiometricLock.setOnCheckedChangeListener { _, isChecked ->
             binding.biometricTimeoutSpinner.isEnabled = isChecked
             onUserChanged()
@@ -204,7 +203,6 @@ class UitlegFunksiesFragment : Fragment() {
 
         binding.uitlegShowQuickActions.setOnCheckedChangeListener { _, _ -> onUserChanged() }
 
-        // Timeout spinner
         binding.biometricTimeoutSpinner.onItemSelectedListener =
             object : AdapterView.OnItemSelectedListener {
                 override fun onItemSelected(
@@ -222,9 +220,6 @@ class UitlegFunksiesFragment : Fragment() {
         binding.funksoieStoor.setOnClickListener { saveFunctionSettings() }
     }
 
-    /**
-     * Called by the parent activity to set the calendar spinner adapter and initial selection.
-     */
     fun setCallCalendarSpinner(adapter: ArrayAdapter<String>, selectedId: Long) {
         binding.calendarSpinner.adapter = adapter
         adapter.notifyDataSetChanged()
@@ -275,7 +270,6 @@ class UitlegFunksiesFragment : Fragment() {
     }
 
     private fun isAnySettingChanged(): Boolean {
-        // Existing checks
         if (binding.uitlegMonitorOproepe.isChecked != initialMonitorOproepe) return true
         if (binding.uitlegLogOproepe.isChecked != initialLogOproepe) return true
         if (binding.uitlegLogVOIP.isChecked != initialLogVOIP) return true
@@ -291,7 +285,7 @@ class UitlegFunksiesFragment : Fragment() {
             if (binding.biometricTimeoutSpinner.selectedItemPosition == 0) Long.MAX_VALUE else 10_000L
         if (selectedTimeoutMs != initialBiometricTimeoutMs) return true
 
-        // Calendar check
+        // Calendar check – both are nullable now
         if (binding.calendarSpinner.adapter != null && binding.calendarSpinner.adapter.count > 0) {
             val firstItem = binding.calendarSpinner.adapter.getItem(0)?.toString()
             if (firstItem != "Laai kalenders…" && firstItem != "Geen kalenders gevind") {
@@ -302,7 +296,6 @@ class UitlegFunksiesFragment : Fragment() {
             }
         }
 
-        // New quick‑action toggles
         if (binding.qaDetail.isChecked != initialQaDetail) return true
         if (binding.qaSms.isChecked != initialQaSms) return true
         if (binding.qaWhatsapp.isChecked != initialQaWhatsApp) return true
@@ -314,40 +307,44 @@ class UitlegFunksiesFragment : Fragment() {
         if (binding.qaCopy.isChecked != initialQaCopy) return true
         if (binding.qaCopyContacts.isChecked != initialQaCopyContacts) return true
 
-
         return false
     }
 
     private fun saveFunctionSettings() {
-        // Save existing settings
-        settingsManager.callMonitorEnabled = binding.uitlegMonitorOproepe.isChecked
-        settingsManager.callLogEnabled = binding.uitlegLogOproepe.isChecked
-        settingsManager.voipLogEnabled = binding.uitlegLogVOIP.isChecked
-        settingsManager.whatsapp1 = binding.uitlegW1.isChecked
-        settingsManager.whatsapp2 = binding.uitlegW2.isChecked
-        settingsManager.whatsapp3 = binding.uitlegW3.isChecked
-        settingsManager.eposHtml = binding.uitlegHtml.isChecked
-        settingsManager.autoStartEnabled = binding.autoStartSwitch.isChecked
-        settingsManager.appBiometricEnabled = binding.uitlegBiometricLock.isChecked
-        settingsManager.appBiometricTimeoutMs =
+        // ── Call monitor ──────────────────────────────────────────────────
+        settingsManager.callMonitor.callMonitorEnabled = binding.uitlegMonitorOproepe.isChecked
+        settingsManager.callMonitor.callLogEnabled = binding.uitlegLogOproepe.isChecked
+        settingsManager.callMonitor.voipLogEnabled = binding.uitlegLogVOIP.isChecked
+        settingsManager.callMonitor.autoStartEnabled = binding.autoStartSwitch.isChecked
+
+        // ── Appearance ────────────────────────────────────────────────────
+        settingsManager.appearance.whatsapp1 = binding.uitlegW1.isChecked
+        settingsManager.appearance.whatsapp2 = binding.uitlegW2.isChecked
+        settingsManager.appearance.whatsapp3 = binding.uitlegW3.isChecked
+        settingsManager.appearance.eposHtml = binding.uitlegHtml.isChecked
+
+        // ── Security ──────────────────────────────────────────────────────
+        settingsManager.security.biometricEnabled = binding.uitlegBiometricLock.isChecked
+        settingsManager.security.biometricTimeoutMs =
             if (binding.biometricTimeoutSpinner.selectedItemPosition == 0) Long.MAX_VALUE else 10_000L
 
+        // ── Calendar ──────────────────────────────────────────────────────
         (activity as? UitlegActivity)?.saveCallCalendarId()
-        settingsManager.showQuickActionBar = binding.uitlegShowQuickActions.isChecked
 
-        // Save new quick‑action toggles
-        settingsManager.quickActionDetail = binding.qaDetail.isChecked
-        settingsManager.quickActionSms = binding.qaSms.isChecked
-        settingsManager.quickActionWhatsApp = binding.qaWhatsapp.isChecked
-        settingsManager.quickActionCall = binding.qaCall.isChecked
-        settingsManager.quickActionEmail = binding.qaEmail.isChecked
-        settingsManager.quickActionLandline = binding.qaLandline.isChecked
-        settingsManager.quickActionNote = binding.qaNote.isChecked
-        settingsManager.quickActionReminder = binding.qaReminder.isChecked
-        settingsManager.quickActionCopy = binding.qaCopy.isChecked
-        settingsManager.quickActionCopyContacts = binding.qaCopyContacts.isChecked
+        // ── Quick actions ─────────────────────────────────────────────────
+        settingsManager.quickActions.showQuickActionBar = binding.uitlegShowQuickActions.isChecked
+        settingsManager.quickActions.quickActionDetail = binding.qaDetail.isChecked
+        settingsManager.quickActions.quickActionSms = binding.qaSms.isChecked
+        settingsManager.quickActions.quickActionWhatsApp = binding.qaWhatsapp.isChecked
+        settingsManager.quickActions.quickActionCall = binding.qaCall.isChecked
+        settingsManager.quickActions.quickActionEmail = binding.qaEmail.isChecked
+        settingsManager.quickActions.quickActionLandline = binding.qaLandline.isChecked
+        settingsManager.quickActions.quickActionNote = binding.qaNote.isChecked
+        settingsManager.quickActions.quickActionReminder = binding.qaReminder.isChecked
+        settingsManager.quickActions.quickActionCopy = binding.qaCopy.isChecked
+        settingsManager.quickActions.quickActionCopyContacts = binding.qaCopyContacts.isChecked
 
-        // Update initial values
+        // ── Update initial values ──────────────────────────────────────────
         initialMonitorOproepe = binding.uitlegMonitorOproepe.isChecked
         initialLogOproepe = binding.uitlegLogOproepe.isChecked
         initialLogVOIP = binding.uitlegLogVOIP.isChecked
@@ -360,7 +357,7 @@ class UitlegFunksiesFragment : Fragment() {
             binding.calendarSpinner.selectedItemPosition
         ) ?: -1L
         initialBiometricLock = binding.uitlegBiometricLock.isChecked
-        initialBiometricTimeoutMs = settingsManager.appBiometricTimeoutMs
+        initialBiometricTimeoutMs = settingsManager.security.biometricTimeoutMs
         initialShowQuickActions = binding.uitlegShowQuickActions.isChecked
 
         initialQaDetail = binding.qaDetail.isChecked

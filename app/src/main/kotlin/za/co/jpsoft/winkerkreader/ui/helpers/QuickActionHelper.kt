@@ -105,7 +105,7 @@ class QuickActionHelper(
         }
 
         // 0. Details
-        if (settingsManager.quickActionDetail) {
+        if (settingsManager.quickActions.quickActionDetail) {
             addActionButton(
                 iconText = "ℹ\uFE0F",
                 label = "Detail",
@@ -116,7 +116,7 @@ class QuickActionHelper(
             )
         }
         // 1. SMS – green icon
-        if (settingsManager.quickActionSms && hasPhone) {
+        if (settingsManager.quickActions.quickActionSms && hasPhone) {
             addActionButton(
                 iconText = "💬",
                 label = "SMS",
@@ -129,13 +129,13 @@ class QuickActionHelper(
 
         // 2. WhatsApp – drawable with green tint
         val whatsappMethod = when {
-            settingsManager.whatsapp1 -> 1
-            settingsManager.whatsapp2 -> 2
-            settingsManager.whatsapp3 -> 3
+            settingsManager.appearance.whatsapp1 -> 1
+            settingsManager.appearance.whatsapp2 -> 2
+            settingsManager.appearance.whatsapp3 -> 3
             else -> 0 // disabled
         }
 
-        if (settingsManager.quickActionWhatsApp && hasPhone && whatsappMethod != 0) {
+        if (settingsManager.quickActions.quickActionWhatsApp && hasPhone && whatsappMethod != 0) {
             val formattedPhone = Utils.fixphonenumber(item.cellphone) ?: item.cellphone
             if (ContactRepository.isWhatsAppContact(formattedPhone)) {
                 addActionButton(
@@ -150,7 +150,7 @@ class QuickActionHelper(
         }
 
         // 3. Call – default color
-        if (settingsManager.quickActionCall && hasPhone) {
+        if (settingsManager.quickActions.quickActionCall && hasPhone) {
             addActionButton(
                 iconText = "📱",
                 label = "Bel",
@@ -162,7 +162,7 @@ class QuickActionHelper(
         }
 
         // 4. Email (new)
-        if (settingsManager.quickActionEmail && item.email.isNotEmpty()) {
+        if (settingsManager.quickActions.quickActionEmail && item.email.isNotEmpty()) {
             addActionButton(
                 iconText = "✉️", label = "E-pos",
                 onClick = {
@@ -173,7 +173,7 @@ class QuickActionHelper(
         }
 
         // 5. Landline (new)
-        if (settingsManager.quickActionLandline && item.landline.isNotEmpty()) {
+        if (settingsManager.quickActions.quickActionLandline && item.landline.isNotEmpty()) {
             addActionButton(
                 iconText = "☎️", label = "Landlyn",
                 onClick = {
@@ -184,7 +184,7 @@ class QuickActionHelper(
         }
 
         // 6. Note
-        if (settingsManager.quickActionNote) {
+        if (settingsManager.quickActions.quickActionNote) {
             addActionButton(
                 iconText = "📝", label = "Nota",
                 onClick = {
@@ -195,7 +195,7 @@ class QuickActionHelper(
         }
 
         // 7. Reminder
-        if (settingsManager.quickActionReminder) {
+        if (settingsManager.quickActions.quickActionReminder) {
             addActionButton(
                 iconDrawableRes = R.drawable.ic_bediening,
                 label = "Herinner",
@@ -207,7 +207,7 @@ class QuickActionHelper(
         }
 
         // 8. Copy to clipboard (new)
-        if (settingsManager.quickActionCopy) {
+        if (settingsManager.quickActions.quickActionCopy) {
             addActionButton(
                 iconText = "📋", label = "Kopieer",
                 onClick = {
@@ -218,7 +218,7 @@ class QuickActionHelper(
         }
 
         // 9. Copy to contacts (new)
-        if (settingsManager.quickActionCopyContacts) {
+        if (settingsManager.quickActions.quickActionCopyContacts) {
             addActionButton(
                 iconText = "👤", label = "Stoor",
                 onClick = {

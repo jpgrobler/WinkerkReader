@@ -131,7 +131,7 @@ class PastoralWidgetProvider : AppWidgetProvider() {
                     putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
                     putExtra("nonce", System.currentTimeMillis())
                 }
-                views.setRemoteAdapter(R.id.widget_pastoral_list, intent)
+                views.setRemoteAdapter(appWidgetId, R.id.widget_pastoral_list, intent)
                 views.setEmptyView(R.id.widget_pastoral_list, R.id.widget_pastoral_empty)
 
                 // ---------- Click handlers ----------

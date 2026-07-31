@@ -30,7 +30,7 @@ class PastoralWidgetKeyguardProvider : AppWidgetProvider() {
 
             val intent = Intent(context, PastoralWidgetKeyguardRemoteViewsService::class.java)
             intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
-            views.setRemoteAdapter(R.id.widget_pastoral_keyguard_list, intent)
+            views.setRemoteAdapter(appWidgetId, R.id.widget_pastoral_keyguard_list, intent)
             views.setEmptyView(
                 R.id.widget_pastoral_keyguard_list,
                 R.id.widget_pastoral_keyguard_empty

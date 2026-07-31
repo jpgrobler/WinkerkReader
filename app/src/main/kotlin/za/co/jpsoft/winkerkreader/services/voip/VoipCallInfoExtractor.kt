@@ -5,6 +5,7 @@ import android.content.ContentResolver
 import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
+import android.os.Parcelable
 import android.provider.ContactsContract
 import java.util.Locale
 
@@ -17,7 +18,7 @@ class VoipCallInfoExtractor {
     // ---- Public extractors ----
 
     fun extractPhoneNumberFromExtras(extras: Bundle, contentResolver: ContentResolver): String {
-        val peopleUris = extras.getParcelableArray(Notification.EXTRA_PEOPLE)
+        val peopleUris = extras.getParcelableArrayCompat(Notification.EXTRA_PEOPLE)
         if (peopleUris != null) {
             for (uriObj in peopleUris) {
                 if (uriObj is Uri) {
@@ -72,8 +73,12 @@ class VoipCallInfoExtractor {
         return "Unknown Contact"
     }
 
+    @Suppress("DEPRECATION")
+    private fun Bundle.getParcelableArrayCompat(key: String): Array<out Parcelable>? =
+        getParcelableArray(key)
+
     fun extractCallerInfoModern(extras: Bundle, contentResolver: ContentResolver): String {
-        val peopleUris = extras.getParcelableArray(Notification.EXTRA_PEOPLE)
+        val peopleUris = extras.getParcelableArrayCompat(Notification.EXTRA_PEOPLE)
         if (peopleUris != null && peopleUris.isNotEmpty()) {
             for (uriObj in peopleUris) {
                 if (uriObj is Uri) {

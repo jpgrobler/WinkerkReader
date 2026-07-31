@@ -26,9 +26,9 @@ class CongregationChipController(
         chipGroup.isSelectionRequired = false
 
         val congregations = listOfNotNull(
-            settings.gemeenteNaam.takeIf { it.isNotBlank() },
-            settings.gemeente2Naam.takeIf { it.isNotBlank() },
-            settings.gemeente3Naam.takeIf { it.isNotBlank() }
+            settings.congregation.gemeenteNaam.takeIf { it.isNotBlank() },
+            settings.congregation.gemeente2Naam.takeIf { it.isNotBlank() },
+            settings.congregation.gemeente3Naam.takeIf { it.isNotBlank() }
         )
 
         congregations.forEach { name ->
@@ -72,9 +72,9 @@ class CongregationChipController(
     // ── Private helpers ───────────────────────────────────────────────────────
 
     private fun congregationColor(name: String): Int = when (name) {
-        settings.gemeenteNaam  -> settings.gemeenteKleur
-        settings.gemeente2Naam -> settings.gemeente2Kleur
-        settings.gemeente3Naam -> settings.gemeente3Kleur
+        settings.congregation.gemeenteNaam -> settings.congregation.gemeenteKleur
+        settings.congregation.gemeente2Naam -> settings.congregation.gemeente2Kleur
+        settings.congregation.gemeente3Naam -> settings.congregation.gemeente3Kleur
         else -> ContextCompat.getColor(context, R.color.md_theme_primary)
     }
 

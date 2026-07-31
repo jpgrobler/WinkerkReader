@@ -145,9 +145,9 @@ class PastoralWidgetRemoteViewsService : RemoteViewsService() {
             val congregationName = getMemberCongregationCached(reminder.memberGuid, context)
             val settingsManager = SettingsManager.getInstance(context)
             val congregationColor = when (congregationName) {
-                settingsManager.gemeenteNaam -> settingsManager.gemeenteKleur
-                settingsManager.gemeente2Naam -> settingsManager.gemeente2Kleur
-                settingsManager.gemeente3Naam -> settingsManager.gemeente3Kleur
+                settingsManager.congregation.gemeenteNaam -> settingsManager.congregation.gemeenteKleur
+                settingsManager.congregation.gemeente2Naam -> settingsManager.congregation.gemeente2Kleur
+                settingsManager.congregation.gemeente3Naam -> settingsManager.congregation.gemeente3Kleur
                 else -> ContextCompat.getColor(context, R.color.md_theme_onSurfaceVariant)
             }
             views.setInt(

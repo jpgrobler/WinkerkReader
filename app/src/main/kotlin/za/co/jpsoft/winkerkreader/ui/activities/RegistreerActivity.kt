@@ -13,7 +13,7 @@ import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
 import za.co.jpsoft.winkerkreader.databinding.RegistreerBinding
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
 
-class RegistreerActivity : BaseActivity() {
+class RegistreerActivity : AuthBaseActivity() {
 
     private lateinit var binding: RegistreerBinding
     private var isDataChanged = false
@@ -74,9 +74,9 @@ class RegistreerActivity : BaseActivity() {
 
         // Populate gemeente fields if available
         val settingsManager = SettingsManager.getInstance(this)
-        if (settingsManager.gemeenteNaam != "Onbekend") {
-            binding.regGemeente.setText(settingsManager.gemeenteNaam)
-            binding.regGemeenteEpos.setText(settingsManager.gemeenteEpos)
+        if (settingsManager.congregation.gemeenteNaam != "Onbekend") {
+            binding.regGemeente.setText(settingsManager.congregation.gemeenteNaam)
+            binding.regGemeenteEpos.setText(settingsManager.congregation.gemeenteEpos)
         }
     }
 
@@ -199,9 +199,9 @@ class RegistreerActivity : BaseActivity() {
     private fun saveUserData(userData: UserData) {
         // Update global gemeente data if changed
         val settingsManager = SettingsManager.getInstance(this)
-        settingsManager.gemeenteEpos = userData.gemEpos
-        if (userData.gemNaam.isNotEmpty() && settingsManager.gemeenteNaam != userData.gemNaam) {
-            settingsManager.gemeenteNaam = userData.gemNaam
+        settingsManager.congregation.gemeenteEpos = userData.gemEpos
+        if (userData.gemNaam.isNotEmpty() && settingsManager.congregation.gemeenteNaam != userData.gemNaam) {
+            settingsManager.congregation.gemeenteNaam = userData.gemNaam
         }
 
         // Save to SharedPreferences

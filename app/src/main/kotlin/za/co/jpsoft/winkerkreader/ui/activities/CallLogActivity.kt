@@ -29,7 +29,7 @@ import za.co.jpsoft.winkerkreader.ui.adapters.CallLogAdapter
 import za.co.jpsoft.winkerkreader.utils.CallLogExporter
 import za.co.jpsoft.winkerkreader.utils.UnifiedCallMonitor
 
-class CallLogActivity : BaseActivity() {
+class CallLogActivity : AuthBaseActivity() {
 
     private lateinit var binding: ActivityCallLogBinding
     private lateinit var callLogAdapter: CallLogAdapter

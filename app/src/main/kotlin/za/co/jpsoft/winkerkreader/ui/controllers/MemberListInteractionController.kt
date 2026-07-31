@@ -57,7 +57,7 @@ class MemberListInteractionController(
 
     // ─── Click: show quick‑action popup ──────────────────────────────────────
     fun showMemberPopupMenu(anchor: View, item: MemberItem) {
-        if (!settingsManager.showQuickActionBar) {
+        if (!settingsManager.quickActions.showQuickActionBar) {
             showFullPopupMenu(anchor, item)  // same method the expandCallback calls
         } else {
             quickActionHelper.showQuickActions(anchor, item)
@@ -102,13 +102,13 @@ class MemberListInteractionController(
             safeRemoveMenuItem(menu, R.id.submenu_teks, R.id.stuur_epos)
         }
 
-        if (!settingsManager.whatsapp1) {
+        if (!settingsManager.appearance.whatsapp1) {
             safeRemoveMenuItem(menu, R.id.submenu_teks, R.id.stuur_whatsapp)
         }
-        if (!settingsManager.whatsapp2) {
+        if (!settingsManager.appearance.whatsapp2) {
             safeRemoveMenuItem(menu, R.id.submenu_teks, R.id.stuur_whatsapp2)
         }
-        if (!settingsManager.whatsapp3) {
+        if (!settingsManager.appearance.whatsapp3) {
             safeRemoveMenuItem(menu, R.id.submenu_teks, R.id.stuur_whatsapp3)
         }
 

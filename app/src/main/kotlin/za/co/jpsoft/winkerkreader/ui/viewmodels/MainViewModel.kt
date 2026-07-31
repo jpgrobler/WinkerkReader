@@ -30,7 +30,8 @@ class MainViewModel(
     val filterVisible: StateFlow<Boolean> = _filterVisible.asStateFlow()
 
     // Sort order – persisted via SavedStateHandle
-    private val _sortOrder = savedStateHandle.getStateFlow("sortOrder", settingsManager.defLayout)
+    private val _sortOrder =
+        savedStateHandle.getStateFlow("sortOrder", settingsManager.memberList.defLayout)
     val sortOrder: StateFlow<String> = _sortOrder
 
     // Saved sort order before filter – persisted
@@ -39,7 +40,7 @@ class MainViewModel(
     val savedSortOrderBeforeFilter: StateFlow<String?> = _savedSortOrderBeforeFilter
 
     // Church name – from SettingsManager
-    private val _churchName = MutableStateFlow(settingsManager.gemeenteNaam)
+    private val _churchName = MutableStateFlow(settingsManager.congregation.gemeenteNaam)
     val churchName: StateFlow<String> = _churchName.asStateFlow()
 
     // Pending reminder count
@@ -56,7 +57,7 @@ class MainViewModel(
 
     fun setSortOrder(sortOrder: String) {
         savedStateHandle["sortOrder"] = sortOrder
-        settingsManager.defLayout = sortOrder
+        settingsManager.memberList.defLayout = sortOrder
     }
 
     fun setSavedSortOrderBeforeFilter(sortOrder: String?) {

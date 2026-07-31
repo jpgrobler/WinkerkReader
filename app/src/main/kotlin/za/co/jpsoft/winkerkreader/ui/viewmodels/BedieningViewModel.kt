@@ -176,8 +176,8 @@ class BedieningViewModel(
     fun syncReminderToGoogleTasks(reminderId: String) {
         viewModelScope.launch {
             try {
-                val url = settingsManager.tasksScriptUrl
-                val secret = settingsManager.tasksScriptSecret
+                val url = settingsManager.tasks.tasksScriptUrl
+                val secret = settingsManager.tasks.tasksScriptSecret
                 if (BuildConfig.DEBUG) Log.d("Tasks", "URL: $url, Secret: $secret")
                 val pushed = repository.syncToGoogleTasksViaScript(reminderId)
                 if (!pushed) {

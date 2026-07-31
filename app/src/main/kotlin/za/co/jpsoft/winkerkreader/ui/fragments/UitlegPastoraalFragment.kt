@@ -25,6 +25,7 @@ import za.co.jpsoft.winkerkreader.ui.activities.UitlegActivity
 import za.co.jpsoft.winkerkreader.ui.activities.UitlegCalendarSelectionListener
 import za.co.jpsoft.winkerkreader.utils.PastoralTaskScriptManager
 import za.co.jpsoft.winkerkreader.utils.SettingsManager
+import za.co.jpsoft.winkerkreader.utils.prefs.TasksPrefs
 
 class UitlegPastoraalFragment : Fragment() {
     private var isLoggedIn = false
@@ -37,7 +38,7 @@ class UitlegPastoraalFragment : Fragment() {
 
     // Aanvanklike waardes
     private var initialAutoSync = false
-    private var initialMode = SettingsManager.GoogleTasksMode.OFF
+    private var initialMode = TasksPrefs.GoogleTasksMode.OFF
     private var initialUrl: String? = null
     private var initialSecret: String? = null
     private var initialTaskListId: String? = null
@@ -83,16 +84,15 @@ class UitlegPastoraalFragment : Fragment() {
             updateSaveButtonState()
         }, 300)
 
-        if (settingsManager.googleTasksMode() == SettingsManager.GoogleTasksMode.API &&
-            settingsManager.isTasksScriptConfigured()
+        if (settingsManager.tasks.googleTasksMode() == TasksPrefs.GoogleTasksMode.API &&
+            settingsManager.tasks.isTasksScriptConfigured()   // fixed
         ) {
             loadTaskLists()
         }
 
-        val savedUrl = settingsManager.tasksScriptUrl
-        val savedSecret = settingsManager.tasksScriptSecret
+        val savedUrl = settingsManager.tasks.tasksScriptUrl
+        val savedSecret = settingsManager.tasks.tasksScriptSecret
         if (!savedUrl.isNullOrBlank() && !savedSecret.isNullOrBlank()) {
-            // Assume they were working (or we can check later); set to "Refresh Lists"
             binding.btnRefreshLists.text = getString(R.string.refresh_lists_btn)
             isLoggedIn = true
         } else {
@@ -102,7 +102,6 @@ class UitlegPastoraalFragment : Fragment() {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: Editable?) {
-                // Credential changed → reset login state
                 if (isLoggedIn) {
                     isLoggedIn = false
                     binding.btnRefreshLists.text = getString(R.string.login_button)
@@ -115,12 +114,12 @@ class UitlegPastoraalFragment : Fragment() {
     }
 
     private fun loadInitialState() {
-        initialAutoSync = settingsManager.pastoralCalendarSyncEnabled
-        initialMode = settingsManager.googleTasksMode()
-        initialUrl = settingsManager.tasksScriptUrl
-        initialSecret = settingsManager.tasksScriptSecret
-        initialTaskListId = settingsManager.googleTasksListId
-        initialCalendarId = settingsManager.getPastoralCalendarId() ?: -1L
+        initialAutoSync = settingsManager.pastoral.pastoralCalendarSyncEnabled   // fixed
+        initialMode = settingsManager.tasks.googleTasksMode()
+        initialUrl = settingsManager.tasks.tasksScriptUrl
+        initialSecret = settingsManager.tasks.tasksScriptSecret
+        initialTaskListId = settingsManager.tasks.googleTasksListId
+        initialCalendarId = settingsManager.pastoral.pastoralCalendarId ?: -1L
     }
 
     fun setPastoralCalendarSpinner(adapter: ArrayAdapter<String>, selectedId: Long) {
@@ -146,7 +145,6 @@ class UitlegPastoraalFragment : Fragment() {
                     val activity = requireActivity() as? UitlegActivity
                     val calId = activity!!.getCalendarIdAtPosition(position)
                     listener?.onCallCalendarSelected(calId)
-                    // Only mark dirty if the user actually picked a different calendar
                     if (calId != initialCalendarId) {
                         onUserChanged()
                     }
@@ -155,7 +153,6 @@ class UitlegPastoraalFragment : Fragment() {
                 override fun onNothingSelected(parent: AdapterView<*>?) {}
             }
 
-        // Update save state after adapter is set
         isInitializing = false
         isDirty = false
         updateSaveButtonState()
@@ -163,11 +160,11 @@ class UitlegPastoraalFragment : Fragment() {
 
     private fun setupGoogleTasksUI() {
         when (initialMode) {
-            SettingsManager.GoogleTasksMode.OFF -> binding.tasksModeOff.isChecked = true
-            SettingsManager.GoogleTasksMode.API -> binding.tasksModeApi.isChecked = true
-            SettingsManager.GoogleTasksMode.SHARE -> binding.tasksModeShare.isChecked = true
+            TasksPrefs.GoogleTasksMode.OFF -> binding.tasksModeOff.isChecked = true
+            TasksPrefs.GoogleTasksMode.API -> binding.tasksModeApi.isChecked = true
+            TasksPrefs.GoogleTasksMode.SHARE -> binding.tasksModeShare.isChecked = true
         }
-        val isApi = initialMode == SettingsManager.GoogleTasksMode.API
+        val isApi = initialMode == TasksPrefs.GoogleTasksMode.API
         binding.tasksListSpinner.visibility = if (isApi) View.VISIBLE else View.GONE
         binding.btnRefreshLists.visibility = if (isApi) View.VISIBLE else View.GONE
 
@@ -209,7 +206,7 @@ class UitlegPastoraalFragment : Fragment() {
                         selectedTaskListId = newId
                         onUserChanged()
                     } else {
-                        selectedTaskListId = newId  // keep in sync without marking dirty
+                        selectedTaskListId = newId
                     }
                 }
 
@@ -238,9 +235,9 @@ class UitlegPastoraalFragment : Fragment() {
         if (binding.pastoralCalendarAutoSync.isChecked != initialAutoSync) return true
 
         val currentMode = when (binding.tasksModeGroup.checkedRadioButtonId) {
-            R.id.tasks_mode_api -> SettingsManager.GoogleTasksMode.API
-            R.id.tasks_mode_share -> SettingsManager.GoogleTasksMode.SHARE
-            else -> SettingsManager.GoogleTasksMode.OFF
+            R.id.tasks_mode_api -> TasksPrefs.GoogleTasksMode.API
+            R.id.tasks_mode_share -> TasksPrefs.GoogleTasksMode.SHARE
+            else -> TasksPrefs.GoogleTasksMode.OFF
         }
         if (currentMode != initialMode) return true
 
@@ -277,11 +274,9 @@ class UitlegPastoraalFragment : Fragment() {
             return
         }
 
-        // If not logged in, this is a login attempt
         if (!isLoggedIn) {
             binding.btnRefreshLists.isEnabled = false
-            binding.btnRefreshLists.text =
-                getString(R.string.logging_in) // optional, or just keep "Login"
+            binding.btnRefreshLists.text = getString(R.string.logging_in)
         }
 
         lifecycleScope.launch(Dispatchers.IO) {
@@ -295,9 +290,7 @@ class UitlegPastoraalFragment : Fragment() {
                             "Login failed. Check URL and secret key.",
                             Toast.LENGTH_LONG
                         ).show()
-                        // Keep isLoggedIn = false, button shows "Login"
                     } else {
-                        // Success
                         isLoggedIn = true
                         taskLists = listData
                         populateTaskListSpinner()
@@ -336,26 +329,27 @@ class UitlegPastoraalFragment : Fragment() {
             val index = taskLists.indexOfFirst { it.first == selectedTaskListId }
             if (index >= 0) binding.tasksListSpinner.setSelection(index)
         }
-        // Listener already set
     }
 
     private fun saveGoogleTasksSettings() {
         val selectedId = binding.tasksModeGroup.checkedRadioButtonId
         val mode = when (selectedId) {
-            R.id.tasks_mode_api -> SettingsManager.GoogleTasksMode.API
-            R.id.tasks_mode_share -> SettingsManager.GoogleTasksMode.SHARE
-            else -> SettingsManager.GoogleTasksMode.OFF
+            R.id.tasks_mode_api -> TasksPrefs.GoogleTasksMode.API
+            R.id.tasks_mode_share -> TasksPrefs.GoogleTasksMode.SHARE
+            else -> TasksPrefs.GoogleTasksMode.OFF
         }
-        settingsManager.setGoogleTasksMode(mode)
-        settingsManager.pastoralCalendarSyncEnabled = binding.pastoralCalendarAutoSync.isChecked
+        // fixed: pass 'mode' argument
+        settingsManager.tasks.setGoogleTasksMode(mode)
+        settingsManager.pastoral.pastoralCalendarSyncEnabled =
+            binding.pastoralCalendarAutoSync.isChecked   // fixed
 
         (activity as? UitlegActivity)?.savePastoralCalendarId()
 
         val scriptUrl = binding.appsScriptLink.text?.toString()?.trim()
         val scriptSecret = binding.appsScriptKey.text?.toString()?.trim()
-        settingsManager.tasksScriptUrl = scriptUrl?.ifBlank { null }
-        settingsManager.tasksScriptSecret = scriptSecret?.ifBlank { null }
-        settingsManager.googleTasksListId = selectedTaskListId
+        settingsManager.tasks.tasksScriptUrl = scriptUrl?.ifBlank { null }
+        settingsManager.tasks.tasksScriptSecret = scriptSecret?.ifBlank { null }
+        settingsManager.tasks.googleTasksListId = selectedTaskListId
 
         // Update initial values
         initialAutoSync = binding.pastoralCalendarAutoSync.isChecked
@@ -503,14 +497,15 @@ Die skrip is nou gereed!
         }"
         binding.backupLocationText.text = ligg
         ligg =
-            "Herinneringe & notas: ${formatBackupTimestamp(settingsManager.lastPastoralBackupTimestamp)}"
+            "Herinneringe & notas: ${formatBackupTimestamp(settingsManager.backup.lastPastoralBackupTimestamp)}"
         binding.backupStatusPastoralText.text = ligg
-        ligg = "Oproeplog: ${formatBackupTimestamp(settingsManager.lastCallLogBackupTimestamp)}"
+        ligg =
+            "Oproeplog: ${formatBackupTimestamp(settingsManager.backup.lastCallLogBackupTimestamp)}"
         binding.backupStatusCallLogText.text = ligg
 
-        binding.callLogBackupSwitch.isChecked = settingsManager.callLogBackupEnabled
+        binding.callLogBackupSwitch.isChecked = settingsManager.backup.callLogBackupEnabled
         binding.callLogBackupSwitch.setOnCheckedChangeListener { _, isChecked ->
-            settingsManager.callLogBackupEnabled = isChecked
+            settingsManager.backup.callLogBackupEnabled = isChecked
             if (isChecked) {
                 // Back up immediately on enabling, rather than waiting for the
                 // next call/mutation, so the status line updates right away.
@@ -521,7 +516,7 @@ Die skrip is nou gereed!
                         )
                     }
                     ligg =
-                        "Oproeplog: ${formatBackupTimestamp(settingsManager.lastCallLogBackupTimestamp)}"
+                        "Oproeplog: ${formatBackupTimestamp(settingsManager.backup.lastCallLogBackupTimestamp)}"
                     binding.backupStatusCallLogText.text = ligg
                 }
             }

@@ -18,7 +18,7 @@ import za.co.jpsoft.winkerkreader.utils.SearchCheckBoxPreferences
 /**
  * Created by Pieter Grobler on 06/09/2017.
  */
-class SettingsActivity : BaseActivity() {
+class SettingsActivity : AuthBaseActivity() {
 
     private lateinit var binding: SubMenuBinding
 

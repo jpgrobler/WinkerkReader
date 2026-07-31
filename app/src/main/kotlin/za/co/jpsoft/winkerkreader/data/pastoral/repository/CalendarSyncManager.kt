@@ -36,11 +36,11 @@ class CalendarSyncManager(
      * @return true if a new event was created, false if skipped or failed.
      */
     suspend fun syncToCalendar(reminderId: String): Boolean = withContext(Dispatchers.IO) {
-        if (!settingsManager.isPastoralCalendarSyncEnabled()) {
+        if (!settingsManager.pastoral.pastoralCalendarSyncEnabled) {
             if (BuildConfig.DEBUG) Log.d(TAG, "sync disabled, skipping $reminderId")
             return@withContext false
         }
-        val calendarId = settingsManager.getPastoralCalendarId() ?: run {
+        val calendarId = settingsManager.pastoral.pastoralCalendarId ?: run {
             if (BuildConfig.DEBUG) Log.w(TAG, "no pastoral calendar selected, skipping $reminderId")
             return@withContext false
         }
@@ -107,11 +107,11 @@ class CalendarSyncManager(
      * Sync a list of reminders to the calendar (auto-sync on creation).
      */
     suspend fun syncRemindersToCalendar(reminders: List<FollowUpReminderEntity>) {
-        if (!settingsManager.isPastoralCalendarSyncEnabled()) {
+        if (!settingsManager.pastoral.pastoralCalendarSyncEnabled) {
             if (BuildConfig.DEBUG) Log.d(TAG, "Auto-sync disabled, skipping calendar sync")
             return
         }
-        val calendarId = settingsManager.getPastoralCalendarId()
+        val calendarId = settingsManager.pastoral.pastoralCalendarId
         if (calendarId == null) {
             if (BuildConfig.DEBUG) Log.w(TAG, "Auto-sync enabled but no pastoral calendar selected")
             return

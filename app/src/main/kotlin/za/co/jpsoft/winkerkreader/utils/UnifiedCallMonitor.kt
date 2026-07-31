@@ -193,7 +193,7 @@ class UnifiedCallMonitor private constructor(
         source: String
     ) {
         val settingsManager = SettingsManager.getInstance(context)
-        if (!settingsManager.callLogEnabled) {
+        if (!settingsManager.callMonitor.callLogEnabled) {
             if (BuildConfig.DEBUG) Log.d(TAG, "Call logging disabled, skipping")
             return
         }

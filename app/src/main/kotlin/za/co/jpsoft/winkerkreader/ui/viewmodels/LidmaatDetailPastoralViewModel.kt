@@ -168,6 +168,9 @@ class LidmaatDetailPastoralViewModel(
             }
     }
 
+    suspend fun getReminderById(reminderId: String): FollowUpReminderEntity? =
+        repository.getReminderById(reminderId)
+
     data class PreviewItem(
         val stepId: String,
         val stepTitle: String,
