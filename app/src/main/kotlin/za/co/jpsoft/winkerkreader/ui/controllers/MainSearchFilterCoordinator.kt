@@ -9,12 +9,11 @@ import za.co.jpsoft.winkerkreader.databinding.ActivityMainBinding
 import za.co.jpsoft.winkerkreader.ui.adapters.MemberListAdapter
 import za.co.jpsoft.winkerkreader.ui.models.MainQueryMode
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel
-import za.co.jpsoft.winkerkreader.utils.SettingsManager
 
 class MainSearchFilterCoordinator(
     private val tag: String,
     private val viewModel: MemberViewModel,
-    private val settingsManager: SettingsManager,
+    // settingsManager removed – was unused
     private val binding: ActivityMainBinding,
     private val memberListAdapter: MemberListAdapter,
     private val findSearchView: () -> SearchView?,

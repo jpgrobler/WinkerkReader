@@ -3,34 +3,24 @@ package za.co.jpsoft.winkerkreader.ui.viewmodels
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.drop
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.pastoral.model.ReminderWithMember
 import za.co.jpsoft.winkerkreader.data.pastoral.repository.PastoralReminderRepository
-import za.co.jpsoft.winkerkreader.utils.SettingsManager
+import za.co.jpsoft.winkerkreader.utils.prefs.TasksPrefs
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
+import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 
-class BedieningViewModel(
+@HiltViewModel
+class BedieningViewModel @Inject constructor(
     private val repository: PastoralReminderRepository,
-    private val settingsManager: SettingsManager
+    private val tasksPrefs: TasksPrefs
 ) : ViewModel() {
 
     // -------------------------------------------------------------------------
@@ -176,8 +166,8 @@ class BedieningViewModel(
     fun syncReminderToGoogleTasks(reminderId: String) {
         viewModelScope.launch {
             try {
-                val url = settingsManager.tasks.tasksScriptUrl
-                val secret = settingsManager.tasks.tasksScriptSecret
+                val url = tasksPrefs.tasksScriptUrl
+                val secret = tasksPrefs.tasksScriptSecret
                 if (BuildConfig.DEBUG) Log.d("Tasks", "URL: $url, Secret: $secret")
                 val pushed = repository.syncToGoogleTasksViaScript(reminderId)
                 if (!pushed) {

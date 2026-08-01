@@ -9,7 +9,6 @@ import za.co.jpsoft.winkerkreader.data.pastoral.dao.FollowUpReminderDao
 import za.co.jpsoft.winkerkreader.data.pastoral.entities.FollowUpReminderEntity
 import za.co.jpsoft.winkerkreader.data.pastoral.model.TemplateContext
 import za.co.jpsoft.winkerkreader.utils.PastoralTaskScriptManager
-import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import za.co.jpsoft.winkerkreader.utils.Utils.toLocalDateSafe
 import za.co.jpsoft.winkerkreader.utils.prefs.TasksPrefs
 import za.co.jpsoft.winkerkreader.utils.prefs.TasksPrefs.GoogleTasksMode
@@ -18,7 +17,7 @@ import za.co.jpsoft.winkerkreader.utils.prefs.TasksPrefs.GoogleTasksMode
  * Manages Google Tasks sync for pastoral reminders.
  */
 class GoogleTaskSyncManager(
-    private val settingsManager: SettingsManager,
+    private val tasksPrefs: TasksPrefs,          // ← replaced SettingsManager
     private val reminderDao: FollowUpReminderDao,
     private val memberResolver: MemberGuidResolver
 ) {
@@ -29,8 +28,8 @@ class GoogleTaskSyncManager(
      */
     suspend fun syncToGoogleTasksViaScript(reminderId: String): Boolean =
         withContext(Dispatchers.IO) {
-            val url = settingsManager.tasks.tasksScriptUrl ?: return@withContext false
-            val secret = settingsManager.tasks.tasksScriptSecret ?: return@withContext false
+            val url = tasksPrefs.tasksScriptUrl ?: return@withContext false
+            val secret = tasksPrefs.tasksScriptSecret ?: return@withContext false
 
             val reminder = reminderDao.getById(reminderId)
                 ?: throw IllegalArgumentException("Reminder not found: $reminderId")
@@ -68,7 +67,7 @@ class GoogleTaskSyncManager(
                     }
                 }
             }
-            val listId = settingsManager.tasks.googleTasksListId
+            val listId = tasksPrefs.googleTasksListId
 
             val taskId = PastoralTaskScriptManager.pushTask(
                 scriptUrl = url,
@@ -99,8 +98,8 @@ class GoogleTaskSyncManager(
      */
     fun deleteGoogleTaskIfSynced(reminder: FollowUpReminderEntity) {
         if (!reminder.googleTaskSynced || reminder.googleTaskId == null) return
-        val url = settingsManager.tasks.tasksScriptUrl ?: return
-        val secret = settingsManager.tasks.tasksScriptSecret ?: return
+        val url = tasksPrefs.tasksScriptUrl ?: return
+        val secret = tasksPrefs.tasksScriptSecret ?: return
         val deleted = PastoralTaskScriptManager.deleteTask(url, secret, reminder.googleTaskId)
         if (BuildConfig.DEBUG) Log.d(TAG, "Google Task delete ${reminder.googleTaskId}: $deleted")
     }
@@ -110,8 +109,8 @@ class GoogleTaskSyncManager(
      */
     fun completeGoogleTaskIfSynced(reminder: FollowUpReminderEntity) {
         if (!reminder.googleTaskSynced || reminder.googleTaskId == null) return
-        val url = settingsManager.tasks.tasksScriptUrl ?: return
-        val secret = settingsManager.tasks.tasksScriptSecret ?: return
+        val url = tasksPrefs.tasksScriptUrl ?: return
+        val secret = tasksPrefs.tasksScriptSecret ?: return
         val done = PastoralTaskScriptManager.completeTask(url, secret, reminder.googleTaskId)
         if (BuildConfig.DEBUG) Log.d(TAG, "Google Task complete ${reminder.googleTaskId}: $done")
     }
@@ -120,11 +119,11 @@ class GoogleTaskSyncManager(
      * Sync multiple reminders to Google Tasks (auto-sync on creation).
      */
     suspend fun syncRemindersToGoogleTasks(reminders: List<FollowUpReminderEntity>) {
-        if (settingsManager.tasks.googleTasksMode() != TasksPrefs.GoogleTasksMode.API) {
+        if (tasksPrefs.googleTasksMode() != GoogleTasksMode.API) {
             if (BuildConfig.DEBUG) Log.d(TAG, "Google Tasks auto-sync disabled (mode != API)")
             return
         }
-        if (!settingsManager.tasks.isTasksScriptConfigured()) {
+        if (!tasksPrefs.isTasksScriptConfigured()) {
             if (BuildConfig.DEBUG) Log.w(TAG, "Google Tasks script not configured – skipping")
             return
         }

@@ -1,32 +1,31 @@
 package za.co.jpsoft.winkerkreader.ui.viewmodels
 
-import android.app.Application
 import android.net.Uri
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.data.models.FamilyMemberItem
 import za.co.jpsoft.winkerkreader.data.models.MemberDetailItem
-import za.co.jpsoft.winkerkreader.data.pastoral.model.FamilyMember
 import za.co.jpsoft.winkerkreader.data.pastoral.repository.FamilyMemberRepository
-import za.co.jpsoft.winkerkreader.data.room.MemberEntity
-import za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase
+import za.co.jpsoft.winkerkreader.data.room.MemberDao
 import za.co.jpsoft.winkerkreader.utils.Utils.fixphonenumber
 import za.co.jpsoft.winkerkreader.utils.Utils.parseDate
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
+import javax.inject.Inject
 
-class LidmaatDetailViewModel(
-    application: Application,
-    private val familyRepo: FamilyMemberRepository
-) : AndroidViewModel(application) {
+@HiltViewModel
+class LidmaatDetailViewModel @Inject constructor(
+    private val familyRepo: FamilyMemberRepository,
+    private val memberDao: MemberDao   // already injected – use directly
+) : ViewModel() {
 
-    // Direct DAO access — no ContentProvider round-trip.
-    private val memberDao = WinkerkDatabase.getInstance(application).memberDao()
+    // REMOVED: memberDao = WinkerkDatabase.getInstance(application).memberDao() // ← DELETE THIS LINE
 
     private val _memberDetail = MutableLiveData<MemberDetailItem?>()
     val memberDetail: LiveData<MemberDetailItem?> = _memberDetail
@@ -85,7 +84,7 @@ class LidmaatDetailViewModel(
     }
 
     // Helper to convert domain → FamilyMemberItem
-    private fun entityToFamilyMemberItem(domain: FamilyMember): FamilyMemberItem {
+    private fun entityToFamilyMemberItem(domain: za.co.jpsoft.winkerkreader.data.pastoral.model.FamilyMember): FamilyMemberItem {
         val birthday = domain.birthday
         val age = if (birthday.isNotEmpty()) {
             try {
@@ -107,11 +106,12 @@ class LidmaatDetailViewModel(
             guid = domain.guid
         )
     }
+
     // -------------------------------------------------------------------------
     // Entity → model conversion  (identical field logic to the old cursor path)
     // -------------------------------------------------------------------------
 
-    private fun entityToDetail(entity: MemberEntity): MemberDetailItem {
+    private fun entityToDetail(entity: za.co.jpsoft.winkerkreader.data.room.MemberEntity): MemberDetailItem {
         // Birthday
         val bDayRaw = entity.geboortedatum ?: ""
         val bDay = if (bDayRaw.length >= 10) bDayRaw.substring(0, 10) else bDayRaw

@@ -10,8 +10,8 @@ import za.co.jpsoft.winkerkreader.data.pastoral.entities.FollowUpReminderEntity
 import za.co.jpsoft.winkerkreader.data.pastoral.model.ScheduleType
 import za.co.jpsoft.winkerkreader.data.pastoral.model.TemplateContext
 import za.co.jpsoft.winkerkreader.utils.CalendarManager
-import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import za.co.jpsoft.winkerkreader.utils.Utils.toLocalDateSafe
+import za.co.jpsoft.winkerkreader.utils.prefs.PastoralPrefs
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit
  */
 class CalendarSyncManager(
     private val calendarManager: CalendarManager,
-    private val settingsManager: SettingsManager,
+    private val pastoralPrefs: PastoralPrefs,      // ← replaced SettingsManager
     private val reminderDao: FollowUpReminderDao,
     private val memberResolver: MemberGuidResolver
 ) {
@@ -36,11 +36,11 @@ class CalendarSyncManager(
      * @return true if a new event was created, false if skipped or failed.
      */
     suspend fun syncToCalendar(reminderId: String): Boolean = withContext(Dispatchers.IO) {
-        if (!settingsManager.pastoral.pastoralCalendarSyncEnabled) {
+        if (!pastoralPrefs.pastoralCalendarSyncEnabled) {
             if (BuildConfig.DEBUG) Log.d(TAG, "sync disabled, skipping $reminderId")
             return@withContext false
         }
-        val calendarId = settingsManager.pastoral.pastoralCalendarId ?: run {
+        val calendarId = pastoralPrefs.pastoralCalendarId ?: run {
             if (BuildConfig.DEBUG) Log.w(TAG, "no pastoral calendar selected, skipping $reminderId")
             return@withContext false
         }
@@ -107,11 +107,11 @@ class CalendarSyncManager(
      * Sync a list of reminders to the calendar (auto-sync on creation).
      */
     suspend fun syncRemindersToCalendar(reminders: List<FollowUpReminderEntity>) {
-        if (!settingsManager.pastoral.pastoralCalendarSyncEnabled) {
+        if (!pastoralPrefs.pastoralCalendarSyncEnabled) {
             if (BuildConfig.DEBUG) Log.d(TAG, "Auto-sync disabled, skipping calendar sync")
             return
         }
-        val calendarId = settingsManager.pastoral.pastoralCalendarId
+        val calendarId = pastoralPrefs.pastoralCalendarId
         if (calendarId == null) {
             if (BuildConfig.DEBUG) Log.w(TAG, "Auto-sync enabled but no pastoral calendar selected")
             return

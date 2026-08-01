@@ -31,6 +31,8 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
+import dagger.hilt.android.AndroidEntryPoint
+import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -46,14 +48,29 @@ import za.co.jpsoft.winkerkreader.ui.viewmodels.EventViewModel
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel
 import za.co.jpsoft.winkerkreader.utils.*
 import za.co.jpsoft.winkerkreader.utils.Utils.fixphonenumber
+import za.co.jpsoft.winkerkreader.utils.prefs.AppearancePrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.CongregationPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.MemberListPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.QuickActionPrefs
 import java.util.Locale
 
+@AndroidEntryPoint
 class VerjaarSmsActivity : AuthBaseActivity() {
 
     companion object {
         private const val TAG = "VerjaarSmsActivity"
         private const val AUTO_SAVE_DELAY_MS = 500L
     }
+
+    // ─── Injected Preferences ──────────────────────────────────────────────────
+    @Inject
+    lateinit var memberListPrefs: MemberListPrefs
+    @Inject
+    lateinit var congregationPrefs: CongregationPrefs
+    @Inject
+    lateinit var appearancePrefs: AppearancePrefs
+    @Inject
+    lateinit var quickActionPrefs: QuickActionPrefs
 
     private lateinit var binding: VerjaarBinding
     private lateinit var memberListAdapter: MemberListAdapter
@@ -107,7 +124,6 @@ class VerjaarSmsActivity : AuthBaseActivity() {
 
         // Observe loading state for member list (keeps progress bar in sync)
         eventViewModel.isLoading.observe(this) { loading ->
-            // Only show if we're not actively sending SMS (to avoid flicker)
             if (!isSending) {
                 binding.verjaarProgress.visibility = if (loading) View.VISIBLE else View.GONE
             }
@@ -196,10 +212,14 @@ class VerjaarSmsActivity : AuthBaseActivity() {
 
     private fun setupRecyclerView() {
         binding.lidmaatList.layoutManager = LinearLayoutManager(this)
-        quickActionHelper = QuickActionHelper(this, SettingsManager.getInstance(this))
+
+        // ─── QuickActionHelper now receives quickActionPrefs instead of SettingsManager ───
+        quickActionHelper = QuickActionHelper(this, quickActionPrefs, appearancePrefs)
         quickActionHelper.expandCallback = { _, item -> showPopupMenuForMember(item) }
 
         memberListAdapter = MemberListAdapter(
+            memberListPrefs = memberListPrefs,
+            congregationPrefs = congregationPrefs,
             onItemClick = { view, item, _ ->
                 val template = binding.boodskap.text.toString()
                 val personalizedMessage = MessageComposer.personalize(template, item)
@@ -214,11 +234,10 @@ class VerjaarSmsActivity : AuthBaseActivity() {
 
         eventViewModel = ViewModelProvider(this)[EventViewModel::class.java]
 
-        val settingsManager = SettingsManager.getInstance(this)
         val initialCongregations = listOfNotNull(
-            settingsManager.congregation.gemeenteNaam.takeIf { it.isNotBlank() },
-            settingsManager.congregation.gemeente2Naam.takeIf { it.isNotBlank() },
-            settingsManager.congregation.gemeente3Naam.takeIf { it.isNotBlank() }
+            congregationPrefs.gemeenteNaam.takeIf { it.isNotBlank() },
+            congregationPrefs.gemeente2Naam.takeIf { it.isNotBlank() },
+            congregationPrefs.gemeente3Naam.takeIf { it.isNotBlank() }
         ).toSet()
 
         val savedStateHandle = SavedStateHandle()
@@ -237,7 +256,7 @@ class VerjaarSmsActivity : AuthBaseActivity() {
             soek = "",
             recordStatus = "0",
             sortOrder = "VERJAAR",
-            useCongregationIndicator = settingsManager.congregation.useCongregationIndicator
+            useCongregationIndicator = congregationPrefs.useCongregationIndicator
         )
 
         eventViewModel.eventList.observe(this) { members ->
@@ -422,7 +441,6 @@ class VerjaarSmsActivity : AuthBaseActivity() {
             return
         }
 
-        // Show progress and disable send icon
         isSending = true
         binding.verjaarProgress.visibility = View.VISIBLE
         binding.verjaarSms.isEnabled = false
@@ -507,14 +525,14 @@ class VerjaarSmsActivity : AuthBaseActivity() {
             popup.menu.findItem(R.id.submenu_teks).subMenu?.removeItem(R.id.stuur_epos)
         }
 
-        val settings = SettingsManager.getInstance(this)
-        if (!settings.appearance.whatsapp1) popup.menu.findItem(R.id.submenu_teks).subMenu?.removeItem(
+        // ─── Use injected appearancePrefs instead of SettingsManager ───
+        if (!appearancePrefs.whatsapp1) popup.menu.findItem(R.id.submenu_teks).subMenu?.removeItem(
             R.id.stuur_whatsapp
         )
-        if (!settings.appearance.whatsapp2) popup.menu.findItem(R.id.submenu_teks).subMenu?.removeItem(
+        if (!appearancePrefs.whatsapp2) popup.menu.findItem(R.id.submenu_teks).subMenu?.removeItem(
             R.id.stuur_whatsapp2
         )
-        if (!settings.appearance.whatsapp3) popup.menu.findItem(R.id.submenu_teks).subMenu?.removeItem(
+        if (!appearancePrefs.whatsapp3) popup.menu.findItem(R.id.submenu_teks).subMenu?.removeItem(
             R.id.stuur_whatsapp3
         )
 

@@ -16,21 +16,22 @@ import za.co.jpsoft.winkerkreader.ui.bottomsheets.VoegNotaByBottomSheet
 import za.co.jpsoft.winkerkreader.ui.helpers.QuickActionHelper
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel
 import za.co.jpsoft.winkerkreader.utils.MemberActionHandler
-import za.co.jpsoft.winkerkreader.utils.SettingsManager
+import za.co.jpsoft.winkerkreader.utils.prefs.AppearancePrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.QuickActionPrefs
 
 class MemberListInteractionController(
     private val activity: AppCompatActivity,
     private val tag: String,
-    private val settingsManager: SettingsManager,
+    private val quickActionPrefs: QuickActionPrefs,   // <-- injected
+    private val appearancePrefs: AppearancePrefs,     // <-- injected
     private val viewModel: MemberViewModel,
     private val memberListAdapter: MemberListAdapter
 ) {
 
     // ─── Quick Action Helper ──────────────────────────────────────────────────
-    private val quickActionHelper = QuickActionHelper(activity, settingsManager)
+    private val quickActionHelper = QuickActionHelper(activity, quickActionPrefs, appearancePrefs)
 
     init {
-        // Set the expand callback to show the full menu
         quickActionHelper.expandCallback = { anchor, item ->
             showFullPopupMenu(anchor, item)
         }
@@ -57,8 +58,8 @@ class MemberListInteractionController(
 
     // ─── Click: show quick‑action popup ──────────────────────────────────────
     fun showMemberPopupMenu(anchor: View, item: MemberItem) {
-        if (!settingsManager.quickActions.showQuickActionBar) {
-            showFullPopupMenu(anchor, item)  // same method the expandCallback calls
+        if (!quickActionPrefs.showQuickActionBar) {
+            showFullPopupMenu(anchor, item)
         } else {
             quickActionHelper.showQuickActions(anchor, item)
         }
@@ -102,13 +103,14 @@ class MemberListInteractionController(
             safeRemoveMenuItem(menu, R.id.submenu_teks, R.id.stuur_epos)
         }
 
-        if (!settingsManager.appearance.whatsapp1) {
+        // Use injected appearancePrefs instead of settingsManager
+        if (!appearancePrefs.whatsapp1) {
             safeRemoveMenuItem(menu, R.id.submenu_teks, R.id.stuur_whatsapp)
         }
-        if (!settingsManager.appearance.whatsapp2) {
+        if (!appearancePrefs.whatsapp2) {
             safeRemoveMenuItem(menu, R.id.submenu_teks, R.id.stuur_whatsapp2)
         }
-        if (!settingsManager.appearance.whatsapp3) {
+        if (!appearancePrefs.whatsapp3) {
             safeRemoveMenuItem(menu, R.id.submenu_teks, R.id.stuur_whatsapp3)
         }
 
@@ -125,11 +127,12 @@ class MemberListInteractionController(
     ): Boolean {
         return when (actionId) {
             R.id.voeg_nota_by -> {
-                openVoegNotaBy(item); true
+                openVoegNotaBy(item)
+                true
             }
-
             R.id.stel_herinnering -> {
-                openStelHerinnering(item); true
+                openStelHerinnering(item)
+                true
             }
             else -> MemberActionHandler(activity, item, viewModel).handleAction(actionId)
         }

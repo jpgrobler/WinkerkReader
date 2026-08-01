@@ -36,6 +36,8 @@ import androidx.core.view.updatePadding
 import androidx.core.widget.TextViewCompat
 import androidx.lifecycle.ViewModelProvider
 import com.bumptech.glide.Glide
+import dagger.hilt.android.AndroidEntryPoint
+import jakarta.inject.Inject
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
@@ -51,14 +53,14 @@ import za.co.jpsoft.winkerkreader.ui.controllers.MemberPhotoController
 import za.co.jpsoft.winkerkreader.ui.viewmodels.LidmaatDetailPastoralViewModel
 import za.co.jpsoft.winkerkreader.ui.viewmodels.LidmaatDetailPastoralViewModelFactory
 import za.co.jpsoft.winkerkreader.ui.viewmodels.LidmaatDetailViewModel
-import za.co.jpsoft.winkerkreader.ui.viewmodels.LidmaatDetailViewModelFactory
 import za.co.jpsoft.winkerkreader.utils.MainNavigationController
 import za.co.jpsoft.winkerkreader.utils.MemberUtils
 import za.co.jpsoft.winkerkreader.utils.PhotoHelper
-import za.co.jpsoft.winkerkreader.utils.SettingsManager
+import za.co.jpsoft.winkerkreader.utils.prefs.AppearancePrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.CongregationPrefs
 import java.io.File
 
-
+@AndroidEntryPoint
 class LidmaatDetailActivity : AuthBaseActivity() {
 
     companion object {
@@ -68,16 +70,27 @@ class LidmaatDetailActivity : AuthBaseActivity() {
         const val EXTRA_MEMBER_GUID = "memberGUID"
     }
 
+    // ─── Injected Preferences ──────────────────────────────────────────────────
+    @Inject
+    lateinit var congregationPrefs: CongregationPrefs
+    @Inject
+    lateinit var appearancePrefs: AppearancePrefs
+    @Inject
+    lateinit var pastoralViewModelFactory: LidmaatDetailPastoralViewModelFactory
+
     private val navigationController by lazy { MainNavigationController(this) }
     private lateinit var binding: LidmaatDetailBinding
-    private lateinit var settingsManager: SettingsManager
 
     private var current_id = 0
     private var mLidmaatGUID: String? = null
     private var mStraatAdres: String = ""
     private var mPosAdres: String = ""
     private var recordStatus: String = "0"
-    private lateinit var viewModel: LidmaatDetailViewModel
+
+    // ─── ViewModels ──────────────────────────────────────────────────────────
+    private val viewModel: LidmaatDetailViewModel by viewModels()   // Hilt-injected
+
+    private lateinit var pastoralViewModel: LidmaatDetailPastoralViewModel
 
     private val huwelikStatusArray =
         arrayOf("Getroud", "Ongetroud", "Geskei", "Weduwee", "Wewenaar", "Onbekend")
@@ -89,12 +102,6 @@ class LidmaatDetailActivity : AuthBaseActivity() {
     private lateinit var photoController: MemberPhotoController
     private lateinit var pastoralSectionController: LidmaatPastoralSectionController
 
-    private val pastoralViewModel: LidmaatDetailPastoralViewModel by viewModels {
-        val guid = intent.getStringExtra(EXTRA_MEMBER_GUID) ?: ""
-        if (BuildConfig.DEBUG) Log.d(TAG, "Pastoral ViewModel GUID: '$guid'")
-        LidmaatDetailPastoralViewModelFactory(this, guid)
-    }
-
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         photoController.pendingImageUri?.let { outState.putString(STATE_IMAGE_URI, it.toString()) }
@@ -103,7 +110,7 @@ class LidmaatDetailActivity : AuthBaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        settingsManager = SettingsManager.getInstance(this)
+
         binding = LidmaatDetailBinding.inflate(layoutInflater)
         setContentView(binding.root)
         ViewCompat.setOnApplyWindowInsetsListener(binding.detailScroll) { view, insets ->
@@ -134,15 +141,22 @@ class LidmaatDetailActivity : AuthBaseActivity() {
 
         recordStatus = intent.getStringExtra("RECORD_STATUS") ?: "0"
 
-        viewModel = ViewModelProvider(
-            this,
-            LidmaatDetailViewModelFactory(application)
-        )[LidmaatDetailViewModel::class.java]
+        // ── Create pastoral ViewModel with the factory ──────────────────────
+        val guid = intent.getStringExtra(EXTRA_MEMBER_GUID) ?: intent.getStringExtra("MEMBER_GUID")
+        if (!guid.isNullOrEmpty()) {
+            pastoralViewModel = ViewModelProvider(
+                this,
+                pastoralViewModelFactory.create(guid)
+            ).get(LidmaatDetailPastoralViewModel::class.java)
+        } else {
+            // Fallback – shouldn't happen
+            pastoralViewModel = ViewModelProvider(
+                this,
+                pastoralViewModelFactory.create("")
+            ).get(LidmaatDetailPastoralViewModel::class.java)
+        }
 
         // ── Route to the appropriate Room-backed load method ────────────────
-        // Primary path: GUID (all normal in-app navigation).
-        // Fallback path: content:// URI (legacy deep-links / shortcuts).
-        val guid = intent.getStringExtra(EXTRA_MEMBER_GUID) ?: intent.getStringExtra("MEMBER_GUID")
         val idFromUri = intent.data?.lastPathSegment?.toLongOrNull()
         when {
             !guid.isNullOrEmpty() -> viewModel.loadMemberByGuid(guid, recordStatus)
@@ -163,7 +177,6 @@ class LidmaatDetailActivity : AuthBaseActivity() {
                     viewModel.loadFamily(item.familyHeadGuid, recordStatus)
                 }
 
-                // ─── Instantiate pastoral section controller only once ───
                 if (!::pastoralSectionController.isInitialized) {
                     pastoralSectionController = LidmaatPastoralSectionController(
                         activity = this,
@@ -229,8 +242,6 @@ class LidmaatDetailActivity : AuthBaseActivity() {
     // ─── UI Initialisation ────────────────────────────────────────────────────
 
     private fun initializeViews() {
-        // ─── Toolbar ─────────────────────────────────────────────────────────────
-
         binding.detailToolbar.setNavigationOnClickListener {
             onBackPressedDispatcher.onBackPressed()
         }
@@ -249,8 +260,6 @@ class LidmaatDetailActivity : AuthBaseActivity() {
         binding.geslag.isEnabled = false
 
         binding.detailGesinBlock.visibility = View.GONE
-
-        // Initially hide the mylpale content (will be shown when data exists)
         binding.detailMylpaleBlock.visibility = View.GONE
     }
 
@@ -338,7 +347,7 @@ class LidmaatDetailActivity : AuthBaseActivity() {
             toggleMylpaleSection()
         }
 
-        // ─── Old icon listeners (kept for compatibility) ─────────────────────
+        // ─── Old icon listeners ──────────────────────────────────────────────
         binding.detailSelfoonIcon.setOnClickListener {
             MemberUtils.callPhone(this, binding.detailSelfoon.text.toString())
         }
@@ -430,7 +439,7 @@ class LidmaatDetailActivity : AuthBaseActivity() {
 
         // Gemeente – use member's own gemeente, fallback to user's
         binding.detailGemeentenaam.text = item.gemeente?.takeIf { it.isNotEmpty() }
-            ?: settingsManager.congregation.gemeenteNaam
+            ?: congregationPrefs.gemeenteNaam
 
         // ─── Quick actions enable ──────────────────────────
         binding.quickActionBel.isEnabled = item.cellphone.isNotEmpty()
@@ -463,21 +472,18 @@ class LidmaatDetailActivity : AuthBaseActivity() {
                     ContextCompat.getColor(this, R.color.md_theme_primary)
                 )
             }
-
             "Aangevra" -> {
                 binding.detailLidmaatstatus.setText("⏳ " + item.memberStatus)
                 binding.detailLidmaatstatus.setTextColor(
                     ContextCompat.getColor(this, R.color.md_theme_secondary)
                 )
             }
-
             "Nie Aangevra" -> {
                 binding.detailLidmaatstatus.setText("✕ " + item.memberStatus)
                 binding.detailLidmaatstatus.setTextColor(
                     ContextCompat.getColor(this, R.color.md_theme_error)
                 )
             }
-
             else -> {
                 binding.detailLidmaatstatus.setText("? " + item.memberStatus)
                 binding.detailLidmaatstatus.setTextColor(
@@ -486,7 +492,7 @@ class LidmaatDetailActivity : AuthBaseActivity() {
             }
         }
 
-        // ─── Block visibility (with address duplication fix) ──
+        // ─── Block visibility ──────────────────────────────
         val street = item.streetAddress ?: ""
         val postal = item.postalAddress ?: ""
 
@@ -504,11 +510,10 @@ class LidmaatDetailActivity : AuthBaseActivity() {
             if (item.employer.isNotEmpty()) View.VISIBLE else View.GONE
         binding.detailStraatadresBlock.visibility =
             if (street.isNotEmpty()) View.VISIBLE else View.GONE
-        // Show postal only if it exists and differs from street
         binding.detailPosadresBlock.visibility =
             if (postal.isNotEmpty() && postal != street) View.VISIBLE else View.GONE
 
-        // ─── Manage dividers between visible contact blocks ──
+        // ─── Manage dividers ──────────────────────────────────
         val blockDividerPairs = listOf(
             binding.detailSelfoonBlock to binding.dividerSelfoon,
             binding.detailTelefoonBlock to binding.dividerTelefoon,
@@ -543,7 +548,6 @@ class LidmaatDetailActivity : AuthBaseActivity() {
     private fun displayFamily(members: List<FamilyMemberItem>) {
         val container = binding.detailGesinContent
 
-        // Remove all views except the header (index 0)
         val childCount = container.childCount
         if (childCount > 1) {
             container.removeViews(1, childCount - 1)
@@ -566,7 +570,6 @@ class LidmaatDetailActivity : AuthBaseActivity() {
                 scaleType = ImageView.ScaleType.CENTER_CROP
             }
 
-            // ─── Load photo using PhotoHelper ──────────────────────────────
             val photoFile = PhotoHelper.getSyncedPhotoFile(this, member.guid)
             if (photoFile != null && photoFile.exists()) {
                 Glide.with(this)
@@ -577,11 +580,9 @@ class LidmaatDetailActivity : AuthBaseActivity() {
                     .error(R.drawable.kontak)
                     .into(imageView)
             } else {
-                // Fallback to a default image (you could use gender‑specific)
                 imageView.setImageResource(R.drawable.kontak)
             }
 
-            // Circular crop
             imageView.outlineProvider = object : ViewOutlineProvider() {
                 override fun getOutline(view: View, outline: Outline) {
                     outline.setOval(0, 0, view.width, view.height)
@@ -684,8 +685,6 @@ class LidmaatDetailActivity : AuthBaseActivity() {
     }
 
     // ─── Edit / update member ─────────────────────────────────────────────────
-    // Write path intentionally kept via ContentProvider → WinkerkProvider.update()
-    // which already routes to Room's openHelper.writableDatabase internally.
 
     private fun onWysigClick() {
         if (binding.buttonWysig.text == getString(R.string.wysig)) {
@@ -696,14 +695,11 @@ class LidmaatDetailActivity : AuthBaseActivity() {
             mPosAdres = binding.detailPosadres.text.toString()
             showSoftKeyboard(binding.buttonWysig)
         } else {
-            // FIRST: save while fields still hold edited values
             viewModel.memberDetail.value?.let { wysigLidmaatData(it) }
-            // THEN: disable editing
             enableEditing(false)
             binding.buttonWysig.text = getString(R.string.wysig)
             binding.buttonWysig.setBackgroundTintList(ColorStateList.valueOf("#0A064F".toColorInt()))
             hideSoftKeyboard()
-            // FINALLY: reload from DB so cleared/changed fields reflect correctly
             mLidmaatGUID?.let { viewModel.loadMemberByGuid(it, recordStatus) }
         }
     }
@@ -867,15 +863,14 @@ class LidmaatDetailActivity : AuthBaseActivity() {
         var emailUrl = ""
         val gemeente = item.gemeente
         emailUrl = when (gemeente) {
-            settingsManager.congregation.gemeenteNaam -> settingsManager.congregation.gemeenteEpos
-            settingsManager.congregation.gemeente2Naam -> settingsManager.congregation.gemeente2Epos
-            settingsManager.congregation.gemeente3Naam -> settingsManager.congregation.gemeente3Epos
+            congregationPrefs.gemeenteNaam -> congregationPrefs.gemeenteEpos
+            congregationPrefs.gemeente2Naam -> congregationPrefs.gemeente2Epos
+            congregationPrefs.gemeente3Naam -> congregationPrefs.gemeente3Epos
             else -> ""
         }
 
         val prefs = getSharedPreferences(PREFS_USER_INFO, MODE_PRIVATE)
-        val eposHtmlEnabled = prefs.getBoolean("EposHtml", false)
-
+        val eposHtmlEnabled = appearancePrefs.eposHtml
         val sendIntent = Intent(Intent.ACTION_SENDTO).apply {
             data = "mailto:".toUri()
             putExtra(Intent.EXTRA_SUBJECT, subject)
@@ -927,7 +922,7 @@ class LidmaatDetailActivity : AuthBaseActivity() {
         imm.showSoftInput(view, 0)
     }
 
-    @Suppress("unused") // kept for potential future use
+    @Suppress("unused")
     private fun buildEventDescription(member: MemberDetailItem): String {
         return buildString {
             member.birthday?.takeIf { it.isNotEmpty() }?.let { append("Geboortedatum: $it\n") }

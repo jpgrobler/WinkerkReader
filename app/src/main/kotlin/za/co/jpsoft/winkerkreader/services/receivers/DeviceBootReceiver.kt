@@ -7,17 +7,25 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.util.Log
+import dagger.hilt.android.AndroidEntryPoint
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.services.BootForegroundServiceStarter
 import za.co.jpsoft.winkerkreader.utils.ServiceUtils
-import za.co.jpsoft.winkerkreader.utils.SettingsManager
+import za.co.jpsoft.winkerkreader.utils.prefs.BirthdaySmsPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.CallMonitorPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.MemberListPrefs
 import java.util.Calendar
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class DeviceBootReceiver : BroadcastReceiver() {
 
-    companion object {
-        private const val TAG = "DeviceBootReceiver"
-    }
+    @Inject
+    lateinit var callMonitorPrefs: CallMonitorPrefs
+    @Inject
+    lateinit var birthdaySmsPrefs: BirthdaySmsPrefs
+    @Inject
+    lateinit var memberListPrefs: MemberListPrefs
 
     override fun onReceive(context: Context, intent: Intent) {
         val action = intent.action ?: run {
@@ -35,10 +43,8 @@ class DeviceBootReceiver : BroadcastReceiver() {
 
                     if (BuildConfig.DEBUG) Log.d(TAG, "Boot/restart received")
 
-                    val settings = SettingsManager.getInstance(context)
-
-                    if (settings.callMonitor.autoStartEnabled) {
-                        // ✅ SINGLE ENTRY POINT: the bridge starts everything
+                    // Use injected prefs instead of SettingsManager
+                    if (callMonitorPrefs.autoStartEnabled) {
                         ServiceUtils.startServiceIfNotRunning(
                             context,
                             BootForegroundServiceStarter::class.java
@@ -52,8 +58,8 @@ class DeviceBootReceiver : BroadcastReceiver() {
                         if (BuildConfig.DEBUG) Log.d(TAG, "Auto‑start disabled, skipping")
                     }
 
-                    // Birthday alarm setup remains unchanged
-                    setupBirthdayAlarmIfEnabled(context, settings)
+                    // Birthday alarm setup using injected prefs
+                    setupBirthdayAlarmIfEnabled(context)
                 }
             }
         } catch (e: Exception) {
@@ -61,42 +67,20 @@ class DeviceBootReceiver : BroadcastReceiver() {
         }
     }
 
-    // ---------- Birthday alarm (unchanged) ----------
+    // ─── Birthday alarm ─────────────────────────────────────────────────────
 
-    private fun setupBirthdayAlarmIfEnabled(context: Context, settings: SettingsManager) {
+    private fun setupBirthdayAlarmIfEnabled(context: Context) {
         try {
-            val reminderEnabled = try {
-                settings.birthdaySms.herinner
-            } catch (e: Exception) {
-                if (BuildConfig.DEBUG) Log.e(TAG, "Error reading herinner", e)
-                false
-            }
-
-            val timeUpdate = try {
-                settings.birthdaySms.smsTimeUpdate
-            } catch (e: Exception) {
-                if (BuildConfig.DEBUG) Log.e(TAG, "Error reading smsTimeUpdate", e)
-                false
-            }
+            val reminderEnabled = birthdaySmsPrefs.herinner
+            val timeUpdate = birthdaySmsPrefs.smsTimeUpdate
 
             if (!reminderEnabled && !timeUpdate) {
                 if (BuildConfig.DEBUG) Log.d(TAG, "Birthday reminder disabled")
                 return
             }
 
-            val hour = try {
-                settings.birthdaySms.smsHour?.toIntOrNull() ?: 8
-            } catch (e: Exception) {
-                if (BuildConfig.DEBUG) Log.e(TAG, "Error reading smsHour", e)
-                8
-            }
-
-            val minute = try {
-                settings.birthdaySms.smsMinute?.toIntOrNull() ?: 0
-            } catch (e: Exception) {
-                if (BuildConfig.DEBUG) Log.e(TAG, "Error reading smsMinute", e)
-                0
-            }
+            val hour = birthdaySmsPrefs.smsHour.toIntOrNull() ?: 8
+            val minute = birthdaySmsPrefs.smsMinute.toIntOrNull() ?: 0
 
             val alarmTime = Calendar.getInstance().apply {
                 set(Calendar.HOUR_OF_DAY, hour)
@@ -107,12 +91,9 @@ class DeviceBootReceiver : BroadcastReceiver() {
 
             val now = Calendar.getInstance()
 
-            try {
-                settings.birthdaySms.smsTimeUpdate = false
-                settings.memberList.fromMenu = false
-            } catch (e: Exception) {
-                if (BuildConfig.DEBUG) Log.e(TAG, "Error clearing settings flags", e)
-            }
+            // Reset flags
+            birthdaySmsPrefs.smsTimeUpdate = false
+            memberListPrefs.fromMenu = false
 
             val alarmIntent = Intent(context, AlarmReceiver::class.java).apply {
                 action = "VerjaarSMS"
@@ -138,11 +119,7 @@ class DeviceBootReceiver : BroadcastReceiver() {
                 return
             }
 
-            try {
-                alarmManager.cancel(pendingIntent)
-            } catch (e: Exception) {
-                if (BuildConfig.DEBUG) Log.e(TAG, "Error canceling existing alarm", e)
-            }
+            alarmManager.cancel(pendingIntent)
 
             var triggerTime = alarmTime.timeInMillis
             if (triggerTime <= now.timeInMillis) {
@@ -231,5 +208,9 @@ class DeviceBootReceiver : BroadcastReceiver() {
                 )
             }
         }
+    }
+
+    companion object {
+        private const val TAG = "DeviceBootReceiver"
     }
 }

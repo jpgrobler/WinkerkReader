@@ -1,4 +1,3 @@
-// File: services/ListViewWidgetService.kt
 package za.co.jpsoft.winkerkreader.services
 
 import android.appwidget.AppWidgetManager
@@ -12,19 +11,25 @@ import android.util.Log
 import android.widget.RemoteViews
 import android.widget.RemoteViewsService
 import androidx.core.content.ContextCompat
+import dagger.hilt.android.AndroidEntryPoint
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
-import za.co.jpsoft.winkerkreader.utils.SettingsManager
+import za.co.jpsoft.winkerkreader.utils.prefs.CongregationPrefs
 import za.co.jpsoft.winkerkreader.widget.WidgetDataRepository
 import za.co.jpsoft.winkerkreader.widget.WidgetRow
 import za.co.jpsoft.winkerkreader.widget.WinkerkReaderWidgetProvider
 import java.time.LocalDate
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class ListViewWidgetService : RemoteViewsService() {
+
+    @Inject
+    lateinit var congregationPrefs: CongregationPrefs
 
     override fun onGetViewFactory(intent: Intent): RemoteViewsFactory {
         if (BuildConfig.DEBUG) Log.d(TAG, "Creating RemoteViewsFactory")
-        return WidgetViewsFactory(applicationContext, intent)
+        return WidgetViewsFactory(applicationContext, intent, congregationPrefs)
     }
 
     companion object {
@@ -34,7 +39,8 @@ class ListViewWidgetService : RemoteViewsService() {
 
 class WidgetViewsFactory(
     private val context: Context,
-    intent: Intent
+    intent: Intent,
+    private val congregationPrefs: CongregationPrefs
 ) : RemoteViewsService.RemoteViewsFactory {
 
     private val tag = "WidgetViewsFactory"
@@ -102,19 +108,17 @@ class WidgetViewsFactory(
         // --- Determine if this row is today ---
         val todayDay = today.toString().substring(8, 10)  // "dd"
         val isToday = day == todayDay
-        val settingsManager = SettingsManager.getInstance(context)
+
+        // Use injected congregationPrefs instead of SettingsManager
         val congregationColor = when (congregationName) {
-            settingsManager.congregation.gemeenteNaam -> settingsManager.congregation.gemeenteKleur
-            settingsManager.congregation.gemeente2Naam -> settingsManager.congregation.gemeente2Kleur
-            settingsManager.congregation.gemeente3Naam -> settingsManager.congregation.gemeente3Kleur
+            congregationPrefs.gemeenteNaam -> congregationPrefs.gemeenteKleur
+            congregationPrefs.gemeente2Naam -> congregationPrefs.gemeente2Kleur
+            congregationPrefs.gemeente3Naam -> congregationPrefs.gemeente3Kleur
             else -> ContextCompat.getColor(context, R.color.md_theme_surface)
         }
-        //remoteViews.setImageViewResource(R.id.congregation_indicator, R.drawable.ic_circle)
         remoteViews.setInt(R.id.congregation_indicator, "setColorFilter", congregationColor)
 
         // --- Choose background colour ---
-        // md_theme_surface = light in day mode, dark in night mode
-        // md_theme_primaryContainer = light tint in day, dark tint in night
         val bgResId = if (isToday) {
             R.color.md_theme_primaryContainer
         } else {
@@ -123,7 +127,7 @@ class WidgetViewsFactory(
         val backgroundColor = ContextCompat.getColor(context, bgResId)
         remoteViews.setInt(R.id.row_container, "setBackgroundColor", backgroundColor)
 
-        // --- Build the display text with spans (your existing logic, unchanged) ---
+        // --- Build the display text with spans ---
         val displayText = "$day/$month $name"
         val spannable = SpannableString(displayText)
         val textLength = spannable.length
@@ -137,10 +141,7 @@ class WidgetViewsFactory(
         if (position > 0 && allRows.isNotEmpty() && day == allRows[position - 1].day) {
             spannable.setSpan(
                 ForegroundColorSpan(
-                    ContextCompat.getColor(
-                        context,
-                        R.color.md_theme_onSurfaceVariant
-                    )
+                    ContextCompat.getColor(context, R.color.md_theme_onSurfaceVariant)
                 ),
                 0, 5, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
             )
@@ -151,7 +152,7 @@ class WidgetViewsFactory(
             )
         }
 
-        // Main text colour (dark/light grey depending on theme)
+        // Main text colour
         if (textLength > 6) {
             spannable.setSpan(
                 ForegroundColorSpan(ContextCompat.getColor(context, R.color.md_theme_onSurface)),
@@ -159,7 +160,7 @@ class WidgetViewsFactory(
             )
         }
 
-        // Highlight today’s row (already primary)
+        // Highlight today’s row
         if (isToday) {
             spannable.setSpan(
                 ForegroundColorSpan(ContextCompat.getColor(context, R.color.md_theme_primary)),
@@ -188,7 +189,7 @@ class WidgetViewsFactory(
 
         remoteViews.setTextViewText(android.R.id.text1, spannable)
 
-        // Set up click intent (unchanged)
+        // Set up click intent
         val fillInIntent = Intent().apply {
             putExtra(WinkerkReaderWidgetProvider.EXTRA_WORD, name)
         }

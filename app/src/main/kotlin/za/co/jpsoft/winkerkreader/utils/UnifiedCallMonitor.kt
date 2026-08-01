@@ -6,73 +6,32 @@ import android.util.Log
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import za.co.jpsoft.winkerkreader.BuildConfig
-import za.co.jpsoft.winkerkreader.data.WinkerkContract
 import za.co.jpsoft.winkerkreader.data.calllog.ActiveCallEntity
 import za.co.jpsoft.winkerkreader.data.calllog.CallLogDao
-import za.co.jpsoft.winkerkreader.data.calllog.CallLogDatabase
 import za.co.jpsoft.winkerkreader.data.calllog.CallLogEntity
 import za.co.jpsoft.winkerkreader.data.models.CallType
+import za.co.jpsoft.winkerkreader.utils.prefs.CallMonitorPrefs
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
+import javax.inject.Inject
+import javax.inject.Singleton
 
-/**
- * Central singleton that handles all call logging (regular phone + VoIP).
- * All call events must go through this class.
- */
-class UnifiedCallMonitor private constructor(
+@Singleton
+class UnifiedCallMonitor @Inject constructor(
     private val context: Context,
     private val callLogDao: CallLogDao,
-    private var calendarManager: CalendarManager,
-    private var calendarId: Long
+    private val calendarManager: CalendarManager,
+    private val callMonitorPrefs: CallMonitorPrefs
 ) {
-
-    companion object {
-        private const val TAG = "UnifiedCallMonitor"
-
-        @Volatile
-        @SuppressLint("StaticFieldLeak")
-        private var instance: UnifiedCallMonitor? = null
-
-        fun getInstance(
-            context: Context,
-            callLogDao: CallLogDao,
-            calendarManager: CalendarManager,
-            calendarId: Long
-        ): UnifiedCallMonitor {
-            return instance ?: synchronized(this) {
-                instance ?: UnifiedCallMonitor(
-                    context.applicationContext,
-                    callLogDao,
-                    calendarManager,
-                    calendarId
-                ).also { instance = it }
-            }
-        }
-
-        /**
-         * Convenience method to get the instance without providing all dependencies.
-         * Useful for UI observers.
-         */
-        fun getInstance(context: Context): UnifiedCallMonitor {
-            val current = instance
-            if (current != null) return current
-
-            val dao = CallLogDatabase.getInstance(context).callLogDao()
-            val calManager = CalendarManager(context)
-            val prefs =
-                context.getSharedPreferences(WinkerkContract.PREFS_USER_INFO, Context.MODE_PRIVATE)
-            val calId = prefs.getLong(WinkerkContract.KEY_SELECTED_CALENDAR_ID, -1L)
-
-            return getInstance(context, dao, calManager, calId)
-        }
-    }
 
     private val _callLogUpdates = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     val callLogUpdates = _callLogUpdates.asSharedFlow()
+
+    private var calendarId: Long = callMonitorPrefs.callCalendarId ?: -1L
 
     // Active calls: key = callId, value = ActiveCall
     private val activeCalls = ConcurrentHashMap<String, ActiveCall>()
@@ -133,9 +92,6 @@ class UnifiedCallMonitor private constructor(
         )
     }
 
-    /**
-     * Call this when a call starts (ringing for incoming, off‑hook for outgoing).
-     */
     suspend fun onCallDetected(
         callId: String,
         number: String?,
@@ -156,7 +112,6 @@ class UnifiedCallMonitor private constructor(
         )
         activeCalls[callId] = activeCall
 
-        // Durable backstop: survives process death.
         callLogDao.upsertActiveCall(
             ActiveCallEntity(
                 callId = callId, number = sanitizedNumber, contactName = contactName,
@@ -167,13 +122,6 @@ class UnifiedCallMonitor private constructor(
         if (BuildConfig.DEBUG) Log.d(TAG, "Call detected: $callId, ...")
     }
 
-    /**
-     * Update the calendar ID if the user changes the selection.
-     */
-    fun updateCalendar(calendarManager: CalendarManager, calendarId: Long) {
-        this.calendarManager = calendarManager
-        this.calendarId = calendarId
-    }
 
     private fun determineCallType(source: String, direction: String?): CallType {
         return when (direction?.lowercase()) {
@@ -192,8 +140,7 @@ class UnifiedCallMonitor private constructor(
         duration: Long,
         source: String
     ) {
-        val settingsManager = SettingsManager.getInstance(context)
-        if (!settingsManager.callMonitor.callLogEnabled) {
+        if (!callMonitorPrefs.callLogEnabled) {
             if (BuildConfig.DEBUG) Log.d(TAG, "Call logging disabled, skipping")
             return
         }
@@ -236,6 +183,10 @@ class UnifiedCallMonitor private constructor(
             )
 
             _callLogUpdates.tryEmit(Unit)
+            // CallLogDatabaseBackup is now an injected dependency? We'll need to inject it.
+            // For now, we'll keep the static backup call, but we can later inject it.
+            // Since CallLogDatabaseBackup is also an object, we'll need to refactor it similarly.
+            // For now, keep the static call.
             za.co.jpsoft.winkerkreader.data.calllog.CallLogDatabaseBackup.backupDebounced(context)
 
             if (calendarId != -1L) {
@@ -260,14 +211,6 @@ class UnifiedCallMonitor private constructor(
         activeCalls.entries.removeIf { it.value.startTime < cutoff }
     }
 
-    /**
-     * Ends any currently-active calls whose source is a VoIP app (i.e. not
-     * "Phone Call"), logging them with an end time of now. Intended to be
-     * called when WhatsAppNotificationService reconnects after a rebind, so
-     * calls orphaned by the disconnect don't sit around until the stale-call
-     * prune silently discards them.
-     * @return number of calls closed out this way.
-     */
     suspend fun endActiveVoipCallsFromOtherSources(): Int {
         val staleVoipCallIds = activeCalls.values
             .filter { it.source != "Phone Call" }
@@ -281,5 +224,9 @@ class UnifiedCallMonitor private constructor(
             onCallEnded(callId, System.currentTimeMillis())
         }
         return staleVoipCallIds.size
+    }
+
+    companion object {
+        private const val TAG = "UnifiedCallMonitor"
     }
 }

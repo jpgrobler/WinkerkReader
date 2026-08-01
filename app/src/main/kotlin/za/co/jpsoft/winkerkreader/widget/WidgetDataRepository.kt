@@ -6,22 +6,43 @@ import androidx.sqlite.db.SimpleSQLiteQuery
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.WinkerkContract
 import za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase
-import za.co.jpsoft.winkerkreader.utils.SettingsManager
+import za.co.jpsoft.winkerkreader.utils.prefs.WidgetPrefs
 import java.time.LocalDate
 import java.time.MonthDay
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
+/**
+ * Repository for widget data (upcoming events – birthdays, baptisms, weddings, etc.)
+ *
+ * Requires [widgetPrefs] to be set via [init] before any data access.
+ * This is called once from the Application class to avoid the need for
+ * a full DI refactor of the entire widget subsystem.
+ */
 object WidgetDataRepository {
+
     private const val TAG = "WidgetDataRepository"
-    private var cachedRows: List<WidgetRow>? = null
-    private var lastRefreshTime = 0L
     private const val MIN_REFRESH_INTERVAL_MS = 5000L
 
-    // Dates are stored as dd/MM/yyyy in the WinKerk database (confirmed via diagnostic logging).
     private val DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy")
 
+    private var cachedRows: List<WidgetRow>? = null
+    private var lastRefreshTime = 0L
+    private lateinit var widgetPrefs: WidgetPrefs
+    private var isInitialized = false
+
+    /**
+     * Must be called once before any other method (typically from Application).
+     * @param prefs The WidgetPrefs instance injected via Hilt.
+     */
+    fun init(prefs: WidgetPrefs) {
+        widgetPrefs = prefs
+        isInitialized = true
+        if (BuildConfig.DEBUG) Log.d(TAG, "WidgetDataRepository initialized")
+    }
+
     fun getWidgetRows(): List<WidgetRow> {
+        checkInitialized()
         val rows = cachedRows ?: emptyList()
         if (BuildConfig.DEBUG) Log.d(TAG, "getWidgetRows: returning ${rows.size} rows")
         return rows
@@ -34,6 +55,7 @@ object WidgetDataRepository {
     }
 
     fun refreshCache(context: Context) {
+        checkInitialized()
         try {
             val currentTime = System.currentTimeMillis()
             if (cachedRows != null && currentTime - lastRefreshTime < MIN_REFRESH_INTERVAL_MS) {
@@ -60,9 +82,21 @@ object WidgetDataRepository {
                 if (rows.isEmpty()) Log.w(TAG, "⚠️ No rows returned from query!")
             }
         } catch (e: Exception) {
-            // Ensure callers always get a valid (empty) list rather than a stale null.
             if (BuildConfig.DEBUG) Log.e(TAG, "Failed to refresh widget cache", e)
             cachedRows = emptyList()
+        }
+    }
+
+    fun forceRefresh(context: Context) {
+        invalidateCache()
+        refreshCache(context)
+    }
+
+    // ─── Private helpers ──────────────────────────────────────────────────────
+
+    private fun checkInitialized() {
+        if (!isInitialized) {
+            throw IllegalStateException("WidgetDataRepository not initialized – call init() first")
         }
     }
 
@@ -70,10 +104,8 @@ object WidgetDataRepository {
         val rows = mutableListOf<WidgetRow>()
         val today = LocalDate.now()
         val todayMonthDay = MonthDay.from(today)
-        val settings = SettingsManager.getInstance(context)
 
         try {
-            // Use the DAO directly — no openHelper.writableDatabase needed.
             val memberDao = WinkerkDatabase.getInstance(context).memberDao()
             val query = WidgetQueryBuilder.buildCombinedQuery()
 
@@ -82,7 +114,6 @@ object WidgetDataRepository {
             memberDao.queryRaw(SimpleSQLiteQuery(query)).use { cursor ->
                 if (BuildConfig.DEBUG) Log.d(TAG, "Cursor has ${cursor.count} rows")
 
-                // Pre-cache column indices — getColumnIndex is O(n) on the column list.
                 val firstNameIdx =
                     cursor.getColumnIndex(WinkerkContract.winkerkEntry.LIDMATE_NOEMNAAM)
                 val lastNameIdx = cursor.getColumnIndex(WinkerkContract.winkerkEntry.LIDMATE_VAN)
@@ -130,12 +161,12 @@ object WidgetDataRepository {
                             continue
                         }
 
-                        // Filter by user settings before doing any further work.
+                        // ── Filter by widget preferences ──────────────────────────
                         when (reason) {
-                            "Doop" -> if (!settings.widget.widgetDoop) continue
-                            "Huwelik" -> if (!settings.widget.widgetHuwelik) continue
-                            "Belydenis" -> if (!settings.widget.widgetBelydenis) continue
-                            "Oorlede" -> if (!settings.widget.widgetSterf) continue
+                            "Doop" -> if (!widgetPrefs.widgetDoop) continue
+                            "Huwelik" -> if (!widgetPrefs.widgetHuwelik) continue
+                            "Belydenis" -> if (!widgetPrefs.widgetBelydenis) continue
+                            "Oorlede" -> if (!widgetPrefs.widgetSterf) continue
                         }
 
                         val eventDate = try {
@@ -149,16 +180,12 @@ object WidgetDataRepository {
                             continue
                         }
 
-                        // SQL already filters to the lookahead window, but guard against
-                        // same-month edge cases letting past days through.
                         val eventMonthDay = MonthDay.of(eventDate.monthValue, eventDate.dayOfMonth)
                         if (eventMonthDay.isBefore(todayMonthDay)) continue
 
                         val years = ChronoUnit.YEARS.between(eventDate, today).toInt()
                         val emoji = emojiMap[reason] ?: ""
-                        // Show age only when meaningful (> 0 suppresses "(0 🎂)" for newborns
-                        // and also avoids negative values for any data anomalies).
-                        val ageDisplay = "($years $emoji)"
+                        val ageDisplay = if (years > 0) "($years $emoji)" else ""
 
                         val fullName =
                             if (lastName.isNotEmpty()) "$firstName $lastName" else firstName
@@ -194,10 +221,5 @@ object WidgetDataRepository {
         }
 
         return rows
-    }
-
-    fun forceRefresh(context: Context) {
-        invalidateCache()
-        refreshCache(context)
     }
 }

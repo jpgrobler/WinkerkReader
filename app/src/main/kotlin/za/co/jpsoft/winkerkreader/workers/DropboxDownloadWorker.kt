@@ -14,14 +14,13 @@ class DropboxDownloadWorker(
 
     companion object {
         const val WORK_NAME = "dropbox_download_work"
-
     }
 
     override suspend fun doWork(): Result {
         return try {
-            // Your existing Dropbox download logic here
-            // This should call the same functionality that AlarmReceiver used for "DropBoxDownLoad"
-            PastoralDatabaseBackup.backupNow(applicationContext)
+            // Use the singleton instance
+            val backup = PastoralDatabaseBackup.getInstance()
+            backup.backupNow(applicationContext)
             if (BuildConfig.DEBUG) Log.d(
                 WORK_NAME,
                 "Pastoral DB backed up before congregation reload"

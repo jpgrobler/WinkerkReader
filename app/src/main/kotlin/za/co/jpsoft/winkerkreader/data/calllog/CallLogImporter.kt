@@ -5,26 +5,30 @@ import android.util.Log
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.DatabaseHelper
 import za.co.jpsoft.winkerkreader.data.calllog.ActiveCallEntity
-import za.co.jpsoft.winkerkreader.data.calllog.CallLogDatabase
+import za.co.jpsoft.winkerkreader.data.calllog.CallLogDao
 import za.co.jpsoft.winkerkreader.data.calllog.CallLogEntity
 import za.co.jpsoft.winkerkreader.data.models.CallType
+import za.co.jpsoft.winkerkreader.utils.prefs.CallMonitorPrefs
+import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
+class CallLogImporter @Inject constructor(
+    private val callMonitorPrefs: CallMonitorPrefs
+) {
 
-object CallLogImporter {
-    private const val TAG = "CallLogImporter"
+    private val TAG = "CallLogImporter"
 
-    suspend fun importIfNeeded(context: Context, pastoralDb: CallLogDatabase) {
-        val settings = SettingsManager.getInstance(context)
-        if (settings.callMonitor.callLogImportedToRoom) return
+    suspend fun importIfNeeded(context: Context, callLogDao: CallLogDao) {
+        if (callMonitorPrefs.callLogImportedToRoom) return
 
         val legacyHelper = DatabaseHelper.getInstance(context)
-        val dao = pastoralDb.callLogDao()
 
         try {
             // Finished calls
             val legacyLogs = legacyHelper.getAllCallLogs()
             legacyLogs.forEach { log ->
-                dao.insert(
+                callLogDao.insert(
                     CallLogEntity(
                         callerInfo = log.callerInfo,
                         timestamp = log.timestamp,
@@ -41,7 +45,7 @@ object CallLogImporter {
             // Any in-progress calls left over from before the cutover
             val legacyActive = legacyHelper.getAllActiveCalls()
             legacyActive.forEach { active ->
-                dao.upsertActiveCall(
+                callLogDao.upsertActiveCall(
                     ActiveCallEntity(
                         callId = active.callId,
                         number = active.number,
@@ -55,7 +59,7 @@ object CallLogImporter {
                 )
             }
 
-            settings.callMonitor.callLogImportedToRoom = true
+            callMonitorPrefs.callLogImportedToRoom = true
             if (BuildConfig.DEBUG) Log.d(
                 TAG,
                 "Imported ${legacyLogs.size} call log(s) and ${legacyActive.size} active call(s) into Room"

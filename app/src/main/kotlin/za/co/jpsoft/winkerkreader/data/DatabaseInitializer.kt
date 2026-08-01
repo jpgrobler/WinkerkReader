@@ -5,11 +5,17 @@ import android.database.sqlite.SQLiteDatabase
 import android.util.Log
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase
-import za.co.jpsoft.winkerkreader.utils.SettingsManager
+import za.co.jpsoft.winkerkreader.utils.prefs.SyncPrefs
+import javax.inject.Inject
+import javax.inject.Singleton
 
-object DatabaseInitializer {
-    private const val TAG = "DatabaseInitializer"
-    private const val CURRENT_SCHEMA_VERSION = 1   // bump this when schema changes
+@Singleton
+class DatabaseInitializer @Inject constructor(
+    private val syncPrefs: SyncPrefs
+) {
+
+    private val TAG = "DatabaseInitializer"
+    private val CURRENT_SCHEMA_VERSION = 1   // bump this when schema changes
 
     interface ProgressListener {
         fun onProgressUpdate(progress: Int)
@@ -17,18 +23,16 @@ object DatabaseInitializer {
     }
 
     fun initializeDatabase(context: Context, listener: ProgressListener? = null) {
-        val settingsManager = SettingsManager.getInstance(context)
-
         // ── If already fully initialized, just check if migration is needed ──
-        if (settingsManager.sync.isDatabaseInitialized) {
+        if (syncPrefs.isDatabaseInitialized) {
             if (BuildConfig.DEBUG) Log.d(TAG, "Database already initialized")
 
             // Only run schema repair if we haven't already applied it
-            if (settingsManager.sync.databaseSchemaVersion < CURRENT_SCHEMA_VERSION) {
+            if (syncPrefs.databaseSchemaVersion < CURRENT_SCHEMA_VERSION) {
                 // Idempotent – repairs only if needed, does nothing otherwise
                 migrateIfNeeded(context)
                 // Mark that we've handled this schema version
-                settingsManager.sync.databaseSchemaVersion = CURRENT_SCHEMA_VERSION
+                syncPrefs.databaseSchemaVersion = CURRENT_SCHEMA_VERSION
             }
 
             listener?.onInitializationComplete(true)
@@ -47,8 +51,8 @@ object DatabaseInitializer {
             db.openHelper.writableDatabase
 
             // 3. Mark as fully initialized
-            settingsManager.sync.isDatabaseInitialized = true
-            settingsManager.sync.databaseSchemaVersion = CURRENT_SCHEMA_VERSION
+            syncPrefs.isDatabaseInitialized = true
+            syncPrefs.databaseSchemaVersion = CURRENT_SCHEMA_VERSION
 
             if (BuildConfig.DEBUG) Log.d(TAG, "Database initialized successfully")
             listener?.onInitializationComplete(true)

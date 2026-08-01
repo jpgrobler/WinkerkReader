@@ -21,7 +21,10 @@ import androidx.lifecycle.lifecycleScope
 import androidx.work.WorkManager
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.snackbar.Snackbar
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.WinkerkContract
@@ -29,22 +32,18 @@ import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
 import za.co.jpsoft.winkerkreader.data.pastoral.PastoralDatabase
 import za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase
 import za.co.jpsoft.winkerkreader.databinding.LaaidatabasisBinding
-import za.co.jpsoft.winkerkreader.ui.controllers.CollapsibleCardController
-import za.co.jpsoft.winkerkreader.ui.controllers.DatabaseImportController
-import za.co.jpsoft.winkerkreader.ui.controllers.DropboxDownloadController
-import za.co.jpsoft.winkerkreader.ui.controllers.LocalDatabaseFileController
-import za.co.jpsoft.winkerkreader.ui.controllers.NetworkTransferController
-import za.co.jpsoft.winkerkreader.ui.controllers.PhotoSyncController
+import za.co.jpsoft.winkerkreader.ui.controllers.*
 import za.co.jpsoft.winkerkreader.utils.CloudUrlTransformer
 import za.co.jpsoft.winkerkreader.utils.MainNavigationController
 import za.co.jpsoft.winkerkreader.utils.PastoralDatabaseBackup
 import za.co.jpsoft.winkerkreader.utils.ServerFileValidator
-import za.co.jpsoft.winkerkreader.utils.SettingsManager
+import za.co.jpsoft.winkerkreader.utils.prefs.*
 import java.io.File
 import java.util.regex.Pattern
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
+
+@AndroidEntryPoint
 class LaaiDatabasisActivity : BaseActivity() {
 
     companion object {
@@ -53,7 +52,6 @@ class LaaiDatabasisActivity : BaseActivity() {
         const val EXTRA_PROMPT_RESTORE = "pastoral_prompt_restore"
         private val CURRENT_PASTORAL_SCHEMA_VERSION
             get() = PastoralDatabaseBackup.CURRENT_PASTORAL_SCHEMA_VERSION
-        private var privateDownloadFile: File? = null
 
         fun isDownloadManagerAvailable(): Boolean = true
 
@@ -66,8 +64,20 @@ class LaaiDatabasisActivity : BaseActivity() {
         }
     }
 
+    // ─── Injected Preferences ──────────────────────────────────────────────────
+    @Inject
+    lateinit var syncPrefs: SyncPrefs
+    @Inject
+    lateinit var memberListPrefs: MemberListPrefs
+    @Inject
+    lateinit var congregationPrefs: CongregationPrefs
+    @Inject
+    lateinit var backupPrefs: BackupPrefs
+    @Inject
+    lateinit var appearancePrefs: AppearancePrefs
+    @Inject
+    lateinit var pastoralDbBackup: PastoralDatabaseBackup
     private lateinit var settings: SharedPreferences
-    private lateinit var settingsManager: SettingsManager
     private lateinit var importController: DatabaseImportController
     private lateinit var binding: LaaidatabasisBinding
     private lateinit var collapsibleCardController: CollapsibleCardController
@@ -79,13 +89,12 @@ class LaaiDatabasisActivity : BaseActivity() {
     private val navigationController by lazy { MainNavigationController(this) }
 
     private var AutoDL = false
-
     private var SERVER_IP: String = ""
     private var SERVER_PORT: Int = 49514
     private var delete: Boolean = false
     private var syncPhotosAfterDb: Boolean = false
     private var fromMenu: Boolean = true
-    private var pcProtocolVersion: String = "v2"   // default = old protocol
+    private var pcProtocolVersion: String = "v2"
 
     private val notificationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -153,7 +162,6 @@ class LaaiDatabasisActivity : BaseActivity() {
         }
 
         settings = getSharedPreferences(WinkerkContract.PREFS_USER_INFO, MODE_PRIVATE)
-        settingsManager = SettingsManager.getInstance(this)
 
         importController = DatabaseImportController(
             context = this,
@@ -161,7 +169,6 @@ class LaaiDatabasisActivity : BaseActivity() {
             onReloadDone = { navigateBackToMain() }
         )
 
-        // ─── Load the database date asynchronously ──────────────────────────────
         lifecycleScope.launch {
             refreshDatabaseDateSuspend()
             updateDateDisplay()
@@ -262,7 +269,7 @@ class LaaiDatabasisActivity : BaseActivity() {
     }
 
     private fun initializeSettings() {
-        AutoDL = settings.getBoolean("AUTO_DL", false)
+        AutoDL = syncPrefs.autoDl   // replaced settings.getBoolean
         pcProtocolVersion = settings.getString("PC_PROTOCOL_VERSION", "v2") ?: "v2"
     }
 
@@ -285,7 +292,7 @@ class LaaiDatabasisActivity : BaseActivity() {
     }
 
     private fun navigateToMainActivity() {
-        settingsManager.memberList.defLayout = "VERJAAR"
+        memberListPrefs.defLayout = "VERJAAR"
         val extras = Bundle().apply {
             putString("SENDER_CLASS_NAME", "WysVerjaar")
         }
@@ -323,10 +330,9 @@ class LaaiDatabasisActivity : BaseActivity() {
             binding.laaiIndeterminateBar.visibility = View.GONE
 
             if (success) {
-                // ─── Force Room to reopen and refresh the date ────────────────
-                WinkerkDatabase.getInstance(this@LaaiDatabasisActivity) // ensures instance is open
-                refreshDatabaseDateSuspend()  // ← waits for the query to complete
-                updateDateDisplay()           // ← updates UI on main thread
+                WinkerkDatabase.getInstance(this@LaaiDatabasisActivity)
+                refreshDatabaseDateSuspend()
+                updateDateDisplay()
 
                 Toast.makeText(
                     this@LaaiDatabasisActivity,
@@ -386,7 +392,7 @@ class LaaiDatabasisActivity : BaseActivity() {
     }
 
     private fun updateDateDisplay() {
-        val date = settingsManager.congregation.dataDatum
+        val date = congregationPrefs.dataDatum
         if (date.isNotEmpty()) {
             binding.datadate.text = getString(R.string.current_data_info, date)
         } else {
@@ -400,16 +406,16 @@ class LaaiDatabasisActivity : BaseActivity() {
                 val date = WinkerkDatabase.getInstance(this@LaaiDatabasisActivity)
                     .datumDao()
                     .getDataDatum()
-                settingsManager.congregation.dataDatum = date ?: ""
+                congregationPrefs.dataDatum = date ?: ""
                 if (BuildConfig.DEBUG) {
                     Log.d(
                         TAG,
-                        "Database date loaded via Room: '${settingsManager.congregation.dataDatum}'"
+                        "Database date loaded via Room: '${congregationPrefs.dataDatum}'"
                     )
                 }
             } catch (e: Exception) {
                 if (BuildConfig.DEBUG) Log.e(TAG, "Error reading database date from Room", e)
-                settingsManager.congregation.dataDatum = ""
+                congregationPrefs.dataDatum = ""
             }
         }
     }
@@ -476,7 +482,7 @@ class LaaiDatabasisActivity : BaseActivity() {
         registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             uri ?: return@registerForActivityResult
             lifecycleScope.launch {
-                val result = PastoralDatabaseBackup.importFromUri(this@LaaiDatabasisActivity, uri)
+                val result = pastoralDbBackup.importFromUri(this@LaaiDatabasisActivity, uri)
                 handleImportResult(result)
             }
         }
@@ -530,5 +536,4 @@ class LaaiDatabasisActivity : BaseActivity() {
             }
         }
     }
-
 }

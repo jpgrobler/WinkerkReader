@@ -15,6 +15,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
@@ -22,22 +23,16 @@ import za.co.jpsoft.winkerkreader.databinding.FragmentBedieningVandagBinding
 import za.co.jpsoft.winkerkreader.ui.activities.LidmaatDetailActivity
 import za.co.jpsoft.winkerkreader.ui.adapters.BedieningReminderAdapter
 import za.co.jpsoft.winkerkreader.ui.viewmodels.BedieningViewModel
-import za.co.jpsoft.winkerkreader.utils.SettingsManager
 
+@AndroidEntryPoint
 class BedieningVandagFragment : Fragment() {
 
     private var _binding: FragmentBedieningVandagBinding? = null
     private val binding get() = _binding!!
 
     private val viewModel: BedieningViewModel by activityViewModels()
-    private val settingsManager: SettingsManager by lazy {
-        SettingsManager.getInstance(
-            requireContext()
-        )
-    }
 
     private lateinit var adapter: BedieningReminderAdapter
-
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -205,8 +200,8 @@ class BedieningVandagFragment : Fragment() {
 
     private fun showDeleteSeriesConfirmationDialog(reminderId: String) {
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle(R.string.herinnering_verwyder_reeks_titel)  // you may need to add this string
-            .setMessage(R.string.herinnering_verwyder_reeks_boodskap) // and this string
+            .setTitle(R.string.herinnering_verwyder_reeks_titel)
+            .setMessage(R.string.herinnering_verwyder_reeks_boodskap)
             .setPositiveButton(R.string.pastoral_import_ja) { _, _ ->
                 viewModel.deleteSeries(reminderId)
             }

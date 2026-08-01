@@ -12,6 +12,7 @@ import androidx.core.view.updatePadding
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayoutMediator
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.pastoral.repository.PastoralReminderRepository
@@ -19,31 +20,39 @@ import za.co.jpsoft.winkerkreader.databinding.ActivityBedieningBinding
 import za.co.jpsoft.winkerkreader.receivers.PastoralReminderActionReceiver
 import za.co.jpsoft.winkerkreader.ui.adapters.BedieningPagerAdapter
 import za.co.jpsoft.winkerkreader.ui.viewmodels.BedieningViewModel
-import za.co.jpsoft.winkerkreader.ui.viewmodels.BedieningViewModelFactory
 import za.co.jpsoft.winkerkreader.utils.MainNavigationController
 import za.co.jpsoft.winkerkreader.utils.PastoralDatabaseBackup
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class BedieningActivity : AuthBaseActivity() {
+
+    @Inject
+    lateinit var repository: PastoralReminderRepository
+    @Inject
+    lateinit var pastoralDbBackup: PastoralDatabaseBackup   // <-- injected
 
     private val navigationController by lazy { MainNavigationController(this) }
     private lateinit var binding: ActivityBedieningBinding
 
-    private val viewModel: BedieningViewModel by viewModels {
-        BedieningViewModelFactory(this)
-    }
+    private val viewModel: BedieningViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityBedieningBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
         ViewCompat.setOnApplyWindowInsetsListener(binding.bedieningViewPager) { view, insets ->
             val navBar = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
             view.updatePadding(bottom = navBar.bottom)
             insets
         }
+
+        // Ensure system templates are present (idempotent)
         lifecycleScope.launch {
-            PastoralReminderRepository.create(this@BedieningActivity).ensureSystemTemplates()
+            repository.ensureSystemTemplates()
         }
+
         setSupportActionBar(binding.bedieningToolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(false)
 
@@ -85,28 +94,24 @@ class BedieningActivity : AuthBaseActivity() {
         }
     }
 
-    /** Handles opening from notification — scrolls to the relevant reminder. */
     private fun handleDeepLink(intent: Intent?) {
         val reminderId = intent
             ?.getStringExtra(PastoralReminderActionReceiver.EXTRA_REMINDER_ID)
             ?: return
 
-        // Navigate to Vandag tab (index 0) and request scroll
         binding.bedieningViewPager.currentItem = 0
         viewModel.requestScrollTo(reminderId)
     }
 
-    // 1. Inflate menu
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_bediening, menu)
         return true
     }
 
-    // 2. Handle tap
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_deel_rugsteun -> {
-                sharePastoralDb()  // bestaande funksie
+                sharePastoralDb()
                 true
             }
             R.id.action_bestuur_sjablone -> {
@@ -114,21 +119,19 @@ class BedieningActivity : AuthBaseActivity() {
                 true
             }
             R.id.action_backup_restore -> {
-                // Open die nuwe aktiwiteit
-                MainNavigationController(this).navigateToPastoralBackup()
+                navigationController.navigateToPastoralBackup()
                 true
             }
             else -> super.onOptionsItemSelected(item)
         }
     }
 
-    // 3. Share implementation
     private fun sharePastoralDb() {
         lifecycleScope.launch {
-            // Ensure backup is current before sharing
-            PastoralDatabaseBackup.backupNow(applicationContext)
+            // Use injected instance
+            pastoralDbBackup.backupNow(applicationContext)
 
-            val backupFile = PastoralDatabaseBackup.findBackupFile(applicationContext)
+            val backupFile = pastoralDbBackup.findBackupFile(applicationContext)
             if (backupFile == null) {
                 Snackbar.make(
                     binding.root,
@@ -138,7 +141,6 @@ class BedieningActivity : AuthBaseActivity() {
                 return@launch
             }
 
-            // Share via FileProvider
             val uri = androidx.core.content.FileProvider.getUriForFile(
                 applicationContext,
                 "${applicationContext.packageName}.fileprovider",
@@ -165,9 +167,6 @@ class BedieningActivity : AuthBaseActivity() {
     }
 
     companion object {
-        /**
-         * Launch BedieningActivity, optionally scrolling to a specific reminder.
-         */
         fun launch(context: Context, reminderId: String? = null) {
             val intent = Intent(context, BedieningActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP

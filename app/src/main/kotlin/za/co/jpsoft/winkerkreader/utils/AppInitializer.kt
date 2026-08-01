@@ -3,9 +3,8 @@ package za.co.jpsoft.winkerkreader.utils
 
 import android.content.Context
 import android.util.Log
-import androidx.lifecycle.LifecycleCoroutineScope
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.BuildConfig
@@ -15,74 +14,59 @@ import za.co.jpsoft.winkerkreader.data.repositories.ChurchInfoRepository
 import za.co.jpsoft.winkerkreader.services.CallMonitoringService
 import za.co.jpsoft.winkerkreader.widget.PastoralWidgetProvider
 
-/**
- * Centralised initialisation logic for the app.
- * Should be called from the Application class and, if needed, after permission grants.
- */
 object AppInitializer {
 
     private const val TAG = "AppInitializer"
 
-    /**
-     * Perform initialisation that must happen on app start.
-     * This includes database setup, service start, and WorkManager scheduling.
-     *
-     * @param appContext Application context
-     * @param lifecycleScope Optional coroutine scope to launch background tasks.
-     *                       If null, tasks are launched on a new CoroutineScope.
-     * @param onProgress Optional callback for database initialisation progress.
-     */
     fun initialize(
         appContext: Context,
-        lifecycleScope: LifecycleCoroutineScope? = null,
+        scope: CoroutineScope,
         onProgress: ((progress: Int) -> Unit)? = null,
         onComplete: ((success: Boolean) -> Unit)? = null,
-        onReady: (() -> Unit)? = null   // <-- NEW: called after DB is ready (or already)
+        onReady: (() -> Unit)? = null,
+        churchInfoRepo: ChurchInfoRepository? = null,
+        databaseInitializer: DatabaseInitializer,
+        workScheduler: WorkScheduler,
+        callLogImporter: CallLogImporter,
+        autoStartEnabled: Boolean   // <-- added parameter
     ) {
-        val scope =
-            lifecycleScope ?: kotlinx.coroutines.CoroutineScope(Dispatchers.IO + SupervisorJob())
         scope.launch {
             withContext(Dispatchers.IO) {
+                // Call log import & reconciliation
                 val callLogDb = CallLogDatabase.getInstance(appContext)
-                CallLogImporter.importIfNeeded(appContext, callLogDb)
+                callLogImporter.importIfNeeded(appContext, callLogDb.callLogDao())
                 ActiveCallReconciler.reconcile(callLogDb.callLogDao())
 
-                val settings = SettingsManager.getInstance(appContext)
-                settings.congregation.ensureDefaultColors()
-                if (!settings.sync.isDatabaseInitialized) {
-                    DatabaseInitializer.initializeDatabase(
-                        context = appContext,
-                        listener = object : DatabaseInitializer.ProgressListener {
-                            override fun onProgressUpdate(progress: Int) {
-                                onProgress?.invoke(progress)
-                            }
-
-                            override fun onInitializationComplete(success: Boolean) {
-                                if (success) {
-                                    settings.sync.isDatabaseInitialized = true
-                                    if (BuildConfig.DEBUG) Log.d(TAG, "Database initialised")
-                                } else {
-                                    if (BuildConfig.DEBUG) Log.e(
-                                        TAG,
-                                        "Database initialisation failed"
-                                    )
-                                }
-                                onComplete?.invoke(success)
-                                // <-- NEW: notify that DB is ready
-                                onReady?.invoke()
-                            }
+                // ─── Database initialization using the injected initializer ───
+                databaseInitializer.initializeDatabase(
+                    context = appContext,
+                    listener = object : DatabaseInitializer.ProgressListener {
+                        override fun onProgressUpdate(progress: Int) {
+                            onProgress?.invoke(progress)
                         }
-                    )
-                } else {
-                    // Already initialized, call onReady immediately
-                    onReady?.invoke()
+
+                        override fun onInitializationComplete(success: Boolean) {
+                            if (BuildConfig.DEBUG) {
+                                if (success) Log.d(TAG, "Database initialised")
+                                else Log.e(TAG, "Database initialisation failed")
+                            }
+                            onComplete?.invoke(success)
+                            onReady?.invoke()
+                        }
+                    }
+                )
+            }
+
+            // Load church info if repository is provided
+            churchInfoRepo?.let {
+                scope.launch {
+                    it.loadChurchInfo()
                 }
             }
 
-            // 2. Start monitoring service if enabled (after DB init)
             withContext(Dispatchers.Main) {
-                val settings = SettingsManager.getInstance(appContext)
-                if (settings.callMonitor.autoStartEnabled) {
+                // Use the passed autoStartEnabled flag instead of SettingsManager
+                if (autoStartEnabled) {
                     try {
                         val intent =
                             android.content.Intent(appContext, CallMonitoringService::class.java)
@@ -98,19 +82,33 @@ object AppInitializer {
                 }
             }
 
-            // 3. Schedule background tasks (WorkManager)
             withContext(Dispatchers.Main) {
-                WorkScheduler(appContext, SettingsManager.getInstance(appContext)).scheduleAll()
+                workScheduler.scheduleAll()
                 PastoralWidgetProvider.refreshWidgets(appContext)
             }
-            ChurchInfoRepository.loadChurchInfo(appContext)
         }
     }
 
-    /**
-     * Simplified version without progress callbacks – for use in Application.onCreate().
-     */
-    fun initializeApp(appContext: Context) {
-        initialize(appContext, null, null, null)
+    fun initializeApp(
+        appContext: Context,
+        scope: CoroutineScope,
+        churchInfoRepo: ChurchInfoRepository? = null,
+        databaseInitializer: DatabaseInitializer,
+        workScheduler: WorkScheduler,
+        callLogImporter: CallLogImporter,
+        autoStartEnabled: Boolean   // <-- added parameter
+    ) {
+        initialize(
+            appContext,
+            scope,
+            null,
+            null,
+            null,
+            churchInfoRepo,
+            databaseInitializer,
+            workScheduler,
+            callLogImporter,
+            autoStartEnabled
+        )
     }
 }

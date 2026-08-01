@@ -10,9 +10,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.services.OproepDetailService
+import za.co.jpsoft.winkerkreader.utils.CallNotificationDiagnostics
 import za.co.jpsoft.winkerkreader.utils.CallerNameResolver
-import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import za.co.jpsoft.winkerkreader.utils.UnifiedCallMonitor
+import za.co.jpsoft.winkerkreader.utils.prefs.CallMonitorPrefs
+import za.co.jpsoft.winkerkreader.utils.VoipDiagnosticHelper
 
 /**
  * Orchestrates VoIP notification processing: detects state, extracts info,
@@ -20,13 +22,14 @@ import za.co.jpsoft.winkerkreader.utils.UnifiedCallMonitor
  */
 class VoipNotificationHandler(
     private val context: Context,
-    private val settingsManager: SettingsManager,
+    private val callMonitorPrefs: CallMonitorPrefs,
     private val unifiedMonitor: UnifiedCallMonitor,
     private val stateDetector: VoipCallStateDetector,
     private val infoExtractor: VoipCallInfoExtractor,
     private val callTracker: VoipCallTracker,
     private val scope: CoroutineScope,
-    private val voipPackages: Map<String, String>  // package name -> app display name
+    private val voipPackages: Map<String, String>,
+    private val diagnostics: CallNotificationDiagnostics
 ) {
 
     private val TAG = "VoipNotificationHandler"
@@ -42,9 +45,7 @@ class VoipNotificationHandler(
         val text = extras.getString(android.app.Notification.EXTRA_TEXT) ?: ""
 
         if (BuildConfig.DEBUG) {
-            Log.d(TAG, "VoIP notification from $appName: category=${notification.category}, " +
-                    "callType=${extras.getInt(android.app.Notification.EXTRA_CALL_TYPE, -1)}, " +
-                    "title='$title', text='$text', key=${sbn.key}")
+            VoipDiagnosticHelper.dumpNotificationToFile(context, sbn, appName)
         }
 
         val category = notification.category
@@ -283,6 +284,7 @@ class VoipNotificationHandler(
         // CallNotificationDiagnostics.record(context, appName, title, text, bigText, subText)
     }
 
+
     // ---- Helpers ----
 
     private fun extractNumber(extras: Bundle, title: String, text: String): String {
@@ -300,7 +302,7 @@ class VoipNotificationHandler(
      * Trigger the popup overlay for VoIP calls.
      */
     private fun triggerVoipCallerPopup(number: String, displayName: String) {
-        if (!settingsManager.callMonitor.callMonitorEnabled) return
+        if (!callMonitorPrefs.callMonitorEnabled) return   // <-- use injected prefs
         if (displayName.isBlank()) return
 
         val serviceIntent = Intent(context, OproepDetailService::class.java).apply {

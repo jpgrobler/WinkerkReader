@@ -1,23 +1,16 @@
 package za.co.jpsoft.winkerkreader.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.onCompletion
-import kotlinx.coroutines.flow.onStart
-import kotlinx.coroutines.flow.stateIn
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import za.co.jpsoft.winkerkreader.data.pastoral.model.TemplateWithSteps
 import za.co.jpsoft.winkerkreader.data.pastoral.repository.PastoralReminderRepository
+import javax.inject.Inject
 
-class TemplateManagerViewModel(
+@HiltViewModel
+class TemplateManagerViewModel @Inject constructor(
     private val repository: PastoralReminderRepository
 ) : ViewModel() {
 
@@ -25,17 +18,17 @@ class TemplateManagerViewModel(
         repository.observeAllTemplates()
             .onStart { _isLoading.value = true }
             .onCompletion { _isLoading.value = false }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed((5_000)), emptyList())
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     private val _error = MutableSharedFlow<String>(extraBufferCapacity = 1)
     val error: SharedFlow<String> = _error.asSharedFlow()
 
     private val _templateCreated = MutableSharedFlow<String>(extraBufferCapacity = 1)
-
-    /** Emits the new templateId so the Activity can immediately open the editor. */
     val templateCreated: SharedFlow<String> = _templateCreated.asSharedFlow()
+
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
     fun createTemplate(titleAf: String, descriptionAf: String?) {
         viewModelScope.launch {
             try {
@@ -66,16 +59,6 @@ class TemplateManagerViewModel(
             } catch (e: Exception) {
                 _error.tryEmit("Kon nie sjabloon verwyder nie")
             }
-        }
-    }
-
-    class Factory(private val repository: PastoralReminderRepository) : ViewModelProvider.Factory {
-        @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            if (modelClass.isAssignableFrom(TemplateManagerViewModel::class.java)) {
-                return TemplateManagerViewModel(repository) as T
-            }
-            throw IllegalArgumentException("Unknown ViewModel: ${modelClass.name}")
         }
     }
 }

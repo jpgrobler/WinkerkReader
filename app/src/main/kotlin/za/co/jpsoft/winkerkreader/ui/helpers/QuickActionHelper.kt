@@ -21,20 +21,22 @@ import za.co.jpsoft.winkerkreader.data.repositories.ContactRepository
 import za.co.jpsoft.winkerkreader.ui.bottomsheets.StelHerinneringBottomSheet
 import za.co.jpsoft.winkerkreader.ui.bottomsheets.VoegNotaByBottomSheet
 import za.co.jpsoft.winkerkreader.utils.MemberUtils
-import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import za.co.jpsoft.winkerkreader.utils.Utils
-
+import za.co.jpsoft.winkerkreader.utils.prefs.AppearancePrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.QuickActionPrefs
 
 /**
  * Reusable helper that displays a horizontal quick-action popup for a member.
  * Used in MainActivity, VerjaarSmsActivity, and anywhere else a member list appears.
  *
  * @property activity The parent [AppCompatActivity] used for inflating views and launching bottom sheets.
- * @property settingsManager Manager for checking configured communication channels (e.g., WhatsApp preferences).
+ * @property quickActionPrefs Preference manager for quick‑action toggles.
+ * @property appearancePrefs Preference manager for WhatsApp method toggles and other appearance settings.
  */
 class QuickActionHelper(
     private val activity: AppCompatActivity,
-    private val settingsManager: SettingsManager
+    private val quickActionPrefs: QuickActionPrefs,
+    private val appearancePrefs: AppearancePrefs
 ) {
 
     // ─── Properties ──────────────────────────────────────────────────────────
@@ -105,7 +107,7 @@ class QuickActionHelper(
         }
 
         // 0. Details
-        if (settingsManager.quickActions.quickActionDetail) {
+        if (quickActionPrefs.quickActionDetail) {
             addActionButton(
                 iconText = "ℹ\uFE0F",
                 label = "Detail",
@@ -116,7 +118,7 @@ class QuickActionHelper(
             )
         }
         // 1. SMS – green icon
-        if (settingsManager.quickActions.quickActionSms && hasPhone) {
+        if (quickActionPrefs.quickActionSms && hasPhone) {
             addActionButton(
                 iconText = "💬",
                 label = "SMS",
@@ -129,13 +131,13 @@ class QuickActionHelper(
 
         // 2. WhatsApp – drawable with green tint
         val whatsappMethod = when {
-            settingsManager.appearance.whatsapp1 -> 1
-            settingsManager.appearance.whatsapp2 -> 2
-            settingsManager.appearance.whatsapp3 -> 3
+            appearancePrefs.whatsapp1 -> 1
+            appearancePrefs.whatsapp2 -> 2
+            appearancePrefs.whatsapp3 -> 3
             else -> 0 // disabled
         }
 
-        if (settingsManager.quickActions.quickActionWhatsApp && hasPhone && whatsappMethod != 0) {
+        if (quickActionPrefs.quickActionWhatsApp && hasPhone && whatsappMethod != 0) {
             val formattedPhone = Utils.fixphonenumber(item.cellphone) ?: item.cellphone
             if (ContactRepository.isWhatsAppContact(formattedPhone)) {
                 addActionButton(
@@ -150,7 +152,7 @@ class QuickActionHelper(
         }
 
         // 3. Call – default color
-        if (settingsManager.quickActions.quickActionCall && hasPhone) {
+        if (quickActionPrefs.quickActionCall && hasPhone) {
             addActionButton(
                 iconText = "📱",
                 label = "Bel",
@@ -162,7 +164,7 @@ class QuickActionHelper(
         }
 
         // 4. Email (new)
-        if (settingsManager.quickActions.quickActionEmail && item.email.isNotEmpty()) {
+        if (quickActionPrefs.quickActionEmail && item.email.isNotEmpty()) {
             addActionButton(
                 iconText = "✉️", label = "E-pos",
                 onClick = {
@@ -173,7 +175,7 @@ class QuickActionHelper(
         }
 
         // 5. Landline (new)
-        if (settingsManager.quickActions.quickActionLandline && item.landline.isNotEmpty()) {
+        if (quickActionPrefs.quickActionLandline && item.landline.isNotEmpty()) {
             addActionButton(
                 iconText = "☎️", label = "Landlyn",
                 onClick = {
@@ -184,7 +186,7 @@ class QuickActionHelper(
         }
 
         // 6. Note
-        if (settingsManager.quickActions.quickActionNote) {
+        if (quickActionPrefs.quickActionNote) {
             addActionButton(
                 iconText = "📝", label = "Nota",
                 onClick = {
@@ -195,7 +197,7 @@ class QuickActionHelper(
         }
 
         // 7. Reminder
-        if (settingsManager.quickActions.quickActionReminder) {
+        if (quickActionPrefs.quickActionReminder) {
             addActionButton(
                 iconDrawableRes = R.drawable.ic_bediening,
                 label = "Herinner",
@@ -207,7 +209,7 @@ class QuickActionHelper(
         }
 
         // 8. Copy to clipboard (new)
-        if (settingsManager.quickActions.quickActionCopy) {
+        if (quickActionPrefs.quickActionCopy) {
             addActionButton(
                 iconText = "📋", label = "Kopieer",
                 onClick = {
@@ -218,7 +220,7 @@ class QuickActionHelper(
         }
 
         // 9. Copy to contacts (new)
-        if (settingsManager.quickActions.quickActionCopyContacts) {
+        if (quickActionPrefs.quickActionCopyContacts) {
             addActionButton(
                 iconText = "👤", label = "Stoor",
                 onClick = {

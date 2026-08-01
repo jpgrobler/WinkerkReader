@@ -1,47 +1,30 @@
 package za.co.jpsoft.winkerkreader.ui.activities
 
+import android.os.Bundle
+import androidx.activity.enableEdgeToEdge
+import dagger.hilt.android.AndroidEntryPoint
 import za.co.jpsoft.winkerkreader.utils.AppAuthGuard
-import za.co.jpsoft.winkerkreader.utils.SettingsManager
+import za.co.jpsoft.winkerkreader.utils.prefs.SecurityPrefs
+import javax.inject.Inject
 
-/**
- * Base for Activities that require the biometric/PIN app‑lock.
- * - Automatically checks background timeout on every `onResume`.
- * - Exposes [appAuthGuard] so subclasses can call `guardIfNeeded()` during `onCreate`.
- *
- * Usage in subclasses:
- *   class MainActivity : AuthBaseActivity() {
- *       override fun onCreate(savedInstanceState: Bundle?) {
- *           super.onCreate(savedInstanceState)
- *           appAuthGuard.guardIfNeeded(
- *               onAuthenticated = { /* initialise UI */ }
- *           )
- *       }
- *
- *       override fun onResumeAfterAuth() {
- *           // Called when the session is still valid (or after re‑auth)
- *           // Add any Activity‑specific resume logic here.
- *       }
- *   }
- */
+@AndroidEntryPoint
 abstract class AuthBaseActivity : BaseActivity() {
 
-    /**
-     * Shared [AppAuthGuard] instance for this Activity.
-     * Exposed as `protected` so subclasses can call [AppAuthGuard.guardIfNeeded]
-     * on the same instance that [onResume] uses for timeout checks.
-     */
-    val appAuthGuard: AppAuthGuard by lazy {
-        AppAuthGuard(this, SettingsManager.getInstance(this))
-    }
+    @Inject
+    lateinit var securityPrefs: SecurityPrefs
 
-    /**
-     * Override this to perform actions after authentication is confirmed
-     * (either immediately on resume if the session is valid, or after a re‑auth).
-     */
-    open fun onResumeAfterAuth() {}
+    // Changed from private to protected so MainActivityInitializer can access it
+    val appAuthGuard by lazy { AppAuthGuard(this, securityPrefs) }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
+        super.onCreate(savedInstanceState)
+    }
 
     override fun onResume() {
         super.onResume()
         appAuthGuard.checkOnResume(onAuthenticated = { onResumeAfterAuth() })
     }
+
+    open fun onResumeAfterAuth() {}
 }

@@ -3,7 +3,9 @@ package za.co.jpsoft.winkerkreader.data.pastoral.repository
 import za.co.jpsoft.winkerkreader.data.pastoral.model.FamilyMember
 import za.co.jpsoft.winkerkreader.data.room.MemberDao
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class FamilyMemberRepository @Inject constructor(
     private val memberDao: MemberDao
 ) {

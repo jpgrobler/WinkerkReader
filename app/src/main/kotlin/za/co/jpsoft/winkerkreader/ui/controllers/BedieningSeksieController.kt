@@ -26,19 +26,6 @@ import za.co.jpsoft.winkerkreader.ui.bottomsheets.VoegNotaByBottomSheet
 /**
  * Drop-in controller that manages the Bediening section
  * (herinneringe + notas) inside [za.co.jpsoft.winkerkreader.ui.activities.LidmaatDetailActivity].
- *
- * Usage — in LidmaatDetailActivity.onCreate():
- *
- *   bedieningSeksie = BedieningSeksieController(
- *       activity       = this,
- *       memberGuid     = memberGuid,
- *       familyHeadGuid = familyHeadGuid,
- *       displayName    = "${member.name} ${member.surname}",
- *       memberSurname  = member.surname,
- *       memberGivenName = member.name,
- *       rootView       = binding.root          // or the <include> view
- *   )
- *   bedieningSeksie.setup()
  */
 class BedieningSeksieController(
     private val activity: AppCompatActivity,
@@ -47,15 +34,13 @@ class BedieningSeksieController(
     private val displayName: String,
     private val memberSurname: String?,
     private val memberGivenName: String?,
-    private val rootView: View
+    private val rootView: View,
+    private val reminderRepo: PastoralReminderRepository,   // <-- injected
+    private val noteRepo: PastoralNoteRepository            // <-- injected
 ) {
     companion object {
         private const val MAX_VISIBLE = 3
     }
-
-    // ── Repositories ───────────────────────────────────────────────────────
-    private val noteRepo by lazy { PastoralNoteRepository(activity) }
-    private val reminderRepo by lazy { PastoralReminderRepository.create(activity) }
 
     // ── Adapters ───────────────────────────────────────────────────────────
     private val noteAdapter = PastoralNoteAdapter(onDelete = ::confirmDeleteNote)

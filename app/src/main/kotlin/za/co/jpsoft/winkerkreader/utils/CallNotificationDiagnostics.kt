@@ -3,6 +3,9 @@ package za.co.jpsoft.winkerkreader.utils
 import android.content.Context
 import org.json.JSONArray
 import org.json.JSONObject
+import za.co.jpsoft.winkerkreader.utils.prefs.CallMonitorPrefs
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * Lightweight, capped, opt-in log of VoIP notifications that could not be
@@ -10,9 +13,13 @@ import org.json.JSONObject
  * Intended purely as a diagnostic aid for improving the matcher over time —
  * not shown to the pastor-user as part of normal call history.
  */
-object CallNotificationDiagnostics {
-    private const val PREF_KEY = "pref_unrecognized_call_samples"
-    private const val MAX_SAMPLES = 20
+@Singleton
+class CallNotificationDiagnostics @Inject constructor(
+    private val callMonitorPrefs: CallMonitorPrefs
+) {
+
+    private val PREF_KEY = "pref_unrecognized_call_samples"
+    private val MAX_SAMPLES = 20
 
     fun record(
         context: Context,
@@ -22,8 +29,7 @@ object CallNotificationDiagnostics {
         bigText: String,
         subText: String
     ) {
-        val settings = SettingsManager.getInstance(context)
-        if (!settings.callMonitor.diagnosticCallCaptureEnabled) return
+        if (!callMonitorPrefs.diagnosticCallCaptureEnabled) return
 
         val prefs = context.getSharedPreferences(WinkerkContractPrefsName(), Context.MODE_PRIVATE)
         val existing = JSONArray(prefs.getString(PREF_KEY, "[]"))

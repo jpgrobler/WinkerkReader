@@ -1,7 +1,5 @@
 package za.co.jpsoft.winkerkreader.ui.activities
 
-import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
@@ -14,6 +12,7 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import za.co.jpsoft.winkerkreader.R
@@ -22,11 +21,15 @@ import za.co.jpsoft.winkerkreader.data.pastoral.repository.PastoralReminderRepos
 import za.co.jpsoft.winkerkreader.databinding.ActivityTemplateEditorBinding
 import za.co.jpsoft.winkerkreader.ui.adapters.StepEditorAdapter
 import za.co.jpsoft.winkerkreader.ui.dialogs.StepEditorDialog
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class TemplateEditorActivity : AuthBaseActivity() {
 
+    @Inject
+    lateinit var repository: PastoralReminderRepository
+
     private lateinit var binding: ActivityTemplateEditorBinding
-    private lateinit var repository: PastoralReminderRepository
     private lateinit var templateId: String
     private lateinit var stepAdapter: StepEditorAdapter
     private var isSystemTemplate = false
@@ -37,15 +40,15 @@ class TemplateEditorActivity : AuthBaseActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityTemplateEditorBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
         lifecycleScope.launch {
             _isLoading.collect { isLoading ->
                 binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
             }
         }
+
         templateId = intent.getStringExtra(EXTRA_TEMPLATE_ID)
             ?: run { finish(); return }
-
-        repository = PastoralReminderRepository.create(this)
 
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
@@ -84,13 +87,13 @@ class TemplateEditorActivity : AuthBaseActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
         android.R.id.home -> {
-            finish(); true
+            finish()
+            true
         }
-
         R.id.action_reset_default -> {
-            confirmResetToDefault(); true
+            confirmResetToDefault()
+            true
         }
-
         else -> super.onOptionsItemSelected(item)
     }
 
@@ -104,7 +107,6 @@ class TemplateEditorActivity : AuthBaseActivity() {
             layoutManager = LinearLayoutManager(this@TemplateEditorActivity)
         }
 
-        // Drag-to-reorder
         val touchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
             ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0
         ) {
@@ -223,6 +225,5 @@ class TemplateEditorActivity : AuthBaseActivity() {
 
     companion object {
         private const val EXTRA_TEMPLATE_ID = "extra_template_id"
-
     }
 }

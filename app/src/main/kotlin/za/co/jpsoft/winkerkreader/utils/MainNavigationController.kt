@@ -8,38 +8,21 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import androidx.core.net.toUri
+import dagger.hilt.android.qualifiers.ApplicationContext
 import za.co.jpsoft.winkerkreader.receivers.PastoralReminderActionReceiver
-import za.co.jpsoft.winkerkreader.ui.activities.ArgiefListActivity
-import za.co.jpsoft.winkerkreader.ui.activities.BedieningActivity
-import za.co.jpsoft.winkerkreader.ui.activities.CallLogActivity
-import za.co.jpsoft.winkerkreader.ui.activities.LaaiDatabasisActivity
-import za.co.jpsoft.winkerkreader.ui.activities.LidmaatDetailActivity
-import za.co.jpsoft.winkerkreader.ui.activities.MainActivity
-import za.co.jpsoft.winkerkreader.ui.activities.PermissionsActivity
-import za.co.jpsoft.winkerkreader.ui.activities.RegistreerActivity
-import za.co.jpsoft.winkerkreader.ui.activities.SplashActivity
-import za.co.jpsoft.winkerkreader.ui.activities.TemplateEditorActivity
-import za.co.jpsoft.winkerkreader.ui.activities.TemplateManagerActivity
-import za.co.jpsoft.winkerkreader.ui.activities.UitlegActivity
-import za.co.jpsoft.winkerkreader.ui.activities.VerjaarSmsActivity
-import za.co.jpsoft.winkerkreader.ui.activities.PastoralBackupActivity
+import za.co.jpsoft.winkerkreader.ui.activities.*
+import javax.inject.Inject
+import javax.inject.Singleton
 
-/**
- * Centralised navigation for the entire app.
- * All activity transitions should go through this controller.
- * When migrating to Navigation Component, only the internal implementation
- * of these methods needs to change – call sites stay identical.
- */
-class MainNavigationController(private val context: Context) {
+@Singleton
+class MainNavigationController @Inject constructor(
+    @ApplicationContext private val context: Context
+) {
 
     // ============================================================
     // Main Navigation
     // ============================================================
 
-    /**
-     * Navigate to MainActivity, optionally with extras.
-     * Used by splash and other screens that return to the main list.
-     */
     fun navigateToMain(extras: Bundle? = null) {
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -76,10 +59,6 @@ class MainNavigationController(private val context: Context) {
     // Member Management
     // ============================================================
 
-    /**
-     * Open LidmaatDetail for a specific member.
-     * Supports both direct GUID and content URI based opening.
-     */
     fun navigateToLidmaatDetail(
         memberGuid: String,
         recordStatus: String = "0",
@@ -99,8 +78,8 @@ class MainNavigationController(private val context: Context) {
     }
 
     fun navigateToVerjaarSms() {
-        val settings = SettingsManager.getInstance(context)
-        settings.memberList.fromMenu = true
+        // The fromMenu flag is now handled inside the ViewModel/Activity, not here.
+        // We'll keep the intent creation simple.
         context.startActivity(Intent(context, VerjaarSmsActivity::class.java))
     }
 
@@ -128,18 +107,12 @@ class MainNavigationController(private val context: Context) {
     // Data Management
     // ============================================================
 
-    /**
-     * Navigate to LaaiDatabasisActivity with optional extras
-     */
     fun navigateToLaaiDatabasis(extras: Bundle? = null) {
         val intent = Intent(context, LaaiDatabasisActivity::class.java)
         extras?.let { intent.putExtras(it) }
         context.startActivity(intent)
     }
 
-    /**
-     * Convenience method for common LaaiDatabasisActivity use cases
-     */
     fun navigateToLaaiDatabasis(promptRestore: Boolean = false) {
         val intent = Intent(context, LaaiDatabasisActivity::class.java)
         if (promptRestore) {
@@ -175,10 +148,6 @@ class MainNavigationController(private val context: Context) {
     // System Settings Navigation
     // ============================================================
 
-    /**
-     * Opens the Notification Listener settings screen.
-     * Required for VoIP call detection (WhatsApp, Skype, etc.)
-     */
     fun navigateToNotificationListenerSettings() {
         try {
             val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
@@ -189,10 +158,6 @@ class MainNavigationController(private val context: Context) {
         }
     }
 
-    /**
-     * Opens the Notification Policy Access settings screen.
-     * Required for Do Not Disturb mode access.
-     */
     fun navigateToNotificationPolicySettings() {
         try {
             val intent = Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
@@ -203,10 +168,6 @@ class MainNavigationController(private val context: Context) {
         }
     }
 
-    /**
-     * Opens the app-specific settings screen.
-     * Fallback when specific settings screens can't be opened.
-     */
     fun navigateToAppSettings() {
         try {
             val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
@@ -218,10 +179,6 @@ class MainNavigationController(private val context: Context) {
         }
     }
 
-    /**
-     * Opens the Overlay Permission settings screen.
-     * Required for floating caller ID window.
-     */
     fun navigateToOverlaySettings() {
         try {
             val intent = Intent(
@@ -235,10 +192,6 @@ class MainNavigationController(private val context: Context) {
         }
     }
 
-    /**
-     * Opens the Battery Optimization settings screen.
-     * Required to keep background services running reliably.
-     */
     fun navigateToBatteryOptimizationSettings() {
         try {
             val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
@@ -249,10 +202,6 @@ class MainNavigationController(private val context: Context) {
         }
     }
 
-    /**
-     * Opens the Exact Alarm permission settings screen.
-     * Required for Android 12+ exact alarm scheduling.
-     */
     fun navigateToExactAlarmSettings() {
         try {
             val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
@@ -265,10 +214,6 @@ class MainNavigationController(private val context: Context) {
         }
     }
 
-    /**
-     * Opens the Manage Overlay Permission settings screen.
-     * Legacy method for overlay permission.
-     */
     fun navigateToManageOverlayPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             try {
@@ -288,9 +233,6 @@ class MainNavigationController(private val context: Context) {
     // External Navigation
     // ============================================================
 
-    /**
-     * Opens a URL in the default browser.
-     */
     fun navigateToUrl(url: String) {
         try {
             val intent = Intent(Intent.ACTION_VIEW, url.toUri())
@@ -301,9 +243,6 @@ class MainNavigationController(private val context: Context) {
         }
     }
 
-    /**
-     * Opens the phone dialer with the given number.
-     */
     fun navigateToPhoneDial(phoneNumber: String) {
         try {
             val intent = Intent(Intent.ACTION_DIAL, "tel:$phoneNumber".toUri())
@@ -314,9 +253,6 @@ class MainNavigationController(private val context: Context) {
         }
     }
 
-    /**
-     * Opens the SMS app with the given number.
-     */
     fun navigateToSms(phoneNumber: String) {
         try {
             val intent = Intent(Intent.ACTION_VIEW, "sms:$phoneNumber".toUri())
@@ -327,9 +263,6 @@ class MainNavigationController(private val context: Context) {
         }
     }
 
-    /**
-     * Opens the email app with the given address.
-     */
     fun navigateToEmail(emailAddress: String) {
         try {
             val intent = Intent(Intent.ACTION_VIEW, "mailto:$emailAddress".toUri())
@@ -340,9 +273,6 @@ class MainNavigationController(private val context: Context) {
         }
     }
 
-    /**
-     * Opens the calendar app to create a new event.
-     */
     fun navigateToCalendar() {
         try {
             val intent = Intent(Intent.ACTION_INSERT).apply {
@@ -355,9 +285,6 @@ class MainNavigationController(private val context: Context) {
         }
     }
 
-    /**
-     * Opens Google Maps with the given address.
-     */
     fun navigateToMaps(address: String) {
         try {
             val encodedAddress = Uri.encode(address)
@@ -381,9 +308,6 @@ class MainNavigationController(private val context: Context) {
     // Service Management
     // ============================================================
 
-    /**
-     * Starts the CallMonitoringService if not already running.
-     */
     fun startCallMonitoringService() {
         try {
             val intent = Intent(
@@ -400,9 +324,6 @@ class MainNavigationController(private val context: Context) {
         }
     }
 
-    /**
-     * Starts the WhatsAppNotificationService if not already running.
-     */
     fun startWhatsAppNotificationService() {
         try {
             val intent = Intent(
@@ -419,9 +340,6 @@ class MainNavigationController(private val context: Context) {
         }
     }
 
-    /**
-     * Starts the ServiceKeepAlive service.
-     */
     fun startKeepAliveService() {
         try {
             val intent =

@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.application'
-    id 'com.google.devtools.ksp' version '2.3.9'
+    id 'com.google.devtools.ksp'
+    id 'com.google.dagger.hilt.android'
 }
 
 def espressoCoreVersion = '3.7.0'
@@ -10,8 +11,8 @@ android {
     defaultConfig {
         applicationId = "za.co.jpsoft.winkerkreader"
         minSdk = 28
-        versionCode = 122
-        versionName = "4.2 test r022"
+        versionCode = 123
+        versionName = "4.2 test r023"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         targetSdk = 37
         vectorDrawables.useSupportLibrary = true
@@ -104,10 +105,13 @@ android {
 
 
 dependencies {
+    implementation 'com.google.dagger:hilt-android:2.60.1'
+    ksp 'com.google.dagger:hilt-compiler:2.60.1'
+
     implementation 'androidx.gridlayout:gridlayout:1.1.0'
 
     implementation 'androidx.lifecycle:lifecycle-process:2.11.0'
-    implementation 'androidx.paging:paging-common:3.5.0'
+    implementation 'androidx.paging:paging-common-ktx:3.5.0'
     implementation "androidx.paging:paging-runtime-ktx:3.5.0"
     implementation("androidx.biometric:biometric:1.1.0")
     implementation "androidx.core:core-ktx:1.19.0"

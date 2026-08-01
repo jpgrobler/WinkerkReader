@@ -1,8 +1,5 @@
 package za.co.jpsoft.winkerkreader.services.receivers
 
-// AlarmReceiver.kt
-
-
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -12,14 +9,19 @@ import android.content.Intent
 import android.media.RingtoneManager
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import dagger.hilt.android.AndroidEntryPoint
 import za.co.jpsoft.winkerkreader.R
-import za.co.jpsoft.winkerkreader.ui.activities.LaaiDatabasisActivity
-import za.co.jpsoft.winkerkreader.ui.activities.VerjaarSmsActivity
+import za.co.jpsoft.winkerkreader.utils.MainNavigationController
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class AlarmReceiver : BroadcastReceiver() {
+
+    @Inject
+    lateinit var navigationController: MainNavigationController
 
     override fun onReceive(context: Context, intent: Intent) {
         val whenTime = System.currentTimeMillis()
@@ -39,7 +41,15 @@ class AlarmReceiver : BroadcastReceiver() {
         if (!action.isNullOrEmpty()) {
             when (action) {
                 "VerjaarSMS" -> {
-                    val notificationIntent = Intent(context, VerjaarSmsActivity::class.java).apply {
+                    // Use navigationController to create the intent
+                    // But we need a PendingIntent that starts VerjaarSmsActivity.
+                    // We'll create the intent directly as before, but we could also
+                    // use navigationController.navigateToVerjaarSms() if it returns an intent.
+                    // For consistency, we'll keep the explicit intent.
+                    val notificationIntent = Intent(
+                        context,
+                        za.co.jpsoft.winkerkreader.ui.activities.VerjaarSmsActivity::class.java
+                    ).apply {
                         flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
                     }
                     val pendingIntent = PendingIntent.getActivity(
@@ -67,7 +77,10 @@ class AlarmReceiver : BroadcastReceiver() {
 
                 "DropBoxDownLoad" -> {
                     val notificationIntent =
-                        Intent(context, LaaiDatabasisActivity::class.java).apply {
+                        Intent(
+                            context,
+                            za.co.jpsoft.winkerkreader.ui.activities.LaaiDatabasisActivity::class.java
+                        ).apply {
                             flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
                         }
                     val pendingIntent = PendingIntent.getActivity(

@@ -13,6 +13,7 @@ import androidx.core.view.updatePadding
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -21,18 +22,22 @@ import za.co.jpsoft.winkerkreader.ui.adapters.BackupListAdapter
 import za.co.jpsoft.winkerkreader.utils.PastoralDatabaseBackup
 import za.co.jpsoft.winkerkreader.utils.PastoralDatabaseBackup.BackupFileInfo
 import java.io.File
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class PastoralBackupActivity : BaseActivity() {
+
+    @Inject
+    lateinit var pastoralDbBackup: PastoralDatabaseBackup
 
     private lateinit var binding: ActivityPastoralBackupBinding
     private lateinit var backupAdapter: BackupListAdapter
 
-    // Launcher vir lêerkies (restore from external)
     private val pickBackupFile =
         registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             uri ?: return@registerForActivityResult
             lifecycleScope.launch {
-                val result = PastoralDatabaseBackup.importFromUri(this@PastoralBackupActivity, uri)
+                val result = pastoralDbBackup.importFromUri(this@PastoralBackupActivity, uri)
                 handleImportResult(result)
             }
         }
@@ -79,7 +84,6 @@ class PastoralBackupActivity : BaseActivity() {
     private fun setupButtons() {
         binding.btnCreateBackup.setOnClickListener { createBackup() }
         binding.btnShareBackup.setOnClickListener { shareBackup() }
-        // Gebruik die bestaande btnRestore vir "Kies Rugsteunlêer"
         binding.btnRestore.setOnClickListener {
             pickBackupFile.launch(arrayOf("application/octet-stream", "*/*"))
         }
@@ -89,7 +93,7 @@ class PastoralBackupActivity : BaseActivity() {
     }
 
     private fun refreshBackupList() {
-        val backups = PastoralDatabaseBackup.listBackupFiles(this)
+        val backups = pastoralDbBackup.listBackupFiles(this)
         backupAdapter.submitList(backups)
         binding.tvBackupCount.text = "${backups.size} rugsteunlêers gevind"
     }
@@ -101,7 +105,7 @@ class PastoralBackupActivity : BaseActivity() {
         binding.btnCreateBackup.isEnabled = false
 
         lifecycleScope.launch(Dispatchers.IO) {
-            val success = PastoralDatabaseBackup.backupNow(applicationContext)
+            val success = pastoralDbBackup.backupNow(applicationContext)
             withContext(Dispatchers.Main) {
                 binding.restoreProgress.visibility = View.GONE
                 binding.btnCreateBackup.isEnabled = true
@@ -124,7 +128,7 @@ class PastoralBackupActivity : BaseActivity() {
     }
 
     private fun shareBackup() {
-        val latest = PastoralDatabaseBackup.listBackupFiles(this).firstOrNull()
+        val latest = pastoralDbBackup.listBackupFiles(this).firstOrNull()
         if (latest == null) {
             Snackbar.make(
                 binding.root,
@@ -156,8 +160,7 @@ class PastoralBackupActivity : BaseActivity() {
 
     private fun performRestore(backupFile: File) {
         lifecycleScope.launch {
-            val result =
-                PastoralDatabaseBackup.importBackup(this@PastoralBackupActivity, backupFile)
+            val result = pastoralDbBackup.importBackup(this@PastoralBackupActivity, backupFile)
             withContext(Dispatchers.Main) {
                 if (result) {
                     Toast.makeText(
@@ -191,12 +194,12 @@ class PastoralBackupActivity : BaseActivity() {
     }
 
     private fun pruneOldBackups() {
-        val days = 7 // kan jy aanpas, of lees uit SettingsManager
+        val days = 7
         AlertDialog.Builder(this)
             .setTitle("Skoonmaak ou rugsteunlêers")
             .setMessage("Alle kiekies ouer as $days dae sal verwyder word. Die mees onlangse rugsteun word behou. Gaan jy voort?")
             .setPositiveButton("Skoonmaak") { _, _ ->
-                val deleted = PastoralDatabaseBackup.pruneOldBackups(this, days)
+                val deleted = pastoralDbBackup.pruneOldBackups(this, days)
                 refreshBackupList()
                 Toast.makeText(this, "$deleted lêers verwyder", Toast.LENGTH_SHORT).show()
             }

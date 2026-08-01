@@ -12,23 +12,31 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.fragment.app.Fragment
+import dagger.hilt.android.AndroidEntryPoint
+import jakarta.inject.Inject
 import yuku.ambilwarna.AmbilWarnaDialog
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.databinding.FragmentUitlegVertoonBinding
-import za.co.jpsoft.winkerkreader.utils.SettingsManager
+import za.co.jpsoft.winkerkreader.utils.prefs.*
 import za.co.jpsoft.winkerkreader.utils.prefs.AppearancePrefs.ThemeMode
 
+@AndroidEntryPoint
 class UitlegVertoonFragment : Fragment() {
+
+    @Inject
+    lateinit var memberListPrefs: MemberListPrefs
+    @Inject
+    lateinit var appearancePrefs: AppearancePrefs
+    @Inject
+    lateinit var congregationPrefs: CongregationPrefs
 
     private var _binding: FragmentUitlegVertoonBinding? = null
     private val binding get() = _binding!!
-    private lateinit var settingsManager: SettingsManager
 
     private var isInitializing = true
     private var isDisplayDirty = false
     private var isColorsDirty = false
 
-    // Initial values: [gem1, gem2, gem3, inactive]
     private var initialCheckboxes = mutableMapOf<Int, Boolean>()
     private var initialLayout: String = "GESINNE"
     private val initialColors = mutableListOf(
@@ -46,7 +54,6 @@ class UitlegVertoonFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        settingsManager = SettingsManager.getInstance(requireContext())
 
         loadPreferences()
         setupListeners()
@@ -54,20 +61,19 @@ class UitlegVertoonFragment : Fragment() {
         isDisplayDirty = false
         isColorsDirty = false
 
-        // ─── Theme mode – use AppearancePrefs.ThemeMode directly ───
-        when (settingsManager.appearance.themeMode) {
-            ThemeMode.LIGHT -> binding.themeModeLight.isChecked = true
-            ThemeMode.DARK -> binding.themeModeDark.isChecked = true
+        when (appearancePrefs.themeMode) {
+            AppearancePrefs.ThemeMode.LIGHT -> binding.themeModeLight.isChecked = true
+            AppearancePrefs.ThemeMode.DARK -> binding.themeModeDark.isChecked = true
             else -> binding.themeModeSystem.isChecked = true
         }
 
         binding.themeModeGroup.setOnCheckedChangeListener { _, checkedId ->
             val mode = when (checkedId) {
-                R.id.theme_mode_light -> ThemeMode.LIGHT
-                R.id.theme_mode_dark -> ThemeMode.DARK
-                else -> ThemeMode.SYSTEM
+                R.id.theme_mode_light -> AppearancePrefs.ThemeMode.LIGHT
+                R.id.theme_mode_dark -> AppearancePrefs.ThemeMode.DARK
+                else -> AppearancePrefs.ThemeMode.SYSTEM
             }
-            settingsManager.appearance.themeMode = mode
+            appearancePrefs.themeMode = mode
             applyTheme(mode)
             Toast.makeText(requireContext(), "Tema verander. Herbegin die app.", Toast.LENGTH_SHORT)
                 .show()
@@ -80,44 +86,31 @@ class UitlegVertoonFragment : Fragment() {
 
     private fun applyTheme(mode: ThemeMode) {
         when (mode) {
-            ThemeMode.LIGHT -> AppCompatDelegate.setDefaultNightMode(
-                AppCompatDelegate.MODE_NIGHT_NO
-            )
-
-            ThemeMode.DARK -> AppCompatDelegate.setDefaultNightMode(
-                AppCompatDelegate.MODE_NIGHT_YES
-            )
-
-            ThemeMode.SYSTEM -> AppCompatDelegate.setDefaultNightMode(
-                AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-            )
+            ThemeMode.LIGHT -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+            ThemeMode.DARK -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+            ThemeMode.SYSTEM -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
         }
     }
 
     private fun loadPreferences() {
-        // ─── Member list display settings ────────────────────────────────
-        val memberList = settingsManager.memberList
-        val congregation = settingsManager.congregation
-
         val checkboxes = listOf(
-            binding.uitlegFoto to memberList.isListFoto,
-            binding.uitlegEpos to memberList.isListEpos,
-            binding.uitlegWhatsap to memberList.isListWhatsapp,
-            binding.uitlegVerjaarsdag to memberList.isListVerjaarBlok,
-            binding.uitlegOuderdom to memberList.isListOuderdom,
-            binding.uitlegHuweliksdag to memberList.isListHuwelikBlok,
-            binding.uitlegWyk to memberList.isListWyk,
-            binding.uitlegSelfoon to memberList.isListSelfoon,
-            binding.uitlegTelefoon to memberList.isListTelefoon,
-            binding.congregationIndicatorSwitch to congregation.useCongregationIndicator
+            binding.uitlegFoto to memberListPrefs.isListFoto,
+            binding.uitlegEpos to memberListPrefs.isListEpos,
+            binding.uitlegWhatsap to memberListPrefs.isListWhatsapp,
+            binding.uitlegVerjaarsdag to memberListPrefs.isListVerjaarBlok,
+            binding.uitlegOuderdom to memberListPrefs.isListOuderdom,
+            binding.uitlegHuweliksdag to memberListPrefs.isListHuwelikBlok,
+            binding.uitlegWyk to memberListPrefs.isListWyk,
+            binding.uitlegSelfoon to memberListPrefs.isListSelfoon,
+            binding.uitlegTelefoon to memberListPrefs.isListTelefoon,
+            binding.congregationIndicatorSwitch to congregationPrefs.useCongregationIndicator
         )
         checkboxes.forEach { (cb, value) ->
             cb.isChecked = value
             initialCheckboxes[cb.id] = value
         }
 
-        // Layout
-        initialLayout = memberList.defLayout
+        initialLayout = memberListPrefs.defLayout
         for (i in 0 until binding.layoutOpsies.count) {
             val item = binding.layoutOpsies.getItemAtPosition(i).toString()
             if (item.equals(initialLayout, ignoreCase = true)) {
@@ -126,39 +119,35 @@ class UitlegVertoonFragment : Fragment() {
             }
         }
 
-        // Colors
-        initialColors[0] = congregation.gemeenteKleur
-        initialColors[1] = congregation.gemeente2Kleur
-        initialColors[2] = congregation.gemeente3Kleur
-        initialColors[3] = congregation.inactiveBackgroundColor
+        initialColors[0] = congregationPrefs.gemeenteKleur
+        initialColors[1] = congregationPrefs.gemeente2Kleur
+        initialColors[2] = congregationPrefs.gemeente3Kleur
+        initialColors[3] = congregationPrefs.inactiveBackgroundColor
 
         updateTextViewBackground(binding.gem1, initialColors[0])
         updateTextViewBackground(binding.gem2, initialColors[1])
         updateTextViewBackground(binding.gem3, initialColors[2])
         updateTextViewBackground(binding.inactiveColorPreview, initialColors[3])
 
-        // Gemeente names
-        if (congregation.gemeenteNaam.isNotBlank()) {
-            binding.gem1.text = congregation.gemeenteNaam
+        if (congregationPrefs.gemeenteNaam.isNotBlank()) {
+            binding.gem1.text = congregationPrefs.gemeenteNaam
         }
-        if (congregation.gemeente2Naam.isNotBlank()) {
-            binding.gem2.text = congregation.gemeente2Naam
+        if (congregationPrefs.gemeente2Naam.isNotBlank()) {
+            binding.gem2.text = congregationPrefs.gemeente2Naam
         }
-        if (congregation.gemeente3Naam.isNotBlank()) {
-            binding.gem3.text = congregation.gemeente3Naam
+        if (congregationPrefs.gemeente3Naam.isNotBlank()) {
+            binding.gem3.text = congregationPrefs.gemeente3Naam
         }
-        initialCongregationIndicator = congregation.useCongregationIndicator
+        initialCongregationIndicator = congregationPrefs.useCongregationIndicator
         binding.congregationIndicatorSwitch.isChecked = initialCongregationIndicator
     }
 
     private fun setupListeners() {
-        // CheckBox listeners
         initialCheckboxes.keys.forEach { id ->
             val cb = binding.root.findViewById<android.widget.CheckBox>(id)
             cb.setOnCheckedChangeListener { _, _ -> onDisplayChanged() }
         }
 
-        // Layout spinner
         binding.layoutOpsies.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(
                 parent: AdapterView<*>?,
@@ -173,13 +162,11 @@ class UitlegVertoonFragment : Fragment() {
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
 
-        // Color pickers
         binding.gem1.setOnClickListener { openColorPickerDialog(it, 1) }
         binding.gem2.setOnClickListener { openColorPickerDialog(it, 2) }
         binding.gem3.setOnClickListener { openColorPickerDialog(it, 3) }
         binding.inactiveColorPreview.setOnClickListener { openColorPickerDialog(it, 4) }
 
-        // Save buttons
         binding.uitlegStoor.setOnClickListener { saveDisplaySettings() }
         binding.saveColor.setOnClickListener { saveColorSettings() }
     }
@@ -210,9 +197,6 @@ class UitlegVertoonFragment : Fragment() {
     }
 
     private fun isDisplaySettingChanged(): Boolean {
-        val memberList = settingsManager.memberList
-        val congregation = settingsManager.congregation
-
         val displayCheckboxIds = listOf(
             R.id.uitleg_foto,
             R.id.uitleg_epos,
@@ -250,50 +234,44 @@ class UitlegVertoonFragment : Fragment() {
     }
 
     private fun saveDisplaySettings() {
-        val memberList = settingsManager.memberList
-        val congregation = settingsManager.congregation
-
         initialCheckboxes.forEach { (id, _) ->
             val cb = binding.root.findViewById<android.widget.CheckBox>(id)
             when (id) {
-                R.id.uitleg_foto -> memberList.isListFoto = cb.isChecked
-                R.id.uitleg_epos -> memberList.isListEpos = cb.isChecked
-                R.id.uitleg_whatsap -> memberList.isListWhatsapp = cb.isChecked
-                R.id.uitleg_verjaarsdag -> memberList.isListVerjaarBlok = cb.isChecked
-                R.id.uitleg_ouderdom -> memberList.isListOuderdom = cb.isChecked
-                R.id.uitleg_Huweliksdag -> memberList.isListHuwelikBlok = cb.isChecked
-                R.id.uitleg_wyk -> memberList.isListWyk = cb.isChecked
-                R.id.uitleg_selfoon -> memberList.isListSelfoon = cb.isChecked
-                R.id.uitleg_telefoon -> memberList.isListTelefoon = cb.isChecked
+                R.id.uitleg_foto -> memberListPrefs.isListFoto = cb.isChecked
+                R.id.uitleg_epos -> memberListPrefs.isListEpos = cb.isChecked
+                R.id.uitleg_whatsap -> memberListPrefs.isListWhatsapp = cb.isChecked
+                R.id.uitleg_verjaarsdag -> memberListPrefs.isListVerjaarBlok = cb.isChecked
+                R.id.uitleg_ouderdom -> memberListPrefs.isListOuderdom = cb.isChecked
+                R.id.uitleg_Huweliksdag -> memberListPrefs.isListHuwelikBlok = cb.isChecked
+                R.id.uitleg_wyk -> memberListPrefs.isListWyk = cb.isChecked
+                R.id.uitleg_selfoon -> memberListPrefs.isListSelfoon = cb.isChecked
+                R.id.uitleg_telefoon -> memberListPrefs.isListTelefoon = cb.isChecked
             }
         }
-        memberList.defLayout = binding.layoutOpsies.selectedItem?.toString() ?: "GESINNE"
-        congregation.useCongregationIndicator = binding.congregationIndicatorSwitch.isChecked
+        memberListPrefs.defLayout = binding.layoutOpsies.selectedItem?.toString() ?: "GESINNE"
+        congregationPrefs.useCongregationIndicator = binding.congregationIndicatorSwitch.isChecked
 
-        // Update initial values
         initialCheckboxes.forEach { (id, _) ->
             val cb = binding.root.findViewById<android.widget.CheckBox>(id)
             initialCheckboxes[id] = cb.isChecked
         }
-        initialLayout = memberList.defLayout
-        initialCongregationIndicator = congregation.useCongregationIndicator
+        initialLayout = memberListPrefs.defLayout
+        initialCongregationIndicator = congregationPrefs.useCongregationIndicator
         isDisplayDirty = false
         updateSaveButtonState()
         Toast.makeText(requireContext(), "Vertoon-instellings gestoor", Toast.LENGTH_SHORT).show()
     }
 
     private fun saveColorSettings() {
-        val congregation = settingsManager.congregation
-
         initialColors[0] = getCurrentColor(R.id.gem1)
         initialColors[1] = getCurrentColor(R.id.gem2)
         initialColors[2] = getCurrentColor(R.id.gem3)
         initialColors[3] = getCurrentColor(R.id.inactive_color_preview)
 
-        congregation.gemeenteKleur = initialColors[0]
-        congregation.gemeente2Kleur = initialColors[1]
-        congregation.gemeente3Kleur = initialColors[2]
-        congregation.inactiveBackgroundColor = initialColors[3]
+        congregationPrefs.gemeenteKleur = initialColors[0]
+        congregationPrefs.gemeente2Kleur = initialColors[1]
+        congregationPrefs.gemeente3Kleur = initialColors[2]
+        congregationPrefs.inactiveBackgroundColor = initialColors[3]
 
         isColorsDirty = false
         updateSaveButtonState()
@@ -301,12 +279,11 @@ class UitlegVertoonFragment : Fragment() {
     }
 
     private fun openColorPickerDialog(view: View, colorIndex: Int) {
-        val congregation = settingsManager.congregation
         val currentColor = when (colorIndex) {
-            1 -> congregation.gemeenteKleur
-            2 -> congregation.gemeente2Kleur
-            3 -> congregation.gemeente3Kleur
-            4 -> congregation.inactiveBackgroundColor
+            1 -> congregationPrefs.gemeenteKleur
+            2 -> congregationPrefs.gemeente2Kleur
+            3 -> congregationPrefs.gemeente3Kleur
+            4 -> congregationPrefs.inactiveBackgroundColor
             else -> -1
         }
         val dialog = AmbilWarnaDialog(

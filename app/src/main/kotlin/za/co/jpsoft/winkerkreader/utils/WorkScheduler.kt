@@ -1,21 +1,22 @@
 package za.co.jpsoft.winkerkreader.utils
 
 import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
+import za.co.jpsoft.winkerkreader.utils.prefs.BirthdaySmsPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.MemberListPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.SyncPrefs
 import za.co.jpsoft.winkerkreader.widget.PastoralWidgetProvider
+import javax.inject.Inject
+import javax.inject.Singleton
 
-/**
- * Centralised scheduling for all background tasks (WorkManager).
- * All alarm/work scheduling logic from MainActivity is moved here.
- */
-class WorkScheduler(
-    private val context: Context,
-    private val settingsManager: SettingsManager
+@Singleton
+class WorkScheduler @Inject constructor(
+    @ApplicationContext private val context: Context,
+    private val syncPrefs: SyncPrefs,
+    private val birthdaySmsPrefs: BirthdaySmsPrefs,
+    private val memberListPrefs: MemberListPrefs
 ) {
 
-    /**
-     * Schedule all background tasks based on current settings.
-     * Called once during app startup.
-     */
     fun scheduleAll() {
         scheduleAutoDownload()
         scheduleReminder()
@@ -24,26 +25,25 @@ class WorkScheduler(
     }
 
     fun scheduleAutoDownload() {
-        if (settingsManager.sync.autoDl || settingsManager.sync.dlTimeUpdate) {
-            val hour = settingsManager.sync.dlHour.toInt()
-            val minute = settingsManager.sync.dlMinute.toInt()
-            val day = settingsManager.sync.dlDay
+        if (syncPrefs.autoDl || syncPrefs.dlTimeUpdate) {
+            val hour = syncPrefs.dlHour.toInt()
+            val minute = syncPrefs.dlMinute.toInt()
+            val day = syncPrefs.dlDay
 
             WorkManagerHelper.scheduleDropboxDownload(context, hour, minute, day)
-            // Reset flags after scheduling
-            settingsManager.sync.dlTimeUpdate = false
-            settingsManager.memberList.fromMenu = false
+            syncPrefs.dlTimeUpdate = false
+            memberListPrefs.fromMenu = false
         }
     }
 
     fun scheduleReminder() {
-        if (settingsManager.birthdaySms.herinner || settingsManager.birthdaySms.smsTimeUpdate) {
-            val hour = settingsManager.birthdaySms.smsHour.toInt()
-            val minute = settingsManager.birthdaySms.smsMinute.toInt()
+        if (birthdaySmsPrefs.herinner || birthdaySmsPrefs.smsTimeUpdate) {
+            val hour = birthdaySmsPrefs.smsHour.toInt()
+            val minute = birthdaySmsPrefs.smsMinute.toInt()
 
             WorkManagerHelper.scheduleBirthdayReminder(context, hour, minute)
-            settingsManager.birthdaySms.smsTimeUpdate = false
-            settingsManager.memberList.fromMenu = false
+            birthdaySmsPrefs.smsTimeUpdate = false
+            memberListPrefs.fromMenu = false
         }
     }
 
@@ -56,10 +56,6 @@ class WorkScheduler(
         WorkManagerHelper.scheduleFollowUpReminders(context)
     }
 
-    /**
-     * Call this when settings change that affect scheduling (e.g., user changes time).
-     * It will reschedule all tasks.
-     */
     fun refreshAll() {
         scheduleAll()
     }

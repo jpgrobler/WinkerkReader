@@ -17,6 +17,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.tabs.TabLayout
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
@@ -35,17 +36,20 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class StelHerinneringBottomSheet : BottomSheetDialogFragment() {
+
+    @Inject
+    lateinit var pastoralViewModelFactory: LidmaatDetailPastoralViewModelFactory
 
     private var _binding: BottomSheetStelHerinneringBinding? = null
     private val binding get() = _binding!!
 
     private val viewModel: LidmaatDetailPastoralViewModel by viewModels {
-        LidmaatDetailPastoralViewModelFactory(
-            context = requireContext(),
-            memberGuid = requireArguments().getString(ARG_MEMBER_GUID) ?: ""
-        )
+        val guid = requireArguments().getString(ARG_MEMBER_GUID) ?: ""
+        pastoralViewModelFactory.create(guid)
     }
 
     private lateinit var formBuilder: TemplateContextFormBuilder

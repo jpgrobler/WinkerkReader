@@ -15,6 +15,7 @@ import android.service.notification.StatusBarNotification
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -22,30 +23,32 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
-import za.co.jpsoft.winkerkreader.data.calllog.CallLogDatabase
 import za.co.jpsoft.winkerkreader.services.voip.VoipCallTracker
 import za.co.jpsoft.winkerkreader.services.voip.VoipNotificationHandler
 import za.co.jpsoft.winkerkreader.services.voip.VoipCallStateDetector
 import za.co.jpsoft.winkerkreader.services.voip.VoipCallInfoExtractor
 import za.co.jpsoft.winkerkreader.ui.activities.MainActivity
-import za.co.jpsoft.winkerkreader.utils.CalendarManager
-import za.co.jpsoft.winkerkreader.utils.SettingsManager
+import za.co.jpsoft.winkerkreader.utils.CallNotificationDiagnostics
 import za.co.jpsoft.winkerkreader.utils.UnifiedCallMonitor
 import za.co.jpsoft.winkerkreader.utils.VoipDiagnosticHelper
+import za.co.jpsoft.winkerkreader.utils.prefs.CallMonitorPrefs
 import java.util.concurrent.TimeUnit
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class WhatsAppNotificationService : NotificationListenerService() {
 
-    // ─── Dependencies (initialised in onCreate) ──────────────────────────────
+    @Inject
+    lateinit var callMonitorPrefs: CallMonitorPrefs
+    @Inject
+    lateinit var unifiedMonitor: UnifiedCallMonitor
 
-    private lateinit var settingsManager: SettingsManager
     private lateinit var notificationHandler: VoipNotificationHandler
     private lateinit var callTracker: VoipCallTracker
-
+    @Inject
+    lateinit var diagnostics: CallNotificationDiagnostics
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val mainHandler = Handler(Looper.getMainLooper())
-
-    // ─── Pruning (periodic cleanup of stale tracked calls) ─────────────────
 
     private val pruneHandler = Handler(Looper.getMainLooper())
     private val pruneRunnable = object : Runnable {
@@ -54,8 +57,6 @@ class WhatsAppNotificationService : NotificationListenerService() {
             pruneHandler.postDelayed(this, TimeUnit.MINUTES.toMillis(30))
         }
     }
-
-    // ─── Lifecycle ──────────────────────────────────────────────────────────────
 
     override fun onCreate() {
         super.onCreate()
@@ -66,21 +67,11 @@ class WhatsAppNotificationService : NotificationListenerService() {
         createNotificationChannel()
         startForeground(NOTIFICATION_ID, createForegroundNotification())
 
-        // Start pruning
         pruneHandler.post(pruneRunnable)
     }
 
     private fun initialize() {
         val appContext = applicationContext
-        settingsManager = SettingsManager.getInstance(appContext)
-
-        val callLogDao = CallLogDatabase.getInstance(appContext).callLogDao()
-        val calendarManager = CalendarManager(appContext)
-        val calendarId = settingsManager.selectedCalendarId ?: -1L
-
-        val unifiedMonitor = UnifiedCallMonitor.getInstance(
-            appContext, callLogDao, calendarManager, calendarId
-        )
 
         val voipPackages = mapOf(
             "com.whatsapp" to "WhatsApp",
@@ -101,13 +92,14 @@ class WhatsAppNotificationService : NotificationListenerService() {
 
         notificationHandler = VoipNotificationHandler(
             context = appContext,
-            settingsManager = settingsManager,
-            unifiedMonitor = unifiedMonitor,
+            callMonitorPrefs = callMonitorPrefs,   // <-- injected
+            unifiedMonitor = unifiedMonitor,       // <-- injected
             stateDetector = stateDetector,
             infoExtractor = infoExtractor,
             callTracker = callTracker,
             scope = serviceScope,
-            voipPackages = voipPackages
+            voipPackages = voipPackages,
+            diagnostics = diagnostics
         )
     }
 
@@ -119,7 +111,6 @@ class WhatsAppNotificationService : NotificationListenerService() {
             requestPermission()
         }
 
-        // Reconcile any orphaned calls left over from a previous listener session
         serviceScope.launch {
             notificationHandler.reconcileStaleActiveCalls()
         }
@@ -147,8 +138,6 @@ class WhatsAppNotificationService : NotificationListenerService() {
         if (BuildConfig.DEBUG) Log.d(TAG, "onDestroy")
     }
 
-    // ─── Notification callbacks (delegated to handler) ──────────────────────
-
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
         sbn ?: return
         if (BuildConfig.DEBUG) {
@@ -157,18 +146,15 @@ class WhatsAppNotificationService : NotificationListenerService() {
 
         val appName = VOIP_PACKAGES[sbn.packageName] ?: return
 
-        // Only process if VoIP logging is enabled
-        if (!settingsManager.callMonitor.voipLogEnabled) return
+        // Use injected pref
+        if (!callMonitorPrefs.voipLogEnabled) return
 
-        // Quick gate: does it look like a call notification?
         if (!VoipCallStateDetector().looksLikeCallNotification(sbn)) return
 
-        // Debug dump (optional)
         if (BuildConfig.DEBUG) {
             VoipDiagnosticHelper.dumpNotificationToFile(applicationContext, sbn, appName)
         }
 
-        // Delegate to handler
         notificationHandler.handleNotification(sbn, appName)
     }
 
@@ -182,7 +168,7 @@ class WhatsAppNotificationService : NotificationListenerService() {
         notificationHandler.handleRemoval(sbn, appName)
     }
 
-    // ─── Foreground service boilerplate ──────────────────────────────────────
+    // ─── Foreground service boilerplate (unchanged) ──────────────────────
 
     private fun createNotificationChannel() {
         try {
@@ -237,8 +223,6 @@ class WhatsAppNotificationService : NotificationListenerService() {
             }
         }
     }
-
-    // ─── Companion ─────────────────────────────────────────────────────────────
 
     companion object {
         private const val TAG = "WhatsAppNotifService"

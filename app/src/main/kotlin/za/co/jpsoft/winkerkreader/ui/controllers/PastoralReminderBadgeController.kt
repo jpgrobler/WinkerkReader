@@ -7,7 +7,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
-import za.co.jpsoft.winkerkreader.data.pastoral.PastoralDatabase
+import za.co.jpsoft.winkerkreader.data.pastoral.dao.FollowUpReminderDao
 import za.co.jpsoft.winkerkreader.ui.activities.MainActivity
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MainViewModel
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel
@@ -19,7 +19,7 @@ import za.co.jpsoft.winkerkreader.utils.ReminderEventBus
  */
 class PastoralReminderBadgeController(
     private val activity: MainActivity,
-    private val pastoralDb: PastoralDatabase,
+    private val followUpReminderDao: FollowUpReminderDao,
     private val memberViewModel: MemberViewModel,
     private val mainViewModel: MainViewModel
 ) {
@@ -54,11 +54,10 @@ class PastoralReminderBadgeController(
         if (BuildConfig.DEBUG) Log.d("PastoralBadgeCtrl", "loadPendingReminderGuids called")
         activity.lifecycleScope.launch(Dispatchers.IO) {
             try {
-                val allPending = pastoralDb.followUpReminderDao().getAllPending()
+                val allPending = followUpReminderDao.getAllPending()
                 val guids = allPending.mapNotNull { reminder ->
                     var guid = reminder.memberGuid?.takeIf { it.isNotBlank() }
                     if (guid == null) {
-                        // Fallback: resolve by name from cache
                         val name = reminder.memberDisplayNameCache
                         if (!name.isNullOrBlank()) {
                             guid = resolveMemberGuidByName(name)

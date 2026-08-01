@@ -11,18 +11,15 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
-import za.co.jpsoft.winkerkreader.data.calllog.CallLogDatabaseBackup.DEBOUNCE_MS
-import za.co.jpsoft.winkerkreader.data.calllog.CallLogDatabaseBackup.backupDebounced
-import za.co.jpsoft.winkerkreader.data.calllog.CallLogDatabaseBackup.backupNow
 import za.co.jpsoft.winkerkreader.utils.DatabaseBackupHelper
-import za.co.jpsoft.winkerkreader.utils.SettingsManager
+import za.co.jpsoft.winkerkreader.utils.prefs.BackupPrefs
 import java.io.File
 
 /**
  * Mirrors [za.co.jpsoft.winkerkreader.utils.PastoralDatabaseBackup] for the
  * call-log database.
  *
- * Backup is **opt-in** via [SettingsManager.backup.callLogBackupEnabled] — call
+ * Backup is **opt-in** via [BackupPrefs.callLogBackupEnabled] — call
  * history is more sensitive than reminders/notes (it can reveal contact
  * patterns even without any note content), so it shouldn't start landing in
  * a PC-accessible folder without the pastor deliberately choosing that. Both
@@ -33,20 +30,32 @@ object CallLogDatabaseBackup {
 
     private const val TAG = "CallLogDbBackup"
     private const val DEBOUNCE_MS = 2_000L
-    private const val DB_FILENAME =
-        "wkr_call_log.db"   // must match CallLogDatabase's Room.databaseBuilder name
+    private const val DB_FILENAME = "wkr_call_log.db"
     private const val BACKUP_FILENAME = "wkr_call_log.db"
     private const val BACKUP_BASENAME = "wkr_call_log"
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var debounceJob: Job? = null
+    private lateinit var backupPrefs: BackupPrefs
+    private var isInitialized = false
+
+    /**
+     * Must be called once before any other method (typically from Application).
+     * @param prefs The BackupPrefs instance injected via Hilt.
+     */
+    fun init(prefs: BackupPrefs) {
+        backupPrefs = prefs
+        isInitialized = true
+        if (BuildConfig.DEBUG) Log.d(TAG, "CallLogDatabaseBackup initialized")
+    }
 
     /**
      * Schedules a backup after [DEBOUNCE_MS] of inactivity, same pattern as
      * PastoralDatabaseBackup. No-ops immediately if the user hasn't opted in.
      */
     fun backupDebounced(context: Context) {
-        if (!SettingsManager.getInstance(context).backup.callLogBackupEnabled) return
+        checkInitialized()
+        if (!backupPrefs.callLogBackupEnabled) return
 
         debounceJob?.cancel()
         debounceJob = scope.launch {
@@ -57,7 +66,8 @@ object CallLogDatabaseBackup {
 
     /** Runs a backup immediately (blocking on IO). No-ops if not opted in. */
     suspend fun backupNow(context: Context) {
-        if (!SettingsManager.getInstance(context).backup.callLogBackupEnabled) return
+        checkInitialized()
+        if (!backupPrefs.callLogBackupEnabled) return
         withContext(Dispatchers.IO) {
             runBackup(context.applicationContext)
         }
@@ -70,17 +80,16 @@ object CallLogDatabaseBackup {
 
             val source = context.getDatabasePath(DB_FILENAME)
             val destDir = File(winkerkEntry.getWkrDir(context))
-            val settings = SettingsManager.getInstance(context)
 
             DatabaseBackupHelper.copyWithDatedRetention(
                 source = source,
                 destDir = destDir,
                 fixedFilename = BACKUP_FILENAME,
                 baseName = BACKUP_BASENAME,
-                retentionDays = settings.backup.backupRetentionDays,
+                retentionDays = backupPrefs.backupRetentionDays,
                 tag = TAG
             )
-            settings.backup.lastCallLogBackupTimestamp = System.currentTimeMillis()
+            backupPrefs.lastCallLogBackupTimestamp = System.currentTimeMillis()
         } catch (e: Exception) {
             if (BuildConfig.DEBUG) Log.e(TAG, "Call log DB backup failed", e)
         }
@@ -91,5 +100,12 @@ object CallLogDatabaseBackup {
         val file = File(winkerkEntry.getWkrDir(context), BACKUP_FILENAME)
         return if (file.exists() && file.length() > 0) file else null
     }
-}
 
+    // ─── Internal helpers ──────────────────────────────────────────────────────
+
+    private fun checkInitialized() {
+        if (!isInitialized) {
+            throw IllegalStateException("CallLogDatabaseBackup not initialized – call init() first")
+        }
+    }
+}

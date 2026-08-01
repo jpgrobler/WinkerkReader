@@ -8,11 +8,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.BuildConfig
+import za.co.jpsoft.winkerkreader.data.DatabaseInitializer
 import za.co.jpsoft.winkerkreader.databinding.ActivityMainBinding
-import za.co.jpsoft.winkerkreader.utils.AppInitializer
-import za.co.jpsoft.winkerkreader.utils.MainNavigationController
-import za.co.jpsoft.winkerkreader.utils.PermissionManager
-import za.co.jpsoft.winkerkreader.utils.SettingsManager
+import za.co.jpsoft.winkerkreader.utils.*
+import za.co.jpsoft.winkerkreader.utils.prefs.BirthdaySmsPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.CallMonitorPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.MemberListPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.SyncPrefs
 
 interface StartupActions {
     fun checkAndRequestPermissions()
@@ -24,8 +26,6 @@ interface StartupActions {
     fun setupAlarms()
     fun loadInitialData()
     fun ensureServicesAreRunning()
-
-    // fun isNotificationAccessEnabled(): Boolean
     fun openNotificationSettings()
     fun showToast(message: String)
 }
@@ -33,11 +33,17 @@ interface StartupActions {
 class MainStartupCoordinator(
     private val context: Context,
     private val lifecycleScope: LifecycleCoroutineScope,
-    private val settingsManager: SettingsManager,
     private val permissionManager: PermissionManager,
     private val binding: ActivityMainBinding,
     private val actions: StartupActions,
-    private val navigationController: MainNavigationController
+    private val navigationController: MainNavigationController,
+    private val databaseInitializer: DatabaseInitializer,
+    private val syncPrefs: SyncPrefs,
+    private val birthdaySmsPrefs: BirthdaySmsPrefs,
+    private val memberListPrefs: MemberListPrefs,
+    private val workScheduler: WorkScheduler,
+    private val callLogImporter: CallLogImporter,
+    private val callMonitorPrefs: CallMonitorPrefs   // <-- added
 ) {
 
     companion object {
@@ -77,7 +83,7 @@ class MainStartupCoordinator(
 
             AppInitializer.initialize(
                 appContext = context.applicationContext,
-                lifecycleScope = lifecycleScope,
+                scope = lifecycleScope,
                 onProgress = { progress ->
                     lifecycleScope.launch(Dispatchers.Main) {
                         binding.indeterminateBar.progress = progress
@@ -96,7 +102,12 @@ class MainStartupCoordinator(
                     lifecycleScope.launch(Dispatchers.Main) {
                         actions.loadInitialData()
                     }
-                }
+                },
+                churchInfoRepo = null,   // already loaded at app startup
+                databaseInitializer = databaseInitializer,
+                workScheduler = workScheduler,
+                callLogImporter = callLogImporter,
+                autoStartEnabled = callMonitorPrefs.autoStartEnabled   // <-- pass from injected pref
             )
         }
     }
@@ -107,7 +118,7 @@ class MainStartupCoordinator(
                 if (BuildConfig.DEBUG) Log.d(TAG, "Notification listener access missing")
                 withContext(Dispatchers.Main) {
                     actions.showToast(NOTIFICATION_PERMISSION_MESSAGE)
-                    actions.openNotificationSettings()  // Now uses navigationController
+                    actions.openNotificationSettings()
                 }
             }
         }

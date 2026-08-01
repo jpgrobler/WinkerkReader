@@ -29,4 +29,13 @@ class CallMonitorPrefs(private val prefs: SharedPreferences) {
     var callLogImportedToRoom: Boolean
         get() = prefs.getBoolean("pref_call_log_imported_to_room", false)
         set(value) = prefs.edit().putBoolean("pref_call_log_imported_to_room", value).apply()
+
+    // Calendar where call log events are written — was CalendarPrefs.selectedCalendarId
+    var callCalendarId: Long?
+        get() {
+            val id = prefs.getLong(WinkerkContract.KEY_SELECTED_CALENDAR_ID, -1L)
+            return if (id == -1L) null else id
+        }
+        set(value) = prefs.edit()
+            .putLong(WinkerkContract.KEY_SELECTED_CALENDAR_ID, value ?: -1L).apply()
 }

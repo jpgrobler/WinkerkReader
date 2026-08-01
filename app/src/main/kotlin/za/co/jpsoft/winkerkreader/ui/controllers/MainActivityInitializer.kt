@@ -17,36 +17,44 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.launch
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
+import za.co.jpsoft.winkerkreader.data.DatabaseInitializer
 import za.co.jpsoft.winkerkreader.data.pastoral.PastoralDatabase
 import za.co.jpsoft.winkerkreader.databinding.ActivityMainBinding
 import za.co.jpsoft.winkerkreader.ui.activities.MainActivity
 import za.co.jpsoft.winkerkreader.ui.adapters.MemberListAdapter
-import za.co.jpsoft.winkerkreader.ui.bottomsheets.FilterBottomSheet
 import za.co.jpsoft.winkerkreader.ui.components.SearchCheckBox
 import za.co.jpsoft.winkerkreader.ui.helpers.MemberListScrollHelper
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MainViewModel
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel
 import za.co.jpsoft.winkerkreader.utils.*
+import za.co.jpsoft.winkerkreader.utils.prefs.*
 import za.co.jpsoft.winkerkreader.workers.PastoralBackupWorker
 
 /**
  * Coordinates the initialisation and wiring of all MainActivity components.
- * Handles both pre‑authentication setup (controllers, adapters, ViewModels) and
- * post‑authentication finalisation (observers, background services, scroll state).
  */
 class MainActivityInitializer(
     private val activity: MainActivity,
-    private val savedInstanceState: Bundle?
+    private val savedInstanceState: Bundle?,
+    private val memberListPrefs: MemberListPrefs,
+    private val callMonitorPrefs: CallMonitorPrefs,
+    private val congregationPrefs: CongregationPrefs,
+    private val mainViewModel: MainViewModel,
+    private val quickActionPrefs: QuickActionPrefs,
+    private val appearancePrefs: AppearancePrefs,
+    private val workScheduler: WorkScheduler,
+    private val syncPrefs: SyncPrefs,
+    private val birthdaySmsPrefs: BirthdaySmsPrefs,
+    private val databaseInitializer: DatabaseInitializer,
+    private val callLogImporter: CallLogImporter,
+    private val navigationController: MainNavigationController,
+    private val backupPrefs: BackupPrefs
 ) {
-
     // ─── Dependencies ──────────────────────────────────────────────────────────
 
     private val lifecycleScope = activity.lifecycleScope
     private val binding: ActivityMainBinding = activity.binding
-    private val settingsManager = SettingsManager.getInstance(activity)
     private val permissionManager = PermissionManager(activity)
-    private val navigationController = MainNavigationController(activity)
-    private val workScheduler = WorkScheduler(activity, settingsManager)
 
     // ─── Components that will be exposed to the activity ────────────────────
 
@@ -80,31 +88,17 @@ class MainActivityInitializer(
 
     // ─── Initialisation entry point ─────────────────────────────────────────
 
-    /**
-     * Call this from MainActivity.onCreate() to set up everything that does not
-     * depend on the app‑lock authentication (controllers, ViewModels, adapters).
-     * The [onAuthenticated] callback will be invoked after the user passes the
-     * biometric/PIN check, and will complete the finalisation.
-     */
     fun setupPreAuth() {
-        // 1. Initialise ViewModel and adapter (must happen before any controller that uses them)
         setupViewModelAndAdapter()
-
-        // 2. Controllers that are needed before auth (chip, sort, search, menu, list interaction, swipe)
         setupChipController()
         setupSortController()
         setupSearchFilterCoordinator()
         setupMenuController()
         setupListInteractionController()
         setupSwipeGestureController()
-
-        // 3. Result coordinator (uses activity’s registerForActivityResult)
         setupActivityResultCoordinator()
-
-        // 4. Work scheduler and backup worker
         setupWorkScheduler()
 
-        // 5. Now guard the rest with auth
         activity.appAuthGuard.guardIfNeeded(
             onAuthenticated = { setupPostAuth() }
         )
@@ -113,32 +107,15 @@ class MainActivityInitializer(
     // ─── Post‑authentication finalisation ───────────────────────────────────
 
     private fun setupPostAuth() {
-        // 1. Observers (UI bindings)
         setupUiBinder()
-
-        // 2. Pastoral badge controller
         setupPastoralBadgeController()
-
-        // 3. Startup coordinator (runs onCreate tasks)
         setupStartupCoordinator()
         startupCoordinator.runOnCreate()
-
-        // 4. Back‑press handler
         setupBackPressHandler()
-
-        // 5. Restore saved instance state (search list, scroll position)
         restoreInstanceState()
-
-        // 6. Setup scroll restoration observer (listens to adapter load state)
         setupScrollRestorationObserver()
-
-        // 7. Sync sort order with settings
         sortController.syncWithSettings(false)
-
-        // 8. Load initial data (search/filter state, WhatsApp contacts)
         loadInitialData()
-
-        // 9. Mark as ready
         initState = InitState.Ready
         activity.invalidateOptionsMenu()
     }
@@ -147,9 +124,9 @@ class MainActivityInitializer(
 
     private fun setupViewModelAndAdapter() {
         val initialCongregations = listOfNotNull(
-            settingsManager.congregation.gemeenteNaam.takeIf { it.isNotBlank() },
-            settingsManager.congregation.gemeente2Naam.takeIf { it.isNotBlank() },
-            settingsManager.congregation.gemeente3Naam.takeIf { it.isNotBlank() }
+            congregationPrefs.gemeenteNaam.takeIf { it.isNotBlank() },
+            congregationPrefs.gemeente2Naam.takeIf { it.isNotBlank() },
+            congregationPrefs.gemeente3Naam.takeIf { it.isNotBlank() }
         ).toSet()
 
         val savedStateHandle = SavedStateHandle()
@@ -163,6 +140,8 @@ class MainActivityInitializer(
         ).get(MemberViewModel::class.java)
 
         adapter = MemberListAdapter(
+            memberListPrefs = memberListPrefs,
+            congregationPrefs = congregationPrefs,
             onItemClick = { view, item, _ ->
                 if (::listInteractionController.isInitialized) {
                     activity.findSearchView()?.clearFocus()
@@ -191,7 +170,7 @@ class MainActivityInitializer(
             context = activity,
             chipGroup = binding.congregationChipGroup,
             loadingBar = binding.indeterminateBar,
-            settings = settingsManager,
+            congregationPrefs = congregationPrefs,
             onFilterChanged = { selected ->
                 viewModel.setCongregationFilter(selected)
                 viewModel.refresh()
@@ -205,9 +184,10 @@ class MainActivityInitializer(
         sortController = SortOrderController(
             tag = "MainActivity",
             viewModel = viewModel,
-            mainViewModel = activity.mainViewModel,
+            mainViewModel = mainViewModel,
             memberListAdapter = adapter,
-            settings = settingsManager,
+            memberListPrefs = memberListPrefs,
+            congregationPrefs = congregationPrefs,
             lifecycleScope = lifecycleScope,
             recyclerView = binding.lidmaatList,
             sortLabel = binding.sortorder,
@@ -219,7 +199,6 @@ class MainActivityInitializer(
         searchFilterCoordinator = MainSearchFilterCoordinator(
             tag = "MainActivity",
             viewModel = viewModel,
-            settingsManager = settingsManager,
             binding = binding,
             memberListAdapter = adapter,
             findSearchView = { activity.findSearchView() },
@@ -231,9 +210,7 @@ class MainActivityInitializer(
         ).apply {
             onFilterRestored = { sortController.recomputeBirthdayOffset() }
             onFilterCancelled = {
-                activity.currentFocus?.let { view ->
-                    hideKeyboard()
-                }
+                activity.currentFocus?.let { hideKeyboard() }
             }
         }
     }
@@ -255,7 +232,8 @@ class MainActivityInitializer(
         listInteractionController = MemberListInteractionController(
             activity = activity,
             tag = "MainActivity",
-            settingsManager = settingsManager,
+            quickActionPrefs = quickActionPrefs,
+            appearancePrefs = appearancePrefs,
             viewModel = viewModel,
             memberListAdapter = adapter
         )
@@ -273,11 +251,9 @@ class MainActivityInitializer(
             override fun onTouchEvent(rv: RecyclerView, e: MotionEvent) {
                 swipeGestureController.handleTouchEvent(e)
             }
-
             override fun onRequestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {}
         })
 
-        // Dismiss quick actions when scrolling
         binding.lidmaatList.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                 if (newState == RecyclerView.SCROLL_STATE_DRAGGING) {
@@ -288,20 +264,18 @@ class MainActivityInitializer(
     }
 
     private fun setupActivityResultCoordinator() {
-        // The ActivityResultCoordinator is already created inside MainActivity
-        // because it requires registerForActivityResult before onCreate.
-        // We keep it there; it's fine.
+        // Already created inside MainActivity – no action needed.
     }
 
     private fun setupWorkScheduler() {
-        val dailyEnabled = settingsManager.backup.dailyBackupEnabled
-        val exportToDownloads = settingsManager.backup.backupExportToDownloads
+        val dailyEnabled = backupPrefs.dailyBackupEnabled
+        val exportToDownloads = backupPrefs.backupExportToDownloads
         if (dailyEnabled) {
             PastoralBackupWorker.schedule(activity, exportToDownloads)
         } else {
             PastoralBackupWorker.cancel(activity)
         }
-        workScheduler.scheduleAll()
+        // workScheduler.scheduleAll() is called from startupCoordinator's setupAlarms()
     }
 
     private fun setupUiBinder() {
@@ -316,80 +290,90 @@ class MainActivityInitializer(
     }
 
     private fun setupPastoralBadgeController() {
+        val dao = PastoralDatabase.getInstance(activity).followUpReminderDao()
         pastoralBadgeController = PastoralReminderBadgeController(
             activity = activity,
-            pastoralDb = PastoralDatabase.getInstance(activity),
+            followUpReminderDao = dao,
             memberViewModel = viewModel,
-            mainViewModel = activity.mainViewModel
+            mainViewModel = mainViewModel
         )
         pastoralBadgeController.setup()
     }
 
     private fun setupStartupCoordinator() {
+        val actions = object : StartupActions {
+            override fun checkAndRequestPermissions() {
+                permissionManager.requestPhonePermissions(activity)
+                permissionManager.requestContactsPermissions(activity)
+                permissionManager.requestSmsPermissions(activity)
+                permissionManager.requestCalendarPermissions(activity)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    permissionManager.requestNotificationPermissions(activity)
+                }
+            }
+
+            override fun startMonitoringServiceIfEnabled() {
+                activity.startMonitoringServiceIfEnabled()
+            }
+
+            override fun setupViewModel() {
+                // Already done
+            }
+
+            override fun setupPermissions() {
+                activity.setupPermissions()
+            }
+
+            override fun initializeData() {
+                // Already handled
+            }
+
+            override fun setupEventHandlers() {
+                // Already handled
+            }
+
+            override fun setupAlarms() {
+                workScheduler.scheduleAll()
+            }
+
+            override fun loadInitialData() {
+                this@MainActivityInitializer.loadInitialData()
+            }
+
+            override fun ensureServicesAreRunning() {
+                activity.ensureServicesAreRunning()
+            }
+
+            override fun openNotificationSettings() {
+                navigationController.navigateToNotificationListenerSettings()
+            }
+
+            override fun showToast(message: String) {
+                Toast.makeText(activity, message, Toast.LENGTH_SHORT).show()
+            }
+        }
+
         startupCoordinator = MainStartupCoordinator(
             context = activity,
             lifecycleScope = lifecycleScope,
-            settingsManager = settingsManager,
             permissionManager = permissionManager,
             binding = binding,
+            actions = actions,
             navigationController = navigationController,
-            actions = object : StartupActions {
-                override fun checkAndRequestPermissions() {
-                    permissionManager.requestPhonePermissions(activity)
-                    permissionManager.requestContactsPermissions(activity)
-                    permissionManager.requestSmsPermissions(activity)
-                    permissionManager.requestCalendarPermissions(activity)
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        permissionManager.requestNotificationPermissions(activity)
-                    }
-                }
-
-                override fun startMonitoringServiceIfEnabled() {
-                    activity.startMonitoringServiceIfEnabled()
-                }
-
-                override fun setupViewModel() { /* already done */
-                }
-
-                override fun setupPermissions() {
-                    activity.setupPermissions()
-                }
-
-                override fun initializeData() {
-                    activity.initializeData(savedInstanceState)
-                }
-
-                override fun setupEventHandlers() {
-                    activity.setupEventHandlers()
-                }
-
-                override fun setupAlarms() {
-                    workScheduler.scheduleAll()
-                }
-
-                override fun loadInitialData() {
-                    this@MainActivityInitializer.loadInitialData()
-                }
-
-                override fun ensureServicesAreRunning() {
-                    activity.ensureServicesAreRunning()
-                }
-
-                override fun openNotificationSettings() {
-                    navigationController.navigateToNotificationListenerSettings()
-                }
-
-                override fun showToast(message: String) {
-                    Toast.makeText(activity, message, Toast.LENGTH_SHORT).show()
-                }
-            }
+            databaseInitializer = databaseInitializer,
+            syncPrefs = syncPrefs,
+            birthdaySmsPrefs = birthdaySmsPrefs,
+            memberListPrefs = memberListPrefs,
+            workScheduler = workScheduler,
+            callLogImporter = callLogImporter,
+            callMonitorPrefs = callMonitorPrefs
         )
     }
 
     private fun setupBackPressHandler() {
         backPressHandler = BackPressHandler(
             activity = activity,
-            mainViewModel = activity.mainViewModel,
+            mainViewModel = mainViewModel,
             onCancelFilter = { searchFilterCoordinator.cancelAndRestore() },
             onFinish = { activity.finish() }
         )
@@ -444,25 +428,22 @@ class MainActivityInitializer(
     }
 
     private fun loadInitialData() {
-        if (true) {
-            if (BuildConfig.DEBUG) Log.d(
-                "MainActivityInit",
-                "loadInitialData: already started, skipping"
-            )
-            return
-        }
+        if (BuildConfig.DEBUG) Log.d("MainActivityInit", "loadInitialData: started")
 
         if (::adapter.isInitialized && adapter.itemCount > 0) {
             savedListScroll = MemberListScrollHelper.saveScrollState(binding.lidmaatList, adapter)
         }
 
-        activity.initializeData(savedInstanceState)
+        if (searchList.isNotEmpty()) {
+            viewModel.setSearchList(searchList)
+        }
+
         hideKeyboard()
         binding.searchItemBlock.visibility = View.GONE
         searchFilterCoordinator.refresh()
         WhatsAppContactLoader.loadWhatsAppContactsAtomic(activity, lifecycleScope)
 
-        val defLayout = settingsManager.memberList.defLayout
+        val defLayout = memberListPrefs.defLayout
         sortController.update(defLayout)
 
         initState = InitState.Ready
@@ -475,12 +456,12 @@ class MainActivityInitializer(
     private fun onAdapterStateChanged() {
         sortController.refreshLabel()
         adapter.updateState(
-            listView = settingsManager.memberList.listView,
+            listView = memberListPrefs.listView,
             soekList = viewModel.soekList,
             soek = viewModel.soek,
             recordStatus = viewModel.recordStatus,
             sortOrder = viewModel.sortOrder,
-            useCongregationIndicator = settingsManager.congregation.useCongregationIndicator
+            useCongregationIndicator = congregationPrefs.useCongregationIndicator
         )
         sortController.prefetchBirthdayScrollIfNeeded()
     }
@@ -494,10 +475,8 @@ class MainActivityInitializer(
 
     // ─── Public API for MainActivity ────────────────────────────────────────
 
-    /** Returns true when the app is fully initialised and ready for user interaction. */
     val isReady: Boolean get() = initState == InitState.Ready
 
-    /** Called from MainActivity.onResumeAfterAuth() to refresh badges and sync state. */
     fun onResumeAfterAuth() {
         if (initState != InitState.AwaitingAuth) {
             startupCoordinator.runOnResume()
@@ -510,21 +489,17 @@ class MainActivityInitializer(
         }
     }
 
-    /** Called from MainActivity.onPause() to save scroll state. */
     fun onPause() {
         if (initState == InitState.Ready) {
             savedListScroll = MemberListScrollHelper.saveScrollState(binding.lidmaatList, adapter)
         }
     }
 
-    /** Called from MainActivity.onDestroy() for cleanup. */
     fun onDestroy() {
         menuController.clearCallbacks()
         listInteractionController.dismissQuickActions()
         WhatsAppContactLoader.reset()
     }
-
-    // ─── Inner state enum (mirrors MainActivity.InitState) ─────────────────
 
     private sealed class InitState {
         object AwaitingAuth : InitState()

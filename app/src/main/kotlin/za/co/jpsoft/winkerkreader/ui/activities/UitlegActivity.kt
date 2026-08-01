@@ -13,24 +13,37 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.google.android.material.tabs.TabLayoutMediator
+import dagger.hilt.android.AndroidEntryPoint
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.models.CalendarInfo
 import za.co.jpsoft.winkerkreader.databinding.ActivityUitlegBinding
+import za.co.jpsoft.winkerkreader.di.UserPrefs
 import za.co.jpsoft.winkerkreader.ui.fragments.UitlegFunksiesFragment
 import za.co.jpsoft.winkerkreader.ui.fragments.UitlegPastoraalFragment
 import za.co.jpsoft.winkerkreader.ui.fragments.UitlegVertoonFragment
 import za.co.jpsoft.winkerkreader.ui.fragments.UitlegWidgetFragment
 import za.co.jpsoft.winkerkreader.utils.CalendarManager
-import za.co.jpsoft.winkerkreader.utils.SettingsManager
+import za.co.jpsoft.winkerkreader.utils.prefs.CalendarPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.PastoralPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.CallMonitorPrefs
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class UitlegActivity : AuthBaseActivity(), UitlegCalendarSelectionListener {
+    @Inject
+    @UserPrefs
+    lateinit var calendarPrefs: CalendarPrefs
+    @Inject
+    lateinit var pastoralPrefs: PastoralPrefs
 
+    @Inject
+    lateinit var calendarManager: CalendarManager
+
+    @Inject
+    lateinit var callMonitorPrefs: CallMonitorPrefs
     private lateinit var binding: ActivityUitlegBinding
-    private lateinit var settingsManager: SettingsManager
-    private var calendarManager: CalendarManager? = null
     private var availableCalendars: List<CalendarInfo> = emptyList()
 
-    // Changed to nullable to match SettingsManager's nullable properties
     private var selectedCalendarId: Long? = -1L
     private var selectedPastoralCalendarId: Long? = -1L
 
@@ -43,7 +56,8 @@ class UitlegActivity : AuthBaseActivity(), UitlegCalendarSelectionListener {
         binding = ActivityUitlegBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        settingsManager = SettingsManager.getInstance(this)
+        selectedCalendarId = callMonitorPrefs.callCalendarId
+        selectedPastoralCalendarId = pastoralPrefs.pastoralCalendarId
 
         val pagerAdapter = UitlegPagerAdapter(this)
         binding.viewPager.adapter = pagerAdapter
@@ -59,7 +73,6 @@ class UitlegActivity : AuthBaseActivity(), UitlegCalendarSelectionListener {
             }
         }.attach()
 
-        initializeCalendarManager()
         tryLoadCalendars()
     }
 
@@ -72,8 +85,7 @@ class UitlegActivity : AuthBaseActivity(), UitlegCalendarSelectionListener {
             )
             return
         }
-        val manager = calendarManager ?: return
-        availableCalendars = manager.getAvailableCalendars() ?: emptyList()
+        availableCalendars = calendarManager.getAvailableCalendars() ?: emptyList()
         if (BuildConfig.DEBUG) {
             Log.d("UitlegActivity", "Available calendars: ${availableCalendars.size}")
         }
@@ -185,19 +197,13 @@ class UitlegActivity : AuthBaseActivity(), UitlegCalendarSelectionListener {
         return adapter
     }
 
-    private fun initializeCalendarManager() {
-        calendarManager = CalendarManager(this)
-        selectedCalendarId = settingsManager.selectedCalendarId
-        selectedPastoralCalendarId = settingsManager.pastoral.pastoralCalendarId
-    }
-
     private fun hasCalendarPermissions(): Boolean {
         return CALENDAR_PERMISSIONS.all {
             ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
         }
     }
 
-    // UitlegCalendarSelectionListener
+    // ─── UitlegCalendarSelectionListener ────────────────────────────────────
     override fun onPastoralCalendarSelected(id: Long) {
         selectedPastoralCalendarId = id
     }
@@ -211,11 +217,11 @@ class UitlegActivity : AuthBaseActivity(), UitlegCalendarSelectionListener {
     }
 
     fun savePastoralCalendarId() {
-        settingsManager.pastoral.pastoralCalendarId = selectedPastoralCalendarId
+        pastoralPrefs.pastoralCalendarId = selectedPastoralCalendarId
     }
 
     fun saveCallCalendarId() {
-        settingsManager.selectedCalendarId = selectedCalendarId
+        callMonitorPrefs.callCalendarId = selectedCalendarId
     }
 
     companion object {

@@ -15,9 +15,11 @@ import androidx.activity.viewModels
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.lifecycle.SavedStateViewModelFactory
+import dagger.hilt.android.AndroidEntryPoint
+import jakarta.inject.Inject
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
+import za.co.jpsoft.winkerkreader.data.DatabaseInitializer
 import za.co.jpsoft.winkerkreader.databinding.ActivityMainBinding
 import za.co.jpsoft.winkerkreader.services.CallMonitoringService
 import za.co.jpsoft.winkerkreader.ui.bottomsheets.FilterBottomSheet
@@ -26,51 +28,69 @@ import za.co.jpsoft.winkerkreader.ui.controllers.MainSearchFilterCoordinator
 import za.co.jpsoft.winkerkreader.ui.controllers.SortOrderController
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MainViewModel
 import za.co.jpsoft.winkerkreader.utils.*
+import za.co.jpsoft.winkerkreader.utils.prefs.*
 import za.co.jpsoft.winkerkreader.workers.PastoralBackupWorker
 
-/**
- * The main container Activity of the application.
- *
- * This class is now a thin coordinator that delegates all heavy lifting to
- * [MainActivityInitializer] and various controllers.
- */
+@AndroidEntryPoint
 class MainActivity : AuthBaseActivity() {
 
-    // ─── View Binding ─────────────────────────────────────────────────────────
+    // ─── Injected Preferences ──────────────────────────────────────────────
+    @Inject
+    lateinit var memberListPrefs: MemberListPrefs
+    @Inject
+    lateinit var widgetPrefs: WidgetPrefs
+    @Inject
+    lateinit var congregationPrefs: CongregationPrefs
+    @Inject
+    lateinit var callMonitorPrefs: CallMonitorPrefs
+    @Inject
+    lateinit var backupPrefs: BackupPrefs
+    @Inject
+    lateinit var appearancePrefs: AppearancePrefs
+    @Inject
+    lateinit var quickActionPrefs: QuickActionPrefs
+    @Inject
+    lateinit var pastoralPrefs: PastoralPrefs
+    @Inject
+    lateinit var birthdaySmsPrefs: BirthdaySmsPrefs
+    @Inject
+    lateinit var syncPrefs: SyncPrefs
 
+    // REMOVED: @Inject lateinit var securityPrefs: SecurityPrefs   // now inherited from AuthBaseActivity
+    @Inject
+    lateinit var tasksPrefs: TasksPrefs
+    @Inject
+    lateinit var databaseInitializer: DatabaseInitializer
+    @Inject
+    lateinit var workScheduler: WorkScheduler
+    @Inject
+    lateinit var callLogImporter: CallLogImporter
+    @Inject
+    lateinit var navigationController: MainNavigationController
+
+    // ─── View Binding ──────────────────────────────────────────────────────
     lateinit var binding: ActivityMainBinding
 
-    // ─── ViewModels ──────────────────────────────────────────────────────────
+    // ─── ViewModels ────────────────────────────────────────────────────────
+    private val mainViewModel: MainViewModel by viewModels()
 
-    val mainViewModel: MainViewModel by viewModels(
-        factoryProducer = { SavedStateViewModelFactory(application, this, intent?.extras) }
-    )
-
-    // ─── Controllers (initialised by initializer) ──────────────────────────
-
+    // ─── Controller ────────────────────────────────────────────────────────
     private lateinit var initializer: MainActivityInitializer
 
-    // Expose the coordinator to fragments/bottom sheets
     val searchFilterCoordinator: MainSearchFilterCoordinator
         get() = initializer.searchFilterCoordinator
 
     val sortController: SortOrderController
         get() = initializer.sortController
 
-    // Exposed for use in the initializer and other callbacks
-    lateinit var settingsManager: SettingsManager
-        private set
-
-    // ─── Lifecycle ───────────────────────────────────────────────────────────
+    // ─── Lifecycle ──────────────────────────────────────────────────────────
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        settingsManager = SettingsManager.getInstance(this)
-
-        // Set up backup worker before inflating
-        val dailyEnabled = settingsManager.backup.dailyBackupEnabled
-        val exportToDownloads = settingsManager.backup.backupExportToDownloads
+        // ─── Use injected prefs ──────────────────────────────────────────
+        val dailyEnabled = backupPrefs.dailyBackupEnabled
+        val exportToDownloads = backupPrefs.backupExportToDownloads
         if (dailyEnabled) {
             PastoralBackupWorker.schedule(this, exportToDownloads)
         } else {
@@ -86,20 +106,36 @@ class MainActivity : AuthBaseActivity() {
             insets
         }
 
-        // Create and run the initializer
-        initializer = MainActivityInitializer(this, savedInstanceState)
+        // ─── Pass injected dependencies to initializer ───────────────────
+        // ─── Pass injected dependencies to initializer ───────────────────
+        initializer = MainActivityInitializer(
+            activity = this,
+            savedInstanceState = savedInstanceState,
+            memberListPrefs = memberListPrefs,
+            callMonitorPrefs = callMonitorPrefs,
+            congregationPrefs = congregationPrefs,
+            mainViewModel = mainViewModel,
+            quickActionPrefs = quickActionPrefs,
+            appearancePrefs = appearancePrefs,
+            workScheduler = workScheduler,
+            syncPrefs = syncPrefs,
+            birthdaySmsPrefs = birthdaySmsPrefs,
+            databaseInitializer = databaseInitializer,
+            callLogImporter = callLogImporter,
+            navigationController = navigationController,
+            backupPrefs = backupPrefs
+        )
         initializer.setupPreAuth()
     }
 
     override fun onStart() {
         super.onStart()
-        if (settingsManager.callMonitor.callLogEnabled) {
+        if (callMonitorPrefs.callLogEnabled) {
             BatteryOptimizationHelper.showBatteryOptimizationDialog(this)
         }
     }
 
     override fun onResumeAfterAuth() {
-        // Delegate to initializer (only when fully ready)
         if (::initializer.isInitialized) {
             initializer.onResumeAfterAuth()
         }
@@ -142,31 +178,19 @@ class MainActivity : AuthBaseActivity() {
 
         return MenuItemHandler(
             this,
-            settingsManager,
             initializer.viewModel,
             MainNavigationController(this),
-            onSortOrderChanged = { sortOrder ->
-                // The initializer owns sortController, but we can expose it or let the handler call it.
-                // For simplicity, we delegate to the initializer's internal method.
-                // We could add a method in initializer to update sort.
-                // However, MenuItemHandler is constructed with a callback; we need to call initializer's sortController.update.
-                // Let's keep the callback as a lambda that invokes sortController.update.
-                // To avoid exposing sortController, we can add a method in initializer.
-                // For now, we can retrieve sortController via a getter if needed.
-                // Since we don't have a getter, we can store a reference or add a method.
-                // Let's add a method in initializer: updateSortOrder(sortOrder)
-                initializer.updateSortOrder(sortOrder)
-            }
+            memberListPrefs,
+            onSortOrderChanged = { sortOrder -> initializer.updateSortOrder(sortOrder) }
         ).handleMenuItem(item) || super.onOptionsItemSelected(item)
     }
 
     override fun onPrepareOptionsMenu(menu: Menu): Boolean {
         if (!::initializer.isInitialized || !initializer.isReady) return false
-        // The badge count is handled by PastoralReminderBadgeController, which updates via invalidateOptionsMenu
         return super.onPrepareOptionsMenu(menu)
     }
 
-    // ─── Touch Events (swipe) ───────────────────────────────────────────────
+    // ─── Touch Events ──────────────────────────────────────────────────────
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         return if (::initializer.isInitialized && initializer.isReady) {
@@ -186,85 +210,40 @@ class MainActivity : AuthBaseActivity() {
         return super.dispatchTouchEvent(event)
     }
 
-    // ─── Helper methods used by initializer's StartupActions ───────────────
+    // ─── Helper methods ──────────────────────────────────────────────────────
 
-    /**
-     * Called from StartupActions to start monitoring services if enabled.
-     */
     fun startMonitoringServiceIfEnabled() {
-        if (settingsManager.callMonitor.autoStartEnabled && !CallMonitoringService.isServiceRunning(
-                this
-            )
-        ) {
+        if (callMonitorPrefs.autoStartEnabled && !CallMonitoringService.isServiceRunning(this)) {
             try {
                 val serviceIntent = Intent(this, CallMonitoringService::class.java)
                 startForegroundService(serviceIntent)
             } catch (e: SecurityException) {
-                if (BuildConfig.DEBUG) Log.e(
-                    "MainActivity",
-                    "Security exception - check permissions",
-                    e
-                )
+                if (BuildConfig.DEBUG) Log.e(TAG, "Security exception - check permissions", e)
             } catch (e: Exception) {
-                if (BuildConfig.DEBUG) Log.e(
-                    "MainActivity",
-                    "Failed to start call monitoring service",
-                    e
-                )
+                if (BuildConfig.DEBUG) Log.e(TAG, "Failed to start call monitoring service", e)
             }
         }
     }
 
-    /**
-     * Called from StartupActions to set up permissions (overlay, notification channels).
-     */
     fun setupPermissions() {
         checkOverlayPermission()
         createNotificationChannel()
         PastoralNotificationHelper.ensureChannel(this)
     }
 
-    /**
-     * Called from StartupActions to initialise data (version info, search/filter lists).
-     */
-    fun initializeData(savedInstanceState: Bundle?) {
-        setupVersionInfo()
-        // Search list is already restored from savedInstanceState in initializer
-        // We just need to set it on the ViewModel
-        // The search list is managed by the initializer; we can access it via a getter if needed.
-        // Instead, we let the initializer handle it.
-    }
-
-    /**
-     * Called from StartupActions to set up event handlers (e.g., touch listeners).
-     */
-    fun setupEventHandlers() {
-        // The initializer already sets up most listeners, but some may remain.
-        // We keep this empty; all wiring is done in initializer.
-    }
-
-    /**
-     * Called from StartupActions to ensure services are running.
-     */
     fun ensureServicesAreRunning() {
-        if (settingsManager.callMonitor.autoStartEnabled && !CallMonitoringService.isServiceRunning(
-                this
-            )
-        ) {
+        if (callMonitorPrefs.autoStartEnabled && !CallMonitoringService.isServiceRunning(this)) {
             startMonitoringServiceIfEnabled()
         }
     }
 
-    /**
-     * Returns the current SearchView from the options menu.
-     */
     fun findSearchView(): SearchView? {
         return if (::initializer.isInitialized) {
             initializer.menuController.findSearchView()
         } else null
     }
 
-    // ─── Private helpers ─────────────────────────────────────────────────────
+    // ─── Private helpers ────────────────────────────────────────────────────
 
     private fun setupVersionInfo() {
         try {
@@ -283,7 +262,7 @@ class MainActivity : AuthBaseActivity() {
                 subtitle = "v$versionName"
             }
         } catch (e: PackageManager.NameNotFoundException) {
-            if (BuildConfig.DEBUG) Log.e("MainActivity", "Failed to get package info", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Failed to get package info", e)
             supportActionBar?.title = "WinkerkReader"
         }
     }

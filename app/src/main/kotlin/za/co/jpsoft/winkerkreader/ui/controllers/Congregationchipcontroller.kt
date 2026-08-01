@@ -8,13 +8,13 @@ import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.utils.ColorUtils
-import za.co.jpsoft.winkerkreader.utils.SettingsManager
+import za.co.jpsoft.winkerkreader.utils.prefs.CongregationPrefs
 
 class CongregationChipController(
     private val context: Context,
     private val chipGroup: ChipGroup,
     private val loadingBar: View,
-    private val settings: SettingsManager,
+    private val congregationPrefs: CongregationPrefs,
     private val onFilterChanged: (selected: Set<String>) -> Unit
 ) {
 
@@ -26,9 +26,9 @@ class CongregationChipController(
         chipGroup.isSelectionRequired = false
 
         val congregations = listOfNotNull(
-            settings.congregation.gemeenteNaam.takeIf { it.isNotBlank() },
-            settings.congregation.gemeente2Naam.takeIf { it.isNotBlank() },
-            settings.congregation.gemeente3Naam.takeIf { it.isNotBlank() }
+            congregationPrefs.gemeenteNaam.takeIf { it.isNotBlank() },
+            congregationPrefs.gemeente2Naam.takeIf { it.isNotBlank() },
+            congregationPrefs.gemeente3Naam.takeIf { it.isNotBlank() }
         )
 
         congregations.forEach { name ->
@@ -72,9 +72,9 @@ class CongregationChipController(
     // ── Private helpers ───────────────────────────────────────────────────────
 
     private fun congregationColor(name: String): Int = when (name) {
-        settings.congregation.gemeenteNaam -> settings.congregation.gemeenteKleur
-        settings.congregation.gemeente2Naam -> settings.congregation.gemeente2Kleur
-        settings.congregation.gemeente3Naam -> settings.congregation.gemeente3Kleur
+        congregationPrefs.gemeenteNaam -> congregationPrefs.gemeenteKleur
+        congregationPrefs.gemeente2Naam -> congregationPrefs.gemeente2Kleur
+        congregationPrefs.gemeente3Naam -> congregationPrefs.gemeente3Kleur
         else -> ContextCompat.getColor(context, R.color.md_theme_primary)
     }
 

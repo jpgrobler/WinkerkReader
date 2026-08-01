@@ -14,6 +14,7 @@ import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import dagger.hilt.android.AndroidEntryPoint
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.KEY_SELECTED_CALENDAR_ID
@@ -25,18 +26,22 @@ import za.co.jpsoft.winkerkreader.utils.CalendarManager
 import za.co.jpsoft.winkerkreader.utils.ForegroundServiceHelper
 import za.co.jpsoft.winkerkreader.utils.ForegroundServiceType
 import za.co.jpsoft.winkerkreader.utils.PhoneCallMonitor
+import za.co.jpsoft.winkerkreader.utils.UnifiedCallMonitor
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class CallMonitoringService : Service() {
 
-    private var phoneCallMonitor: PhoneCallMonitor? = null
-    private var callLogDao: CallLogDao? =
-        null   // was: private var databaseHelper: DatabaseHelper? = null
-    private var pendingIncomingNumber: String? = null
+    @Inject
+    lateinit var unifiedMonitor: UnifiedCallMonitor
 
+    private var phoneCallMonitor: PhoneCallMonitor? = null
+    private var callLogDao: CallLogDao? = null
+    private var pendingIncomingNumber: String? = null
 
     override fun onCreate() {
         super.onCreate()
-        isServiceRunning = true  // Add this
+        isServiceRunning = true
         if (BuildConfig.DEBUG) Log.d(TAG, "Call Monitoring Service created")
         createNotificationChannel()
         callLogDao = CallLogDatabase.getInstance(this).callLogDao()
@@ -44,12 +49,13 @@ class CallMonitoringService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        isServiceRunning = false  // Add this
+        isServiceRunning = false
         if (BuildConfig.DEBUG) Log.d(TAG, "Call Monitoring Service destroyed")
         phoneCallMonitor?.stopMonitoring()
         phoneCallMonitor = null
         callLogDao = null
     }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (BuildConfig.DEBUG) Log.d(TAG, "Call Monitoring Service started")
         if (hasRequiredPermissions()) {
@@ -63,7 +69,7 @@ class CallMonitoringService : Service() {
                 TAG,
                 "Missing required permissions, cannot start monitoring"
             )
-            stopSelf()   // ✅ Stop immediately
+            stopSelf()
         }
 
         val notification = createNotification()
@@ -86,11 +92,8 @@ class CallMonitoringService : Service() {
             }
         }
 
-
-
         return START_STICKY
     }
-
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -146,21 +149,12 @@ class CallMonitoringService : Service() {
                 return
             }
 
-            val calendarManager = CalendarManager(this)
-            val userPrefs = getSharedPreferences(PREFS_USER_INFO, MODE_PRIVATE)
-            var calendarId = userPrefs.getLong(KEY_SELECTED_CALENDAR_ID, NO_CALENDAR_ID)
-
-            // Simple validation: use default if invalid (e.g., -1)
-            if (calendarId < 0) {
-                if (BuildConfig.DEBUG) Log.w(TAG, "Invalid calendar ID: $calendarId, using default")
-                calendarId = NO_CALENDAR_ID
-            }
-
             if (callLogDao == null) {
                 callLogDao = CallLogDatabase.getInstance(this).callLogDao()
             }
 
-            phoneCallMonitor = PhoneCallMonitor(this, callLogDao!!, calendarManager, calendarId)
+            // Create PhoneCallMonitor with the injected UnifiedCallMonitor
+            phoneCallMonitor = PhoneCallMonitor(this, unifiedMonitor)
 
             if (pendingIncomingNumber != null) {
                 phoneCallMonitor?.setIncomingNumber(pendingIncomingNumber)
@@ -176,29 +170,24 @@ class CallMonitoringService : Service() {
         }
     }
 
-
     companion object {
         private const val TAG = "CallMonitoringService"
         private const val CHANNEL_ID = "call_monitoring_channel"
         private const val NOTIFICATION_ID = 1
         private const val NO_CALENDAR_ID = -1L
 
-        // Add this for consistency with other services
         private var isServiceRunning = false
 
         @JvmStatic
         fun isRunning(): Boolean = isServiceRunning
 
-        // Keep the existing isServiceRunning method for compatibility
         fun isServiceRunning(context: Context): Boolean {
             val manager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 context.getSystemService(ActivityManager::class.java)
             } else {
                 context.getSystemService(ACTIVITY_SERVICE) as? ActivityManager
             }
-
             if (manager == null) return false
-
             val serviceName =
                 "${context.packageName}.${CallMonitoringService::class.java.simpleName}"
             return try {

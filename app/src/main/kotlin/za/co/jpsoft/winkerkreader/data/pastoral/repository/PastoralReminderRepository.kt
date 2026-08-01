@@ -12,7 +12,8 @@ import za.co.jpsoft.winkerkreader.data.pastoral.model.ScheduleType
 import za.co.jpsoft.winkerkreader.data.pastoral.model.TemplateWithSteps
 import za.co.jpsoft.winkerkreader.data.pastoral.model.VandagDashboard
 import za.co.jpsoft.winkerkreader.utils.CalendarManager
-import za.co.jpsoft.winkerkreader.utils.SettingsManager
+import za.co.jpsoft.winkerkreader.utils.prefs.PastoralPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.TasksPrefs
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -143,25 +144,34 @@ class PastoralReminderRepository(
     companion object {
         private const val TAG = "PastoralReminderRepository"
 
-        fun create(context: Context): PastoralReminderRepository {
+        /**
+         * Factory method – now accepts the required preference slices directly.
+         * Callers must provide [pastoralPrefs] and [tasksPrefs] (available via Hilt injection).
+         *
+         * This eliminates the dependency on [SettingsManager] and makes the repository
+         * testable with custom pref implementations.
+         */
+        fun create(
+            context: Context,
+            pastoralPrefs: PastoralPrefs,
+            tasksPrefs: TasksPrefs,
+            backupHelper: ReminderBackupHelper
+        ): PastoralReminderRepository {
             val appContext = context.applicationContext
             val database = PastoralDatabase.getInstance(appContext)
-            val settingsManager = SettingsManager.getInstance(appContext)
             val calendarManager = CalendarManager(appContext)
             val memberResolver = CongregationMemberGuidResolver(appContext)
             val reminderDao = database.followUpReminderDao()
 
-            val backupHelper = ReminderBackupHelper(appContext)
-
             val calendarSync = CalendarSyncManager(
                 calendarManager,
-                settingsManager,
+                pastoralPrefs,
                 reminderDao,
                 memberResolver
             )
 
             val taskSync = GoogleTaskSyncManager(
-                settingsManager,
+                tasksPrefs,
                 reminderDao,
                 memberResolver
             )
@@ -171,11 +181,10 @@ class PastoralReminderRepository(
                 memberResolver,
                 calendarSync,
                 taskSync,
-                backupHelper
+                backupHelper   // <-- pass here
             )
 
             val queries = ReminderQueryRepository(database, memberResolver)
-
             val templates = TemplateRepository(database)
 
             return PastoralReminderRepository(crud, queries, templates, calendarSync, taskSync)

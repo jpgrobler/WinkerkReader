@@ -1,7 +1,5 @@
 package za.co.jpsoft.winkerkreader.ui.activities
 
-import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.activity.viewModels
@@ -12,23 +10,22 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import za.co.jpsoft.winkerkreader.R
-import za.co.jpsoft.winkerkreader.data.pastoral.repository.PastoralReminderRepository
 import za.co.jpsoft.winkerkreader.databinding.ActivityTemplateManagerBinding
 import za.co.jpsoft.winkerkreader.ui.adapters.TemplateManagerAdapter
 import za.co.jpsoft.winkerkreader.ui.viewmodels.TemplateManagerViewModel
 import za.co.jpsoft.winkerkreader.utils.MainNavigationController
 
+@AndroidEntryPoint
 class TemplateManagerActivity : AuthBaseActivity() {
 
     private lateinit var binding: ActivityTemplateManagerBinding
     private lateinit var adapter: TemplateManagerAdapter
 
-    private val viewModel: TemplateManagerViewModel by viewModels {
-        TemplateManagerViewModel.Factory(PastoralReminderRepository.create(this))
-    }
+    private val viewModel: TemplateManagerViewModel by viewModels()
 
     private val navigationController by lazy { MainNavigationController(this) }
     private val _isLoading = MutableStateFlow(false)
@@ -37,11 +34,13 @@ class TemplateManagerActivity : AuthBaseActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityTemplateManagerBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             view.updatePadding(bottom = bars.bottom)
-            insets  // important: return insets so RecyclerView also gets them
+            insets
         }
+
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
@@ -50,6 +49,7 @@ class TemplateManagerActivity : AuthBaseActivity() {
             onToggleActive = { templateId, isActive -> viewModel.setActive(templateId, isActive) },
             onDelete = { templateId, titleAf -> confirmDelete(templateId, titleAf) }
         )
+
         binding.rvTemplates.apply {
             adapter = this@TemplateManagerActivity.adapter
             layoutManager = LinearLayoutManager(this@TemplateManagerActivity)
@@ -62,16 +62,19 @@ class TemplateManagerActivity : AuthBaseActivity() {
                 adapter.submitList(templates)
             }
         }
+
         lifecycleScope.launch {
             viewModel.templateCreated.collect { templateId ->
                 navigationController.navigateToTemplateEditor(templateId)
             }
         }
+
         lifecycleScope.launch {
             viewModel.error.collect { message ->
                 Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
             }
         }
+
         lifecycleScope.launch {
             viewModel.isLoading.collect { isLoading ->
                 binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE

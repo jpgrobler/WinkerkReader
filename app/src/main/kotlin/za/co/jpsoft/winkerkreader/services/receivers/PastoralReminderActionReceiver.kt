@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -12,8 +13,13 @@ import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.pastoral.repository.PastoralReminderRepository
 import za.co.jpsoft.winkerkreader.utils.PastoralNotificationHelper
 import java.time.LocalDateTime
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class PastoralReminderActionReceiver : BroadcastReceiver() {
+
+    @Inject
+    lateinit var repository: PastoralReminderRepository
 
     override fun onReceive(context: Context, intent: Intent) {
         val reminderId = intent.getStringExtra(EXTRA_REMINDER_ID) ?: run {
@@ -27,7 +33,6 @@ class PastoralReminderActionReceiver : BroadcastReceiver() {
 
         scope.launch {
             try {
-                val repository = PastoralReminderRepository.create(context.applicationContext)
                 when (intent.action) {
                     ACTION_COMPLETE -> {
                         repository.completeReminder(reminderId)
@@ -56,7 +61,6 @@ class PastoralReminderActionReceiver : BroadcastReceiver() {
                     e
                 )
             } finally {
-                // Always cancel the notification and release goAsync
                 if (notifId != -1) {
                     PastoralNotificationHelper.cancelNotification(context, reminderId)
                 }

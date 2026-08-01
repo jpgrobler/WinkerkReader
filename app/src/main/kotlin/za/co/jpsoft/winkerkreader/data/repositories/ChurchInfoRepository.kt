@@ -1,25 +1,28 @@
-// data/repositories/ChurchInfoRepository.kt
 package za.co.jpsoft.winkerkreader.data.repositories
 
-import android.content.Context
+import android.database.Cursor
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase
-import za.co.jpsoft.winkerkreader.utils.SettingsManager
+import za.co.jpsoft.winkerkreader.utils.prefs.CongregationPrefs
+import javax.inject.Inject
+import javax.inject.Singleton
 
-object ChurchInfoRepository {
+@Singleton
+class ChurchInfoRepository @Inject constructor(
+    private val database: WinkerkDatabase,
+    private val congregationPrefs: CongregationPrefs
+) {
 
-    private const val TAG = "ChurchInfoRepo"
+    private val TAG = "ChurchInfoRepo"
 
-    suspend fun loadChurchInfo(context: Context) {
+    suspend fun loadChurchInfo() {
         withContext(Dispatchers.IO) {
             try {
-                val db = WinkerkDatabase.getInstance(context).openHelper.writableDatabase
-                val settingsManager = SettingsManager.getInstance(context)
-
-                val cursor = db.query(
+                val db = database.openHelper.writableDatabase
+                val cursor: Cursor = db.query(
                     "SELECT DISTINCT Gemeente, [Gemeente epos] FROM Members GROUP BY Gemeente, [Gemeente epos]"
                 )
                 cursor.use {
@@ -30,12 +33,12 @@ object ChurchInfoRepository {
                         emails.add(it.getString(1) ?: "")
                     }
                     if (names.isNotEmpty()) {
-                        settingsManager.congregation.gemeenteNaam = names.getOrElse(0) { "" }
-                        settingsManager.congregation.gemeenteEpos = emails.getOrElse(0) { "" }
-                        settingsManager.congregation.gemeente2Naam = names.getOrElse(1) { "" }
-                        settingsManager.congregation.gemeente2Epos = emails.getOrElse(1) { "" }
-                        settingsManager.congregation.gemeente3Naam = names.getOrElse(2) { "" }
-                        settingsManager.congregation.gemeente3Epos = emails.getOrElse(2) { "" }
+                        congregationPrefs.gemeenteNaam = names.getOrElse(0) { "" }
+                        congregationPrefs.gemeenteEpos = emails.getOrElse(0) { "" }
+                        congregationPrefs.gemeente2Naam = names.getOrElse(1) { "" }
+                        congregationPrefs.gemeente2Epos = emails.getOrElse(1) { "" }
+                        congregationPrefs.gemeente3Naam = names.getOrElse(2) { "" }
+                        congregationPrefs.gemeente3Epos = emails.getOrElse(2) { "" }
                     }
                     if (BuildConfig.DEBUG) Log.d(TAG, "Loaded ${names.size} congregation(s)")
                 }

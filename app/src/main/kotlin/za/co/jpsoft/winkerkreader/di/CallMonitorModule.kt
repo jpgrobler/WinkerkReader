@@ -1,0 +1,29 @@
+package za.co.jpsoft.winkerkreader.di
+
+import android.content.Context
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
+import za.co.jpsoft.winkerkreader.data.calllog.CallLogDao
+import za.co.jpsoft.winkerkreader.utils.CalendarManager
+import za.co.jpsoft.winkerkreader.utils.UnifiedCallMonitor
+import za.co.jpsoft.winkerkreader.utils.prefs.CallMonitorPrefs
+import javax.inject.Singleton
+
+@Module
+@InstallIn(SingletonComponent::class)
+object CallMonitorModule {
+
+    @Provides
+    @Singleton
+    fun provideUnifiedCallMonitor(
+        @ApplicationContext context: Context,
+        callLogDao: CallLogDao,
+        calendarManager: CalendarManager,
+        callMonitorPrefs: CallMonitorPrefs
+    ): UnifiedCallMonitor {
+        return UnifiedCallMonitor(context, callLogDao, calendarManager, callMonitorPrefs)
+    }
+}

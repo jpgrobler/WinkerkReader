@@ -31,10 +31,9 @@ class PastoralBackupWorker(
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         try {
-            // 1 — Standard WKR-dir backup (for PC access)
-            PastoralDatabaseBackup.backupNow(applicationContext)
+            val backup = PastoralDatabaseBackup.getInstance()
+            backup.backupNow(applicationContext)
 
-            // 2 — Optional dated copy to Downloads (user-accessible restore source)
             if (inputData.getBoolean(KEY_EXPORT_TO_DOWNLOADS, false)) {
                 exportToDownloads(applicationContext)
             }

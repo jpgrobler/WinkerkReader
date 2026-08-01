@@ -33,11 +33,20 @@ import za.co.jpsoft.winkerkreader.databinding.ListItem2Binding
 import za.co.jpsoft.winkerkreader.databinding.ListItemBinding
 import za.co.jpsoft.winkerkreader.utils.ColorUtils
 import za.co.jpsoft.winkerkreader.utils.PhotoHelper
-import za.co.jpsoft.winkerkreader.utils.SettingsManager
+import za.co.jpsoft.winkerkreader.utils.prefs.CongregationPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.MemberListPrefs
 import za.co.jpsoft.winkerkreader.utils.Utils.fixphonenumber
 import java.util.Locale
 
+/**
+ * Adapter for the member list with pagination support.
+ *
+ * @param memberListPrefs injected preferences for display settings
+ * @param congregationPrefs injected preferences for congregation colors and names
+ */
 class MemberListAdapter(
+    private val memberListPrefs: MemberListPrefs,
+    private val congregationPrefs: CongregationPrefs,
     private val onItemClick: (view: View, item: MemberItem, position: Int) -> Unit,
     private val onItemLongClick: (item: MemberItem, position: Int) -> Boolean
 ) : PagingDataAdapter<MemberItem, MemberListAdapter.MemberViewHolder>(DIFF) {
@@ -353,13 +362,12 @@ class MemberListAdapter(
 
         fun bind(item: MemberItem, hasPending: Boolean, position: Int) {
             val context = itemView.context
-            val settings = SettingsManager.getInstance(context)
             var congregationColor = Int.MIN_VALUE
             if (!soekList) {
                 congregationColor = when (item.congregation) {
-                    settings.congregation.gemeenteNaam -> settings.congregation.gemeenteKleur
-                    settings.congregation.gemeente2Naam -> settings.congregation.gemeente2Kleur
-                    settings.congregation.gemeente3Naam -> settings.congregation.gemeente3Kleur
+                    congregationPrefs.gemeenteNaam -> congregationPrefs.gemeenteKleur
+                    congregationPrefs.gemeente2Naam -> congregationPrefs.gemeente2Kleur
+                    congregationPrefs.gemeente3Naam -> congregationPrefs.gemeente3Kleur
                     else -> Int.MIN_VALUE
                 }
             }
@@ -420,7 +428,7 @@ class MemberListAdapter(
                         finalBgColor = ContextCompat.getColor(context, R.color.selected_view)
                     }
                     item.recordstatus == "2" -> {
-                        val inactiveColor = settings.congregation.inactiveBackgroundColor
+                        val inactiveColor = congregationPrefs.inactiveBackgroundColor
                         if (inactiveColor != Int.MIN_VALUE) finalBgColor = inactiveColor
                     }
                 }
@@ -440,17 +448,17 @@ class MemberListAdapter(
             verjaarTextView.setTextColor(textColor)
             huwelikTextView.setTextColor(textColor)
 
-            applyVisibilitySettings(settings)
+            applyVisibilitySettings()
             resetViewState()
 
             val useRing = useCongregationIndicator && congregationColor != Int.MIN_VALUE
             if (useRing) bindPhotoData(item, itemView, useRing, congregationColor)
             else bindPhotoData(item, itemView, useRing, textColor)
             bindBasicInfo(item)
-            bindContactInfo(item, settings)
-            bindAgeInfo(item, settings)
-            bindWeddingInfo(item, settings)
-            bindEmailIndicator(item, settings)
+            bindContactInfo(item)
+            bindAgeInfo(item)
+            bindWeddingInfo(item)
+            bindEmailIndicator(item)
 
             // ------------------------------------------------------------
             // SEARCH HIGHLIGHTING with caching
@@ -580,16 +588,15 @@ class MemberListAdapter(
 
         // -------- Helper methods --------
 
-        private fun applyVisibilitySettings(settings: SettingsManager) {
-            fotoFrame.visibility = if (settings.memberList.isListFoto) View.VISIBLE else View.GONE
+        private fun applyVisibilitySettings() {
+            fotoFrame.visibility = if (memberListPrefs.isListFoto) View.VISIBLE else View.GONE
             ouderdomTextView.visibility =
-                if (settings.memberList.isListOuderdom) View.VISIBLE else View.GONE
-            wykTextView.visibility = if (settings.memberList.isListWyk) View.VISIBLE else View.GONE
+                if (memberListPrefs.isListOuderdom) View.VISIBLE else View.GONE
+            wykTextView.visibility = if (memberListPrefs.isListWyk) View.VISIBLE else View.GONE
             huwelikTextView.visibility =
-                if (settings.memberList.isListHuwelikBlok) View.VISIBLE else View.GONE
-            eposImageView.visibility =
-                if (settings.memberList.isListEpos) View.VISIBLE else View.GONE
-            if (settings.memberList.isListVerjaarBlok) {
+                if (memberListPrefs.isListHuwelikBlok) View.VISIBLE else View.GONE
+            eposImageView.visibility = if (memberListPrefs.isListEpos) View.VISIBLE else View.GONE
+            if (memberListPrefs.isListVerjaarBlok) {
                 koekImageView.visibility = View.VISIBLE
                 verjaarTextView.visibility = View.VISIBLE
             } else {
@@ -656,16 +663,16 @@ class MemberListAdapter(
             vanTextView.text = item.surname
         }
 
-        private fun bindContactInfo(item: MemberItem, settings: SettingsManager) {
+        private fun bindContactInfo(item: MemberItem) {
             if (item.cellphone.isNotEmpty()) {
                 val formattedCell = fixphonenumber(item.cellphone) ?: item.cellphone
-                if (settings.memberList.isListSelfoon) {
+                if (memberListPrefs.isListSelfoon) {
                     selBlock.visibility = View.VISIBLE
                     cellTextView.text = formattedCell
                 } else {
                     selBlock.visibility = View.GONE
                 }
-                if (settings.memberList.isListWhatsapp) {
+                if (memberListPrefs.isListWhatsapp) {
                     if (ContactRepository.isWhatsAppContact(formattedCell)) {
                         whatsappImageView.visibility = View.VISIBLE
                     }
@@ -674,7 +681,7 @@ class MemberListAdapter(
                 cellTextView.text = ""
             }
 
-            val showWard = settings.memberList.isListWyk && sortOrder != "WYK"
+            val showWard = memberListPrefs.isListWyk && sortOrder != "WYK"
             if (item.ward.isNotEmpty() && showWard) {
                 wykTextView.visibility = View.VISIBLE
                 wykTextView.text = item.ward
@@ -686,15 +693,15 @@ class MemberListAdapter(
             if (item.landline.isNotEmpty()) {
                 val formattedLandline = fixphonenumber(item.landline) ?: item.landline
                 telBlock.visibility =
-                    if (settings.memberList.isListTelefoon) View.VISIBLE else View.GONE
+                    if (memberListPrefs.isListTelefoon) View.VISIBLE else View.GONE
                 telTextView.text = formattedLandline
             } else {
                 telTextView.text = ""
             }
         }
 
-        private fun bindAgeInfo(item: MemberItem, settings: SettingsManager) {
-            if (item.birthday.isNotEmpty() && settings.memberList.isListOuderdom && item.birthday.length >= 10) {
+        private fun bindAgeInfo(item: MemberItem) {
+            if (item.birthday.isNotEmpty() && memberListPrefs.isListOuderdom && item.birthday.length >= 10) {
                 var txt = "(${item.age})"
                 ouderdomTextView.text = txt
                 ouderdomTextView.visibility = View.VISIBLE
@@ -706,7 +713,7 @@ class MemberListAdapter(
                 val today = java.time.LocalDate.now()
                 val bMonth = item.birthday.substring(3, 5).trimStart('0').toIntOrNull() ?: 0
                 val bDay = item.birthday.substring(0, 2).trimStart('0').toIntOrNull() ?: 0
-                if (bMonth == today.monthValue && bDay == today.dayOfMonth && settings.memberList.isListVerjaarBlok) {
+                if (bMonth == today.monthValue && bDay == today.dayOfMonth && memberListPrefs.isListVerjaarBlok) {
                     koekImageView.visibility = View.VISIBLE
                 } else {
                     koekImageView.visibility = View.GONE
@@ -716,9 +723,9 @@ class MemberListAdapter(
             }
         }
 
-        private fun bindWeddingInfo(item: MemberItem, settings: SettingsManager) {
+        private fun bindWeddingInfo(item: MemberItem) {
             huwelikTextView.visibility = View.GONE
-            if (item.weddingDate.isNotEmpty() && settings.memberList.isListHuwelikBlok && item.weddingDate.length > 6) {
+            if (item.weddingDate.isNotEmpty() && memberListPrefs.isListHuwelikBlok && item.weddingDate.length > 6) {
                 ringImageView.visibility = View.VISIBLE
                 val day = item.weddingDate.substring(0, 2)
                 val month = item.weddingDate.substring(3, 5)
@@ -728,9 +735,9 @@ class MemberListAdapter(
             }
         }
 
-        private fun bindEmailIndicator(item: MemberItem, settings: SettingsManager) {
+        private fun bindEmailIndicator(item: MemberItem) {
             eposImageView.visibility =
-                if (item.email.isNotEmpty() && settings.memberList.isListEpos) View.VISIBLE else View.GONE
+                if (item.email.isNotEmpty() && memberListPrefs.isListEpos) View.VISIBLE else View.GONE
         }
 
         private fun bindSeparator(item: MemberItem) {

@@ -18,15 +18,12 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
-import za.co.jpsoft.winkerkreader.data.calllog.CallLogDao
 import za.co.jpsoft.winkerkreader.data.models.CallType
 import za.co.jpsoft.winkerkreader.services.OproepDetailService
 
 class PhoneCallMonitor(
     private val context: Context,
-    callLogDao: CallLogDao,
-    calendarManager: CalendarManager,
-    calendarId: Long
+    private val unifiedMonitor: UnifiedCallMonitor   // <-- injected
 ) {
 
     private var telephonyManager: TelephonyManager? = null
@@ -41,13 +38,10 @@ class PhoneCallMonitor(
     private var currentCallType: CallType? = null
     private var pendingIncomingNumber: String? = null
 
-    private var unifiedMonitor: UnifiedCallMonitor? = null
     private val monitorScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     init {
         telephonyManager = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-        unifiedMonitor =
-            UnifiedCallMonitor.getInstance(context, callLogDao, calendarManager, calendarId)
     }
 
     fun setIncomingNumber(number: String?) {
@@ -65,14 +59,12 @@ class PhoneCallMonitor(
                 context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
         }
 
-        // Use the deprecated listener on all SDK versions – it still provides the number
         @Suppress("DEPRECATION")
         phoneStateListener = object : PhoneStateListener() {
             @Deprecated("Deprecated in Java")
             override fun onCallStateChanged(state: Int, phoneNumber: String?) {
                 handleStateChanged(state, phoneNumber)
                 super.onCallStateChanged(state, phoneNumber)
-
             }
         }
 
@@ -129,58 +121,11 @@ class PhoneCallMonitor(
         startCallerIdentificationService(context, currentIncomingNumber)
     }
 
-//    private fun handleRingingState(phoneNumber: String?) {
-//        val number = pendingIncomingNumber ?: phoneNumber
-//        pendingIncomingNumber = null
-//
-//        callStartTime = System.currentTimeMillis()
-//        val callId = "phone_$callStartTime"
-//        currentCallId = callId
-//
-//        currentIncomingNumber = if (!number.isNullOrBlank()) number else "Unknown Number"
-//
-//        currentCallType = CallType.INCOMING
-//
-//        val settings = context.getSharedPreferences(PREFS_USER_INFO, 0)
-//        settings.edit { putString("CallerNumber", number) }
-//        if (BuildConfig.DEBUG) Log.d(TAG, "INCOMING call detected: $currentIncomingNumber")
-//
-//        // Launch coroutine to resolve name and log
-//        monitorScope.launch {
-//            val displayName = if (number.isNullOrBlank()) {
-//                null
-//            } else {
-//                // Try to resolve from member database first
-//                val result = CallerInfoResolver.resolve(number, context.contentResolver)
-//                when (result) {
-//                    is CallerInfoResult.Member -> result.name
-//                    is CallerInfoResult.Contact -> result.name
-//                    CallerInfoResult.Unknown -> {
-//                        // If not found in app database, try system contacts
-//                        getContactNameFromSystem(number)
-//                    }
-//
-//                    else -> {getContactNameFromSystem(number)}
-//                }
-//            }
-//            unifiedMonitor?.onCallDetected(
-//                callId = callId,
-//                number = number ?: "Unknown Number",
-//                direction = "incoming",
-//                source = "Phone Call",
-//                timestamp = callStartTime,
-//                displayName = displayName ?: "Unknown Contact"
-//            )
-//            startCallerIdentificationService(context, number)
-//        }
-//    }
-
     private fun handleOffHookState(phoneNumber: String?) {
         if (currentIncomingNumber != null) {
             if (BuildConfig.DEBUG) Log.d(TAG, "Incoming call ANSWERED: $currentIncomingNumber")
             isCallActive = true
         } else {
-            // Outgoing call
             callStartTime = System.currentTimeMillis()
             val callId = "phone_$callStartTime"
             currentCallId = callId
@@ -193,8 +138,8 @@ class PhoneCallMonitor(
 
             monitorScope.launch {
                 val number = phoneNumber ?: "Unknown Number"
-                val displayName = CallerNameResolver.resolve(number, context) ?: number  // changed
-                unifiedMonitor?.onCallDetected(
+                val displayName = CallerNameResolver.resolve(number, context) ?: number
+                unifiedMonitor.onCallDetected(
                     callId = callId,
                     number = number,
                     direction = "outgoing",
@@ -216,9 +161,8 @@ class PhoneCallMonitor(
                 val number = currentIncomingNumber ?: currentOutgoingNumber ?: "Unknown Number"
 
                 monitorScope.launch {
-                    val displayName =
-                        CallerNameResolver.resolve(number, context) ?: number  // changed
-                    unifiedMonitor?.onCallDetected(
+                    val displayName = CallerNameResolver.resolve(number, context) ?: number
+                    unifiedMonitor.onCallDetected(
                         callId = callId,
                         number = number,
                         direction = direction,
@@ -230,11 +174,10 @@ class PhoneCallMonitor(
             }
 
             currentIncomingNumber != null && callId != null -> {
-                // Missed call
                 val number = currentIncomingNumber!!
                 monitorScope.launch {
                     val displayName = CallerNameResolver.resolve(number, context) ?: number
-                    unifiedMonitor?.onCallDetected(
+                    unifiedMonitor.onCallDetected(
                         callId = callId,
                         number = number,
                         direction = "missed",
@@ -242,7 +185,7 @@ class PhoneCallMonitor(
                         timestamp = startTime,
                         displayName = displayName
                     )
-                    unifiedMonitor?.onCallEnded(callId, System.currentTimeMillis())
+                    unifiedMonitor.onCallEnded(callId, System.currentTimeMillis())
                 }
             }
         }

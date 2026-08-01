@@ -18,8 +18,8 @@ import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.pastoral.PastoralDatabase
 import za.co.jpsoft.winkerkreader.data.pastoral.entities.FollowUpReminderEntity
 import za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase
-import za.co.jpsoft.winkerkreader.utils.SettingsManager
 import za.co.jpsoft.winkerkreader.utils.Utils.toLocalDateSafe
+import za.co.jpsoft.winkerkreader.utils.widget.PastoralWidgetDependencies
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -42,7 +42,6 @@ class PastoralWidgetRemoteViewsService : RemoteViewsService() {
 
         override fun onCreate() {
             if (BuildConfig.DEBUG) Log.d(TAG, "onCreate")
-            // ✅ Do NOT load data here – onDataSetChanged() will be called next.
         }
 
         override fun onDataSetChanged() {
@@ -122,7 +121,7 @@ class PastoralWidgetRemoteViewsService : RemoteViewsService() {
         }
 
         private fun bindReminderToViews(views: RemoteViews, reminder: FollowUpReminderEntity) {
-            // --- Dynamic colours ---
+            // ─── Dynamic colours ──────────────────────────────────────────────
             val surfaceColor = ContextCompat.getColor(context, R.color.md_theme_surface)
             val primaryContainerColor =
                 ContextCompat.getColor(context, R.color.md_theme_primaryContainer)
@@ -141,13 +140,14 @@ class PastoralWidgetRemoteViewsService : RemoteViewsService() {
             val bgColor = if (isToday) primaryContainerColor else surfaceColor
             views.setInt(R.id.widget_pastoral_item_root, "setBackgroundColor", bgColor)
 
-            // --- Congregation colour indicator ---
+            // ─── Congregation colour indicator ────────────────────────────────
+            // Use injected CongregationPrefs via the static holder
             val congregationName = getMemberCongregationCached(reminder.memberGuid, context)
-            val settingsManager = SettingsManager.getInstance(context)
+            val congregationPrefs = PastoralWidgetDependencies.congregationPrefs
             val congregationColor = when (congregationName) {
-                settingsManager.congregation.gemeenteNaam -> settingsManager.congregation.gemeenteKleur
-                settingsManager.congregation.gemeente2Naam -> settingsManager.congregation.gemeente2Kleur
-                settingsManager.congregation.gemeente3Naam -> settingsManager.congregation.gemeente3Kleur
+                congregationPrefs.gemeenteNaam -> congregationPrefs.gemeenteKleur
+                congregationPrefs.gemeente2Naam -> congregationPrefs.gemeente2Kleur
+                congregationPrefs.gemeente3Naam -> congregationPrefs.gemeente3Kleur
                 else -> ContextCompat.getColor(context, R.color.md_theme_onSurfaceVariant)
             }
             views.setInt(
@@ -156,7 +156,7 @@ class PastoralWidgetRemoteViewsService : RemoteViewsService() {
                 congregationColor
             )
 
-            // Build display text
+            // ─── Build display text ────────────────────────────────────────────
             val displayName =
                 reminder.memberDisplayNameCache?.takeIf { it.isNotBlank() } ?: "Lidmaat"
             val dateStr = if (isToday) {
@@ -255,8 +255,6 @@ class PastoralWidgetRemoteViewsService : RemoteViewsService() {
 
         /**
          * Resolves the congregation name for a member by GUID.
-         * Queries MemberDao directly — no ContentProvider round-trip.
-         * No record-status filter: pastoral reminders can target any member record.
          */
         private fun getMemberCongregation(memberGuid: String?, context: Context): String? {
             if (memberGuid.isNullOrEmpty()) return null

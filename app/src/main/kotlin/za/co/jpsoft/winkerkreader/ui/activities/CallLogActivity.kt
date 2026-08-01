@@ -15,6 +15,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -28,13 +29,18 @@ import za.co.jpsoft.winkerkreader.databinding.ActivityCallLogBinding
 import za.co.jpsoft.winkerkreader.ui.adapters.CallLogAdapter
 import za.co.jpsoft.winkerkreader.utils.CallLogExporter
 import za.co.jpsoft.winkerkreader.utils.UnifiedCallMonitor
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class CallLogActivity : AuthBaseActivity() {
+
+    @Inject
+    lateinit var unifiedCallMonitor: UnifiedCallMonitor
 
     private lateinit var binding: ActivityCallLogBinding
     private lateinit var callLogAdapter: CallLogAdapter
     private lateinit var callLogDao: CallLogDao   // was: private lateinit var databaseHelper: DatabaseHelper
-    private var currentCallLogs: List<za.co.jpsoft.winkerkreader.data.models.CallLog> = emptyList()
+    private var currentCallLogs: List<CallLog> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -231,8 +237,7 @@ class CallLogActivity : AuthBaseActivity() {
             .setMessage("Is jy seker jy wil al die oproepinligting uitvee?\n Dit kan nie omgekeer word nie!")
             .setPositiveButton("Wis uit") { _, _ ->
                 lifecycleScope.launch(Dispatchers.IO) {
-                    val success =
-                        callLogDao.clearAll() >= 0   // was: databaseHelper.clearAllCallLogs()
+                    val success = callLogDao.clearAll() >= 0
                     withContext(Dispatchers.Main) {
                         if (success) {
                             Toast.makeText(
@@ -264,7 +269,7 @@ class CallLogActivity : AuthBaseActivity() {
     private fun observeCallLogUpdates() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                UnifiedCallMonitor.getInstance(this@CallLogActivity).callLogUpdates.collect {
+                unifiedCallMonitor.callLogUpdates.collect {
                     loadCallLogs()
                 }
             }

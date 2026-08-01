@@ -8,12 +8,18 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import com.google.android.material.snackbar.Snackbar
+import dagger.hilt.android.AndroidEntryPoint
+import jakarta.inject.Inject
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
 import za.co.jpsoft.winkerkreader.databinding.RegistreerBinding
-import za.co.jpsoft.winkerkreader.utils.SettingsManager
+import za.co.jpsoft.winkerkreader.utils.prefs.CongregationPrefs
 
+@AndroidEntryPoint
 class RegistreerActivity : AuthBaseActivity() {
+
+    @Inject
+    lateinit var congregationPrefs: CongregationPrefs
 
     private lateinit var binding: RegistreerBinding
     private var isDataChanged = false
@@ -37,7 +43,6 @@ class RegistreerActivity : AuthBaseActivity() {
     private fun initializeUI() {
         binding.regAbout.text = getAboutText()
 
-        // Set up focus change listeners for better UX
         listOf(
             binding.regNaam,
             binding.regVan,
@@ -66,17 +71,15 @@ class RegistreerActivity : AuthBaseActivity() {
     private fun populateUserData() {
         val settings = getSharedPreferences(PREFS_USER_INFO, 0)
 
-        // Populate user fields with saved data
         binding.regNaam.setText(settings.getString("Naam", ""))
         binding.regVan.setText(settings.getString("Van", ""))
         binding.regEpos.setText(settings.getString("E-Pos", ""))
         binding.regSelno.setText(settings.getString("Selfoon", ""))
 
-        // Populate gemeente fields if available
-        val settingsManager = SettingsManager.getInstance(this)
-        if (settingsManager.congregation.gemeenteNaam != "Onbekend") {
-            binding.regGemeente.setText(settingsManager.congregation.gemeenteNaam)
-            binding.regGemeenteEpos.setText(settingsManager.congregation.gemeenteEpos)
+        // Use injected congregationPrefs instead of SettingsManager
+        if (congregationPrefs.gemeenteNaam != "Onbekend") {
+            binding.regGemeente.setText(congregationPrefs.gemeenteNaam)
+            binding.regGemeenteEpos.setText(congregationPrefs.gemeenteEpos)
         }
     }
 
@@ -113,7 +116,6 @@ class RegistreerActivity : AuthBaseActivity() {
                     layout?.error = null
                 }
             }
-
             binding.regGemeenteEpos.id -> {
                 if (text.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(text)
                         .matches()
@@ -123,7 +125,6 @@ class RegistreerActivity : AuthBaseActivity() {
                     layout?.error = null
                 }
             }
-
             binding.regSelno.id -> {
                 if (text.isNotEmpty() && !text.matches(Regex("^[0-9\\-\\+\\s]+$"))) {
                     layout?.error = getString(R.string.invalid_phone)
@@ -164,7 +165,6 @@ class RegistreerActivity : AuthBaseActivity() {
     private fun handleUpdateClick(unused: View) {
         val userData = collectUserData()
 
-        // Validate required fields
         if (userData.naam.isEmpty() || userData.van.isEmpty()) {
             Snackbar.make(
                 binding.root,
@@ -197,14 +197,13 @@ class RegistreerActivity : AuthBaseActivity() {
     }
 
     private fun saveUserData(userData: UserData) {
-        // Update global gemeente data if changed
-        val settingsManager = SettingsManager.getInstance(this)
-        settingsManager.congregation.gemeenteEpos = userData.gemEpos
-        if (userData.gemNaam.isNotEmpty() && settingsManager.congregation.gemeenteNaam != userData.gemNaam) {
-            settingsManager.congregation.gemeenteNaam = userData.gemNaam
+        // Update global gemeente data using injected prefs
+        congregationPrefs.gemeenteEpos = userData.gemEpos
+        if (userData.gemNaam.isNotEmpty() && congregationPrefs.gemeenteNaam != userData.gemNaam) {
+            congregationPrefs.gemeenteNaam = userData.gemNaam
         }
 
-        // Save to SharedPreferences
+        // Save user's personal info to SharedPreferences
         val settings = getSharedPreferences(PREFS_USER_INFO, 0)
         settings.edit {
             putString("Naam", userData.naam)

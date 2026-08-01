@@ -16,27 +16,39 @@ import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import dagger.hilt.android.AndroidEntryPoint
+import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.databinding.FragmentUitlegPastoraalBinding
+import za.co.jpsoft.winkerkreader.di.UserPrefs
 import za.co.jpsoft.winkerkreader.ui.activities.UitlegActivity
 import za.co.jpsoft.winkerkreader.ui.activities.UitlegCalendarSelectionListener
 import za.co.jpsoft.winkerkreader.utils.PastoralTaskScriptManager
-import za.co.jpsoft.winkerkreader.utils.SettingsManager
-import za.co.jpsoft.winkerkreader.utils.prefs.TasksPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.*
 
+@AndroidEntryPoint
 class UitlegPastoraalFragment : Fragment() {
+
+    @Inject
+    lateinit var pastoralPrefs: PastoralPrefs
+    @Inject
+    lateinit var tasksPrefs: TasksPrefs
+    @Inject
+    lateinit var backupPrefs: BackupPrefs
+
+    @Inject
+    @UserPrefs
+    lateinit var calendarPrefs: CalendarPrefs
     private var isLoggedIn = false
     private var _binding: FragmentUitlegPastoraalBinding? = null
     private val binding get() = _binding!!
-    private lateinit var settingsManager: SettingsManager
     private var listener: UitlegCalendarSelectionListener? = null
     private var taskLists: List<Pair<String, String>> = emptyList()
     private var selectedTaskListId: String? = null
 
-    // Aanvanklike waardes
     private var initialAutoSync = false
     private var initialMode = TasksPrefs.GoogleTasksMode.OFF
     private var initialUrl: String? = null
@@ -63,9 +75,7 @@ class UitlegPastoraalFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        settingsManager = SettingsManager.getInstance(requireContext())
 
-        // Tydelike spinner
         val tempAdapter = ArrayAdapter(
             requireContext(),
             android.R.layout.simple_spinner_item,
@@ -84,14 +94,14 @@ class UitlegPastoraalFragment : Fragment() {
             updateSaveButtonState()
         }, 300)
 
-        if (settingsManager.tasks.googleTasksMode() == TasksPrefs.GoogleTasksMode.API &&
-            settingsManager.tasks.isTasksScriptConfigured()   // fixed
+        if (tasksPrefs.googleTasksMode() == TasksPrefs.GoogleTasksMode.API &&
+            tasksPrefs.isTasksScriptConfigured()
         ) {
             loadTaskLists()
         }
 
-        val savedUrl = settingsManager.tasks.tasksScriptUrl
-        val savedSecret = settingsManager.tasks.tasksScriptSecret
+        val savedUrl = tasksPrefs.tasksScriptUrl
+        val savedSecret = tasksPrefs.tasksScriptSecret
         if (!savedUrl.isNullOrBlank() && !savedSecret.isNullOrBlank()) {
             binding.btnRefreshLists.text = getString(R.string.refresh_lists_btn)
             isLoggedIn = true
@@ -114,12 +124,12 @@ class UitlegPastoraalFragment : Fragment() {
     }
 
     private fun loadInitialState() {
-        initialAutoSync = settingsManager.pastoral.pastoralCalendarSyncEnabled   // fixed
-        initialMode = settingsManager.tasks.googleTasksMode()
-        initialUrl = settingsManager.tasks.tasksScriptUrl
-        initialSecret = settingsManager.tasks.tasksScriptSecret
-        initialTaskListId = settingsManager.tasks.googleTasksListId
-        initialCalendarId = settingsManager.pastoral.pastoralCalendarId ?: -1L
+        initialAutoSync = pastoralPrefs.pastoralCalendarSyncEnabled
+        initialMode = tasksPrefs.googleTasksMode()
+        initialUrl = tasksPrefs.tasksScriptUrl
+        initialSecret = tasksPrefs.tasksScriptSecret
+        initialTaskListId = tasksPrefs.googleTasksListId
+        initialCalendarId = pastoralPrefs.pastoralCalendarId ?: -1L
     }
 
     fun setPastoralCalendarSpinner(adapter: ArrayAdapter<String>, selectedId: Long) {
@@ -338,20 +348,17 @@ class UitlegPastoraalFragment : Fragment() {
             R.id.tasks_mode_share -> TasksPrefs.GoogleTasksMode.SHARE
             else -> TasksPrefs.GoogleTasksMode.OFF
         }
-        // fixed: pass 'mode' argument
-        settingsManager.tasks.setGoogleTasksMode(mode)
-        settingsManager.pastoral.pastoralCalendarSyncEnabled =
-            binding.pastoralCalendarAutoSync.isChecked   // fixed
+        tasksPrefs.setGoogleTasksMode(mode)
+        pastoralPrefs.pastoralCalendarSyncEnabled = binding.pastoralCalendarAutoSync.isChecked
 
         (activity as? UitlegActivity)?.savePastoralCalendarId()
 
         val scriptUrl = binding.appsScriptLink.text?.toString()?.trim()
         val scriptSecret = binding.appsScriptKey.text?.toString()?.trim()
-        settingsManager.tasks.tasksScriptUrl = scriptUrl?.ifBlank { null }
-        settingsManager.tasks.tasksScriptSecret = scriptSecret?.ifBlank { null }
-        settingsManager.tasks.googleTasksListId = selectedTaskListId
+        tasksPrefs.tasksScriptUrl = scriptUrl?.ifBlank { null }
+        tasksPrefs.tasksScriptSecret = scriptSecret?.ifBlank { null }
+        tasksPrefs.googleTasksListId = selectedTaskListId
 
-        // Update initial values
         initialAutoSync = binding.pastoralCalendarAutoSync.isChecked
         initialMode = mode
         initialUrl = scriptUrl?.ifBlank { null }
@@ -366,6 +373,63 @@ class UitlegPastoraalFragment : Fragment() {
         Toast.makeText(requireContext(), "Pastorale instellings gestoor", Toast.LENGTH_SHORT).show()
     }
 
+    // copyScriptToClipboard, onDestroyView, setupBackupStatusSection, formatBackupTimestamp remain unchanged
+    // (but update references to backupPrefs where needed)
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
+    private fun setupBackupStatusSection() {
+        var ligg = "Ligging: ${
+            za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.getWkrDir(requireContext())
+        }"
+        binding.backupLocationText.text = ligg
+        ligg =
+            "Herinneringe & notas: ${formatBackupTimestamp(backupPrefs.lastPastoralBackupTimestamp)}"
+        binding.backupStatusPastoralText.text = ligg
+        ligg = "Oproeplog: ${formatBackupTimestamp(backupPrefs.lastCallLogBackupTimestamp)}"
+        binding.backupStatusCallLogText.text = ligg
+
+        binding.callLogBackupSwitch.isChecked = backupPrefs.callLogBackupEnabled
+        binding.callLogBackupSwitch.setOnCheckedChangeListener { _, isChecked ->
+            backupPrefs.callLogBackupEnabled = isChecked
+            if (isChecked) {
+                viewLifecycleOwner.lifecycleScope.launch {
+                    withContext(Dispatchers.IO) {
+                        za.co.jpsoft.winkerkreader.data.calllog.CallLogDatabaseBackup.backupNow(
+                            requireContext()
+                        )
+                    }
+                    ligg =
+                        "Oproeplog: ${formatBackupTimestamp(backupPrefs.lastCallLogBackupTimestamp)}"
+                    binding.backupStatusCallLogText.text = ligg
+                }
+            }
+        }
+    }
+
+    private fun formatBackupTimestamp(timestamp: Long): String {
+        if (timestamp == 0L) return "Nog nie rugsteun gemaak nie"
+        val now = System.currentTimeMillis()
+        val diffMs = now - timestamp
+        val diffMinutes = diffMs / (60 * 1000)
+        val diffHours = diffMs / (60 * 60 * 1000)
+        val diffDays = diffMs / (24 * 60 * 60 * 1000)
+
+        return when {
+            diffMinutes < 1 -> "Nou-nou"
+            diffMinutes < 60 -> "$diffMinutes minute gelede"
+            diffHours < 24 -> "$diffHours ure gelede"
+            diffDays == 1L -> "Gister"
+            else -> {
+                val formatter =
+                    java.text.SimpleDateFormat("d MMM yyyy, HH:mm", java.util.Locale("af"))
+                formatter.format(java.util.Date(timestamp))
+            }
+        }
+    }
     private fun copyScriptToClipboard() {
         val scriptCode = """
 /**
@@ -452,7 +516,8 @@ function taskBelongsToUs(taskId) {
     return false;
   }
 }
-        """.trimIndent()
+    """.trimIndent()
+
         val instructions = """
 📋 INSTALLASIE-INSTRUKSIES:
 
@@ -470,7 +535,8 @@ function taskBelongsToUs(taskId) {
 10. Stoor die instellings.
 
 Die skrip is nou gereed!
-        """.trimIndent()
+    """.trimIndent()
+
         val fullText = "$scriptCode\n\n$instructions"
         val clipboard =
             requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -481,67 +547,5 @@ Die skrip is nou gereed!
             "Skrip en instruksies is na knipbord gekopieer",
             Toast.LENGTH_LONG
         ).show()
-    }
-
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
-
-    private fun setupBackupStatusSection() {
-        var ligg = "Ligging: ${
-            za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.getWkrDir(
-                requireContext()
-            )
-        }"
-        binding.backupLocationText.text = ligg
-        ligg =
-            "Herinneringe & notas: ${formatBackupTimestamp(settingsManager.backup.lastPastoralBackupTimestamp)}"
-        binding.backupStatusPastoralText.text = ligg
-        ligg =
-            "Oproeplog: ${formatBackupTimestamp(settingsManager.backup.lastCallLogBackupTimestamp)}"
-        binding.backupStatusCallLogText.text = ligg
-
-        binding.callLogBackupSwitch.isChecked = settingsManager.backup.callLogBackupEnabled
-        binding.callLogBackupSwitch.setOnCheckedChangeListener { _, isChecked ->
-            settingsManager.backup.callLogBackupEnabled = isChecked
-            if (isChecked) {
-                // Back up immediately on enabling, rather than waiting for the
-                // next call/mutation, so the status line updates right away.
-                viewLifecycleOwner.lifecycleScope.launch {
-                    withContext(Dispatchers.IO) {
-                        za.co.jpsoft.winkerkreader.data.calllog.CallLogDatabaseBackup.backupNow(
-                            requireContext()
-                        )
-                    }
-                    ligg =
-                        "Oproeplog: ${formatBackupTimestamp(settingsManager.backup.lastCallLogBackupTimestamp)}"
-                    binding.backupStatusCallLogText.text = ligg
-                }
-            }
-        }
-    }
-
-    private fun formatBackupTimestamp(timestamp: Long): String {
-        if (timestamp == 0L) return "Nog nie rugsteun gemaak nie"
-
-        val now = System.currentTimeMillis()
-        val diffMs = now - timestamp
-        val diffMinutes = diffMs / (60 * 1000)
-        val diffHours = diffMs / (60 * 60 * 1000)
-        val diffDays = diffMs / (24 * 60 * 60 * 1000)
-
-        return when {
-            diffMinutes < 1 -> "Nou-nou"
-            diffMinutes < 60 -> "$diffMinutes minute gelede"
-            diffHours < 24 -> "$diffHours ure gelede"
-            diffDays == 1L -> "Gister"
-            else -> {
-                val formatter =
-                    java.text.SimpleDateFormat("d MMM yyyy, HH:mm", java.util.Locale("af"))
-                formatter.format(java.util.Date(timestamp))
-            }
-        }
     }
 }

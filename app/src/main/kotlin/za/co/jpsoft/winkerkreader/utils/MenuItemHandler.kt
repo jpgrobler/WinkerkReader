@@ -10,14 +10,14 @@ import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.WinkerkContract
 import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.LIDMATE_TAG
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel
+import za.co.jpsoft.winkerkreader.utils.prefs.MemberListPrefs
 
 class MenuItemHandler(
     private val activity: AppCompatActivity,
-    private val settings: SettingsManager,
     private val viewModel: MemberViewModel,
     private val navigationController: MainNavigationController,
-    // ─── callback ──────────────────────────────────────────────
-    private val onSortOrderChanged: (String) -> Unit          // activity will handle sort change + label update
+    private val memberListPrefs: MemberListPrefs,
+    private val onSortOrderChanged: (String) -> Unit
 ) {
     fun handleMenuItem(item: MenuItem): Boolean {
         return when (item.itemId) {
@@ -34,13 +34,13 @@ class MenuItemHandler(
                 true
             }
             R.id.laai -> {
-                settings.memberList.fromMenu = true
+                memberListPrefs.fromMenu = true   // ← fixed
                 navigationController.navigateToLaaiDatabasis(extras = null)
                 activity.finish()
                 true
             }
             R.id.sms_verjaar -> {
-                settings.memberList.fromMenu = true
+                memberListPrefs.fromMenu = true   // ← fixed
                 navigationController.navigateToVerjaarSms()
                 true
             }
@@ -84,49 +84,49 @@ class MenuItemHandler(
     fun handleAktiefRadioGroup(): Boolean = true
 
     private fun handleTagged(): Boolean {
-        settings.memberList.defLayout = "VAN"
+        memberListPrefs.defLayout = "VAN"   // ← fixed
         viewModel.soekList = false
         onSortOrderChanged("VAN")
         return true
     }
 
     private fun handleSortVan(): Boolean {
-        settings.memberList.defLayout = "VAN"
+        memberListPrefs.defLayout = "VAN"   // ← fixed
         viewModel.soekList = false
         onSortOrderChanged("VAN")
         return true
     }
 
     private fun handleSortWyk(): Boolean {
-        settings.memberList.defLayout = "WYK"
+        memberListPrefs.defLayout = "WYK"   // ← fixed
         viewModel.soekList = false
         onSortOrderChanged("WYK")
         return true
     }
 
     private fun handleSortOuderdom(): Boolean {
-        settings.memberList.defLayout = "OUDERDOM"
+        memberListPrefs.defLayout = "OUDERDOM"   // ← fixed
         viewModel.soekList = false
         onSortOrderChanged("OUDERDOM")
         return true
     }
 
     private fun handleVerjaar(): Boolean {
-        settings.memberList.defLayout = "VERJAAR"
+        memberListPrefs.defLayout = "VERJAAR"   // ← fixed
         viewModel.soekList = false
         onSortOrderChanged("VERJAAR")
         return true
     }
 
     private fun handleSortAdres(): Boolean {
-        settings.memberList.defLayout = "ADRES"
+        memberListPrefs.defLayout = "ADRES"   // ← fixed
         viewModel.soekList = false
         onSortOrderChanged("ADRES")
         return true
     }
 
     private fun handleSortGesin(): Boolean {
-        settings.memberList.defLayout = "GESINNE"
+        memberListPrefs.defLayout = "GESINNE"   // ← fixed
         viewModel.soekList = false
         onSortOrderChanged("GESINNE")
         return true

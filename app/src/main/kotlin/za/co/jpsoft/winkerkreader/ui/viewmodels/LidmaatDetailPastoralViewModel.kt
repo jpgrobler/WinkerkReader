@@ -28,10 +28,7 @@ class LidmaatDetailPastoralViewModel(
     val memberGuid: String
 ) : ViewModel() {
 
-    // -------------------------------------------------------------------------
-    // Pending reminders for this member (drives mini-list)
-    // -------------------------------------------------------------------------
-
+    // ── Pending reminders ────────────────────────────────────────────────────
     val pendingReminders: StateFlow<List<FollowUpReminderEntity>> =
         repository.observePendingForMember(memberGuid)
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
@@ -40,21 +37,13 @@ class LidmaatDetailPastoralViewModel(
         .map { it.size }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
 
-    // -------------------------------------------------------------------------
-    // Available templates (drives template picker in BottomSheet)
-    // -------------------------------------------------------------------------
-
+    // ── Templates ────────────────────────────────────────────────────────────
     val templates: StateFlow<List<TemplateWithSteps>> =
         repository.observeTemplates()
             .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
-    // -------------------------------------------------------------------------
-    // One-shot events
-    // -------------------------------------------------------------------------
-
+    // ── Events ──────────────────────────────────────────────────────────────
     private val _created = MutableSharedFlow<Int>(extraBufferCapacity = 1)
-
-    /** Emits the count of reminders just created — used for Toast confirmation. */
     val created: SharedFlow<Int> = _created.asSharedFlow()
 
     private val _error = MutableSharedFlow<String>(extraBufferCapacity = 1)
