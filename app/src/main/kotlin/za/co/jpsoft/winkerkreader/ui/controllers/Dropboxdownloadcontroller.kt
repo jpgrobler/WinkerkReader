@@ -13,7 +13,7 @@ import android.util.Log
 import androidx.lifecycle.LifecycleCoroutineScope
 import kotlinx.coroutines.launch
 import za.co.jpsoft.winkerkreader.BuildConfig
-import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.WINKERK_DB
+import za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract.winkerkEntry.WINKERK_DB
 import java.io.File
 
 /**

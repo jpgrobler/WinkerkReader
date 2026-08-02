@@ -13,6 +13,7 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayoutMediator
 import dagger.hilt.android.AndroidEntryPoint
+import jakarta.inject.Inject
 import kotlinx.coroutines.launch
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.pastoral.repository.PastoralReminderRepository
@@ -20,9 +21,8 @@ import za.co.jpsoft.winkerkreader.databinding.ActivityBedieningBinding
 import za.co.jpsoft.winkerkreader.receivers.PastoralReminderActionReceiver
 import za.co.jpsoft.winkerkreader.ui.adapters.BedieningPagerAdapter
 import za.co.jpsoft.winkerkreader.ui.viewmodels.BedieningViewModel
-import za.co.jpsoft.winkerkreader.utils.MainNavigationController
-import za.co.jpsoft.winkerkreader.utils.PastoralDatabaseBackup
-import javax.inject.Inject
+import za.co.jpsoft.winkerkreader.utils.db.PastoralDatabaseBackup
+import za.co.jpsoft.winkerkreader.utils.ui.MainNavigationController
 
 @AndroidEntryPoint
 class BedieningActivity : AuthBaseActivity() {
@@ -54,8 +54,6 @@ class BedieningActivity : AuthBaseActivity() {
         }
 
         setSupportActionBar(binding.bedieningToolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(false)
-
         setupViewPager()
         setupTabBadge()
         handleDeepLink(intent)

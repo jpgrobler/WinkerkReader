@@ -35,11 +35,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
-import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
-import za.co.jpsoft.winkerkreader.utils.CallerInfoResolver
-import za.co.jpsoft.winkerkreader.utils.CallerInfoResult
-import za.co.jpsoft.winkerkreader.utils.ForegroundServiceHelper
-import za.co.jpsoft.winkerkreader.utils.ForegroundServiceType
+import za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract.PREFS_USER_INFO
+import za.co.jpsoft.winkerkreader.utils.telephony.CallerInfoResolver
+import za.co.jpsoft.winkerkreader.utils.telephony.CallerInfoResult
+import za.co.jpsoft.winkerkreader.utils.work.ForegroundServiceHelper
+import za.co.jpsoft.winkerkreader.utils.work.ForegroundServiceType
 import java.lang.ref.WeakReference
 
 class OproepDetailService : Service() {

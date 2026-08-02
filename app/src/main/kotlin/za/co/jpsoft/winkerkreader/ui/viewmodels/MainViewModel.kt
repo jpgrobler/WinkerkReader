@@ -5,6 +5,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,7 +18,6 @@ import za.co.jpsoft.winkerkreader.utils.prefs.CongregationPrefs
 import za.co.jpsoft.winkerkreader.utils.prefs.MemberListPrefs
 import java.time.LocalDate
 import java.time.ZoneId
-import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(

@@ -2,8 +2,6 @@ package za.co.jpsoft.winkerkreader
 
 import android.app.Application
 import android.os.Build
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.Lifecycle
@@ -15,20 +13,23 @@ import jakarta.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import za.co.jpsoft.winkerkreader.data.DatabaseInitializer
-import za.co.jpsoft.winkerkreader.data.calllog.CallLogDatabaseBackup
-import za.co.jpsoft.winkerkreader.data.repositories.ChurchInfoRepository
-import za.co.jpsoft.winkerkreader.utils.*
+import za.co.jpsoft.winkerkreader.data.calllog.setup.CallLogDatabaseBackup
+import za.co.jpsoft.winkerkreader.data.members.repository.ChurchInfoRepository
+import za.co.jpsoft.winkerkreader.data.members.setup.DatabaseInitializer
+import za.co.jpsoft.winkerkreader.utils.AppInitializer
+import za.co.jpsoft.winkerkreader.utils.CallLogImporter
+import za.co.jpsoft.winkerkreader.utils.db.PastoralDatabaseBackup
 import za.co.jpsoft.winkerkreader.utils.prefs.AppearancePrefs
 import za.co.jpsoft.winkerkreader.utils.prefs.AppearancePrefs.ThemeMode
 import za.co.jpsoft.winkerkreader.utils.prefs.BackupPrefs
 import za.co.jpsoft.winkerkreader.utils.prefs.CallMonitorPrefs
 import za.co.jpsoft.winkerkreader.utils.prefs.CongregationPrefs
 import za.co.jpsoft.winkerkreader.utils.prefs.WidgetPrefs
+import za.co.jpsoft.winkerkreader.utils.security.AppAuthState
 import za.co.jpsoft.winkerkreader.utils.widget.PastoralWidgetDependencies
-import za.co.jpsoft.winkerkreader.widget.PastoralWidgetProvider
+import za.co.jpsoft.winkerkreader.utils.work.WorkScheduler
 import za.co.jpsoft.winkerkreader.widget.WidgetDataRepository
-import za.co.jpsoft.winkerkreader.widget.WinkerkReaderWidgetProvider
+import java.util.concurrent.TimeUnit
 
 interface LeakCanaryHelper {
     fun setup(application: Application)
@@ -62,9 +63,9 @@ open class WinkerkReader : Application() {
     @Inject
     lateinit var pastoralDbBackup: PastoralDatabaseBackup
     @Inject
-    lateinit var appearancePrefs: AppearancePrefs       // <-- added
+    lateinit var appearancePrefs: AppearancePrefs
     @Inject
-    lateinit var callMonitorPrefs: CallMonitorPrefs     // <-- added
+    lateinit var callMonitorPrefs: CallMonitorPrefs
 
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
@@ -78,7 +79,7 @@ open class WinkerkReader : Application() {
             DynamicColors.applyToActivitiesIfAvailable(this)
         }
 
-        // Use injected appearancePrefs directly
+        // Apply theme
         when (appearancePrefs.themeMode) {
             ThemeMode.LIGHT -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
             ThemeMode.DARK -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
@@ -92,7 +93,7 @@ open class WinkerkReader : Application() {
             databaseInitializer = databaseInitializer,
             workScheduler = workScheduler,
             callLogImporter = callLogImporter,
-            autoStartEnabled = callMonitorPrefs.autoStartEnabled   // <-- pass from injected prefs
+            autoStartEnabled = callMonitorPrefs.autoStartEnabled
         )
 
         ProcessLifecycleOwner.get().lifecycle.addObserver(
@@ -108,49 +109,29 @@ open class WinkerkReader : Application() {
         CallLogDatabaseBackup.init(backupPrefs)
         PastoralWidgetDependencies.init(congregationPrefs)
 
-        refreshWidgetsOnStartup()
+        // ✅ Replace fragile Handler delays with WorkManager‑scheduled refresh
+        scheduleWidgetRefreshWithDelay()
     }
 
     protected open fun createLeakCanaryHelper(): LeakCanaryHelper {
         return NoOpLeakCanaryHelper()
     }
 
-    private fun refreshWidgetsOnStartup() {
-        Handler(Looper.getMainLooper()).postDelayed({
-            try {
-                if (BuildConfig.DEBUG) Log.d("WinkerkReader", "🔄 First widget refresh attempt")
-                WinkerkReaderWidgetProvider.updateAllWidgets(this)
-                PastoralWidgetProvider.forceRefreshWidgets(this)
-                WidgetDataRepository.invalidateCache()
-                WidgetDataRepository.refreshCache(this)
-                if (BuildConfig.DEBUG) Log.d(
-                    "WinkerkReader",
-                    "✅ Widgets refreshed on startup (attempt 1)"
-                )
-            } catch (e: Exception) {
-                if (BuildConfig.DEBUG) Log.e(
-                    "WinkerkReader",
-                    "Failed to refresh widgets on startup",
-                    e
-                )
-            }
-        }, 1000)
-
-        Handler(Looper.getMainLooper()).postDelayed({
-            try {
-                if (BuildConfig.DEBUG) Log.d("WinkerkReader", "🔄 Second widget refresh attempt")
-                PastoralWidgetProvider.forceRefreshWidgets(this)
-                if (BuildConfig.DEBUG) Log.d(
-                    "WinkerkReader",
-                    "✅ Widgets refreshed on startup (attempt 2)"
-                )
-            } catch (e: Exception) {
-                if (BuildConfig.DEBUG) Log.e(
-                    "WinkerkReader",
-                    "Failed second widget refresh attempt",
-                    e
-                )
-            }
-        }, 3000)
+    /**
+     * Schedules a single widget refresh via WorkManager with a 30‑second delay.
+     * WorkManager handles retries and respects device idle state.
+     */
+    private fun scheduleWidgetRefreshWithDelay() {
+        try {
+            // Use the existing WorkScheduler if it has a dedicated method,
+            // or enqueue a one‑time work directly.
+            if (BuildConfig.DEBUG) Log.d(
+                "WinkerkReader",
+                "Scheduling widget refresh with 30s delay"
+            )
+            workScheduler.scheduleWidgetRefresh(initialDelay = 30, unit = TimeUnit.SECONDS)
+        } catch (e: Exception) {
+            if (BuildConfig.DEBUG) Log.e("WinkerkReader", "Failed to schedule widget refresh", e)
+        }
     }
 }

@@ -10,11 +10,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.services.OproepDetailService
-import za.co.jpsoft.winkerkreader.utils.CallNotificationDiagnostics
-import za.co.jpsoft.winkerkreader.utils.CallerNameResolver
-import za.co.jpsoft.winkerkreader.utils.UnifiedCallMonitor
 import za.co.jpsoft.winkerkreader.utils.prefs.CallMonitorPrefs
-import za.co.jpsoft.winkerkreader.utils.VoipDiagnosticHelper
+import za.co.jpsoft.winkerkreader.utils.telephony.CallNotificationDiagnostics
+import za.co.jpsoft.winkerkreader.utils.telephony.CallerNameResolver
+import za.co.jpsoft.winkerkreader.utils.telephony.UnifiedCallMonitor
+import za.co.jpsoft.winkerkreader.utils.telephony.VoipDiagnosticHelper
 
 /**
  * Orchestrates VoIP notification processing: detects state, extracts info,

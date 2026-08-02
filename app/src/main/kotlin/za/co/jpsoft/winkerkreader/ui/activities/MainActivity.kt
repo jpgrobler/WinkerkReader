@@ -3,10 +3,7 @@ package za.co.jpsoft.winkerkreader.ui.activities
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Bundle
-import android.text.Spannable
-import android.text.SpannableString
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -19,7 +16,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import jakarta.inject.Inject
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
-import za.co.jpsoft.winkerkreader.data.DatabaseInitializer
+import za.co.jpsoft.winkerkreader.data.members.setup.DatabaseInitializer
 import za.co.jpsoft.winkerkreader.databinding.ActivityMainBinding
 import za.co.jpsoft.winkerkreader.services.CallMonitoringService
 import za.co.jpsoft.winkerkreader.ui.bottomsheets.FilterBottomSheet
@@ -27,9 +24,25 @@ import za.co.jpsoft.winkerkreader.ui.controllers.MainActivityInitializer
 import za.co.jpsoft.winkerkreader.ui.controllers.MainSearchFilterCoordinator
 import za.co.jpsoft.winkerkreader.ui.controllers.SortOrderController
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MainViewModel
-import za.co.jpsoft.winkerkreader.utils.*
-import za.co.jpsoft.winkerkreader.utils.prefs.*
-import za.co.jpsoft.winkerkreader.workers.PastoralBackupWorker
+import za.co.jpsoft.winkerkreader.utils.CallLogImporter
+import za.co.jpsoft.winkerkreader.utils.PastoralNotificationHelper
+import za.co.jpsoft.winkerkreader.utils.messaging.WhatsAppContactLoader
+import za.co.jpsoft.winkerkreader.utils.permissions.PermissionManager
+import za.co.jpsoft.winkerkreader.utils.prefs.AppearancePrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.BackupPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.BirthdaySmsPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.CallMonitorPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.CongregationPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.MemberListPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.PastoralPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.QuickActionPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.SyncPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.TasksPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.WidgetPrefs
+import za.co.jpsoft.winkerkreader.utils.ui.MainNavigationController
+import za.co.jpsoft.winkerkreader.utils.ui.MenuItemHandler
+import za.co.jpsoft.winkerkreader.utils.work.BatteryOptimizationHelper
+import za.co.jpsoft.winkerkreader.utils.work.WorkScheduler
 
 @AndroidEntryPoint
 class MainActivity : AuthBaseActivity() {
@@ -91,11 +104,11 @@ class MainActivity : AuthBaseActivity() {
         // ─── Use injected prefs ──────────────────────────────────────────
         val dailyEnabled = backupPrefs.dailyBackupEnabled
         val exportToDownloads = backupPrefs.backupExportToDownloads
-        if (dailyEnabled) {
-            PastoralBackupWorker.schedule(this, exportToDownloads)
-        } else {
-            PastoralBackupWorker.cancel(this)
-        }
+//        if (dailyEnabled) {
+//            PastoralBackupWorker.schedule(this, exportToDownloads)
+//        } else {
+//            PastoralBackupWorker.cancel(this)
+//        }
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -106,7 +119,6 @@ class MainActivity : AuthBaseActivity() {
             insets
         }
 
-        // ─── Pass injected dependencies to initializer ───────────────────
         // ─── Pass injected dependencies to initializer ───────────────────
         initializer = MainActivityInitializer(
             activity = this,
@@ -179,7 +191,7 @@ class MainActivity : AuthBaseActivity() {
         return MenuItemHandler(
             this,
             initializer.viewModel,
-            MainNavigationController(this),
+            navigationController,
             memberListPrefs,
             onSortOrderChanged = { sortOrder -> initializer.updateSortOrder(sortOrder) }
         ).handleMenuItem(item) || super.onOptionsItemSelected(item)
@@ -244,29 +256,6 @@ class MainActivity : AuthBaseActivity() {
     }
 
     // ─── Private helpers ────────────────────────────────────────────────────
-
-    private fun setupVersionInfo() {
-        try {
-            val packageInfo = packageManager.getPackageInfo(packageName, 0)
-            val versionName = packageInfo.versionName
-
-            supportActionBar?.apply {
-                val title = SpannableString("WinkerkReader")
-                title.setSpan(
-                    android.text.style.RelativeSizeSpan(0.75f),
-                    0,
-                    title.length,
-                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-                )
-                this.title = title
-                subtitle = "v$versionName"
-            }
-        } catch (e: PackageManager.NameNotFoundException) {
-            if (BuildConfig.DEBUG) Log.e(TAG, "Failed to get package info", e)
-            supportActionBar?.title = "WinkerkReader"
-        }
-    }
-
     private fun checkOverlayPermission() {
         PermissionManager(this).requestOverlayPermissionWithRationale(this)
     }

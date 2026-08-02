@@ -5,7 +5,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import za.co.jpsoft.winkerkreader.databinding.ItemPastoralBackupBinding
-import za.co.jpsoft.winkerkreader.utils.PastoralDatabaseBackup
+import za.co.jpsoft.winkerkreader.utils.db.PastoralDatabaseBackup
 import java.time.format.DateTimeFormatter
 
 class BackupListAdapter(

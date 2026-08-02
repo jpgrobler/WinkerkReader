@@ -8,10 +8,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.BuildConfig
-import za.co.jpsoft.winkerkreader.data.DatabaseInitializer
-import za.co.jpsoft.winkerkreader.data.calllog.CallLogDatabase
-import za.co.jpsoft.winkerkreader.data.repositories.ChurchInfoRepository
+import za.co.jpsoft.winkerkreader.data.calllog.setup.CallLogDatabase
+import za.co.jpsoft.winkerkreader.data.members.repository.ChurchInfoRepository
+import za.co.jpsoft.winkerkreader.data.members.setup.DatabaseInitializer
 import za.co.jpsoft.winkerkreader.services.CallMonitoringService
+import za.co.jpsoft.winkerkreader.utils.telephony.ActiveCallReconciler
+import za.co.jpsoft.winkerkreader.utils.work.WorkScheduler
 import za.co.jpsoft.winkerkreader.widget.PastoralWidgetProvider
 
 object AppInitializer {

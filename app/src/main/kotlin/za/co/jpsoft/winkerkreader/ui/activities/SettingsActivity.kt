@@ -9,7 +9,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import za.co.jpsoft.winkerkreader.R
-import za.co.jpsoft.winkerkreader.data.WinkerkContract
+import za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract
 import za.co.jpsoft.winkerkreader.databinding.SubMenuBinding
 import za.co.jpsoft.winkerkreader.databinding.SubMenuItemBinding
 import za.co.jpsoft.winkerkreader.ui.components.SearchCheckBox

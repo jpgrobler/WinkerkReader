@@ -10,10 +10,11 @@ import android.provider.CalendarContract
 import android.util.Log
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
+import za.co.jpsoft.winkerkreader.data.calllog.models.CallType
 import za.co.jpsoft.winkerkreader.data.models.CalendarInfo
-import za.co.jpsoft.winkerkreader.data.models.CallType
 import za.co.jpsoft.winkerkreader.utils.CalendarManager.Companion.PASTORAL_REMINDER_TOKEN
 import za.co.jpsoft.winkerkreader.utils.CalendarManager.Companion.PASTORAL_TITLE_PREFIX
+import za.co.jpsoft.winkerkreader.utils.db.CursorDataExtractor
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter

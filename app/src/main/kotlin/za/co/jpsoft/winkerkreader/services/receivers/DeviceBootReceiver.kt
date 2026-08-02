@@ -8,14 +8,14 @@ import android.content.Intent
 import android.os.Build
 import android.util.Log
 import dagger.hilt.android.AndroidEntryPoint
+import jakarta.inject.Inject
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.services.BootForegroundServiceStarter
-import za.co.jpsoft.winkerkreader.utils.ServiceUtils
 import za.co.jpsoft.winkerkreader.utils.prefs.BirthdaySmsPrefs
 import za.co.jpsoft.winkerkreader.utils.prefs.CallMonitorPrefs
 import za.co.jpsoft.winkerkreader.utils.prefs.MemberListPrefs
+import za.co.jpsoft.winkerkreader.utils.work.ServiceUtils
 import java.util.Calendar
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class DeviceBootReceiver : BroadcastReceiver() {

@@ -31,4 +31,26 @@ class SyncPrefs(private val prefs: SharedPreferences) {
     var databaseSchemaVersion: Int
         get() = prefs.getInt("database_schema_version", 0)
         set(value) = prefs.edit().putInt("database_schema_version", value).apply()
+
+    // ─── Additional properties for LaaiDatabasisActivity ──────────────────────
+
+    var serverIp: String
+        get() = prefs.getString("IP", "") ?: ""
+        set(value) = prefs.edit().putString("IP", value).apply()
+
+    var dropboxUrl: String
+        get() = prefs.getString("DropBox", "") ?: ""
+        set(value) = prefs.edit().putString("DropBox", value).apply()
+
+    var syncPhotos: Boolean
+        get() = prefs.getBoolean("SYNC_PHOTOS", false)
+        set(value) = prefs.edit().putBoolean("SYNC_PHOTOS", value).apply()
+
+    var pcProtocolVersion: String
+        get() = prefs.getString("PC_PROTOCOL_VERSION", "v2") ?: "v2"
+        set(value) = prefs.edit().putString("PC_PROTOCOL_VERSION", value).apply()
+
+    var fromMenu: Boolean
+        get() = prefs.getBoolean("FROM_MENU", false)
+        set(value) = prefs.edit().putBoolean("FROM_MENU", value).apply()
 }

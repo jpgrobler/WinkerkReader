@@ -8,7 +8,6 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.paging.LoadState
@@ -16,8 +15,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.launch
 import za.co.jpsoft.winkerkreader.BuildConfig
-import za.co.jpsoft.winkerkreader.R
-import za.co.jpsoft.winkerkreader.data.DatabaseInitializer
+import za.co.jpsoft.winkerkreader.data.members.setup.DatabaseInitializer
 import za.co.jpsoft.winkerkreader.data.pastoral.PastoralDatabase
 import za.co.jpsoft.winkerkreader.databinding.ActivityMainBinding
 import za.co.jpsoft.winkerkreader.ui.activities.MainActivity
@@ -26,8 +24,21 @@ import za.co.jpsoft.winkerkreader.ui.components.SearchCheckBox
 import za.co.jpsoft.winkerkreader.ui.helpers.MemberListScrollHelper
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MainViewModel
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel
-import za.co.jpsoft.winkerkreader.utils.*
-import za.co.jpsoft.winkerkreader.utils.prefs.*
+import za.co.jpsoft.winkerkreader.utils.CallLogImporter
+import za.co.jpsoft.winkerkreader.utils.SearchCheckBoxPreferences
+import za.co.jpsoft.winkerkreader.utils.messaging.WhatsAppContactLoader
+import za.co.jpsoft.winkerkreader.utils.permissions.PermissionManager
+import za.co.jpsoft.winkerkreader.utils.prefs.AppearancePrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.BackupPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.BirthdaySmsPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.CallMonitorPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.CongregationPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.MemberListPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.QuickActionPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.SyncPrefs
+import za.co.jpsoft.winkerkreader.utils.ui.BackPressHandler
+import za.co.jpsoft.winkerkreader.utils.ui.MainNavigationController
+import za.co.jpsoft.winkerkreader.utils.work.WorkScheduler
 import za.co.jpsoft.winkerkreader.workers.PastoralBackupWorker
 
 /**
@@ -129,15 +140,7 @@ class MainActivityInitializer(
             congregationPrefs.gemeente3Naam.takeIf { it.isNotBlank() }
         ).toSet()
 
-        val savedStateHandle = SavedStateHandle()
-        viewModel = ViewModelProvider(
-            activity,
-            MemberViewModel.MemberViewModelFactory(
-                activity.application,
-                savedStateHandle,
-                initialCongregations
-            )
-        ).get(MemberViewModel::class.java)
+        viewModel = ViewModelProvider(activity)[MemberViewModel::class.java]
 
         adapter = MemberListAdapter(
             memberListPrefs = memberListPrefs,

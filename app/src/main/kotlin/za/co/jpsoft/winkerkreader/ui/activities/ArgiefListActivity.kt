@@ -21,8 +21,8 @@ import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.databinding.ArgiefBinding
 import za.co.jpsoft.winkerkreader.databinding.ArgiefItemBinding
 import za.co.jpsoft.winkerkreader.ui.viewmodels.ArgiefViewModel
-import za.co.jpsoft.winkerkreader.utils.getStringOrEmpty
-import za.co.jpsoft.winkerkreader.utils.getStringOrNull
+import za.co.jpsoft.winkerkreader.utils.db.getStringOrEmpty
+import za.co.jpsoft.winkerkreader.utils.db.getStringOrNull
 
 class ArgiefListActivity : AuthBaseActivity() {
 

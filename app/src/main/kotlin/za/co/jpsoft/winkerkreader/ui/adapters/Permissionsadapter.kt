@@ -7,7 +7,7 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.databinding.ItemPermissionBinding
-import za.co.jpsoft.winkerkreader.utils.PermissionItem
+import za.co.jpsoft.winkerkreader.utils.permissions.PermissionItem
 
 /**
  * Displays the list of [PermissionItem]s on the permissions screen.

@@ -3,9 +3,9 @@ package za.co.jpsoft.winkerkreader.ui.activities
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import dagger.hilt.android.AndroidEntryPoint
-import za.co.jpsoft.winkerkreader.utils.AppAuthGuard
+import jakarta.inject.Inject
 import za.co.jpsoft.winkerkreader.utils.prefs.SecurityPrefs
-import javax.inject.Inject
+import za.co.jpsoft.winkerkreader.utils.security.AppAuthGuard
 
 @AndroidEntryPoint
 abstract class AuthBaseActivity : BaseActivity() {

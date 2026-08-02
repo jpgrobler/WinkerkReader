@@ -8,13 +8,17 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.BuildConfig
-import za.co.jpsoft.winkerkreader.data.DatabaseInitializer
+import za.co.jpsoft.winkerkreader.data.members.setup.DatabaseInitializer
 import za.co.jpsoft.winkerkreader.databinding.ActivityMainBinding
-import za.co.jpsoft.winkerkreader.utils.*
+import za.co.jpsoft.winkerkreader.utils.AppInitializer
+import za.co.jpsoft.winkerkreader.utils.CallLogImporter
+import za.co.jpsoft.winkerkreader.utils.permissions.PermissionManager
 import za.co.jpsoft.winkerkreader.utils.prefs.BirthdaySmsPrefs
 import za.co.jpsoft.winkerkreader.utils.prefs.CallMonitorPrefs
 import za.co.jpsoft.winkerkreader.utils.prefs.MemberListPrefs
 import za.co.jpsoft.winkerkreader.utils.prefs.SyncPrefs
+import za.co.jpsoft.winkerkreader.utils.ui.MainNavigationController
+import za.co.jpsoft.winkerkreader.utils.work.WorkScheduler
 
 interface StartupActions {
     fun checkAndRequestPermissions()

@@ -12,6 +12,7 @@ import android.widget.RemoteViews
 import android.widget.RemoteViewsService
 import androidx.core.content.ContextCompat
 import dagger.hilt.android.AndroidEntryPoint
+import jakarta.inject.Inject
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.utils.prefs.CongregationPrefs
@@ -19,7 +20,6 @@ import za.co.jpsoft.winkerkreader.widget.WidgetDataRepository
 import za.co.jpsoft.winkerkreader.widget.WidgetRow
 import za.co.jpsoft.winkerkreader.widget.WinkerkReaderWidgetProvider
 import java.time.LocalDate
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class ListViewWidgetService : RemoteViewsService() {

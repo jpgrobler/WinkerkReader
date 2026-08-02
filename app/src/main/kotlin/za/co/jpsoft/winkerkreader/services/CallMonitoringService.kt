@@ -15,19 +15,16 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import dagger.hilt.android.AndroidEntryPoint
+import jakarta.inject.Inject
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
-import za.co.jpsoft.winkerkreader.data.WinkerkContract.KEY_SELECTED_CALENDAR_ID
-import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
-import za.co.jpsoft.winkerkreader.data.calllog.CallLogDao
-import za.co.jpsoft.winkerkreader.data.calllog.CallLogDatabase
+import za.co.jpsoft.winkerkreader.data.calllog.dao.CallLogDao
+import za.co.jpsoft.winkerkreader.data.calllog.setup.CallLogDatabase
 import za.co.jpsoft.winkerkreader.ui.activities.MainActivity
-import za.co.jpsoft.winkerkreader.utils.CalendarManager
-import za.co.jpsoft.winkerkreader.utils.ForegroundServiceHelper
-import za.co.jpsoft.winkerkreader.utils.ForegroundServiceType
-import za.co.jpsoft.winkerkreader.utils.PhoneCallMonitor
-import za.co.jpsoft.winkerkreader.utils.UnifiedCallMonitor
-import javax.inject.Inject
+import za.co.jpsoft.winkerkreader.utils.telephony.PhoneCallMonitor
+import za.co.jpsoft.winkerkreader.utils.telephony.UnifiedCallMonitor
+import za.co.jpsoft.winkerkreader.utils.work.ForegroundServiceHelper
+import za.co.jpsoft.winkerkreader.utils.work.ForegroundServiceType
 
 @AndroidEntryPoint
 class CallMonitoringService : Service() {

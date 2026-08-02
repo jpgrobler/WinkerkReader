@@ -1,8 +1,7 @@
 package za.co.jpsoft.winkerkreader.utils.prefs
 
 import android.content.SharedPreferences
-import za.co.jpsoft.winkerkreader.data.WinkerkContract
-import za.co.jpsoft.winkerkreader.utils.prefs.TasksPrefs.GoogleTasksMode
+import za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract
 
 class TasksPrefs(
     private val prefs: SharedPreferences,

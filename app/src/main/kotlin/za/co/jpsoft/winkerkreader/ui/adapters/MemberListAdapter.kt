@@ -27,15 +27,15 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.RequestOptions
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
-import za.co.jpsoft.winkerkreader.data.models.MemberItem
-import za.co.jpsoft.winkerkreader.data.repositories.ContactRepository
+import za.co.jpsoft.winkerkreader.data.members.models.MemberItem
+import za.co.jpsoft.winkerkreader.data.members.repository.ContactRepository
 import za.co.jpsoft.winkerkreader.databinding.ListItem2Binding
 import za.co.jpsoft.winkerkreader.databinding.ListItemBinding
-import za.co.jpsoft.winkerkreader.utils.ColorUtils
-import za.co.jpsoft.winkerkreader.utils.PhotoHelper
+import za.co.jpsoft.winkerkreader.utils.Utils.fixphonenumber
+import za.co.jpsoft.winkerkreader.utils.files.PhotoHelper
 import za.co.jpsoft.winkerkreader.utils.prefs.CongregationPrefs
 import za.co.jpsoft.winkerkreader.utils.prefs.MemberListPrefs
-import za.co.jpsoft.winkerkreader.utils.Utils.fixphonenumber
+import za.co.jpsoft.winkerkreader.utils.ui.ColorUtils
 import java.util.Locale
 
 /**

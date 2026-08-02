@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
+import jakarta.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import za.co.jpsoft.winkerkreader.R
@@ -21,7 +22,6 @@ import za.co.jpsoft.winkerkreader.data.pastoral.repository.PastoralReminderRepos
 import za.co.jpsoft.winkerkreader.databinding.ActivityTemplateEditorBinding
 import za.co.jpsoft.winkerkreader.ui.adapters.StepEditorAdapter
 import za.co.jpsoft.winkerkreader.ui.dialogs.StepEditorDialog
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class TemplateEditorActivity : AuthBaseActivity() {

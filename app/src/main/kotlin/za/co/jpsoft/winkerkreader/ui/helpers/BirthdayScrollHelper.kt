@@ -4,8 +4,8 @@ import android.content.Context
 import android.util.Log
 import androidx.recyclerview.widget.RecyclerView
 import za.co.jpsoft.winkerkreader.BuildConfig
-import za.co.jpsoft.winkerkreader.data.models.MemberItem
-import za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase
+import za.co.jpsoft.winkerkreader.data.members.models.MemberItem
+import za.co.jpsoft.winkerkreader.data.members.setup.WinkerkDatabase
 import za.co.jpsoft.winkerkreader.ui.helpers.BirthdayScrollHelper.findNextBirthdayPosition
 import java.time.LocalDate
 import java.util.concurrent.ExecutorService

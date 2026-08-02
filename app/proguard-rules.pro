@@ -32,7 +32,7 @@
 # ============================================================
 # SQLiteStatementValidator
 # ============================================================
--keepclassmembers class za.co.jpsoft.winkerkreader.utils.SQLiteStatementValidator { *; }
+-keepclassmembers class za.co.jpsoft.winkerkreader.utils.db.SQLiteStatementValidator { *; }
 
 # ============================================================
 # Room

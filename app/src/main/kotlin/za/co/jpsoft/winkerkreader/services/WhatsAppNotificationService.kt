@@ -7,7 +7,6 @@ import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.service.notification.NotificationListenerService
@@ -16,6 +15,7 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import dagger.hilt.android.AndroidEntryPoint
+import jakarta.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -23,17 +23,16 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
+import za.co.jpsoft.winkerkreader.services.voip.VoipCallInfoExtractor
+import za.co.jpsoft.winkerkreader.services.voip.VoipCallStateDetector
 import za.co.jpsoft.winkerkreader.services.voip.VoipCallTracker
 import za.co.jpsoft.winkerkreader.services.voip.VoipNotificationHandler
-import za.co.jpsoft.winkerkreader.services.voip.VoipCallStateDetector
-import za.co.jpsoft.winkerkreader.services.voip.VoipCallInfoExtractor
 import za.co.jpsoft.winkerkreader.ui.activities.MainActivity
-import za.co.jpsoft.winkerkreader.utils.CallNotificationDiagnostics
-import za.co.jpsoft.winkerkreader.utils.UnifiedCallMonitor
-import za.co.jpsoft.winkerkreader.utils.VoipDiagnosticHelper
 import za.co.jpsoft.winkerkreader.utils.prefs.CallMonitorPrefs
+import za.co.jpsoft.winkerkreader.utils.telephony.CallNotificationDiagnostics
+import za.co.jpsoft.winkerkreader.utils.telephony.UnifiedCallMonitor
+import za.co.jpsoft.winkerkreader.utils.telephony.VoipDiagnosticHelper
 import java.util.concurrent.TimeUnit
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class WhatsAppNotificationService : NotificationListenerService() {

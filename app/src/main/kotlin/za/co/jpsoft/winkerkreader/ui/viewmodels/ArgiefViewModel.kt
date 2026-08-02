@@ -10,7 +10,7 @@ import androidx.sqlite.db.SimpleSQLiteQuery
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase
+import za.co.jpsoft.winkerkreader.data.members.setup.WinkerkDatabase
 
 class ArgiefViewModel(application: Application) : AndroidViewModel(application) {
 

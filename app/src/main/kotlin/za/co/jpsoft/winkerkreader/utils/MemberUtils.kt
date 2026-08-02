@@ -18,10 +18,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.net.toUri
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
-import za.co.jpsoft.winkerkreader.data.models.MemberItem
+import za.co.jpsoft.winkerkreader.data.members.models.MemberItem
 import za.co.jpsoft.winkerkreader.ui.activities.LidmaatDetailActivity
 import za.co.jpsoft.winkerkreader.utils.Utils.fixphonenumber
-import java.net.URLEncoder
+import za.co.jpsoft.winkerkreader.utils.messaging.WhatsAppMessageSender
 
 /**
  * Utility functions for common member actions: copying to clipboard,
@@ -234,7 +234,7 @@ object MemberUtils {
             )
             val intent = Intent(context, LidmaatDetailActivity::class.java).apply {
                 data = ContentUris.withAppendedId(
-                    za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.CONTENT_URI,
+                    za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract.winkerkEntry.CONTENT_URI,
                     item.id
                 )
                 putExtra("RECORD_STATUS", recordStatus)

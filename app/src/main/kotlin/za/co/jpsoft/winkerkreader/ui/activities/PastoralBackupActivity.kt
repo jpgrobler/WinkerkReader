@@ -14,15 +14,15 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
+import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.databinding.ActivityPastoralBackupBinding
 import za.co.jpsoft.winkerkreader.ui.adapters.BackupListAdapter
-import za.co.jpsoft.winkerkreader.utils.PastoralDatabaseBackup
-import za.co.jpsoft.winkerkreader.utils.PastoralDatabaseBackup.BackupFileInfo
+import za.co.jpsoft.winkerkreader.utils.db.PastoralDatabaseBackup
+import za.co.jpsoft.winkerkreader.utils.db.PastoralDatabaseBackup.BackupFileInfo
 import java.io.File
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class PastoralBackupActivity : BaseActivity() {

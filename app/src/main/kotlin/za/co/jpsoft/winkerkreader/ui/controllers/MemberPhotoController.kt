@@ -15,10 +15,10 @@ import androidx.core.content.FileProvider
 import com.bumptech.glide.Glide
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
-import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
+import za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract.winkerkEntry
 import za.co.jpsoft.winkerkreader.databinding.LidmaatDetailBinding
-import za.co.jpsoft.winkerkreader.utils.PhotoHelper
-import za.co.jpsoft.winkerkreader.utils.forceShowIcons
+import za.co.jpsoft.winkerkreader.utils.files.PhotoHelper
+import za.co.jpsoft.winkerkreader.utils.ui.forceShowIcons
 import java.io.File
 import java.io.FileOutputStream
 

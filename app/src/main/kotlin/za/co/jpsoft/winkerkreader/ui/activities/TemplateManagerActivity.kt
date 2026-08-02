@@ -17,7 +17,7 @@ import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.databinding.ActivityTemplateManagerBinding
 import za.co.jpsoft.winkerkreader.ui.adapters.TemplateManagerAdapter
 import za.co.jpsoft.winkerkreader.ui.viewmodels.TemplateManagerViewModel
-import za.co.jpsoft.winkerkreader.utils.MainNavigationController
+import za.co.jpsoft.winkerkreader.utils.ui.MainNavigationController
 
 @AndroidEntryPoint
 class TemplateManagerActivity : AuthBaseActivity() {

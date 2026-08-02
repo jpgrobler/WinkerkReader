@@ -14,6 +14,7 @@ import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.google.android.material.tabs.TabLayoutMediator
 import dagger.hilt.android.AndroidEntryPoint
+import jakarta.inject.Inject
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.models.CalendarInfo
 import za.co.jpsoft.winkerkreader.databinding.ActivityUitlegBinding
@@ -24,9 +25,8 @@ import za.co.jpsoft.winkerkreader.ui.fragments.UitlegVertoonFragment
 import za.co.jpsoft.winkerkreader.ui.fragments.UitlegWidgetFragment
 import za.co.jpsoft.winkerkreader.utils.CalendarManager
 import za.co.jpsoft.winkerkreader.utils.prefs.CalendarPrefs
-import za.co.jpsoft.winkerkreader.utils.prefs.PastoralPrefs
 import za.co.jpsoft.winkerkreader.utils.prefs.CallMonitorPrefs
-import javax.inject.Inject
+import za.co.jpsoft.winkerkreader.utils.prefs.PastoralPrefs
 
 @AndroidEntryPoint
 class UitlegActivity : AuthBaseActivity(), UitlegCalendarSelectionListener {

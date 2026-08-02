@@ -1,8 +1,7 @@
 package za.co.jpsoft.winkerkreader.utils.prefs
 
 import android.content.SharedPreferences
-import za.co.jpsoft.winkerkreader.data.WinkerkContract
-import za.co.jpsoft.winkerkreader.utils.prefs.AppearancePrefs.ThemeMode
+import za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract
 
 class AppearancePrefs(private val prefs: SharedPreferences) {
 

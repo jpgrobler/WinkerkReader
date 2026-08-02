@@ -16,8 +16,8 @@ import androidx.core.view.isNotEmpty
 import com.google.android.material.color.MaterialColors
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
-import za.co.jpsoft.winkerkreader.data.models.MemberItem
-import za.co.jpsoft.winkerkreader.data.repositories.ContactRepository
+import za.co.jpsoft.winkerkreader.data.members.models.MemberItem
+import za.co.jpsoft.winkerkreader.data.members.repository.ContactRepository
 import za.co.jpsoft.winkerkreader.ui.bottomsheets.StelHerinneringBottomSheet
 import za.co.jpsoft.winkerkreader.ui.bottomsheets.VoegNotaByBottomSheet
 import za.co.jpsoft.winkerkreader.utils.MemberUtils

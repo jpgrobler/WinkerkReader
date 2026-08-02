@@ -27,7 +27,10 @@ import za.co.jpsoft.winkerkreader.di.UserPrefs
 import za.co.jpsoft.winkerkreader.ui.activities.UitlegActivity
 import za.co.jpsoft.winkerkreader.ui.activities.UitlegCalendarSelectionListener
 import za.co.jpsoft.winkerkreader.utils.PastoralTaskScriptManager
-import za.co.jpsoft.winkerkreader.utils.prefs.*
+import za.co.jpsoft.winkerkreader.utils.prefs.BackupPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.CalendarPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.PastoralPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.TasksPrefs
 
 @AndroidEntryPoint
 class UitlegPastoraalFragment : Fragment() {
@@ -383,7 +386,9 @@ class UitlegPastoraalFragment : Fragment() {
 
     private fun setupBackupStatusSection() {
         var ligg = "Ligging: ${
-            za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry.getWkrDir(requireContext())
+            za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract.winkerkEntry.getWkrDir(
+                requireContext()
+            )
         }"
         binding.backupLocationText.text = ligg
         ligg =
@@ -398,7 +403,7 @@ class UitlegPastoraalFragment : Fragment() {
             if (isChecked) {
                 viewLifecycleOwner.lifecycleScope.launch {
                     withContext(Dispatchers.IO) {
-                        za.co.jpsoft.winkerkreader.data.calllog.CallLogDatabaseBackup.backupNow(
+                        za.co.jpsoft.winkerkreader.data.calllog.setup.CallLogDatabaseBackup.backupNow(
                             requireContext()
                         )
                     }

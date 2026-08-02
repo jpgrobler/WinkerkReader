@@ -4,7 +4,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import za.co.jpsoft.winkerkreader.data.models.CallLog
+import za.co.jpsoft.winkerkreader.data.calllog.models.CallLog
 import za.co.jpsoft.winkerkreader.databinding.ItemCallLogBinding
 
 class CallLogAdapter(initialLogs: List<CallLog>) :

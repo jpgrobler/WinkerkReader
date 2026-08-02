@@ -4,11 +4,11 @@ import android.content.Context
 import android.util.Log
 import androidx.sqlite.db.SimpleSQLiteQuery
 import za.co.jpsoft.winkerkreader.BuildConfig
-import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
+import za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract.winkerkEntry
+import za.co.jpsoft.winkerkreader.data.members.setup.WinkerkDatabase
 import za.co.jpsoft.winkerkreader.data.pastoral.model.MemberDisplay
-import za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase
 import za.co.jpsoft.winkerkreader.utils.Utils.fixphonenumber
-import za.co.jpsoft.winkerkreader.utils.getStringOrEmpty
+import za.co.jpsoft.winkerkreader.utils.db.getStringOrEmpty
 
 fun interface MemberGuidResolver {
     fun resolve(memberGuid: String): MemberDisplay?

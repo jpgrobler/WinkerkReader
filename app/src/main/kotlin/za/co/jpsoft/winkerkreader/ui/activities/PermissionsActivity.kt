@@ -10,14 +10,14 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.databinding.ActivityPermissionsBinding
 import za.co.jpsoft.winkerkreader.ui.adapters.PermissionsAdapter
-import za.co.jpsoft.winkerkreader.utils.BatteryOptimizationHelper
-import za.co.jpsoft.winkerkreader.utils.BatteryOptimizationHelper.showBatteryOptimizationDialog
-import za.co.jpsoft.winkerkreader.utils.MainNavigationController
-import za.co.jpsoft.winkerkreader.utils.PermissionDefinitions
-import za.co.jpsoft.winkerkreader.utils.PermissionItem
-import za.co.jpsoft.winkerkreader.utils.PermissionManager
-import za.co.jpsoft.winkerkreader.utils.PermissionRationaleHelper
-import za.co.jpsoft.winkerkreader.utils.PermissionType
+import za.co.jpsoft.winkerkreader.utils.permissions.PermissionDefinitions
+import za.co.jpsoft.winkerkreader.utils.permissions.PermissionItem
+import za.co.jpsoft.winkerkreader.utils.permissions.PermissionManager
+import za.co.jpsoft.winkerkreader.utils.permissions.PermissionRationaleHelper
+import za.co.jpsoft.winkerkreader.utils.permissions.PermissionType
+import za.co.jpsoft.winkerkreader.utils.ui.MainNavigationController
+import za.co.jpsoft.winkerkreader.utils.work.BatteryOptimizationHelper
+import za.co.jpsoft.winkerkreader.utils.work.BatteryOptimizationHelper.showBatteryOptimizationDialog
 
 class PermissionsActivity : BaseActivity() {
 

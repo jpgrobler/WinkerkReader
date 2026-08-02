@@ -10,7 +10,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import za.co.jpsoft.winkerkreader.BuildConfig
-import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
+import za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract.winkerkEntry
 import za.co.jpsoft.winkerkreader.data.pastoral.dao.FollowUpReminderDao
 import za.co.jpsoft.winkerkreader.data.pastoral.dao.PastoralMetaDao
 import za.co.jpsoft.winkerkreader.data.pastoral.dao.PastoralNoteDao

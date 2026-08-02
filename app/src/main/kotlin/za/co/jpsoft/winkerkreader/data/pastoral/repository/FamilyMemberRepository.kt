@@ -1,8 +1,8 @@
 package za.co.jpsoft.winkerkreader.data.pastoral.repository
 
+import jakarta.inject.Inject
+import za.co.jpsoft.winkerkreader.data.members.dao.MemberDao
 import za.co.jpsoft.winkerkreader.data.pastoral.model.FamilyMember
-import za.co.jpsoft.winkerkreader.data.room.MemberDao
-import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton

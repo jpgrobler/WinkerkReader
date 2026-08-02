@@ -8,6 +8,7 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.inputmethod.InputMethodManager
 import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.LinearLayout
@@ -17,8 +18,8 @@ import androidx.fragment.app.FragmentActivity
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel
-import za.co.jpsoft.winkerkreader.utils.MainNavigationController
-import android.view.inputmethod.InputMethodManager
+import za.co.jpsoft.winkerkreader.utils.ui.MainNavigationController
+
 class MainMenuController(
     private val activity: FragmentActivity,
     private val tag: String,
@@ -39,16 +40,6 @@ class MainMenuController(
 
     fun onCreateOptionsMenu(menu: Menu): Boolean {
         optionsMenu = menu
-        if (menu.javaClass.simpleName == "MenuBuilder") {
-            try {
-                val method =
-                    menu.javaClass.getDeclaredMethod("setOptionalIconsVisible", Boolean::class.java)
-                method.isAccessible = true
-                method.invoke(menu, true)
-            } catch (e: Exception) {
-                if (BuildConfig.DEBUG) Log.e(tag, "Failed to show menu icons", e)
-            }
-        }
         activity.menuInflater.inflate(R.menu.menu_main, menu)
         setupSearchView(menu)
         setupStatusFilterControls()
@@ -180,6 +171,7 @@ class MainMenuController(
             }
         )
     }
+
     private fun hideKeyboardAndClearFocus() {
         val searchView = findSearchView()
         searchView?.clearFocus()
@@ -189,5 +181,4 @@ class MainMenuController(
             imm.hideSoftInputFromWindow(view.windowToken, 0)
         }
     }
-
 }

@@ -4,7 +4,7 @@ package za.co.jpsoft.winkerkreader.ui.activities
 
 
 import android.os.Bundle
-import za.co.jpsoft.winkerkreader.utils.MainNavigationController
+import za.co.jpsoft.winkerkreader.utils.ui.MainNavigationController
 
 /**
  * Created by Pieter Grobler on 30/08/2017.

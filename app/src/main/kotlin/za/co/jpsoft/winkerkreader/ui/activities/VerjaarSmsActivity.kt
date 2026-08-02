@@ -11,7 +11,6 @@ import android.os.Looper
 import android.telephony.SmsManager
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.MenuItem
 import android.view.View
 import androidx.activity.OnBackPressedCallback
@@ -22,7 +21,6 @@ import androidx.core.content.edit
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.paging.PagingData
@@ -36,22 +34,27 @@ import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
-import za.co.jpsoft.winkerkreader.data.WinkerkContract
-import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
-import za.co.jpsoft.winkerkreader.data.models.MemberItem
+import za.co.jpsoft.winkerkreader.data.members.models.MemberItem
+import za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract
+import za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract.PREFS_USER_INFO
 import za.co.jpsoft.winkerkreader.databinding.VerjaarBinding
 import za.co.jpsoft.winkerkreader.ui.adapters.MemberListAdapter
 import za.co.jpsoft.winkerkreader.ui.helpers.QuickActionHelper
 import za.co.jpsoft.winkerkreader.ui.viewmodels.EventViewModel
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel
-import za.co.jpsoft.winkerkreader.utils.*
+import za.co.jpsoft.winkerkreader.utils.BirthdayAlarmScheduler
+import za.co.jpsoft.winkerkreader.utils.EventMessageStore
+import za.co.jpsoft.winkerkreader.utils.MemberActionHandler
 import za.co.jpsoft.winkerkreader.utils.Utils.fixphonenumber
+import za.co.jpsoft.winkerkreader.utils.messaging.BirthdaySmsSender
+import za.co.jpsoft.winkerkreader.utils.messaging.MessageComposer
+import za.co.jpsoft.winkerkreader.utils.messaging.WhatsAppMessageSender
 import za.co.jpsoft.winkerkreader.utils.prefs.AppearancePrefs
 import za.co.jpsoft.winkerkreader.utils.prefs.CongregationPrefs
 import za.co.jpsoft.winkerkreader.utils.prefs.MemberListPrefs
 import za.co.jpsoft.winkerkreader.utils.prefs.QuickActionPrefs
+import za.co.jpsoft.winkerkreader.utils.ui.forceShowIcons
 import java.util.Locale
 
 @AndroidEntryPoint
@@ -240,15 +243,7 @@ class VerjaarSmsActivity : AuthBaseActivity() {
             congregationPrefs.gemeente3Naam.takeIf { it.isNotBlank() }
         ).toSet()
 
-        val savedStateHandle = SavedStateHandle()
-        memberViewModel = ViewModelProvider(
-            this,
-            MemberViewModel.MemberViewModelFactory(
-                application,
-                savedStateHandle,
-                initialCongregations
-            )
-        ).get(MemberViewModel::class.java)
+        memberViewModel = ViewModelProvider(this)[MemberViewModel::class.java]
 
         memberListAdapter.updateState(
             listView = 2,

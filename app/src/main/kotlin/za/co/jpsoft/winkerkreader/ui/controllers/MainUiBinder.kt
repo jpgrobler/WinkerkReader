@@ -5,17 +5,17 @@ import android.view.View
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.paging.LoadState
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import za.co.jpsoft.winkerkreader.BuildConfig
+import za.co.jpsoft.winkerkreader.data.members.repository.ContactRepository
 import za.co.jpsoft.winkerkreader.databinding.ActivityMainBinding
-import za.co.jpsoft.winkerkreader.data.repositories.ContactRepository
 import za.co.jpsoft.winkerkreader.ui.adapters.MemberListAdapter
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel
-import androidx.lifecycle.lifecycleScope
 
 /**
  * Binds UI components to ViewModel and other data sources.
@@ -40,7 +40,7 @@ class MainUiBinder(
         }
 
         // 2. Verjaar flag (currently only logs; kept for consistency)
-        viewModel.getVerjaarFLag().observe(lifecycleOwner) { showBirthday ->
+        viewModel.getVerjaarFlag().observe(lifecycleOwner) { showBirthday ->
             if (BuildConfig.DEBUG) Log.d("MainUiBinder", "verjaarFlag: $showBirthday")
         }
 

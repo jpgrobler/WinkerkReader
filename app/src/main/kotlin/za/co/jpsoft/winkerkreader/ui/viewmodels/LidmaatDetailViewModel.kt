@@ -6,18 +6,18 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import za.co.jpsoft.winkerkreader.data.models.FamilyMemberItem
-import za.co.jpsoft.winkerkreader.data.models.MemberDetailItem
+import za.co.jpsoft.winkerkreader.data.members.dao.MemberDao
+import za.co.jpsoft.winkerkreader.data.members.models.FamilyMemberItem
+import za.co.jpsoft.winkerkreader.data.members.models.MemberDetailItem
 import za.co.jpsoft.winkerkreader.data.pastoral.repository.FamilyMemberRepository
-import za.co.jpsoft.winkerkreader.data.room.MemberDao
 import za.co.jpsoft.winkerkreader.utils.Utils.fixphonenumber
 import za.co.jpsoft.winkerkreader.utils.Utils.parseDate
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
-import javax.inject.Inject
 
 @HiltViewModel
 class LidmaatDetailViewModel @Inject constructor(
@@ -111,7 +111,7 @@ class LidmaatDetailViewModel @Inject constructor(
     // Entity → model conversion  (identical field logic to the old cursor path)
     // -------------------------------------------------------------------------
 
-    private fun entityToDetail(entity: za.co.jpsoft.winkerkreader.data.room.MemberEntity): MemberDetailItem {
+    private fun entityToDetail(entity: za.co.jpsoft.winkerkreader.data.members.entities.MemberEntity): MemberDetailItem {
         // Birthday
         val bDayRaw = entity.geboortedatum ?: ""
         val bDay = if (bDayRaw.length >= 10) bDayRaw.substring(0, 10) else bDayRaw

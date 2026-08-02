@@ -16,20 +16,20 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
+import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.R.string.menu_call_log
-import za.co.jpsoft.winkerkreader.data.calllog.CallLogDao
-import za.co.jpsoft.winkerkreader.data.calllog.CallLogDatabase
-import za.co.jpsoft.winkerkreader.data.models.CallLog
+import za.co.jpsoft.winkerkreader.data.calllog.dao.CallLogDao
+import za.co.jpsoft.winkerkreader.data.calllog.models.CallLog
+import za.co.jpsoft.winkerkreader.data.calllog.setup.CallLogDatabase
 import za.co.jpsoft.winkerkreader.databinding.ActivityCallLogBinding
 import za.co.jpsoft.winkerkreader.ui.adapters.CallLogAdapter
-import za.co.jpsoft.winkerkreader.utils.CallLogExporter
-import za.co.jpsoft.winkerkreader.utils.UnifiedCallMonitor
-import javax.inject.Inject
+import za.co.jpsoft.winkerkreader.utils.telephony.CallLogExporter
+import za.co.jpsoft.winkerkreader.utils.telephony.UnifiedCallMonitor
 
 @AndroidEntryPoint
 class CallLogActivity : AuthBaseActivity() {
@@ -117,7 +117,8 @@ class CallLogActivity : AuthBaseActivity() {
         }
     }
 
-    private fun za.co.jpsoft.winkerkreader.data.calllog.CallLogEntity.toDisplayModel() = CallLog(
+    private fun za.co.jpsoft.winkerkreader.data.calllog.entities.CallLogEntity.toDisplayModel() =
+        CallLog(
         id = id,
         callerInfo = callerInfo,
         timestamp = timestamp,

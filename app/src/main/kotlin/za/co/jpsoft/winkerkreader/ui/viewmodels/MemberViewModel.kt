@@ -1,17 +1,15 @@
 package za.co.jpsoft.winkerkreader.ui.viewmodels
 
-import android.app.Application
-import android.util.Log
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
+import dagger.hilt.android.lifecycle.HiltViewModel
+import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,20 +21,21 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import za.co.jpsoft.winkerkreader.BuildConfig
-import za.co.jpsoft.winkerkreader.data.MemberPagingSource
-import za.co.jpsoft.winkerkreader.data.MemberRepository
+import za.co.jpsoft.winkerkreader.data.members.dao.MemberDao
+import za.co.jpsoft.winkerkreader.data.members.models.MemberItem
+import za.co.jpsoft.winkerkreader.data.members.queries.MemberPagingSource
+import za.co.jpsoft.winkerkreader.data.members.repository.MemberRepository
 import za.co.jpsoft.winkerkreader.data.models.FilterBox
-import za.co.jpsoft.winkerkreader.data.models.MemberItem
 import za.co.jpsoft.winkerkreader.ui.components.SearchCheckBox
 import za.co.jpsoft.winkerkreader.ui.models.MainQueryMode
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class MemberViewModel(
-    application: Application,
-    private val savedStateHandle: SavedStateHandle,
-    initialCongregations: Set<String> = emptySet()
-) : AndroidViewModel(application) {
+@HiltViewModel
+class MemberViewModel @Inject constructor(
+    private val repository: MemberRepository,
+    private val memberDao: MemberDao,
+    private val savedStateHandle: SavedStateHandle
+) : ViewModel() {
 
     companion object {
         private const val TAG = "MemberViewModel"
@@ -46,40 +45,36 @@ class MemberViewModel(
         private const val KEY_SOEK_LIST = "soekList"
     }
 
-    // -------------------------------------------------------------------------
-    // UI State (saved in SavedStateHandle)
-    // -------------------------------------------------------------------------
-    private val _congregationFilter = MutableStateFlow(initialCongregations)
+    // ─── SavedStateHandle‑backed StateFlows ──────────────────────────────────
+    private val _congregationFilter = MutableStateFlow<Set<String>>(emptySet())
+
+    private val sortOrderFlow = savedStateHandle.getStateFlow(KEY_SORT_ORDER, "VAN")
+    private val soekFlow = savedStateHandle.getStateFlow(KEY_SOEK, "")
+    private val recordStatusFlow = savedStateHandle.getStateFlow(KEY_RECORD_STATUS, "0")
 
     var sortOrder: String
         get() = savedStateHandle[KEY_SORT_ORDER] ?: "VAN"
         set(value) {
             savedStateHandle.set(KEY_SORT_ORDER, value)
-            _sortOrder.value = value
         }
 
     var recordStatus: String
         get() = savedStateHandle[KEY_RECORD_STATUS] ?: "0"
         set(value) {
             savedStateHandle.set(KEY_RECORD_STATUS, value)
-            _recordStatus.value = value
         }
 
     var soek: String
         get() = savedStateHandle[KEY_SOEK] ?: ""
         set(value) {
             savedStateHandle.set(KEY_SOEK, value)
-            _soek.value = value
         }
 
     var soekList: Boolean
         get() = savedStateHandle[KEY_SOEK_LIST] ?: false
         set(value) = savedStateHandle.set(KEY_SOEK_LIST, value)
 
-    // -------------------------------------------------------------------------
-    // LiveData for legacy UI
-    // -------------------------------------------------------------------------
-
+    // ─── Legacy LiveData ──────────────────────────────────────────────────────
     private val _memberList = MutableLiveData<List<MemberItem>>(emptyList())
     fun getMemberList(): LiveData<List<MemberItem>> = _memberList
 
@@ -87,7 +82,7 @@ class MemberViewModel(
     fun getTextLiveData(): LiveData<String> = textLiveData
 
     private val verjaarFlag = MutableLiveData<Boolean>()
-    fun getVerjaarFLag(): LiveData<Boolean> = verjaarFlag
+    fun getVerjaarFlag(): LiveData<Boolean> = verjaarFlag
 
     private val rowCount = MutableLiveData<Int>()
     fun getRowCount(): LiveData<Int> = rowCount
@@ -95,44 +90,31 @@ class MemberViewModel(
     private val _memberGuidsWithPendingReminders = MutableLiveData<Set<String>>(emptySet())
     val memberGuidsWithPendingReminders: LiveData<Set<String>> = _memberGuidsWithPendingReminders
 
-    // -------------------------------------------------------------------------
-    // Dependencies
-    // -------------------------------------------------------------------------
-
-    private val repository: MemberRepository by lazy {
-        MemberRepository(getApplication())
-    }
-
-    // -------------------------------------------------------------------------
-    // State flows that trigger Pager recreation
-    // -------------------------------------------------------------------------
-
-    private val _sortOrder = MutableStateFlow("VAN")
-    private val _soek = MutableStateFlow("")
-    private val _recordStatus = MutableStateFlow("0")
+    // ─── Paging‑driving StateFlows ──────────────────────────────────────────
     private val _filterList = MutableStateFlow<ArrayList<FilterBox>?>(null)
     private val _eventType = MutableStateFlow("LIDMAAT_DATA")
-
-    // ✅ Congregation filter - multiple selection
-
 
     private val _totalCount = MutableStateFlow(0)
     val totalCount: StateFlow<Int> = _totalCount.asStateFlow()
 
-    // -------------------------------------------------------------------------
-    // Init - sets up total count observer
-    // -------------------------------------------------------------------------
+    private val _refreshTrigger = MutableStateFlow(0)
+    fun refresh() {
+        _refreshTrigger.value++
+    }
 
+    // ─── Init ─────────────────────────────────────────────────────────────────
     init {
         viewModelScope.launch {
-            // Combine all parameters for total count
+            // Use list‑based combine for 6 flows
             combine(
-                _sortOrder,
-                _soek,
-                _recordStatus,
-                _filterList,
-                _eventType,
-                _congregationFilter  // ✅ Added congregation filter
+                listOf(
+                    sortOrderFlow,
+                    soekFlow,
+                    recordStatusFlow,
+                    _filterList,
+                    _eventType,
+                    _congregationFilter
+                )
             ) { args ->
                 PagingParams(
                     sort = args[0] as String,
@@ -151,41 +133,15 @@ class MemberViewModel(
                             soek = params.search,
                             filterList = params.filters,
                             sortOrder = params.sort,
-                            congregations = params.congregations.toList()  // ✅ Pass to repository
+                            congregations = params.congregations.toList()
                         )
                     }
                     _totalCount.value = count
                 }
         }
-        syncPagingStateFlows()
     }
 
-    private var pagingStateFlowsSynced = false
-
-    private fun syncPagingStateFlows() {
-        if (pagingStateFlowsSynced) return
-        val currentSort = sortOrder
-        _sortOrder.value = currentSort
-        _soek.value = soek
-        _recordStatus.value = recordStatus
-
-        _eventType.value = when (currentSort) {
-            "ADRES" -> "LIDMAAT_DATA_ADRES"
-            "GESINNE" -> "GESINNE_DATA"
-            "WYK" -> "LIDMAAT_DATA_WYK"
-            "VERJAAR", "VERJAARSDAG" -> "LIDMAAT_DATA_VERJAAR"
-            "OUDERDOM" -> "OUDERDOM_DATA"
-            "HUWELIK" -> "HUWELIK_DATA"
-            else -> "LIDMAAT_DATA"
-        }
-
-        pagingStateFlowsSynced = true
-    }
-
-    // -------------------------------------------------------------------------
-    // Data loading – legacy (kept for compatibility)
-    // -------------------------------------------------------------------------
-
+    // ─── Legacy data loading ──────────────────────────────────────────────────
     private var currentFilterList: ArrayList<FilterBox>? = null
     private var searchList: List<SearchCheckBox>? = null
 
@@ -200,11 +156,9 @@ class MemberViewModel(
     @Deprecated("Use pagingDataFlow for the main list; kept for compatibility")
     fun loadData(mode: MainQueryMode) {
         val request = mode.toQueryRequest()
-
         if (request.eventType == "FILTER_DATA") {
             currentFilterList = request.filterList ?: arrayListOf()
         }
-
         val nextEventType = request.eventType
         val nextSoek = soek
         val nextRecordStatus = recordStatus
@@ -212,26 +166,20 @@ class MemberViewModel(
         val nextSortOrder = sortOrder
 
         val paramsChanged = _eventType.value != nextEventType
-                || _soek.value != nextSoek
-                || _recordStatus.value != nextRecordStatus
+                || soekFlow.value != nextSoek
+                || recordStatusFlow.value != nextRecordStatus
                 || _filterList.value != nextFilterList
-                || _sortOrder.value != nextSortOrder
+                || sortOrderFlow.value != nextSortOrder
 
         _eventType.value = nextEventType
-        _soek.value = nextSoek
-        _recordStatus.value = nextRecordStatus
+        soek = nextSoek
+        recordStatus = nextRecordStatus
         _filterList.value = nextFilterList
-        if (_sortOrder.value != nextSortOrder) {
-            _sortOrder.value = nextSortOrder
+        if (sortOrderFlow.value != nextSortOrder) {
+            sortOrder = nextSortOrder
         }
-
-        if (!paramsChanged) {
-            refresh()
-        }
-
-        viewModelScope.launch(Dispatchers.IO) {
-            fetchData(request.eventType)
-        }
+        if (!paramsChanged) refresh()
+        viewModelScope.launch(Dispatchers.IO) { fetchData(request.eventType) }
     }
 
     private suspend fun fetchData(eventType: String) {
@@ -242,7 +190,7 @@ class MemberViewModel(
                 soek = soek,
                 filterList = currentFilterList,
                 sortOrder = sortOrder,
-                congregations = _congregationFilter.value.toList()  // ✅ Pass congregations
+                congregations = _congregationFilter.value.toList()
             )
             withContext(Dispatchers.Main) {
                 _memberList.value = items
@@ -284,7 +232,6 @@ class MemberViewModel(
 
                     toets == "eindig met" -> sb.append(f.title).append(" eindig met '")
                         .append(f.text1).append("%'")
-
                     toets == "leeg" -> sb.append(f.title).append(" is leeg")
                     toets == "kleiner as" -> sb.append("Ouderdom is kleiner as ").append(f.text1)
                     toets == "groter as" -> sb.append("Ouderdom is groter as ").append(f.text1)
@@ -293,7 +240,6 @@ class MemberViewModel(
 
                     toets == "gelyk" && f.title == "Ouderdom" -> sb.append("Ouderdom = ")
                         .append(f.text1)
-
                     f.title == "Geslag" -> sb.append(if (toets == "manlik") "alle MANS" else "alle VROUE")
                     f.title == "Selfoon" -> sb.append("Almal met selfoon")
                     f.title == "E-pos" -> sb.append("Almal met epos")
@@ -303,7 +249,6 @@ class MemberViewModel(
 
                     f.title == "Lidmaatskap" -> sb.append("Waar Lidmaatskapstatus ").append(f.text3)
                         .append(" is")
-
                     f.title == "Gesinshoof" -> sb.append("Almal wat GESINSHOOFDE is")
                 }
             }
@@ -312,10 +257,7 @@ class MemberViewModel(
         return sb.toString()
     }
 
-    // -------------------------------------------------------------------------
-    // Query mode conversion
-    // -------------------------------------------------------------------------
-
+    // ─── Query mode conversion ──────────────────────────────────────────────
     private data class QueryRequest(
         val eventType: String,
         val filterList: ArrayList<FilterBox>? = null
@@ -334,48 +276,29 @@ class MemberViewModel(
         is MainQueryMode.Raw -> QueryRequest(layout)
     }
 
-    // -------------------------------------------------------------------------
-    // Paging 3 support
-    // -------------------------------------------------------------------------
+    // ─── Paging 3 ─────────────────────────────────────────────────────────────
+    private val pagingConfig =
+        PagingConfig(pageSize = 50, prefetchDistance = 500, enablePlaceholders = false)
 
-    private val pagingConfig = PagingConfig(
-        pageSize = 50,
-        prefetchDistance = 500,
-        enablePlaceholders = false
-    )
-
-    // In MemberViewModel.kt - Replace the refresh() method:
-    private val _refreshTrigger = MutableStateFlow(0)
-
-    fun refresh() {
-        _refreshTrigger.value++
-    }
-
-    fun delay(i: Int) {}
-
-    fun getCurrentCongregations(): Set<String> = _congregationFilter.value
-
-    // ✅ Data class for paging parameters - includes congregations
     private data class PagingParams(
         val sort: String,
         val search: String,
         val status: String,
         val filters: ArrayList<FilterBox>?,
         val eventType: String,
-        val congregations: Set<String>  // ✅ Added
+        val congregations: Set<String>
     )
 
-    /**
-     * Main paging data flow – recreates the Pager when any parameter changes.
-     */
     private val pagingDataFlow = combine(
-        _sortOrder,
-        _soek,
-        _recordStatus,
-        _filterList,
-        _eventType,
-        _congregationFilter,
-        _refreshTrigger
+        listOf(
+            sortOrderFlow,
+            soekFlow,
+            recordStatusFlow,
+            _filterList,
+            _eventType,
+            _congregationFilter,
+            _refreshTrigger
+        )
     ) { args ->
         PagingParams(
             sort = args[0] as String,
@@ -388,9 +311,7 @@ class MemberViewModel(
     }.flatMapLatest { params ->
         Pager(pagingConfig) {
             MemberPagingSource(
-                memberDao = za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase.getInstance(
-                    getApplication()
-                ).memberDao(),
+                memberDao = memberDao,
                 memberRepository = repository,
                 eventType = params.eventType,
                 recordStatus = params.status,
@@ -403,65 +324,31 @@ class MemberViewModel(
         }.flow
     }.cachedIn(viewModelScope)
 
-    // ✅ Expose with distinctUntilChanged to prevent duplicate emissions
     val pagingDataFlowWithRefresh = pagingDataFlow.distinctUntilChanged()
-    // ========================================================================
-    // PUBLIC API
-    // ========================================================================
 
-    /**
-     * Updates the sort order and the corresponding event type,
-     * then invalidates the current PagingSource to reload with the new parameters.
-     */
+    // ─── Public API ──────────────────────────────────────────────────────────
     fun updateSortOrder(newSort: String) {
-        if (BuildConfig.DEBUG) Log.d(TAG, "updateSortOrder: newSort=$newSort")
         sortOrder = newSort
-
-        val newEventType = when (newSort) {
-            "ADRES" -> "LIDMAAT_DATA_ADRES"
-            "GESINNE" -> "GESINNE_DATA"
-            "WYK" -> "LIDMAAT_DATA_WYK"
-            "VERJAAR" -> "LIDMAAT_DATA_VERJAAR"
-            "OUDERDOM" -> "OUDERDOM_DATA"
-            "HUWELIK" -> "HUWELIK_DATA"
-            else -> "LIDMAAT_DATA"
-        }
-        if (BuildConfig.DEBUG) Log.d(TAG, "updateSortOrder: newEventType=$newEventType")
-        _eventType.value = newEventType
-
+        _eventType.value = eventTypeFor(newSort)
         refresh()
     }
 
-    /**
-     * Updates the ViewModel state for a filter operation.
-     * @param filters The list of active filters.
-     */
     fun updateFilter(filters: ArrayList<FilterBox>) {
-        if (BuildConfig.DEBUG) Log.d(TAG, "updateFilter: filters size=${filters.size}")
         _filterList.value = filters
         _eventType.value = "FILTER_DATA"
         sortOrder = "Filter"
         soekList = false
         soek = ""
-        // Clear any active congregation filter when using advanced filters
-        //_congregationFilter.value = emptySet()
-
         currentFilterList = filters
         textLiveData.value = buildFilterText()
     }
 
-    /**
-     * Updates the ViewModel state for a search operation.
-     * @param searchTerm The search string (non‑blank).
-     */
     fun updateSearch(searchTerm: String) {
         soek = searchTerm
         soekList = true
         _eventType.value = "SOEK_DATA"
         sortOrder = "SOEK_DATA"
         _filterList.value = null
-        // Clear any active congregation filter when searching
-        //_congregationFilter.value = emptySet()
         textLiveData.value = searchTerm
     }
 
@@ -469,57 +356,39 @@ class MemberViewModel(
         textLiveData.value = ""
     }
 
-    /**
-     * Resets search/filter state and restores a regular sort order.
-     * @param sort The sort order to restore (e.g., "VAN", "GESINNE").
-     */
     fun resetToSort(sort: String) {
         soek = ""
         soekList = false
         _filterList.value = null
-        //_congregationFilter.value = emptySet()  // ✅ Clear congregation filters
-        val newEventType = when (sort) {
-            "ADRES" -> "LIDMAAT_DATA_ADRES"
-            "GESINNE" -> "GESINNE_DATA"
-            "WYK" -> "LIDMAAT_DATA_WYK"
-            "VERJAAR" -> "LIDMAAT_DATA_VERJAAR"
-            "OUDERDOM" -> "OUDERDOM_DATA"
-            "HUWELIK" -> "HUWELIK_DATA"
-            else -> "LIDMAAT_DATA"
-        }
-        _eventType.value = newEventType
+        _eventType.value = eventTypeFor(sort)
         sortOrder = sort
         refresh()
     }
 
     private fun updateEventTypeFromSortOrder() {
-        _eventType.value = when (sortOrder) {
-            "ADRES" -> "LIDMAAT_DATA_ADRES"
-            "GESINNE" -> "GESINNE_DATA"
-            "WYK" -> "LIDMAAT_DATA_WYK"
-            "VERJAAR" -> "LIDMAAT_DATA_VERJAAR"
-            "OUDERDOM" -> "OUDERDOM_DATA"
-            "HUWELIK" -> "HUWELIK_DATA"
-            else -> "LIDMAAT_DATA"
-        }
+        _eventType.value = eventTypeFor(sortOrder)
+    }
+
+    private fun eventTypeFor(sort: String): String = when (sort) {
+        "ADRES" -> "LIDMAAT_DATA_ADRES"
+        "GESINNE" -> "GESINNE_DATA"
+        "WYK" -> "LIDMAAT_DATA_WYK"
+        "VERJAAR" -> "LIDMAAT_DATA_VERJAAR"
+        "OUDERDOM" -> "OUDERDOM_DATA"
+        "HUWELIK" -> "HUWELIK_DATA"
+        else -> "LIDMAAT_DATA"
     }
 
     fun setCongregationFilter(congregations: Set<String>) {
         _congregationFilter.value = congregations
-
-        // If search is active, keep it.
         if (soekList && soek.isNotEmpty()) {
             refresh()
             return
         }
-
-        // If filter is active, keep it.
         if (_filterList.value != null && _filterList.value!!.any { it.checked }) {
             refresh()
             return
         }
-
-        // No active search/filter – use the sort-based event type.
         _filterList.value = null
         currentFilterList = null
         updateEventTypeFromSortOrder()
@@ -527,25 +396,13 @@ class MemberViewModel(
     }
 
     fun getEventType(): String = _eventType.value
-
     fun getFilterListSize(): Int = _filterList.value?.size ?: 0
+    fun getCurrentFilterList(): ArrayList<FilterBox>? = _filterList.value
 
-    /**
-     * Returns the current filter list, or null if no filters are active.
-     * Used by FilterBottomSheet to preserve and restore filter state.
-     */
-    fun getCurrentFilterList(): ArrayList<FilterBox>? {
-        return _filterList.value
-    }
-
-    /**
-     * Clear any active filters
-     */
     fun clearFilters() {
         _filterList.value = null
         currentFilterList = null
         _eventType.value = "LIDMAAT_DATA"
-//        _congregationFilter.value = emptySet()  // ✅ Clear congregation filters
         refresh()
     }
 
@@ -558,17 +415,10 @@ class MemberViewModel(
         val today = java.time.LocalDate.now()
         val month = "%02d".format(today.monthValue)
         val day = "%02d".format(today.dayOfMonth)
-
-        // Determine the correct event type for the given sort order
         val eventType = when (sortOrder) {
             "VERJAAR", "VERJAARSDAG" -> "LIDMAAT_DATA_VERJAAR"
-            else -> "LIDMAAT_DATA" // fallback
+            else -> "LIDMAAT_DATA"
         }
-
-        // Get the current congregation filter, convert to List (null-safe)
-        val congregations = _congregationFilter.value
-        val congregationList = if (congregations.isNotEmpty()) congregations.toList() else null
-
         return repository.countMembersBeforeBirthday(
             eventType = eventType,
             recordStatus = recordStatus,
@@ -579,19 +429,5 @@ class MemberViewModel(
             todayDay = day,
             congregations = _congregationFilter.value.toList()
         )
-    }
-
-    class MemberViewModelFactory(
-        private val application: Application,
-        private val savedStateHandle: SavedStateHandle,
-        private val initialCongregations: Set<String>
-    ) : ViewModelProvider.Factory {
-        @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            if (modelClass.isAssignableFrom(MemberViewModel::class.java)) {
-                return MemberViewModel(application, savedStateHandle, initialCongregations) as T
-            }
-            throw IllegalArgumentException("Unknown ViewModel class")
-        }
     }
 }

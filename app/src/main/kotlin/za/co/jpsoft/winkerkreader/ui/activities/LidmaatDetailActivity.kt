@@ -40,10 +40,10 @@ import dagger.hilt.android.AndroidEntryPoint
 import jakarta.inject.Inject
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
-import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
-import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
-import za.co.jpsoft.winkerkreader.data.models.FamilyMemberItem
-import za.co.jpsoft.winkerkreader.data.models.MemberDetailItem
+import za.co.jpsoft.winkerkreader.data.members.models.FamilyMemberItem
+import za.co.jpsoft.winkerkreader.data.members.models.MemberDetailItem
+import za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract.PREFS_USER_INFO
+import za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract.winkerkEntry
 import za.co.jpsoft.winkerkreader.databinding.LidmaatDetailBinding
 import za.co.jpsoft.winkerkreader.ui.adapters.SpinnerAdapter
 import za.co.jpsoft.winkerkreader.ui.bottomsheets.StelHerinneringBottomSheet
@@ -53,12 +53,11 @@ import za.co.jpsoft.winkerkreader.ui.controllers.MemberPhotoController
 import za.co.jpsoft.winkerkreader.ui.viewmodels.LidmaatDetailPastoralViewModel
 import za.co.jpsoft.winkerkreader.ui.viewmodels.LidmaatDetailPastoralViewModelFactory
 import za.co.jpsoft.winkerkreader.ui.viewmodels.LidmaatDetailViewModel
-import za.co.jpsoft.winkerkreader.utils.MainNavigationController
 import za.co.jpsoft.winkerkreader.utils.MemberUtils
-import za.co.jpsoft.winkerkreader.utils.PhotoHelper
+import za.co.jpsoft.winkerkreader.utils.files.PhotoHelper
 import za.co.jpsoft.winkerkreader.utils.prefs.AppearancePrefs
 import za.co.jpsoft.winkerkreader.utils.prefs.CongregationPrefs
-import java.io.File
+import za.co.jpsoft.winkerkreader.utils.ui.MainNavigationController
 
 @AndroidEntryPoint
 class LidmaatDetailActivity : AuthBaseActivity() {

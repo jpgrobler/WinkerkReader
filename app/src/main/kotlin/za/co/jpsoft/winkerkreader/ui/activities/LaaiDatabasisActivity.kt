@@ -13,7 +13,6 @@ import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
-import androidx.core.content.edit
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
@@ -22,25 +21,33 @@ import androidx.work.WorkManager
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
+import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
-import za.co.jpsoft.winkerkreader.data.WinkerkContract
-import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
+import za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract
+import za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract.winkerkEntry
+import za.co.jpsoft.winkerkreader.data.members.setup.WinkerkDatabase
 import za.co.jpsoft.winkerkreader.data.pastoral.PastoralDatabase
-import za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase
 import za.co.jpsoft.winkerkreader.databinding.LaaidatabasisBinding
-import za.co.jpsoft.winkerkreader.ui.controllers.*
-import za.co.jpsoft.winkerkreader.utils.CloudUrlTransformer
-import za.co.jpsoft.winkerkreader.utils.MainNavigationController
-import za.co.jpsoft.winkerkreader.utils.PastoralDatabaseBackup
-import za.co.jpsoft.winkerkreader.utils.ServerFileValidator
-import za.co.jpsoft.winkerkreader.utils.prefs.*
+import za.co.jpsoft.winkerkreader.ui.controllers.CollapsibleCardController
+import za.co.jpsoft.winkerkreader.ui.controllers.DatabaseImportController
+import za.co.jpsoft.winkerkreader.ui.controllers.DropboxDownloadController
+import za.co.jpsoft.winkerkreader.ui.controllers.LocalDatabaseFileController
+import za.co.jpsoft.winkerkreader.ui.controllers.NetworkTransferController
+import za.co.jpsoft.winkerkreader.ui.controllers.PhotoSyncController
+import za.co.jpsoft.winkerkreader.utils.db.PastoralDatabaseBackup
+import za.co.jpsoft.winkerkreader.utils.network.CloudUrlTransformer
+import za.co.jpsoft.winkerkreader.utils.prefs.AppearancePrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.BackupPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.CongregationPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.MemberListPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.SyncPrefs
+import za.co.jpsoft.winkerkreader.utils.ui.MainNavigationController
 import java.io.File
 import java.util.regex.Pattern
-import javax.inject.Inject
 
 
 @AndroidEntryPoint
@@ -77,7 +84,7 @@ class LaaiDatabasisActivity : BaseActivity() {
     lateinit var appearancePrefs: AppearancePrefs
     @Inject
     lateinit var pastoralDbBackup: PastoralDatabaseBackup
-    private lateinit var settings: SharedPreferences
+
     private lateinit var importController: DatabaseImportController
     private lateinit var binding: LaaidatabasisBinding
     private lateinit var collapsibleCardController: CollapsibleCardController
@@ -88,13 +95,16 @@ class LaaiDatabasisActivity : BaseActivity() {
 
     private val navigationController by lazy { MainNavigationController(this) }
 
-    private var AutoDL = false
-    private var SERVER_IP: String = ""
-    private var SERVER_PORT: Int = 49514
+    private var autoDl = false
     private var delete: Boolean = false
     private var syncPhotosAfterDb: Boolean = false
     private var fromMenu: Boolean = true
     private var pcProtocolVersion: String = "v2"
+
+    // Raw SharedPreferences only for controllers that still need it
+    private val settings: SharedPreferences by lazy {
+        getSharedPreferences(WinkerkContract.PREFS_USER_INFO, MODE_PRIVATE)
+    }
 
     private val notificationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -161,8 +171,6 @@ class LaaiDatabasisActivity : BaseActivity() {
             insets
         }
 
-        settings = getSharedPreferences(WinkerkContract.PREFS_USER_INFO, MODE_PRIVATE)
-
         importController = DatabaseImportController(
             context = this,
             onError = { msg -> showError(msg) },
@@ -194,12 +202,12 @@ class LaaiDatabasisActivity : BaseActivity() {
             }
         }
 
-        binding.serverIp.setText(settings.getString("IP", ""))
+        binding.serverIp.setText(syncPrefs.serverIp)
 
         photoSyncController = PhotoSyncController(
             lifecycleOwner = this,
             workManager = WorkManager.getInstance(this),
-            settings = settings,
+            settings = settings,  // still uses raw prefs internally
             progressBar = binding.photoSyncProgress,
             statusLabel = binding.photoSyncStatus,
             syncButton = binding.startPhotoSync,
@@ -228,7 +236,7 @@ class LaaiDatabasisActivity : BaseActivity() {
             wifiButton = binding.laaiSocket,
             usbButton = binding.laaiUSB,
             protocolVersion = { pcProtocolVersion },
-            saveIp = { ip -> settings.edit { putString("IP", ip) } },
+            saveIp = { ip -> syncPrefs.serverIp = ip },  // ✅ use typed prefs
             onFileDownloaded = { file -> importController.processTempFile(file) },
             onNavigateBack = { navigateBackToMain() }
         )
@@ -251,10 +259,10 @@ class LaaiDatabasisActivity : BaseActivity() {
 
         handleIntentExtras()
 
-        syncPhotosAfterDb = settings.getBoolean("SYNC_PHOTOS", false)
+        syncPhotosAfterDb = syncPrefs.syncPhotos
         binding.syncPhotos.isChecked = syncPhotosAfterDb
         binding.syncPhotos.setOnCheckedChangeListener { _, isChecked ->
-            settings.edit { putBoolean("SYNC_PHOTOS", isChecked) }
+            syncPrefs.syncPhotos = isChecked
             syncPhotosAfterDb = isChecked
         }
 
@@ -269,8 +277,9 @@ class LaaiDatabasisActivity : BaseActivity() {
     }
 
     private fun initializeSettings() {
-        AutoDL = syncPrefs.autoDl   // replaced settings.getBoolean
-        pcProtocolVersion = settings.getString("PC_PROTOCOL_VERSION", "v2") ?: "v2"
+        autoDl = syncPrefs.autoDl
+        pcProtocolVersion = syncPrefs.pcProtocolVersion
+        fromMenu = syncPrefs.fromMenu
     }
 
     private fun initializeVersionToggle() {
@@ -279,7 +288,7 @@ class LaaiDatabasisActivity : BaseActivity() {
 
         group.setOnCheckedChangeListener { _, checkedId ->
             pcProtocolVersion = if (checkedId == R.id.btnV3) "v3" else "v2"
-            settings.edit { putString("PC_PROTOCOL_VERSION", pcProtocolVersion) }
+            syncPrefs.pcProtocolVersion = pcProtocolVersion
         }
     }
 
@@ -310,7 +319,7 @@ class LaaiDatabasisActivity : BaseActivity() {
         )
         val downloadUrl = CloudUrlTransformer.transform(binding.dbLink.text.toString())
         dropboxController.startDownload(downloadUrl)
-        settings.edit { putString("DropBox", downloadUrl) }
+        syncPrefs.dropboxUrl = downloadUrl
         binding.laaiBoodskap.text = getString(R.string.db_dropbox_downloading)
         binding.dbLinkButton.visibility = View.INVISIBLE
         binding.laaiLocal.visibility = View.GONE
@@ -385,8 +394,8 @@ class LaaiDatabasisActivity : BaseActivity() {
 
     private fun initializeDataInfo() {
         updateDateDisplay()
-        val dropBoxUrl = settings.getString("DropBox", "")
-        if (!dropBoxUrl.isNullOrEmpty()) {
+        val dropBoxUrl = syncPrefs.dropboxUrl
+        if (dropBoxUrl.isNotEmpty()) {
             binding.dbLink.setText(dropBoxUrl)
         }
     }
@@ -435,38 +444,48 @@ class LaaiDatabasisActivity : BaseActivity() {
     }
 
     private fun processAutomaticDatabaseUpdate(filePath: String) {
-        Toast.makeText(this, "WKR - Databasislaai", Toast.LENGTH_SHORT).show()
         val file = File(filePath)
         val fileSizeKB = file.length() / 1024
         val fileSizeMB = fileSizeKB / 1024
-        Toast.makeText(this, "WKR - DROPBOX Databasis $fileSizeKB KB", Toast.LENGTH_LONG).show()
-        if (fileSizeMB >= 1) {
-            Toast.makeText(this, "WKR - Probeer Dropbox databasis laai", Toast.LENGTH_LONG).show()
-            lifecycleScope.launch {
-                val success = importController.importFromFile(file)
-                if (success) {
-                    Toast.makeText(
-                        this@LaaiDatabasisActivity,
-                        "Databasis suksesvol gelaai",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    importController.reloadAndFinish()
-                } else {
-                    Toast.makeText(
-                        this@LaaiDatabasisActivity,
-                        "Databasis laai misluk",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
+
+        if (fileSizeMB < 1) {
+            Snackbar.make(
+                binding.root,
+                "Dropbox databasis te klein ($fileSizeKB KB)",
+                Snackbar.LENGTH_LONG
+            ).show()
+            return
+        }
+
+        Snackbar.make(
+            binding.root,
+            "Probeer Dropbox databasis laai ($fileSizeKB KB)",
+            Snackbar.LENGTH_LONG
+        ).show()
+
+        lifecycleScope.launch {
+            val success = importController.importFromFile(file)
+            if (success) {
+                Toast.makeText(
+                    this@LaaiDatabasisActivity,
+                    "Databasis suksesvol gelaai",
+                    Toast.LENGTH_SHORT
+                ).show()
+                importController.reloadAndFinish()
+            } else {
+                Toast.makeText(
+                    this@LaaiDatabasisActivity,
+                    "Databasis laai misluk",
+                    Toast.LENGTH_LONG
+                ).show()
             }
-        } else {
-            Toast.makeText(this, "WKR - Dropbox Databasis te klein", Toast.LENGTH_LONG).show()
         }
     }
 
     private fun handleAutomaticDownload() {
-        if (!fromMenu && AutoDL && binding.dbLink.text.toString() != getString(R.string.dbLink)) {
-            settings.edit { putBoolean("FROM_MENU", false) }
+        // Use fromMenu from syncPrefs
+        if (!fromMenu && autoDl && binding.dbLink.text.toString() != getString(R.string.dbLink)) {
+            syncPrefs.fromMenu = false
             binding.dbLinkButton.performClick()
         }
     }
@@ -510,30 +529,6 @@ class LaaiDatabasisActivity : BaseActivity() {
         if (result is PastoralDatabaseBackup.ImportResult.Success) {
             PastoralDatabase.getInstance(this)
             finish()
-        }
-    }
-
-    private fun loadDatabaseFromDevice(filePath: String) {
-        val sourceFile = File(filePath)
-        if (!sourceFile.exists()) {
-            Toast.makeText(this, "Lêer nie gevind nie", Toast.LENGTH_LONG).show()
-            return
-        }
-        lifecycleScope.launch {
-            if (importController.importFromFile(sourceFile)) {
-                Toast.makeText(
-                    this@LaaiDatabasisActivity,
-                    "Databasis suksesvol gelaai",
-                    Toast.LENGTH_SHORT
-                ).show()
-                importController.reloadAndFinish()
-            } else {
-                Toast.makeText(
-                    this@LaaiDatabasisActivity,
-                    "Databasis laai misluk",
-                    Toast.LENGTH_LONG
-                ).show()
-            }
         }
     }
 }

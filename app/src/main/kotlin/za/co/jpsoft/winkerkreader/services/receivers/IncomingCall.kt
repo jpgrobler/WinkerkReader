@@ -9,8 +9,8 @@ import android.telephony.TelephonyManager
 import android.util.Log
 import androidx.core.content.edit
 import za.co.jpsoft.winkerkreader.BuildConfig
-import za.co.jpsoft.winkerkreader.data.WinkerkContract.KEY_OPROEPMONITOR
-import za.co.jpsoft.winkerkreader.data.WinkerkContract.PREFS_USER_INFO
+import za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract.KEY_OPROEPMONITOR
+import za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract.PREFS_USER_INFO
 import za.co.jpsoft.winkerkreader.services.CallMonitoringService
 import za.co.jpsoft.winkerkreader.services.OproepDetailService
 

@@ -4,9 +4,11 @@ import android.content.Context
 import android.util.Log
 import androidx.sqlite.db.SimpleSQLiteQuery
 import za.co.jpsoft.winkerkreader.BuildConfig
-import za.co.jpsoft.winkerkreader.data.WinkerkContract
-import za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase
+import za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract
+import za.co.jpsoft.winkerkreader.data.members.setup.WinkerkDatabase
 import za.co.jpsoft.winkerkreader.utils.prefs.WidgetPrefs
+import za.co.jpsoft.winkerkreader.widget.WidgetDataRepository.init
+import za.co.jpsoft.winkerkreader.widget.WidgetDataRepository.widgetPrefs
 import java.time.LocalDate
 import java.time.MonthDay
 import java.time.format.DateTimeFormatter

@@ -1,9 +1,9 @@
 package za.co.jpsoft.winkerkreader.data.pastoral.repository
 
 import android.content.Context
-import za.co.jpsoft.winkerkreader.utils.PastoralDatabaseBackup
+import jakarta.inject.Inject
+import za.co.jpsoft.winkerkreader.utils.db.PastoralDatabaseBackup
 import za.co.jpsoft.winkerkreader.widget.PastoralWidgetProvider
-import javax.inject.Inject
 import javax.inject.Singleton
 
 /**

@@ -1,14 +1,13 @@
 package za.co.jpsoft.winkerkreader.ui.controllers
 
 import android.content.Context
-import android.graphics.Color
 import android.view.View
 import androidx.core.content.ContextCompat
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import za.co.jpsoft.winkerkreader.R
-import za.co.jpsoft.winkerkreader.utils.ColorUtils
 import za.co.jpsoft.winkerkreader.utils.prefs.CongregationPrefs
+import za.co.jpsoft.winkerkreader.utils.ui.ColorUtils
 
 class CongregationChipController(
     private val context: Context,

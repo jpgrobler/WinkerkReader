@@ -19,8 +19,8 @@ import za.co.jpsoft.winkerkreader.data.pastoral.model.ReminderWithMember
 import za.co.jpsoft.winkerkreader.data.pastoral.model.ScheduleType
 import za.co.jpsoft.winkerkreader.data.pastoral.model.TemplateContext
 import za.co.jpsoft.winkerkreader.databinding.ItemBedieningReminderBinding
-import za.co.jpsoft.winkerkreader.utils.PhotoHelper
 import za.co.jpsoft.winkerkreader.utils.Utils.toLocalDateSafe
+import za.co.jpsoft.winkerkreader.utils.files.PhotoHelper
 import java.io.File
 import java.time.Instant
 import java.time.LocalDate

@@ -1,14 +1,12 @@
 // ui/viewmodels/LidmaatDetailPastoralViewModelFactory.kt
 package za.co.jpsoft.winkerkreader.ui.viewmodels
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import jakarta.inject.Inject
 import jakarta.inject.Singleton
 import za.co.jpsoft.winkerkreader.data.pastoral.repository.FamilyMemberRepository
 import za.co.jpsoft.winkerkreader.data.pastoral.repository.PastoralReminderRepository
-import za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase
 
 @Singleton
 class LidmaatDetailPastoralViewModelFactory @Inject constructor(

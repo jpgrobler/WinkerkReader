@@ -12,7 +12,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.models.PendingReminderUiItem
-import za.co.jpsoft.winkerkreader.data.pastoral.entities.FollowUpReminderEntity
 import za.co.jpsoft.winkerkreader.data.pastoral.entities.PastoralNoteEntity
 import za.co.jpsoft.winkerkreader.data.pastoral.model.TemplateContext
 import za.co.jpsoft.winkerkreader.data.pastoral.repository.PastoralNoteRepository
@@ -22,9 +21,9 @@ import za.co.jpsoft.winkerkreader.ui.adapters.PendingReminderMiniAdapter
 import za.co.jpsoft.winkerkreader.ui.bottomsheets.StelHerinneringBottomSheet
 import za.co.jpsoft.winkerkreader.ui.bottomsheets.VoegNotaByBottomSheet
 import za.co.jpsoft.winkerkreader.ui.viewmodels.LidmaatDetailPastoralViewModel
-import za.co.jpsoft.winkerkreader.utils.NoteAuthManager
 import za.co.jpsoft.winkerkreader.utils.ReminderUiMapper
 import za.co.jpsoft.winkerkreader.utils.Utils.toLocalDateSafe
+import za.co.jpsoft.winkerkreader.utils.security.NoteAuthManager
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale

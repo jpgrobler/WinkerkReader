@@ -17,8 +17,8 @@ import androidx.work.WorkerParameters
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.BuildConfig
-import za.co.jpsoft.winkerkreader.data.WinkerkContract.winkerkEntry
-import za.co.jpsoft.winkerkreader.utils.PastoralDatabaseBackup
+import za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract.winkerkEntry
+import za.co.jpsoft.winkerkreader.utils.db.PastoralDatabaseBackup
 import java.io.File
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter

@@ -8,8 +8,8 @@ import androidx.work.workDataOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.BuildConfig
-import za.co.jpsoft.winkerkreader.data.WinkerkContract
-import za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase
+import za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract
+import za.co.jpsoft.winkerkreader.data.members.setup.WinkerkDatabase
 import java.io.File
 import java.io.FileOutputStream
 import java.net.Socket

@@ -15,9 +15,9 @@ import android.widget.RemoteViewsService
 import androidx.core.content.ContextCompat
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
+import za.co.jpsoft.winkerkreader.data.members.setup.WinkerkDatabase
 import za.co.jpsoft.winkerkreader.data.pastoral.PastoralDatabase
 import za.co.jpsoft.winkerkreader.data.pastoral.entities.FollowUpReminderEntity
-import za.co.jpsoft.winkerkreader.data.room.WinkerkDatabase
 import za.co.jpsoft.winkerkreader.utils.Utils.toLocalDateSafe
 import za.co.jpsoft.winkerkreader.utils.widget.PastoralWidgetDependencies
 import java.time.LocalDate
