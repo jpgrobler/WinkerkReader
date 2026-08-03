@@ -8,6 +8,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import jakarta.inject.Singleton
 import za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract.PREFS_USER_INFO
 import za.co.jpsoft.winkerkreader.utils.prefs.AppearancePrefs
 import za.co.jpsoft.winkerkreader.utils.prefs.BackupPrefs
@@ -24,7 +25,6 @@ import za.co.jpsoft.winkerkreader.utils.prefs.TasksPrefs
 import za.co.jpsoft.winkerkreader.utils.prefs.WidgetPrefs
 import za.co.jpsoft.winkerkreader.utils.security.EncryptedPrefsManager
 import javax.inject.Qualifier
-import javax.inject.Singleton
 
 // ─── Qualifiers ──────────────────────────────────────────────────────────────
 

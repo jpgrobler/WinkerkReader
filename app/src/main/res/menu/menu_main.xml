@@ -69,6 +69,10 @@
         app:showAsAction="never">
         <menu>
             <item
+                android:id="@+id/menu_swipe_settings"
+                android:title="@string/swiep_instellings"
+                app:showAsAction="never" />
+            <item
                 android:id="@+id/laai"
                 android:title="@string/mainmenu_laai"
                 app:showAsAction="never" />

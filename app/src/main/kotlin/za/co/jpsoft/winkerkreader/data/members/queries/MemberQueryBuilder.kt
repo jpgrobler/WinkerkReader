@@ -495,15 +495,13 @@ object MemberQueryBuilder {
         appendWhereClause(eventType, where, argsList, soek, filterList)
 
         // Add the birthday condition - members with birthday BEFORE today
-        val birthdayCondition = buildString {
-            append("((CAST(SUBSTR(")
-            append(col(winkerkEntry.LIDMATE_GEBOORTEDATUM))
-            append(", 4, 2) AS INTEGER) < ?) OR (CAST(SUBSTR(")
-            append(col(winkerkEntry.LIDMATE_GEBOORTEDATUM))
-            append(", 4, 2) AS INTEGER) = ? AND CAST(SUBSTR(")
-            append(col(winkerkEntry.LIDMATE_GEBOORTEDATUM))
-            append(", 1, 2) AS INTEGER) < ?))")
-        }
+        val birthdayColumn =
+            winkerkEntry.LIDMATE_TABLE_NAME + "." + col(winkerkEntry.LIDMATE_GEBOORTEDATUM)
+        val birthdateExpr =
+            "date(SUBSTR(" + col(winkerkEntry.LIDMATE_GEBOORTEDATUM) + ", 7,4) || '-' || SUBSTR(" + col(
+                winkerkEntry.LIDMATE_GEBOORTEDATUM
+            ) + ", 4, 2) || '-' || SUBSTR(" + col(winkerkEntry.LIDMATE_GEBOORTEDATUM) + ", 1, 2))"
+        val birthdayCondition = "strftime('%m-%d', $birthdateExpr) < '${todayMonth}-${todayDay}'"
 
         // Add the birthday condition
         if (where.isEmpty()) {
@@ -513,9 +511,9 @@ object MemberQueryBuilder {
         }
 
         // Add the parameters for the birthday condition
-        argsList.add(todayMonth)
-        argsList.add(todayMonth)
-        argsList.add(todayDay)
+//        argsList.add(todayMonth)
+//        argsList.add(todayMonth)
+//        argsList.add(todayDay)
 
         // Build the FROM clause
         val fromClause =

@@ -6,12 +6,12 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import jakarta.inject.Singleton
 import za.co.jpsoft.winkerkreader.data.pastoral.repository.PastoralReminderRepository
 import za.co.jpsoft.winkerkreader.data.pastoral.repository.ReminderBackupHelper
 import za.co.jpsoft.winkerkreader.utils.db.PastoralDatabaseBackup
 import za.co.jpsoft.winkerkreader.utils.prefs.PastoralPrefs
 import za.co.jpsoft.winkerkreader.utils.prefs.TasksPrefs
-import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)

@@ -2,9 +2,9 @@ package za.co.jpsoft.winkerkreader.data.pastoral.repository
 
 import android.content.Context
 import jakarta.inject.Inject
+import jakarta.inject.Singleton
 import za.co.jpsoft.winkerkreader.utils.db.PastoralDatabaseBackup
 import za.co.jpsoft.winkerkreader.widget.PastoralWidgetProvider
-import javax.inject.Singleton
 
 /**
  * Encapsulates backup and widget refresh side-effects.

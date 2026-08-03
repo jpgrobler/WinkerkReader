@@ -331,7 +331,7 @@ class QuickActionHelper(
      *
      * @param item The target [MemberItem].
      */
-    private fun openVoegNotaBy(item: MemberItem) {
+    fun openVoegNotaBy(item: MemberItem) {
         val guid = item.guid.takeIf { it.isNotBlank() } ?: run {
             if (BuildConfig.DEBUG) Log.w("QuickActionHelper", "openVoegNotaBy: guid is null/blank")
             return
@@ -350,7 +350,7 @@ class QuickActionHelper(
      *
      * @param item The target [MemberItem].
      */
-    private fun openStelHerinnering(item: MemberItem) {
+    fun openStelHerinnering(item: MemberItem) {
         val guid = item.guid.takeIf { it.isNotBlank() } ?: run {
             if (BuildConfig.DEBUG) Log.w(
                 "QuickActionHelper",

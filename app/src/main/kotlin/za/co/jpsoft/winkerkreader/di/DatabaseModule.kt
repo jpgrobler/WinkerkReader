@@ -7,13 +7,13 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import jakarta.inject.Singleton
 import za.co.jpsoft.winkerkreader.data.calllog.dao.CallLogDao
 import za.co.jpsoft.winkerkreader.data.calllog.setup.CallLogDatabase
 import za.co.jpsoft.winkerkreader.data.members.dao.MemberDao
 import za.co.jpsoft.winkerkreader.data.members.setup.WinkerkDatabase
 import za.co.jpsoft.winkerkreader.data.pastoral.PastoralDatabase
 import za.co.jpsoft.winkerkreader.data.pastoral.dao.FollowUpReminderDao
-import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)

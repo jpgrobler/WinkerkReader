@@ -14,7 +14,6 @@ import za.co.jpsoft.winkerkreader.data.members.setup.DatabaseInitializer
 import za.co.jpsoft.winkerkreader.services.CallMonitoringService
 import za.co.jpsoft.winkerkreader.utils.telephony.ActiveCallReconciler
 import za.co.jpsoft.winkerkreader.utils.work.WorkScheduler
-import za.co.jpsoft.winkerkreader.widget.PastoralWidgetProvider
 
 object AppInitializer {
 
@@ -86,7 +85,6 @@ object AppInitializer {
 
             withContext(Dispatchers.Main) {
                 workScheduler.scheduleAll()
-                PastoralWidgetProvider.refreshWidgets(appContext)
             }
         }
     }

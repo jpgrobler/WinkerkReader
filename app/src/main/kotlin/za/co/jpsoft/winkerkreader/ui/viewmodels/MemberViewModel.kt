@@ -1,5 +1,6 @@
 package za.co.jpsoft.winkerkreader.ui.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
@@ -12,17 +13,23 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.members.dao.MemberDao
 import za.co.jpsoft.winkerkreader.data.members.models.MemberItem
+import za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract.winkerkEntry
 import za.co.jpsoft.winkerkreader.data.members.queries.MemberPagingSource
 import za.co.jpsoft.winkerkreader.data.members.repository.MemberRepository
 import za.co.jpsoft.winkerkreader.data.models.FilterBox
@@ -41,10 +48,12 @@ class MemberViewModel @Inject constructor(
         private const val TAG = "MemberViewModel"
         private const val KEY_SORT_ORDER = "sortOrder"
         private const val KEY_SOEK = "soek"
-        private const val KEY_RECORD_STATUS = "recordStatus"
+        private const val KEY_RECORD_STATUS = winkerkEntry.LIDMATE_REKORDSTATUS //"recordStatus"
         private const val KEY_SOEK_LIST = "soekList"
     }
 
+    @Volatile
+    private var birthdayInitialKey: Int = 0
     // ─── SavedStateHandle‑backed StateFlows ──────────────────────────────────
     private val _congregationFilter = MutableStateFlow<Set<String>>(emptySet())
 
@@ -102,6 +111,9 @@ class MemberViewModel @Inject constructor(
         _refreshTrigger.value++
     }
 
+    private val _scrollToPosition = MutableSharedFlow<Int>()
+    val scrollToPosition: SharedFlow<Int> = _scrollToPosition.asSharedFlow()
+
     // ─── Init ─────────────────────────────────────────────────────────────────
     init {
         viewModelScope.launch {
@@ -126,8 +138,7 @@ class MemberViewModel @Inject constructor(
                 )
             }.debounce(300)
                 .collect { params ->
-                    val count = withContext(Dispatchers.IO) {
-                        repository.countMembers(
+                    val count = repository.countMembers(
                             eventType = params.eventType,
                             recordStatus = params.status,
                             soek = params.search,
@@ -135,7 +146,6 @@ class MemberViewModel @Inject constructor(
                             sortOrder = params.sort,
                             congregations = params.congregations.toList()
                         )
-                    }
                     _totalCount.value = count
                 }
         }
@@ -278,7 +288,7 @@ class MemberViewModel @Inject constructor(
 
     // ─── Paging 3 ─────────────────────────────────────────────────────────────
     private val pagingConfig =
-        PagingConfig(pageSize = 50, prefetchDistance = 500, enablePlaceholders = false)
+        PagingConfig(pageSize = 50, prefetchDistance = 50, enablePlaceholders = false)
 
     private data class PagingParams(
         val sort: String,
@@ -289,15 +299,11 @@ class MemberViewModel @Inject constructor(
         val congregations: Set<String>
     )
 
+    // ─── Paging flow — use initialKey for birthday sort ─────────────────────────
     private val pagingDataFlow = combine(
         listOf(
-            sortOrderFlow,
-            soekFlow,
-            recordStatusFlow,
-            _filterList,
-            _eventType,
-            _congregationFilter,
-            _refreshTrigger
+            sortOrderFlow, soekFlow, recordStatusFlow,
+            _filterList, _eventType, _congregationFilter, _refreshTrigger
         )
     ) { args ->
         PagingParams(
@@ -309,27 +315,73 @@ class MemberViewModel @Inject constructor(
             congregations = args[5] as Set<String>
         )
     }.flatMapLatest { params ->
-        Pager(pagingConfig) {
-            MemberPagingSource(
-                memberDao = memberDao,
-                memberRepository = repository,
-                eventType = params.eventType,
-                recordStatus = params.status,
-                soek = params.search,
-                filterList = params.filters,
-                sortOrder = params.sort,
-                congregations = params.congregations.toList(),
-                pageSize = 50
-            )
-        }.flow
+        if (params.eventType != "LIDMAAT_DATA_VERJAAR") {
+            Pager(pagingConfig, initialKey = 0) {
+                memberPagingSource(params)
+            }.flow
+        } else {
+            // Recompute on every birthday reload (sort/filter/congregation change).
+            flow {
+                val startKey = resolveBirthdayScrollOffset().also {
+                    birthdayInitialKey = it
+                    if (BuildConfig.DEBUG) Log.d("Paging", "birthday startKey = $it")
+                }
+                emit(startKey)
+            }.flatMapLatest { startKey ->
+                Pager(pagingConfig, initialKey = startKey) {
+                    memberPagingSource(params)
+                }.flow
+            }
+        }
     }.cachedIn(viewModelScope)
+
+    private fun memberPagingSource(params: PagingParams) = MemberPagingSource(
+        memberDao = memberDao,
+        memberRepository = repository,
+        eventType = params.eventType,
+        recordStatus = params.status,
+        soek = params.search,
+        filterList = params.filters,
+        sortOrder = params.sort,
+        congregations = params.congregations.toList(),
+        pageSize = 50
+    )
+
+// ─── New public method for birthday sort ────────────────────────────────────
+    /**
+     * Calculates today's birthday offset BEFORE triggering the sort change.
+     * This guarantees [birthdayInitialKey] is set before [flatMapLatest]
+     * re-creates the Pager, so the first load starts at the right position.
+     */
+    private var lastBirthdaySortTime = 0L
+    fun switchToBirthdaySort() {
+        if (System.currentTimeMillis() - lastBirthdaySortTime < 1000) return // debounce 1s
+        lastBirthdaySortTime = System.currentTimeMillis()
+        viewModelScope.launch {
+            if (sortOrder != "VERJAAR") {
+                sortOrder = "VERJAAR"
+                _eventType.value = eventTypeFor("VERJAAR")
+            }
+            // Offset is resolved inside paging flatMapLatest; refresh recreates the pager.
+            refresh()
+        }
+    }
 
     val pagingDataFlowWithRefresh = pagingDataFlow.distinctUntilChanged()
 
     // ─── Public API ──────────────────────────────────────────────────────────
     fun updateSortOrder(newSort: String) {
+        if (BuildConfig.DEBUG) Log.d(
+            "SortChange",
+            "updateSortOrder called with $newSort, stack:",
+            Exception()
+        )
         sortOrder = newSort
         _eventType.value = eventTypeFor(newSort)
+        if (newSort != "VERJAAR") {
+            birthdayInitialKey = 0
+            viewModelScope.launch { _scrollToPosition.emit(0) }
+        }
         refresh()
     }
 
@@ -362,6 +414,7 @@ class MemberViewModel @Inject constructor(
         _filterList.value = null
         _eventType.value = eventTypeFor(sort)
         sortOrder = sort
+        if (BuildConfig.DEBUG) Log.d("SortReset", sort)
         refresh()
     }
 
@@ -391,6 +444,7 @@ class MemberViewModel @Inject constructor(
         }
         _filterList.value = null
         currentFilterList = null
+        if (BuildConfig.DEBUG) Log.d("SortChange", "Set CongregatinFilter")
         updateEventTypeFromSortOrder()
         refresh()
     }
@@ -409,6 +463,28 @@ class MemberViewModel @Inject constructor(
     override fun onCleared() {
         clearCache()
         super.onCleared()
+    }
+
+    fun refreshBirthdaySort() {
+        refresh()
+    }
+
+    /**
+     * SQL offset for the first member whose birthday is today, or the next
+     * upcoming one. Wraps to January when no birthdays remain this calendar year.
+     */
+    suspend fun resolveBirthdayScrollOffset(): Int {
+        val offset = getBirthdayOffset("VERJAAR")
+        val total = repository.countMembers(
+            eventType = "LIDMAAT_DATA_VERJAAR",
+            recordStatus = recordStatus,
+            soek = soek,
+            filterList = _filterList.value,
+            sortOrder = "VERJAAR",
+            congregations = _congregationFilter.value.toList()
+        )
+        if (BuildConfig.DEBUG) Log.d("BirthdaySort", "offset = $offset, total = $total")
+        return if (total > 0 && offset >= total) 0 else offset
     }
 
     suspend fun getBirthdayOffset(sortOrder: String): Int {

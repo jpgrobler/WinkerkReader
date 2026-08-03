@@ -4,10 +4,10 @@ import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.util.Log
 import jakarta.inject.Inject
+import jakarta.inject.Singleton
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract
 import za.co.jpsoft.winkerkreader.utils.prefs.SyncPrefs
-import javax.inject.Singleton
 
 @Singleton
 class DatabaseInitializer @Inject constructor(

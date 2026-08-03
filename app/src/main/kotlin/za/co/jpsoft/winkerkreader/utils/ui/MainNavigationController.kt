@@ -1,6 +1,7 @@
 // File: utils/MainNavigationController.kt
 package za.co.jpsoft.winkerkreader.utils.ui
 
+import android.app.Activity
 import android.content.ContentUris
 import android.content.Context
 import android.content.Intent
@@ -12,6 +13,7 @@ import android.provider.Settings
 import androidx.core.net.toUri
 import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
+import jakarta.inject.Singleton
 import za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract
 import za.co.jpsoft.winkerkreader.services.CallMonitoringService
 import za.co.jpsoft.winkerkreader.services.ServiceKeepAlive
@@ -30,27 +32,36 @@ import za.co.jpsoft.winkerkreader.ui.activities.TemplateEditorActivity
 import za.co.jpsoft.winkerkreader.ui.activities.TemplateManagerActivity
 import za.co.jpsoft.winkerkreader.ui.activities.UitlegActivity
 import za.co.jpsoft.winkerkreader.ui.activities.VerjaarSmsActivity
-import javax.inject.Singleton
 
 @Singleton
 class MainNavigationController @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
 
+    /** Required when [context] is not an [Activity] (e.g. Hilt application context). */
+    private fun launchActivity(intent: Intent) {
+        if (context !is Activity) {
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        context.startActivity(intent)
+    }
+
+    private fun activityIntent(target: Class<*>): Intent = Intent(context, target)
+
     // ============================================================
     // Main Navigation
     // ============================================================
 
     fun navigateToMain(extras: Bundle? = null) {
-        val intent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        val intent = activityIntent(MainActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
             extras?.let { putExtras(it) }
         }
-        context.startActivity(intent)
+        launchActivity(intent)
     }
 
     fun navigateToSplash() {
-        context.startActivity(Intent(context, SplashActivity::class.java))
+        launchActivity(activityIntent(SplashActivity::class.java))
     }
 
     // ============================================================
@@ -70,7 +81,7 @@ class MainNavigationController @Inject constructor(
     // ============================================================
 
     fun navigateToPastoralBackup() {
-        context.startActivity(Intent(context, PastoralBackupActivity::class.java))
+        launchActivity(activityIntent(PastoralBackupActivity::class.java))
     }
 
     // ============================================================
@@ -82,7 +93,7 @@ class MainNavigationController @Inject constructor(
         recordStatus: String = "0",
         memberId: Long? = null
     ) {
-        val intent = Intent(context, LidmaatDetailActivity::class.java).apply {
+        val intent = activityIntent(LidmaatDetailActivity::class.java).apply {
             putExtra(LidmaatDetailActivity.EXTRA_MEMBER_GUID, memberGuid)
             putExtra("RECORD_STATUS", recordStatus)
             memberId?.let {
@@ -92,17 +103,17 @@ class MainNavigationController @Inject constructor(
                 )
             }
         }
-        context.startActivity(intent)
+        launchActivity(intent)
     }
 
     fun navigateToVerjaarSms() {
         // The fromMenu flag is now handled inside the ViewModel/Activity, not here.
         // We'll keep the intent creation simple.
-        context.startActivity(Intent(context, VerjaarSmsActivity::class.java))
+        launchActivity(activityIntent(VerjaarSmsActivity::class.java))
     }
 
     fun navigateToArgief() {
-        context.startActivity(Intent(context, ArgiefListActivity::class.java))
+        launchActivity(activityIntent(ArgiefListActivity::class.java))
     }
 
     // ============================================================
@@ -110,15 +121,15 @@ class MainNavigationController @Inject constructor(
     // ============================================================
 
     fun navigateToUitleg() {
-        context.startActivity(Intent(context, UitlegActivity::class.java))
+        launchActivity(activityIntent(UitlegActivity::class.java))
     }
 
     fun navigateToRegistreer() {
-        context.startActivity(Intent(context, RegistreerActivity::class.java))
+        launchActivity(activityIntent(RegistreerActivity::class.java))
     }
 
     fun navigateToPermissions() {
-        context.startActivity(Intent(context, PermissionsActivity::class.java))
+        launchActivity(activityIntent(PermissionsActivity::class.java))
     }
 
     // ============================================================
@@ -126,17 +137,17 @@ class MainNavigationController @Inject constructor(
     // ============================================================
 
     fun navigateToLaaiDatabasis(extras: Bundle? = null) {
-        val intent = Intent(context, LaaiDatabasisActivity::class.java)
+        val intent = activityIntent(LaaiDatabasisActivity::class.java)
         extras?.let { intent.putExtras(it) }
-        context.startActivity(intent)
+        launchActivity(intent)
     }
 
     fun navigateToLaaiDatabasis(promptRestore: Boolean = false) {
-        val intent = Intent(context, LaaiDatabasisActivity::class.java)
+        val intent = activityIntent(LaaiDatabasisActivity::class.java)
         if (promptRestore) {
             intent.putExtra(LaaiDatabasisActivity.EXTRA_PROMPT_RESTORE, true)
         }
-        context.startActivity(intent)
+        launchActivity(intent)
     }
 
     // ============================================================
@@ -144,7 +155,7 @@ class MainNavigationController @Inject constructor(
     // ============================================================
 
     fun navigateToCallLog() {
-        context.startActivity(Intent(context, CallLogActivity::class.java))
+        launchActivity(activityIntent(CallLogActivity::class.java))
     }
 
     // ============================================================
@@ -152,12 +163,12 @@ class MainNavigationController @Inject constructor(
     // ============================================================
 
     fun navigateToTemplateManager() {
-        context.startActivity(Intent(context, TemplateManagerActivity::class.java))
+        launchActivity(activityIntent(TemplateManagerActivity::class.java))
     }
 
     fun navigateToTemplateEditor(templateId: String) {
-        context.startActivity(
-            Intent(context, TemplateEditorActivity::class.java)
+        launchActivity(
+            activityIntent(TemplateEditorActivity::class.java)
                 .putExtra("extra_template_id", templateId)
         )
     }

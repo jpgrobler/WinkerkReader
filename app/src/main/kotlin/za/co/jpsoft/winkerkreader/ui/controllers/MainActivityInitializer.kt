@@ -11,6 +11,7 @@ import android.widget.Toast
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.paging.LoadState
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.launch
@@ -22,6 +23,7 @@ import za.co.jpsoft.winkerkreader.ui.activities.MainActivity
 import za.co.jpsoft.winkerkreader.ui.adapters.MemberListAdapter
 import za.co.jpsoft.winkerkreader.ui.components.SearchCheckBox
 import za.co.jpsoft.winkerkreader.ui.helpers.MemberListScrollHelper
+import za.co.jpsoft.winkerkreader.ui.helpers.QuickActionHelper
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MainViewModel
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel
 import za.co.jpsoft.winkerkreader.utils.CallLogImporter
@@ -38,8 +40,8 @@ import za.co.jpsoft.winkerkreader.utils.prefs.QuickActionPrefs
 import za.co.jpsoft.winkerkreader.utils.prefs.SyncPrefs
 import za.co.jpsoft.winkerkreader.utils.ui.BackPressHandler
 import za.co.jpsoft.winkerkreader.utils.ui.MainNavigationController
+import za.co.jpsoft.winkerkreader.utils.ui.SwipeActionHandler
 import za.co.jpsoft.winkerkreader.utils.work.WorkScheduler
-import za.co.jpsoft.winkerkreader.workers.PastoralBackupWorker
 
 /**
  * Coordinates the initialisation and wiring of all MainActivity components.
@@ -89,30 +91,73 @@ class MainActivityInitializer(
     private lateinit var backPressHandler: BackPressHandler
     private lateinit var pastoralBadgeController: PastoralReminderBadgeController
     private lateinit var uiBinder: MainUiBinder
+    private lateinit var quickActionHelper: QuickActionHelper
 
     // ─── State ────────────────────────────────────────────────────────────────
 
     private var initState: InitState = InitState.AwaitingAuth
-    private var savedListScroll: MemberListScrollHelper.ScrollState? = null
+
+    // Replace: private var savedListScroll: MemberListScrollHelper.ScrollState? = null
+    private var savedScrollStateWithSort: Pair<MemberListScrollHelper.ScrollState, String>? = null
     private var searchList: ArrayList<SearchCheckBox> = arrayListOf()
     private var scrollRestored = false
 
+    lateinit var swipeActionHandler: SwipeActionHandler
+        private set
     // ─── Initialisation entry point ─────────────────────────────────────────
 
     fun setupPreAuth() {
         setupViewModelAndAdapter()
         setupChipController()
         setupSortController()
+        quickActionHelper = QuickActionHelper(activity, quickActionPrefs, appearancePrefs)
+        setupSwipeActionHandler()
+        setupItemSwipe()
         setupSearchFilterCoordinator()
         setupMenuController()
         setupListInteractionController()
-        setupSwipeGestureController()
+        //setupSwipeGestureController()
         setupActivityResultCoordinator()
         setupWorkScheduler()
+
 
         activity.appAuthGuard.guardIfNeeded(
             onAuthenticated = { setupPostAuth() }
         )
+    }
+
+    private fun setupItemSwipe() {
+        val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
+            0,  // drag directions – none
+            ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
+        ) {
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean = false
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val position = viewHolder.bindingAdapterPosition
+                if (position == RecyclerView.NO_POSITION) return
+
+                val item = adapter.snapshot().getOrNull(position) ?: return
+
+                // Reset translation so the view reappears
+                viewHolder.itemView.translationX = 0f
+
+                // Rebind after a short delay to let the swipe animation finish
+                binding.lidmaatList.postDelayed({
+                    adapter.notifyItemChanged(position)
+                }, 100)
+
+                when (direction) {
+                    ItemTouchHelper.LEFT -> swipeActionHandler.handleSwipeLeft(item)
+                    ItemTouchHelper.RIGHT -> swipeActionHandler.handleSwipeRight(item)
+                }
+            }
+        })
+        itemTouchHelper.attachToRecyclerView(binding.lidmaatList)
     }
 
     // ─── Post‑authentication finalisation ───────────────────────────────────
@@ -238,7 +283,19 @@ class MainActivityInitializer(
             quickActionPrefs = quickActionPrefs,
             appearancePrefs = appearancePrefs,
             viewModel = viewModel,
-            memberListAdapter = adapter
+            memberListAdapter = adapter,
+            quickActionHelper = quickActionHelper
+        )
+    }
+
+    private fun setupSwipeActionHandler() {
+        swipeActionHandler = SwipeActionHandler(
+            activity = activity,
+            viewModel = viewModel,
+            navigationController = navigationController,
+            memberListPrefs = memberListPrefs,
+            sortOrderController = sortController,
+            quickActionHelper = quickActionHelper
         )
     }
 
@@ -273,12 +330,8 @@ class MainActivityInitializer(
     private fun setupWorkScheduler() {
         val dailyEnabled = backupPrefs.dailyBackupEnabled
         val exportToDownloads = backupPrefs.backupExportToDownloads
-        if (dailyEnabled) {
-            PastoralBackupWorker.schedule(activity, exportToDownloads)
-        } else {
-            PastoralBackupWorker.cancel(activity)
-        }
-        // workScheduler.scheduleAll() is called from startupCoordinator's setupAlarms()
+        workScheduler.schedulePastoralBackup(dailyEnabled, exportToDownloads)
+        // workScheduler.scheduleAll() is still called from startupCoordinator's setupAlarms()
     }
 
     private fun setupUiBinder() {
@@ -414,7 +467,7 @@ class MainActivityInitializer(
     private fun setupScrollRestorationObserver() {
         lifecycleScope.launch {
             adapter.loadStateFlow.collect { loadStates ->
-                if (loadStates.refresh is LoadState.NotLoading && savedListScroll != null) {
+                if (loadStates.refresh is LoadState.NotLoading && savedScrollStateWithSort != null) {
                     restoreListScrollIfNeeded()
                 }
             }
@@ -422,11 +475,22 @@ class MainActivityInitializer(
     }
 
     private fun restoreListScrollIfNeeded() {
+        // Skip if birthday sort has a pending explicit scroll
         if (sortController.hasPendingBirthdayScroll) return
-        val state = savedListScroll ?: return
+
+        val saved = savedScrollStateWithSort ?: return
+        val (savedState, savedSort) = saved
+
+        // Only restore if the sort order hasn't changed
+        if (savedSort != viewModel.sortOrder) {
+            // Discard stale state
+            savedScrollStateWithSort = null
+            return
+        }
+
         if (adapter.itemCount == 0) return
-        MemberListScrollHelper.restoreScrollState(binding.lidmaatList, state, adapter)
-        savedListScroll = null
+        MemberListScrollHelper.restoreScrollState(binding.lidmaatList, savedState, adapter)
+        savedScrollStateWithSort = null
         scrollRestored = true
     }
 
@@ -434,7 +498,8 @@ class MainActivityInitializer(
         if (BuildConfig.DEBUG) Log.d("MainActivityInit", "loadInitialData: started")
 
         if (::adapter.isInitialized && adapter.itemCount > 0) {
-            savedListScroll = MemberListScrollHelper.saveScrollState(binding.lidmaatList, adapter)
+            val scrollState = MemberListScrollHelper.saveScrollState(binding.lidmaatList, adapter)
+            savedScrollStateWithSort = scrollState?.let { it to viewModel.sortOrder }
         }
 
         if (searchList.isNotEmpty()) {
@@ -446,8 +511,21 @@ class MainActivityInitializer(
         searchFilterCoordinator.refresh()
         WhatsAppContactLoader.loadWhatsAppContactsAtomic(activity, lifecycleScope)
 
-        val defLayout = memberListPrefs.defLayout
-        sortController.update(defLayout)
+        // Only apply default layout if this is the very first load
+        if (initState != InitState.Ready) {
+            val defLayout = memberListPrefs.defLayout
+            when {
+                viewModel.sortOrder.isEmpty() -> sortController.update(defLayout)
+                viewModel.sortOrder == "VAN" && defLayout != "VAN" -> sortController.update(
+                    defLayout
+                )
+
+                viewModel.sortOrder == "VERJAAR" || viewModel.sortOrder == "VERJAARSDAG" -> {
+                    sortController.requestBirthdayAnchor(viewModel.sortOrder)
+                    viewModel.switchToBirthdaySort()
+                }
+            }
+        }
 
         initState = InitState.Ready
     }
@@ -487,14 +565,15 @@ class MainActivityInitializer(
             searchFilterCoordinator.updateSummaryView()
             sortController.syncWithSettings(initState == InitState.Ready)
             viewModel.refresh()
-            loadInitialData()
+            // ❌ Remove or guard loadInitialData() here
             binding.lidmaatList.post { restoreListScrollIfNeeded() }
         }
     }
 
     fun onPause() {
         if (initState == InitState.Ready) {
-            savedListScroll = MemberListScrollHelper.saveScrollState(binding.lidmaatList, adapter)
+            val scrollState = MemberListScrollHelper.saveScrollState(binding.lidmaatList, adapter)
+            savedScrollStateWithSort = scrollState?.let { it to viewModel.sortOrder }
         }
     }
 
@@ -503,6 +582,7 @@ class MainActivityInitializer(
         listInteractionController.dismissQuickActions()
         WhatsAppContactLoader.reset()
     }
+
 
     private sealed class InitState {
         object AwaitingAuth : InitState()

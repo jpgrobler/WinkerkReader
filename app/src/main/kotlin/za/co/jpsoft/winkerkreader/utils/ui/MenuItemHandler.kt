@@ -17,7 +17,9 @@ class MenuItemHandler(
     private val viewModel: MemberViewModel,
     private val navigationController: MainNavigationController,
     private val memberListPrefs: MemberListPrefs,
-    private val onSortOrderChanged: (String) -> Unit
+    private val onSortOrderChanged: (String) -> Unit,
+    private val onBirthdaySortSelected: () -> Unit,
+    private val swipeActionHandler: SwipeActionHandler
 ) {
     fun handleMenuItem(item: MenuItem): Boolean {
         return when (item.itemId) {
@@ -77,6 +79,10 @@ class MenuItemHandler(
                 item.title = spanString
                 true
             }
+            R.id.menu_swipe_settings -> {
+                swipeActionHandler.showSwipeSettingsDialog()
+                true
+            }
             else -> false
         }
     }
@@ -114,7 +120,7 @@ class MenuItemHandler(
     private fun handleVerjaar(): Boolean {
         memberListPrefs.defLayout = "VERJAAR"   // ← fixed
         viewModel.soekList = false
-        onSortOrderChanged("VERJAAR")
+        onBirthdaySortSelected()    // onSortOrderChanged("VERJAAR")
         return true
     }
 

@@ -6,11 +6,11 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import jakarta.inject.Singleton
 import za.co.jpsoft.winkerkreader.data.calllog.dao.CallLogDao
 import za.co.jpsoft.winkerkreader.utils.CalendarManager
 import za.co.jpsoft.winkerkreader.utils.prefs.CallMonitorPrefs
 import za.co.jpsoft.winkerkreader.utils.telephony.UnifiedCallMonitor
-import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)

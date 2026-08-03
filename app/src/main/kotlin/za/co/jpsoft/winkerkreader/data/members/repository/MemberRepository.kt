@@ -1,38 +1,42 @@
 package za.co.jpsoft.winkerkreader.data.members.repository
 
-import android.content.ContentResolver
-import android.content.Context
 import android.util.Log
-import dagger.hilt.android.qualifiers.ApplicationContext
+import androidx.sqlite.db.SimpleSQLiteQuery
 import jakarta.inject.Inject
+import jakarta.inject.Singleton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.BuildConfig
+import za.co.jpsoft.winkerkreader.data.members.dao.MemberDao
+import za.co.jpsoft.winkerkreader.data.members.entities.MemberEntity
 import za.co.jpsoft.winkerkreader.data.members.models.MemberItem
 import za.co.jpsoft.winkerkreader.data.members.queries.MemberItemSeparator
 import za.co.jpsoft.winkerkreader.data.members.queries.MemberQueryBuilder
-import za.co.jpsoft.winkerkreader.data.members.setup.WinkerkDatabase
 import za.co.jpsoft.winkerkreader.data.models.FilterBox
 import za.co.jpsoft.winkerkreader.utils.db.SQLiteStatementValidator
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
-import javax.inject.Singleton
 
 @Singleton
 class MemberRepository @Inject constructor(
-    @ApplicationContext private val context: Context
+    private val memberDao: MemberDao          // Hilt provides this; no Context needed
 ) {
 
-    private val contentResolver: ContentResolver = context.applicationContext.contentResolver
-    private val memberDao = WinkerkDatabase.getInstance(context).memberDao()
+    companion object {
+        private const val TAG = "MemberRepository"
+    }
 
-    // LRU cache with capacity 24; synchronized for thread safety
+    // ─── LRU cache ───────────────────────────────────────────────────────────
+    // Capacity 24; access-ordered so the least-recently-used entry is evicted first.
+    // All access is wrapped in synchronized() for thread safety.
     private val queryCache =
         object : LinkedHashMap<String, MemberQueryBuilder.SqlRequest>(16, 0.75f, true) {
-            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, MemberQueryBuilder.SqlRequest>): Boolean {
-                return size > 24 // evict when exceeding capacity
-            }
+            override fun removeEldestEntry(
+                eldest: MutableMap.MutableEntry<String, MemberQueryBuilder.SqlRequest>
+            ) = size > 24
         }
+
+    // ─── Public API ──────────────────────────────────────────────────────────
 
     suspend fun loadMembers(
         eventType: String,
@@ -45,34 +49,25 @@ class MemberRepository @Inject constructor(
         val cacheKey =
             buildCacheKey(eventType, recordStatus, soek, filterList, sortOrder, congregations)
 
-        // Retrieve from cache or build query – synchronised to avoid race conditions
         val sqlRequest = synchronized(queryCache) {
-            queryCache[cacheKey] ?: run {
-                MemberQueryBuilder.buildQuery(
-                    eventType = eventType,
-                    recordStatus = recordStatus,
-                    soek = soek,
-                    filterList = filterList,
-                    sortOrder = sortOrder,
-                    congregations = congregations
-                )?.also { queryCache[cacheKey] = it }
-            }
+            queryCache[cacheKey] ?: MemberQueryBuilder.buildQuery(
+                eventType = eventType,
+                recordStatus = recordStatus,
+                soek = soek,
+                filterList = filterList,
+                sortOrder = sortOrder,
+                congregations = congregations
+            )?.also { queryCache[cacheKey] = it }
         }
 
         if (sqlRequest == null) {
-            if (BuildConfig.DEBUG) Log.e(
-                "MemberRepository",
-                "Failed to build query for: $eventType"
-            )
+            if (BuildConfig.DEBUG) Log.e(TAG, "Failed to build query for: $eventType")
             return emptyList()
         }
 
         val validation = SQLiteStatementValidator.validateAndFixSQLiteStatement(sqlRequest.sql)
         if (!validation.isValid) {
-            if (BuildConfig.DEBUG) Log.e(
-                "MemberRepository",
-                "SQL validation failed: ${validation.errorMessage}"
-            )
+            if (BuildConfig.DEBUG) Log.e(TAG, "SQL validation failed: ${validation.errorMessage}")
             return emptyList()
         }
         val finalSql = validation.fixedSql ?: sqlRequest.sql
@@ -81,15 +76,108 @@ class MemberRepository @Inject constructor(
     }
 
     fun clearCache() {
-        synchronized(queryCache) {
-            queryCache.clear()
-        }
-        if (BuildConfig.DEBUG) Log.d("MemberRepository", "Cache cleared")
+        synchronized(queryCache) { queryCache.clear() }
+        if (BuildConfig.DEBUG) Log.d(TAG, "Cache cleared")
     }
 
-    // -------------------------------------------------------------------------
-    // Private helpers
-    // -------------------------------------------------------------------------
+    /**
+     * Maps a [MemberEntity] to a [MemberItem].
+     * Public because [MemberPagingSource] calls this directly.
+     */
+    fun mapEntityToItem(entity: MemberEntity): MemberItem {
+        val birthday = entity.geboortedatum ?: ""
+        val weddingDate = entity.huwelikDate ?: ""
+
+        val age = birthday.take(10).let { parseDate(it)?.yearsUntilNow() }?.toString() ?: "?"
+        val weddingYears =
+            weddingDate.take(10).let { parseDate(it)?.yearsUntilNow() }?.toString() ?: "?"
+
+        return MemberItem(
+            id = entity.id,
+            name = entity.noemnaam ?: "",
+            surname = entity.van ?: "",
+            gender = entity.geslag ?: "",
+            congregation = entity.gemeente ?: "",
+            familyHead = entity.familyHeadGUID ?: "",
+            cellphone = entity.selfoon ?: "",
+            landline = entity.landlyn ?: "",
+            email = entity.epos ?: "",
+            ward = entity.wyk ?: "",
+            address = entity.straatadres?.takeIf { it.isNotEmpty() } ?: "GEEN",
+            birthday = birthday,
+            weddingDate = weddingDate,
+            picturePath = entity.fotostoorplek ?: "",
+            tag = entity.tag?.toIntOrNull() ?: 0,
+            guid = entity.memberGUID ?: "",
+            age = age,
+            weddingYears = weddingYears,
+            recordstatus = entity.rekordstatus ?: ""
+        )
+    }
+
+    // ─── Count methods ───────────────────────────────────────────────────────
+
+    /**
+     * Returns the total number of members matching the given parameters.
+     * Runs on [Dispatchers.IO] internally; safe to call from any coroutine.
+     */
+    suspend fun countMembers(
+        eventType: String,
+        recordStatus: String,
+        soek: String,
+        filterList: ArrayList<FilterBox>?,
+        sortOrder: String,
+        congregations: List<String>? = null
+    ): Int = withContext(Dispatchers.IO) {
+        val (sql, args) = MemberQueryBuilder.buildCountQuery(
+            eventType, recordStatus, soek, filterList, sortOrder, congregations
+        )
+        try {
+            memberDao.countRaw(SimpleSQLiteQuery(sql, args))
+        } catch (e: Exception) {
+            if (BuildConfig.DEBUG) Log.e(TAG, "Count failed", e)
+            0
+        }
+    }
+
+    suspend fun countMembersBeforeBirthday(
+        eventType: String,
+        recordStatus: String,
+        soek: String,
+        filterList: ArrayList<FilterBox>?,
+        sortOrder: String,
+        todayMonth: String,
+        todayDay: String,
+        congregations: List<String>? = null
+    ): Int = withContext(Dispatchers.IO) {
+        val (sql, args) = MemberQueryBuilder.buildCountBeforeBirthdayQuery(
+            eventType, recordStatus, soek, filterList, sortOrder,
+            todayMonth, todayDay, congregations
+        )
+        try {
+            memberDao.countRaw(SimpleSQLiteQuery(sql, args))
+        } catch (e: Exception) {
+            if (BuildConfig.DEBUG) Log.e(TAG, "Count birthday failed", e)
+            0
+        }
+    }
+
+    // ─── Private helpers ─────────────────────────────────────────────────────
+
+    private suspend fun queryAndConvert(
+        sql: String,
+        args: Array<String>,
+        sortOrder: String
+    ): List<MemberItem> = withContext(Dispatchers.IO) {
+        try {
+            val entities = memberDao.getMembersRaw(SimpleSQLiteQuery(sql, args))
+            val rawItems = entities.map { mapEntityToItem(it) }
+            MemberItemSeparator.applySeparators(rawItems, sortOrder)
+        } catch (e: Exception) {
+            if (BuildConfig.DEBUG) Log.e(TAG, "Query failed", e)
+            emptyList()
+        }
+    }
 
     private fun buildCacheKey(
         eventType: String,
@@ -112,144 +200,41 @@ class MemberRepository @Inject constructor(
 
             "FILTER_DATA" -> {
                 filterList?.filter { it.checked }?.forEach { f ->
-                    append("_").append(f.title).append("_").append(f.text1).append("_")
-                        .append(f.text3)
+                    append("_").append(f.title)
+                        .append("_").append(f.text1)
+                        .append("_").append(f.text3)
                 }
             }
         }
         append("_sort_").append(sortOrder)
     }
 
-    private suspend fun queryAndConvert(
-        sql: String,
-        args: Array<String>,
-        sortOrder: String
-    ): List<MemberItem> {
-        return withContext(Dispatchers.IO) {
-            try {
-                val query = androidx.sqlite.db.SimpleSQLiteQuery(sql, args)
-                val entities = memberDao.getMembersRaw(query)
-                val rawItems = entities.map { mapEntityToItem(it) }
-                MemberItemSeparator.applySeparators(rawItems, sortOrder)
-            } catch (e: Exception) {
-                if (BuildConfig.DEBUG) Log.e("MemberRepository", "Query failed", e)
-                emptyList()
-            }
-        }
-    }
-
-    // -------------------------------------------------------------------------
-    // Entity mapping - uses MemberItemSeparator for separator logic
-    // -------------------------------------------------------------------------
-
-    fun mapEntityToItem(entity: za.co.jpsoft.winkerkreader.data.members.entities.MemberEntity): MemberItem {
-        val birthday = entity.geboortedatum ?: ""
-        val weddingDate = entity.huwelikDate ?: ""
-
-        var age = "?"
-        var weddingYears = "?"
-
-        if (birthday.length >= 10) {
-            try {
-                parseDate(birthday.substring(0, 10))?.let {
-                    val y = ChronoUnit.YEARS.between(it, LocalDate.now())
-                    if (y >= 0) age = y.toString()
-                }
-            } catch (_: Exception) {
-            }
-        }
-        if (weddingDate.length >= 10) {
-            try {
-                parseDate(weddingDate.substring(0, 10))?.let {
-                    val y = ChronoUnit.YEARS.between(it, LocalDate.now())
-                    if (y >= 0) weddingYears = y.toString()
-                }
-            } catch (_: Exception) {
-            }
-        }
-
-        return MemberItem(
-            id = entity.id,
-            name = entity.noemnaam ?: "",
-            surname = entity.van ?: "",
-            gender = entity.geslag ?: "",
-            congregation = entity.gemeente ?: "",
-            familyHead = entity.familyHeadGUID ?: "",
-            cellphone = entity.selfoon ?: "",
-            landline = entity.landlyn ?: "",
-            email = entity.epos ?: "",
-            ward = entity.wyk ?: "",
-            address = (entity.straatadres ?: "").takeIf { it.isNotEmpty() } ?: "GEEN",
-            birthday = birthday,
-            weddingDate = weddingDate,
-            picturePath = entity.fotostoorplek ?: "",
-            tag = entity.tag?.toIntOrNull() ?: 0,
-            guid = entity.memberGUID ?: "",
-            age = age,
-            weddingYears = weddingYears,
-            recordstatus = entity.rekordstatus ?: ""
-        )
-    }
-
-
-    private fun parseDate(dateStr: String): LocalDate? = try {
-        val parts = dateStr.split("-", "/")
-        if (parts.size == 3) LocalDate.of(parts[2].toInt(), parts[1].toInt(), parts[0].toInt())
-        else null
-    } catch (_: Exception) {
-        null
-    }
-
-    // -------------------------------------------------------------------------
-    // Count methods
-    // -------------------------------------------------------------------------
-
-    fun countMembers(
-        eventType: String,
-        recordStatus: String,
-        soek: String,
-        filterList: ArrayList<FilterBox>?,
-        sortOrder: String,
-        congregations: List<String>? = null
-    ): Int {
-        val (sql, args) = MemberQueryBuilder.buildCountQuery(
-            eventType, recordStatus, soek, filterList, sortOrder, congregations
-        )
+    /**
+     * Parses a date string in either WinKerk format (DD-MM-YYYY) or ISO format (YYYY-MM-DD).
+     * WinKerk stores dates as DD-MM-YYYY; ISO is included defensively.
+     * Returns null on any parse failure.
+     */
+    private fun parseDate(dateStr: String): LocalDate? {
+        if (dateStr.length < 10) return null
         return try {
-            memberDao.countRaw(androidx.sqlite.db.SimpleSQLiteQuery(sql, args))
-        } catch (e: Exception) {
-            if (BuildConfig.DEBUG) Log.e("MemberRepository", "Count failed", e)
-            0
+            val parts = dateStr.split("-", "/")
+            if (parts.size != 3) return null
+            val first = parts[0].toInt()
+            if (first > 31) {
+                // First part is a 4-digit year → ISO format YYYY-MM-DD
+                LocalDate.of(first, parts[1].toInt(), parts[2].toInt())
+            } else {
+                // First part is a day → WinKerk format DD-MM-YYYY
+                LocalDate.of(parts[2].toInt(), parts[1].toInt(), first)
+            }
+        } catch (_: Exception) {
+            null
         }
     }
 
-    suspend fun countMembersBeforeBirthday(
-        eventType: String,
-        recordStatus: String,
-        soek: String,
-        filterList: ArrayList<FilterBox>?,
-        sortOrder: String,
-        todayMonth: String,
-        todayDay: String,
-        congregations: List<String>? = null
-    ): Int {
-        val (sql, args) = MemberQueryBuilder.buildCountBeforeBirthdayQuery(
-            eventType,
-            recordStatus,
-            soek,
-            filterList,
-            sortOrder,
-            todayMonth,
-            todayDay,
-            congregations
-        )
-        return withContext(Dispatchers.IO) {
-            try {
-                memberDao.countRaw(androidx.sqlite.db.SimpleSQLiteQuery(sql, args))
-            } catch (e: Exception) {
-                if (BuildConfig.DEBUG) Log.e("MemberRepository", "Count birthday failed", e)
-                0
-            }
-        }
+    // Extension to keep mapEntityToItem concise
+    private fun LocalDate.yearsUntilNow(): Long? {
+        val years = ChronoUnit.YEARS.between(this, LocalDate.now())
+        return if (years >= 0) years else null
     }
 }

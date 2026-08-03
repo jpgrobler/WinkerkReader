@@ -3,12 +3,12 @@ package za.co.jpsoft.winkerkreader.data.members.repository
 import android.database.Cursor
 import android.util.Log
 import jakarta.inject.Inject
+import jakarta.inject.Singleton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.members.setup.WinkerkDatabase
 import za.co.jpsoft.winkerkreader.utils.prefs.CongregationPrefs
-import javax.inject.Singleton
 
 @Singleton
 class ChurchInfoRepository @Inject constructor(

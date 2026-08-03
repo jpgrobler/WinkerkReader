@@ -25,11 +25,12 @@ class MemberListInteractionController(
     private val quickActionPrefs: QuickActionPrefs,   // <-- injected
     private val appearancePrefs: AppearancePrefs,     // <-- injected
     private val viewModel: MemberViewModel,
-    private val memberListAdapter: MemberListAdapter
+    private val memberListAdapter: MemberListAdapter,
+    private val quickActionHelper: QuickActionHelper
 ) {
 
     // ─── Quick Action Helper ──────────────────────────────────────────────────
-    private val quickActionHelper = QuickActionHelper(activity, quickActionPrefs, appearancePrefs)
+    //private val quickActionHelper = QuickActionHelper(activity, quickActionPrefs, appearancePrefs)
 
     init {
         quickActionHelper.expandCallback = { anchor, item ->

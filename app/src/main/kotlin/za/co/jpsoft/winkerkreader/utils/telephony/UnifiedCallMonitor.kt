@@ -3,6 +3,7 @@ package za.co.jpsoft.winkerkreader.utils.telephony
 import android.content.Context
 import android.util.Log
 import jakarta.inject.Inject
+import jakarta.inject.Singleton
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import za.co.jpsoft.winkerkreader.BuildConfig
@@ -19,7 +20,6 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
-import javax.inject.Singleton
 
 @Singleton
 class UnifiedCallMonitor @Inject constructor(

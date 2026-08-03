@@ -7,13 +7,20 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.view.MotionEvent
 import androidx.activity.viewModels
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
+import androidx.paging.LoadState
+import androidx.paging.PagingDataAdapter
+import androidx.recyclerview.widget.LinearLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
 import jakarta.inject.Inject
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.members.setup.DatabaseInitializer
@@ -138,6 +145,34 @@ class MainActivity : AuthBaseActivity() {
             backupPrefs = backupPrefs
         )
         initializer.setupPreAuth()
+
+        lifecycleScope.launch {
+            // Use the adapter from the initializer
+            val adapter = initializer.adapter as? PagingDataAdapter<*, *>
+            if (adapter != null) {
+                initializer.viewModel.scrollToPosition.collect { position ->
+                    // Wait for the refresh load to complete (data is ready)
+                    adapter.loadStateFlow
+                        .filter { it.refresh is LoadState.NotLoading }
+                        .first()
+                    delay(50)
+                    binding.lidmaatList.post {
+                        (binding.lidmaatList.layoutManager as? LinearLayoutManager)
+                            ?.scrollToPositionWithOffset(position, 0)
+                        binding.lidmaatList.scrollToPosition(position)
+                    }
+                }
+            } else {
+                // Fallback (should not happen because adapter is initialized early)
+                initializer.viewModel.scrollToPosition.collect { position ->
+                    binding.lidmaatList.postDelayed({
+                        (binding.lidmaatList.layoutManager as? LinearLayoutManager)
+                            ?.scrollToPositionWithOffset(position, 0)
+                        binding.lidmaatList.scrollToPosition(position)
+                    }, 500)
+                }
+            }
+        }
     }
 
     override fun onStart() {
@@ -189,11 +224,13 @@ class MainActivity : AuthBaseActivity() {
         }
 
         return MenuItemHandler(
-            this,
-            initializer.viewModel,
-            navigationController,
-            memberListPrefs,
-            onSortOrderChanged = { sortOrder -> initializer.updateSortOrder(sortOrder) }
+            activity = this,
+            viewModel = initializer.viewModel,
+            navigationController = navigationController,
+            memberListPrefs = memberListPrefs,
+            onSortOrderChanged = { sortOrder -> initializer.updateSortOrder(sortOrder) },
+            onBirthdaySortSelected = { initializer.updateSortOrder("VERJAAR") },
+            swipeActionHandler = initializer.swipeActionHandler
         ).handleMenuItem(item) || super.onOptionsItemSelected(item)
     }
 
@@ -204,23 +241,23 @@ class MainActivity : AuthBaseActivity() {
 
     // ─── Touch Events ──────────────────────────────────────────────────────
 
-    override fun onTouchEvent(event: MotionEvent): Boolean {
-        return if (::initializer.isInitialized && initializer.isReady) {
-            initializer.swipeGestureController.onTouchEvent(event) || super.onTouchEvent(event)
-        } else {
-            super.onTouchEvent(event)
-        }
-    }
+//    override fun onTouchEvent(event: MotionEvent): Boolean {
+//        return if (::initializer.isInitialized && initializer.isReady) {
+//            initializer.swipeGestureController.onTouchEvent(event) || super.onTouchEvent(event)
+//        } else {
+//            super.onTouchEvent(event)
+//        }
+//    }
 
-    override fun dispatchTouchEvent(event: MotionEvent): Boolean {
-        if (::initializer.isInitialized && initializer.isReady) {
-            initializer.swipeGestureController.handleTouchEventIfOutside(
-                event,
-                binding.chipScrollView
-            )
-        }
-        return super.dispatchTouchEvent(event)
-    }
+//    override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+//        if (::initializer.isInitialized && initializer.isReady) {
+//            initializer.swipeGestureController.handleTouchEventIfOutside(
+//                event,
+//                binding.chipScrollView
+//            )
+//        }
+//        return super.dispatchTouchEvent(event)
+//    }
 
     // ─── Helper methods ──────────────────────────────────────────────────────
 

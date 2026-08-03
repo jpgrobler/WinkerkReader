@@ -136,8 +136,17 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         ns1:chipSpacingHorizontal="6dp"
-                        ns1:singleLine="true">
+                        ns1:singleLine="false">
 
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_recordstatus"
+                            style="@style/Widget.WinkerkReader.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:visibility="gone"
+                            ns2:text="Aktief" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chip_ouderdom"

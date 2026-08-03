@@ -1,6 +1,5 @@
 package za.co.jpsoft.winkerkreader.ui.controllers
 
-import android.content.SharedPreferences
 import android.widget.Button
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -13,6 +12,7 @@ import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import za.co.jpsoft.winkerkreader.R
+import za.co.jpsoft.winkerkreader.utils.prefs.SyncPrefs
 import za.co.jpsoft.winkerkreader.workers.PhotoDownloadWorker
 import za.co.jpsoft.winkerkreader.workers.PhotoDownloadWorkerOld
 
@@ -39,7 +39,7 @@ import za.co.jpsoft.winkerkreader.workers.PhotoDownloadWorkerOld
 class PhotoSyncController(
     private val lifecycleOwner: LifecycleOwner,
     private val workManager: WorkManager,
-    private val settings: SharedPreferences,
+    private val syncPrefs: SyncPrefs,
     private val progressBar: ProgressBar,
     private val statusLabel: TextView,
     private val syncButton: Button,
@@ -59,7 +59,7 @@ class PhotoSyncController(
     fun startSync() {
         workManager.cancelAllWorkByTag("photo_sync")
 
-        val ip = settings.getString("IP", "")
+        val ip = syncPrefs.serverIp
         if (ip.isNullOrEmpty()) {
             Toast.makeText(
                 syncButton.context, "Please set server IP first", Toast.LENGTH_SHORT

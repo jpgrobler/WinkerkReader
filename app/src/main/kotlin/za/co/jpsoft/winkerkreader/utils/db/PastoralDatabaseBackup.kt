@@ -5,6 +5,7 @@ import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
 import android.util.Log
 import jakarta.inject.Inject
+import jakarta.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -19,7 +20,6 @@ import za.co.jpsoft.winkerkreader.utils.prefs.BackupPrefs
 import java.io.File
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import javax.inject.Singleton
 
 @Singleton
 class PastoralDatabaseBackup @Inject constructor(

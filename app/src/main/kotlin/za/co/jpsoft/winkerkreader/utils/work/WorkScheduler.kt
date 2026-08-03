@@ -8,13 +8,13 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
+import jakarta.inject.Singleton
 import za.co.jpsoft.winkerkreader.utils.prefs.BirthdaySmsPrefs
 import za.co.jpsoft.winkerkreader.utils.prefs.MemberListPrefs
 import za.co.jpsoft.winkerkreader.utils.prefs.SyncPrefs
-import za.co.jpsoft.winkerkreader.widget.PastoralWidgetProvider
+import za.co.jpsoft.winkerkreader.workers.PastoralBackupWorker
 import za.co.jpsoft.winkerkreader.workers.WidgetRefreshWorker
 import java.util.concurrent.TimeUnit
-import javax.inject.Singleton
 
 @Singleton
 class WorkScheduler @Inject constructor(
@@ -56,7 +56,6 @@ class WorkScheduler @Inject constructor(
 
     fun scheduleWidgetRefresh() {
         WorkManagerHelper.scheduleWidgetRefresh(context)
-        PastoralWidgetProvider.refreshWidgets(context)
     }
 
     fun scheduleFollowUpReminders() {
@@ -81,5 +80,14 @@ class WorkScheduler @Inject constructor(
             ExistingWorkPolicy.REPLACE,
             request
         )
+    }
+
+    // WorkScheduler.kt (add this method)
+    fun schedulePastoralBackup(enabled: Boolean, exportToDownloads: Boolean) {
+        if (enabled) {
+            PastoralBackupWorker.schedule(context, exportToDownloads)
+        } else {
+            PastoralBackupWorker.cancel(context)
+        }
     }
 }

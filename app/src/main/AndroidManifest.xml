@@ -319,7 +319,7 @@
 
         <!-- Providers -->
         <provider
-            android:name="za.co.jpsoft.winkerkreader.data.WinkerkProvider"
+            android:name="za.co.jpsoft.winkerkreader.data.members.provider.WinkerkProvider"
             android:authorities="za.co.jpsoft.winkerkreader"
             android:exported="false" />
 

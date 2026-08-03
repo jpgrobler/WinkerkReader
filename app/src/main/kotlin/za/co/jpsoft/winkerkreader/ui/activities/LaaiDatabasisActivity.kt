@@ -1,7 +1,7 @@
 package za.co.jpsoft.winkerkreader.ui.activities
 
 import android.Manifest
-import android.content.SharedPreferences
+
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.os.Build
@@ -102,10 +102,6 @@ class LaaiDatabasisActivity : BaseActivity() {
     private var pcProtocolVersion: String = "v2"
 
     // Raw SharedPreferences only for controllers that still need it
-    private val settings: SharedPreferences by lazy {
-        getSharedPreferences(WinkerkContract.PREFS_USER_INFO, MODE_PRIVATE)
-    }
-
     private val notificationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) Log.d("LaaiDatabasis", "Notification permission granted")
@@ -207,7 +203,7 @@ class LaaiDatabasisActivity : BaseActivity() {
         photoSyncController = PhotoSyncController(
             lifecycleOwner = this,
             workManager = WorkManager.getInstance(this),
-            settings = settings,  // still uses raw prefs internally
+            syncPrefs = syncPrefs,
             progressBar = binding.photoSyncProgress,
             statusLabel = binding.photoSyncStatus,
             syncButton = binding.startPhotoSync,
@@ -244,7 +240,7 @@ class LaaiDatabasisActivity : BaseActivity() {
         initializeButtons()
         initializeVersionToggle()
 
-        collapsibleCardController = CollapsibleCardController(settings)
+        collapsibleCardController = CollapsibleCardController(syncPrefs)
         collapsibleCardController.setupAll(binding)
         initializeProgressBars()
         initializeDataInfo()
@@ -492,7 +488,7 @@ class LaaiDatabasisActivity : BaseActivity() {
 
     private fun showError(message: String) {
         runOnUiThread {
-            Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+            Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG).show()
             binding.laaiBoodskap.text = message
         }
     }

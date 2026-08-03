@@ -69,6 +69,7 @@ class LidmaatDetailActivity : AuthBaseActivity() {
         const val EXTRA_MEMBER_GUID = "memberGUID"
     }
 
+    private val KEY_RECORD_STATUS = winkerkEntry.LIDMATE_REKORDSTATUS//"Rekordstatus"
     // ─── Injected Preferences ──────────────────────────────────────────────────
     @Inject
     lateinit var congregationPrefs: CongregationPrefs
@@ -85,6 +86,7 @@ class LidmaatDetailActivity : AuthBaseActivity() {
     private var mStraatAdres: String = ""
     private var mPosAdres: String = ""
     private var recordStatus: String = "0"
+    private var mRecordStatus = "0"
 
     // ─── ViewModels ──────────────────────────────────────────────────────────
     private val viewModel: LidmaatDetailViewModel by viewModels()   // Hilt-injected
@@ -362,7 +364,10 @@ class LidmaatDetailActivity : AuthBaseActivity() {
         binding.detailSmsIcon.setOnClickListener {
             MemberUtils.sendSms(this, binding.detailSelfoon.text.toString())
         }
-
+        binding.chipRecordstatus.setOnClickListener {
+            recordStatus = if (recordStatus == "0") "2" else "0"
+            updateRecordStatusChip()
+        }
         setupCopyOnLongClick()
     }
 
@@ -435,6 +440,7 @@ class LidmaatDetailActivity : AuthBaseActivity() {
         binding.chipWyk.text = item.ward
         binding.chipWyk.visibility = if (item.ward.isNotEmpty()) View.VISIBLE else View.GONE
         binding.chipLidmaatstatus.text = item.memberStatus
+        updateRecordStatusChip()
 
         // Gemeente – use member's own gemeente, fallback to user's
         binding.detailGemeentenaam.text = item.gemeente?.takeIf { it.isNotEmpty() }
@@ -692,6 +698,7 @@ class LidmaatDetailActivity : AuthBaseActivity() {
             binding.buttonWysig.setBackgroundTintList(ColorStateList.valueOf(Color.RED))
             mStraatAdres = binding.detailStraatadres.text.toString()
             mPosAdres = binding.detailPosadres.text.toString()
+            mRecordStatus = recordStatus                           // ADD
             showSoftKeyboard(binding.buttonWysig)
         } else {
             viewModel.memberDetail.value?.let { wysigLidmaatData(it) }
@@ -740,8 +747,10 @@ class LidmaatDetailActivity : AuthBaseActivity() {
         )
 
         if (enable) {
+            binding.chipRecordstatus.visibility = View.VISIBLE
             conditionalBlocks.forEach { it.visibility = View.VISIBLE }
         } else {
+            binding.chipRecordstatus.visibility = View.GONE
             viewModel.memberDetail.value?.let { displayMemberData(it) }
         }
     }
@@ -849,6 +858,14 @@ class LidmaatDetailActivity : AuthBaseActivity() {
 
         emailHtml += "</html>"
 
+        // ─── Record status (Aktief / Onaktief) ──────────────────────────────────
+        if (recordStatus != mRecordStatus) {
+            val statusLabel = if (recordStatus == "0") "Aktief" else "Onaktief"
+            values.put(KEY_RECORD_STATUS, recordStatus.toInt())
+            emailHtml += "\r\n<p>Status : <b><font color='red'>$statusLabel</font></b></p>"
+            emailText += "\r\nStatus : $statusLabel"
+        }
+
         if (values.size() > 0) {
             val uri = ContentUris.withAppendedId(winkerkEntry.CONTENT_URI, id.toLong())
             contentResolver.update(
@@ -886,6 +903,53 @@ class LidmaatDetailActivity : AuthBaseActivity() {
             startActivity(sendIntent)
         } catch (e: Exception) {
             if (BuildConfig.DEBUG) Log.e(TAG, "Email intent failed", e)
+        }
+    }
+
+    // ─── Record-status helpers ───────────────────────────────────────────────
+
+    private fun updateRecordStatusChip() {
+        val isAktief = recordStatus == "0"
+        binding.chipRecordstatus.apply {
+            text = if (isAktief) "Aktief" else "Onaktief"
+            chipBackgroundColor = ColorStateList.valueOf(
+                ContextCompat.getColor(
+                    context,
+                    if (isAktief) R.color.md_theme_primary else R.color.md_theme_error
+                )
+            )
+            setTextColor(
+                ContextCompat.getColor(
+                    context,
+                    if (isAktief) R.color.md_theme_onPrimary else R.color.md_theme_onError
+                )
+            )
+        }
+    }
+
+    private fun toggleRecordStatus() {
+        val nuweStatus = if (recordStatus == "0") "2" else "0"
+        if (current_id == 0) return
+
+        val values = ContentValues().apply {
+            put(KEY_RECORD_STATUS, nuweStatus)
+        }
+        val uri = ContentUris.withAppendedId(winkerkEntry.CONTENT_URI, current_id.toLong())
+        val rows = contentResolver.update(
+            uri,
+            values,
+            "${winkerkEntry.LIDMATE_TABLE_NAME}._rowid_ = ?",
+            arrayOf(current_id.toString())
+        )
+
+        if (rows > 0) {
+            recordStatus = nuweStatus
+            updateRecordStatusChip()
+            val msg =
+                if (nuweStatus == "0") "Lidmaat gemerk as Aktief" else "Lidmaat gemerk as Onaktief"
+            Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(this, "Kon nie status opdateer nie", Toast.LENGTH_SHORT).show()
         }
     }
 

@@ -103,6 +103,7 @@ class MainUiBinder(
                 adapter.loadStateFlow.collect { loadStates ->
                     if (loadStates.refresh is LoadState.NotLoading) {
                         sortController.refreshLabel()
+                        sortController.anchorBirthdayListIfPending()
                     }
                 }
             }

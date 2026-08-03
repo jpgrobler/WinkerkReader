@@ -66,23 +66,19 @@ class MainMenuController(
 
         when (viewModel.recordStatus) {
             "0" -> {
-                checkBoxActive.isChecked = true
-                checkBoxInactive.isChecked = false
+                checkBoxActive.isChecked = true; checkBoxInactive.isChecked = false
             }
 
             "2" -> {
-                checkBoxActive.isChecked = false
-                checkBoxInactive.isChecked = true
+                checkBoxActive.isChecked = false; checkBoxInactive.isChecked = true
             }
 
             "*" -> {
-                checkBoxActive.isChecked = true
-                checkBoxInactive.isChecked = true
+                checkBoxActive.isChecked = true; checkBoxInactive.isChecked = true
             }
 
             else -> {
-                checkBoxActive.isChecked = true
-                checkBoxInactive.isChecked = false
+                checkBoxActive.isChecked = true; checkBoxInactive.isChecked = false
             }
         }
 
@@ -90,13 +86,12 @@ class MainMenuController(
         val updateFilter = {
             if (!isUpdating) {
                 isUpdating = true
-                val newStatus =
-                    when {
-                        checkBoxActive.isChecked && checkBoxInactive.isChecked -> "*"
-                        checkBoxActive.isChecked && !checkBoxInactive.isChecked -> "0"
-                        !checkBoxActive.isChecked && checkBoxInactive.isChecked -> "2"
-                        else -> "0"
-                    }
+                val newStatus = when {
+                    checkBoxActive.isChecked && checkBoxInactive.isChecked -> "*"
+                    checkBoxActive.isChecked && !checkBoxInactive.isChecked -> "0"
+                    !checkBoxActive.isChecked && checkBoxInactive.isChecked -> "2"
+                    else -> "0"
+                }
 
                 if (!checkBoxActive.isChecked && !checkBoxInactive.isChecked) {
                     checkBoxActive.isChecked = true
@@ -110,13 +105,10 @@ class MainMenuController(
                     )
 
                     viewModel.clearCache()
-                    viewModel.refresh()
+                    viewModel.refresh()   // This already triggers a new PagingData load
 
-                    // ✅ Also update the row count via the legacy loadData path
-                    val mode = searchFilterCoordinator.resolveQueryMode(viewModel.getEventType())
-                    viewModel.loadData(mode)
-
-                    // Resync display banner and adapter state after filter change
+                    // ✅ The paging adapter will automatically update the list and row count.
+                    // No need for the legacy loadData() call.
                     onFilterDisplayChanged()
                     onAdapterStateChanged()
                 }

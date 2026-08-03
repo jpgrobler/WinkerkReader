@@ -2,11 +2,11 @@ package za.co.jpsoft.winkerkreader.utils.telephony
 
 import android.content.Context
 import jakarta.inject.Inject
+import jakarta.inject.Singleton
 import org.json.JSONArray
 import org.json.JSONObject
 import za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract
 import za.co.jpsoft.winkerkreader.utils.prefs.CallMonitorPrefs
-import javax.inject.Singleton
 
 /**
  * Lightweight, capped, opt-in log of VoIP notifications that could not be

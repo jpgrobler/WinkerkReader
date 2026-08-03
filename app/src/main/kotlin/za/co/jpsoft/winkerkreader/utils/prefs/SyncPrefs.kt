@@ -53,4 +53,36 @@ class SyncPrefs(private val prefs: SharedPreferences) {
     var fromMenu: Boolean
         get() = prefs.getBoolean("FROM_MENU", false)
         set(value) = prefs.edit().putBoolean("FROM_MENU", value).apply()
+
+    // ─── Photo sync preferences ──────────────────────────────
+    var photoSyncLastRun: Long
+        get() = prefs.getLong("photo_sync_last_run", 0L)
+        set(value) = prefs.edit().putLong("photo_sync_last_run", value).apply()
+
+    var photoSyncAuto: Boolean
+        get() = prefs.getBoolean("photo_sync_auto", false)
+        set(value) = prefs.edit().putBoolean("photo_sync_auto", value).apply()
+
+    // ─── Collapsible card expanded states ─────────────────────
+    // Option A: store as a JSON string (e.g., {"card1":true, "card2":false})
+    var cardExpandedStates: String
+        get() = prefs.getString("card_expanded_states", "{}") ?: "{}"
+        set(value) = prefs.edit().putString("card_expanded_states", value).apply()
+
+    // ─── Collapsible card expanded states ──────────────────────────
+    var cardLocalExpanded: Boolean
+        get() = prefs.getBoolean("CARD_LOCAL_EXPANDED", false)
+        set(value) = prefs.edit().putBoolean("CARD_LOCAL_EXPANDED", value).apply()
+
+    var cardDropboxExpanded: Boolean
+        get() = prefs.getBoolean("CARD_DROPBOX_EXPANDED", false)
+        set(value) = prefs.edit().putBoolean("CARD_DROPBOX_EXPANDED", value).apply()
+
+    var cardWifiExpanded: Boolean
+        get() = prefs.getBoolean("CARD_WIFI_EXPANDED", true)
+        set(value) = prefs.edit().putBoolean("CARD_WIFI_EXPANDED", value).apply()
+
+    var cardPhotoExpanded: Boolean
+        get() = prefs.getBoolean("CARD_PHOTO_EXPANDED", true)
+        set(value) = prefs.edit().putBoolean("CARD_PHOTO_EXPANDED", value).apply()
 }

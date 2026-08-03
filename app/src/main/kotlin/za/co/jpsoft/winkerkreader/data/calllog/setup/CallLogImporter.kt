@@ -3,6 +3,7 @@ package za.co.jpsoft.winkerkreader.utils
 import android.content.Context
 import android.util.Log
 import jakarta.inject.Inject
+import jakarta.inject.Singleton
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.calllog.dao.CallLogDao
 import za.co.jpsoft.winkerkreader.data.calllog.entities.ActiveCallEntity
@@ -10,7 +11,6 @@ import za.co.jpsoft.winkerkreader.data.calllog.entities.CallLogEntity
 import za.co.jpsoft.winkerkreader.data.calllog.models.CallType
 import za.co.jpsoft.winkerkreader.data.members.setup.DatabaseHelper
 import za.co.jpsoft.winkerkreader.utils.prefs.CallMonitorPrefs
-import javax.inject.Singleton
 
 @Singleton
 class CallLogImporter @Inject constructor(

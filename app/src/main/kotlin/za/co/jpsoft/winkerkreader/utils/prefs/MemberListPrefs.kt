@@ -56,4 +56,12 @@ class MemberListPrefs(private val prefs: SharedPreferences) {
     var fromMenu: Boolean
         get() = prefs.getBoolean("FROM_MENU", false)
         set(value) = prefs.edit().putBoolean("FROM_MENU", value).apply()
+
+    var swipeRightAction: String
+        get() = prefs.getString("swipe_right_action", "VOLGENDE_SORTERING") ?: "VOLGENDE_SORTERING"
+        set(value) = prefs.edit().putString("swipe_right_action", value).apply()
+
+    var swipeLeftAction: String
+        get() = prefs.getString("swipe_left_action", "BESONDERHEDE") ?: "BESONDERHEDE"
+        set(value) = prefs.edit().putString("swipe_left_action", value).apply()
 }

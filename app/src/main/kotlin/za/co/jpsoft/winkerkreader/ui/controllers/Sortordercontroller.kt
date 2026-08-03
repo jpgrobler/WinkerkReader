@@ -6,13 +6,17 @@ import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.ui.adapters.MemberListAdapter
+import za.co.jpsoft.winkerkreader.ui.helpers.BirthdayScrollHelper
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MainViewModel
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel
 import za.co.jpsoft.winkerkreader.utils.prefs.CongregationPrefs
 import za.co.jpsoft.winkerkreader.utils.prefs.MemberListPrefs
+import java.time.LocalDate
 
 /**
  * Manages the member list sort order and birthday auto-scroll.
@@ -37,6 +41,8 @@ class SortOrderController(
     var hasPendingBirthdayScroll: Boolean = false
         private set
 
+    private var pendingBirthdayAnchor = false
+
     // ── Sort order API ────────────────────────────────────────────────────────
 
     fun update(newSort: String) {
@@ -55,16 +61,26 @@ class SortOrderController(
         )
         sortLabel.text = iconFor(newSort)
 
-        if (newSort == currentSort) return
+        if (newSort == currentSort) {
+            if (isBirthdaySort(newSort)) {
+                requestBirthdayAnchor(newSort)
+                viewModel.switchToBirthdaySort()
+            }
+            return
+        }
 
         currentSort = newSort
         memberListPrefs.defLayout = newSort
         mainViewModel.setSortOrder(newSort)
-        viewModel.updateSortOrder(newSort)
+
+        if (isBirthdaySort(newSort)) {
+            requestBirthdayAnchor(newSort)
+            viewModel.switchToBirthdaySort()
+        } else {
+            viewModel.updateSortOrder(newSort)
+        }
 
         onMenuInvalidated()
-
-        if (isBirthdaySort(newSort)) scrollToBirthday()
 
         if (BuildConfig.DEBUG) Log.d(tag, "SortOrderController.update complete")
     }
@@ -86,7 +102,6 @@ class SortOrderController(
             else        -> "VAN"
         }
         update(next)
-        viewModel.refresh()
     }
 
     fun cycleBack() {
@@ -101,43 +116,75 @@ class SortOrderController(
             else       -> "VAN"
         }
         update(next)
-        viewModel.refresh()
     }
 
     // ── Birthday scroll API ───────────────────────────────────────────────────
 
-    fun prefetchBirthdayScrollIfNeeded() {
-        if (!isBirthdaySort(viewModel.sortOrder)) return
-        if (hasPendingBirthdayScroll) return
+    /** Call before a birthday reload; [anchorBirthdayListIfPending] scrolls after load. */
+    fun requestBirthdayAnchor(forSort: String = viewModel.sortOrder) {
+        if (!isBirthdaySort(forSort)) return
+        pendingBirthdayAnchor = true
+        hasPendingBirthdayScroll = true
+    }
+
+    /**
+     * After paging refresh, scroll to today or the nearest upcoming birthday in
+     * the loaded adapter window. Survives Paging prepending earlier pages.
+     */
+    fun anchorBirthdayListIfPending() {
+        if (!pendingBirthdayAnchor) return
+        if (!isBirthdaySort(viewModel.sortOrder)) {
+            pendingBirthdayAnchor = false
+            hasPendingBirthdayScroll = false
+            return
+        }
 
         lifecycleScope.launch {
-            val offset = viewModel.getBirthdayOffset(viewModel.sortOrder)
-            if (offset <= 0) return@launch
+            try {
+                // Wait for refresh and any backward prefetch — prepended pages shift
+                // adapter indices and would undo a scroll done too early.
+                memberListAdapter.loadStateFlow
+                    .filter {
+                        it.refresh is LoadState.NotLoading &&
+                                it.prepend !is LoadState.Loading
+                    }
+                    .first()
 
-            hasPendingBirthdayScroll = true
-            memberListAdapter.loadStateFlow.collect { loadStates ->
-                if (loadStates.refresh is LoadState.NotLoading) {
-                    val itemCount = memberListAdapter.itemCount
-                    if (itemCount > 0) {
-                        val scrollPos = if (offset < itemCount) offset else itemCount - 1
-                        recyclerView.post {
-                            (recyclerView.layoutManager as? LinearLayoutManager)
-                                ?.scrollToPositionWithOffset(scrollPos, 0)
-                        }
-                        hasPendingBirthdayScroll = false
+                val items = memberListAdapter.snapshot().items
+                if (items.isEmpty()) return@launch
+
+                val today = LocalDate.now()
+                val month = "%02d".format(today.monthValue)
+                val day = "%02d".format(today.dayOfMonth)
+                val targetPos = BirthdayScrollHelper.findNextBirthdayPosition(items, month, day)
+                if (targetPos >= 0) {
+                    recyclerView.post {
+                        (recyclerView.layoutManager as? LinearLayoutManager)
+                            ?.scrollToPositionWithOffset(targetPos, 0)
                     }
                 }
+            } catch (e: Exception) {
+                if (BuildConfig.DEBUG) Log.e(tag, "Birthday anchor scroll failed", e)
+            } finally {
+                pendingBirthdayAnchor = false
+                hasPendingBirthdayScroll = false
             }
         }
     }
 
-    fun recomputeBirthdayOffset() {
-        val sort = memberListPrefs.defLayout
-        if (!isBirthdaySort(sort)) return
+    fun prefetchBirthdayScrollIfNeeded() {
+        if (!isBirthdaySort(viewModel.sortOrder)) return
+        if (hasPendingBirthdayScroll) return
         lifecycleScope.launch {
-            val offset = viewModel.getBirthdayOffset(sort)
+            val offset = viewModel.getBirthdayOffset(viewModel.sortOrder)
             hasPendingBirthdayScroll = offset > 0
         }
+    }
+
+    fun recomputeBirthdayOffset() {
+        if (!isBirthdaySort(viewModel.sortOrder)) return
+        requestBirthdayAnchor(viewModel.sortOrder)
+        viewModel.switchToBirthdaySort()
     }
 
     fun refreshLabel() {
@@ -156,29 +203,6 @@ class SortOrderController(
     }
 
     // ── Private ───────────────────────────────────────────────────────────────
-
-    private fun scrollToBirthday() {
-        lifecycleScope.launch {
-            try {
-                val offset = viewModel.getBirthdayOffset(viewModel.sortOrder)
-                memberListAdapter.loadStateFlow.collect { loadStates ->
-                    if (loadStates.refresh is LoadState.NotLoading) {
-                        val itemCount = memberListAdapter.itemCount
-                        if (itemCount > 0 && offset >= 0) {
-                            val scrollPos = if (offset < itemCount) offset else itemCount - 1
-                            recyclerView.post {
-                                (recyclerView.layoutManager as? LinearLayoutManager)
-                                    ?.scrollToPositionWithOffset(scrollPos, 0)
-                            }
-                        }
-                        return@collect
-                    }
-                }
-            } catch (e: Exception) {
-                if (BuildConfig.DEBUG) Log.e(tag, "SortOrderController: birthday scroll failed", e)
-            }
-        }
-    }
 
     private fun isBirthdaySort(sort: String) =
         sort == "VERJAAR" || sort == "VERJAARSDAG"
