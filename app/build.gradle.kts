@@ -11,8 +11,8 @@ android {
     defaultConfig {
         applicationId = "za.co.jpsoft.winkerkreader"
         minSdk = 28
-        versionCode = 123
-        versionName = "4.2 test r023"
+        versionCode = 124
+        versionName = "4.2 test r024"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         targetSdk = 37
 

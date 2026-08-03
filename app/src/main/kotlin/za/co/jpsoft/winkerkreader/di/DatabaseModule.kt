@@ -10,6 +10,7 @@ import dagger.hilt.components.SingletonComponent
 import jakarta.inject.Singleton
 import za.co.jpsoft.winkerkreader.data.calllog.dao.CallLogDao
 import za.co.jpsoft.winkerkreader.data.calllog.setup.CallLogDatabase
+import za.co.jpsoft.winkerkreader.data.members.dao.LiveMemberDao
 import za.co.jpsoft.winkerkreader.data.members.dao.MemberDao
 import za.co.jpsoft.winkerkreader.data.members.setup.WinkerkDatabase
 import za.co.jpsoft.winkerkreader.data.pastoral.PastoralDatabase
@@ -29,19 +30,26 @@ object DatabaseModule {
     fun provideFollowUpReminderDao(database: PastoralDatabase): FollowUpReminderDao =
         database.followUpReminderDao()
 
+    /**
+     * Always resolves to the live companion DB. A plain Room DAO snapshot becomes
+     * invalid after [WinkerkDatabase.closeInstance] during import/swap.
+     */
     @Provides
     @Singleton
     fun provideMemberDao(@ApplicationContext context: Context): MemberDao =
-        WinkerkDatabase.getInstance(context).memberDao()
+        LiveMemberDao(context.applicationContext)
 
     @Provides
     @Singleton
     fun provideCallLogDao(@ApplicationContext context: Context): CallLogDao =
         CallLogDatabase.getInstance(context).callLogDao()
 
-    // NEW: Provide WinkerkDatabase
+    /**
+     * Prefer [WinkerkDatabase.getInstance] at call sites that survive a DB swap.
+     * This binding is for constructors that need a Room type; it may become stale
+     * after closeInstance — use getInstance() for long-lived work.
+     */
     @Provides
-    @Singleton
     fun provideWinkerkDatabase(@ApplicationContext context: Context): WinkerkDatabase =
         WinkerkDatabase.getInstance(context)
 }

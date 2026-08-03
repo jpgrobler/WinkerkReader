@@ -233,8 +233,18 @@ class LaaiDatabasisActivity : BaseActivity() {
             usbButton = binding.laaiUSB,
             protocolVersion = { pcProtocolVersion },
             saveIp = { ip -> syncPrefs.serverIp = ip },  // ✅ use typed prefs
-            onFileDownloaded = { file -> importController.processTempFile(file) },
-            onNavigateBack = { navigateBackToMain() }
+            onFileDownloaded = { file ->
+                val ok = importController.processTempFile(file)
+                if (ok) {
+                    // Reopen Room + ContentProvider; navigate via onReloadDone
+                    withContext(Dispatchers.Main) {
+                        importController.reloadAndFinish()
+                    }
+                }
+                ok
+            },
+            // reloadAndFinish already navigates; avoid a second Main launch
+            onNavigateBack = { }
         )
 
         initializeButtons()

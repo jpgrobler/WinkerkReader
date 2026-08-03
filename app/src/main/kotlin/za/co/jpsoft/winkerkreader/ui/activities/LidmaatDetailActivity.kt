@@ -42,7 +42,6 @@ import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.members.models.FamilyMemberItem
 import za.co.jpsoft.winkerkreader.data.members.models.MemberDetailItem
-import za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract.PREFS_USER_INFO
 import za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract.winkerkEntry
 import za.co.jpsoft.winkerkreader.databinding.LidmaatDetailBinding
 import za.co.jpsoft.winkerkreader.ui.adapters.SpinnerAdapter
@@ -856,25 +855,28 @@ class LidmaatDetailActivity : AuthBaseActivity() {
             emailText += "\r\n${winkerkEntry.LIDMATE_GESLAG} : $newGeslag"
         }
 
-        emailHtml += "</html>"
-
         // ─── Record status (Aktief / Onaktief) ──────────────────────────────────
         if (recordStatus != mRecordStatus) {
             val statusLabel = if (recordStatus == "0") "Aktief" else "Onaktief"
             values.put(KEY_RECORD_STATUS, recordStatus.toInt())
-            emailHtml += "\r\n<p>Status : <b><font color='red'>$statusLabel</font></b></p>"
-            emailText += "\r\nStatus : $statusLabel"
+            emailHtml += "\r\n<p>Rekordstatus : <b><font color='red'>$statusLabel</font></b></p>"
+            emailText += "\r\nRekordstatus : $statusLabel"
         }
 
-        if (values.size() > 0) {
-            val uri = ContentUris.withAppendedId(winkerkEntry.CONTENT_URI, id.toLong())
-            contentResolver.update(
-                uri,
-                values,
-                "${winkerkEntry.LIDMATE_TABLE_NAME}._rowid_ = ?",
-                arrayOf(id.toString())
-            )
+        emailHtml += "</html>"
+
+        if (values.size() == 0) {
+            // No fields changed — leave edit mode without opening an email composer
+            return
         }
+
+        val uri = ContentUris.withAppendedId(winkerkEntry.CONTENT_URI, id.toLong())
+        contentResolver.update(
+            uri,
+            values,
+            "${winkerkEntry.LIDMATE_TABLE_NAME}._rowid_ = ?",
+            arrayOf(id.toString())
+        )
 
         var emailUrl = ""
         val gemeente = item.gemeente
@@ -885,7 +887,6 @@ class LidmaatDetailActivity : AuthBaseActivity() {
             else -> ""
         }
 
-        val prefs = getSharedPreferences(PREFS_USER_INFO, MODE_PRIVATE)
         val eposHtmlEnabled = appearancePrefs.eposHtml
         val sendIntent = Intent(Intent.ACTION_SENDTO).apply {
             data = "mailto:".toUri()

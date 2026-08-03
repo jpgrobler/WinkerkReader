@@ -239,26 +239,6 @@ class MainActivity : AuthBaseActivity() {
         return super.onPrepareOptionsMenu(menu)
     }
 
-    // ─── Touch Events ──────────────────────────────────────────────────────
-
-//    override fun onTouchEvent(event: MotionEvent): Boolean {
-//        return if (::initializer.isInitialized && initializer.isReady) {
-//            initializer.swipeGestureController.onTouchEvent(event) || super.onTouchEvent(event)
-//        } else {
-//            super.onTouchEvent(event)
-//        }
-//    }
-
-//    override fun dispatchTouchEvent(event: MotionEvent): Boolean {
-//        if (::initializer.isInitialized && initializer.isReady) {
-//            initializer.swipeGestureController.handleTouchEventIfOutside(
-//                event,
-//                binding.chipScrollView
-//            )
-//        }
-//        return super.dispatchTouchEvent(event)
-//    }
-
     // ─── Helper methods ──────────────────────────────────────────────────────
 
     fun startMonitoringServiceIfEnabled() {

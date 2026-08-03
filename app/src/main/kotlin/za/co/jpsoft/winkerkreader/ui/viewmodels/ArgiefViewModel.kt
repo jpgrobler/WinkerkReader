@@ -14,8 +14,8 @@ import za.co.jpsoft.winkerkreader.data.members.setup.WinkerkDatabase
 
 class ArgiefViewModel(application: Application) : AndroidViewModel(application) {
 
-    // Direct DAO access — no ContentProvider round-trip.
-    private val argiefDao = WinkerkDatabase.getInstance(application).argiefDao()
+    // Resolve on each use — companion instance is replaced after DB import.
+    private fun argiefDao() = WinkerkDatabase.getInstance(getApplication()).argiefDao()
 
     private val _archiveCursor = MutableLiveData<Cursor?>()
     val archiveCursor: LiveData<Cursor?> = _archiveCursor
@@ -40,7 +40,7 @@ class ArgiefViewModel(application: Application) : AndroidViewModel(application) 
 
         viewModelScope.launch(Dispatchers.IO) {
             val (sql, args) = buildQuery(sortBy, searchTerm)
-            val newCursor = argiefDao.queryRaw(SimpleSQLiteQuery(sql, args))
+            val newCursor = argiefDao().queryRaw(SimpleSQLiteQuery(sql, args))
 
             withContext(Dispatchers.Main) {
                 val oldCursor = _archiveCursor.value

@@ -1,7 +1,9 @@
 package za.co.jpsoft.winkerkreader.data.members.repository
 
+import android.content.Context
 import android.database.Cursor
 import android.util.Log
+import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
 import jakarta.inject.Singleton
 import kotlinx.coroutines.Dispatchers
@@ -12,7 +14,7 @@ import za.co.jpsoft.winkerkreader.utils.prefs.CongregationPrefs
 
 @Singleton
 class ChurchInfoRepository @Inject constructor(
-    private val database: WinkerkDatabase,
+    @ApplicationContext private val context: Context,
     private val congregationPrefs: CongregationPrefs
 ) {
 
@@ -21,7 +23,8 @@ class ChurchInfoRepository @Inject constructor(
     suspend fun loadChurchInfo() {
         withContext(Dispatchers.IO) {
             try {
-                val db = database.openHelper.writableDatabase
+                // Resolve live instance — Hilt must not keep a closed RoomDatabase after DB swap
+                val db = WinkerkDatabase.getInstance(context).openHelper.writableDatabase
                 val cursor: Cursor = db.query(
                     "SELECT DISTINCT Gemeente, [Gemeente epos] FROM Members GROUP BY Gemeente, [Gemeente epos]"
                 )

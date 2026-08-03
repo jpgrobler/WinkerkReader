@@ -124,10 +124,22 @@ class DatabaseImportController(
         delay(200)
         System.gc()
 
-        // 4. Atomic replace
+        // 4. Atomic replace (also remove Room/SQLite sidecars from the old file)
         val dbPath = File(context.applicationInfo.dataDir, "databases")
         val dbFile = File(dbPath, DB_NAME)
-        if (dbFile.exists() && !dbFile.delete()) {
+        listOf(
+            dbFile,
+            File(dbPath, "$DB_NAME-wal"),
+            File(dbPath, "$DB_NAME-shm"),
+            File(dbPath, "$DB_NAME-journal")
+        )
+            .filter { it.exists() }
+            .forEach { sidecar ->
+                if (!sidecar.delete()) {
+                    if (BuildConfig.DEBUG) Log.w(TAG, "Could not delete ${sidecar.name}")
+                }
+            }
+        if (dbFile.exists()) {
             reportError("Kon bestaande databasis nie verwyder nie")
             tempFile.delete()
             return@withContext false
@@ -135,6 +147,11 @@ class DatabaseImportController(
         if (!tempFile.renameTo(dbFile)) {
             tempFile.copyTo(dbFile, overwrite = true)
             tempFile.delete()
+        }
+
+        // 5. Open the replacement file so the next UI query does not hit a null/closed instance
+        withContext(Dispatchers.Main) {
+            WinkerkDatabase.getInstance(context)
         }
 
         true

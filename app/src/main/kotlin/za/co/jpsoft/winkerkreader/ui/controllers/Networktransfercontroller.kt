@@ -42,8 +42,12 @@ import java.util.UUID
  *       usbButton        = binding.laaiUSB,
  *       protocolVersion  = { pcProtocolVersion },
  *       saveIp           = { ip -> settings.edit { putString("IP", ip) } },
- *       onFileDownloaded = { file -> importController.processTempFile(file) },
- *       onNavigateBack   = { navigateBackToMain() }
+ *       onFileDownloaded = { file ->
+ *           val ok = importController.processTempFile(file)
+ *           if (ok) importController.reloadAndFinish()  // reopens Room + navigates
+ *           ok
+ *       },
+ *       onNavigateBack   = { }  // reloadAndFinish already navigates
  *   )
  *
  *   binding.laaiSocket.setOnClickListener { networkController.handleWiFiClick() }
