@@ -1,10 +1,12 @@
 package za.co.jpsoft.winkerkreader.ui.controllers
 
 import android.content.Context
+import android.util.Log
 import android.view.View
 import androidx.core.content.ContextCompat
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
+import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.utils.prefs.CongregationPrefs
 import za.co.jpsoft.winkerkreader.utils.ui.ColorUtils
@@ -18,7 +20,9 @@ class CongregationChipController(
 ) {
 
     private var isUpdating = false
-
+    fun refresh() {
+        setup()
+    }
     fun setup() {
         chipGroup.removeAllViews()
         chipGroup.isSingleSelection = false
@@ -29,6 +33,8 @@ class CongregationChipController(
             congregationPrefs.gemeente2Naam.takeIf { it.isNotBlank() },
             congregationPrefs.gemeente3Naam.takeIf { it.isNotBlank() }
         )
+
+        if (BuildConfig.DEBUG) Log.d("ChipController", "Loaded congregations: $congregations")
 
         congregations.forEach { name ->
             val color = congregationColor(name)

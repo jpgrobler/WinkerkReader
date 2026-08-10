@@ -17,8 +17,12 @@ import jakarta.inject.Inject
 import yuku.ambilwarna.AmbilWarnaDialog
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.databinding.FragmentUitlegVertoonBinding
-import za.co.jpsoft.winkerkreader.utils.prefs.*
+import za.co.jpsoft.winkerkreader.ui.activities.UitlegActivity
+import za.co.jpsoft.winkerkreader.utils.prefs.AppearancePrefs
 import za.co.jpsoft.winkerkreader.utils.prefs.AppearancePrefs.ThemeMode
+import za.co.jpsoft.winkerkreader.utils.prefs.CongregationPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.MemberListPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.SecurityPrefs
 
 @AndroidEntryPoint
 class UitlegVertoonFragment : Fragment() {
@@ -30,19 +34,27 @@ class UitlegVertoonFragment : Fragment() {
     @Inject
     lateinit var congregationPrefs: CongregationPrefs
 
+    @Inject
+    lateinit var securityPrefs: SecurityPrefs
+
     private var _binding: FragmentUitlegVertoonBinding? = null
     private val binding get() = _binding!!
 
     private var isInitializing = true
     private var isDisplayDirty = false
     private var isColorsDirty = false
-
+    private var isSecurityDirty = false
+    private var initialLockOnRestart = true
     private var initialCheckboxes = mutableMapOf<Int, Boolean>()
     private var initialLayout: String = "GESINNE"
     private val initialColors = mutableListOf(
         Int.MIN_VALUE, Int.MIN_VALUE, Int.MIN_VALUE, Int.MIN_VALUE
     )
     private var initialCongregationIndicator = false
+
+    // Security initial state
+    private var initialSecurityEnabled = false
+    private var initialTimeoutMs = Long.MAX_VALUE
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -60,6 +72,7 @@ class UitlegVertoonFragment : Fragment() {
         isInitializing = false
         isDisplayDirty = false
         isColorsDirty = false
+        isSecurityDirty = false
 
         when (appearancePrefs.themeMode) {
             AppearancePrefs.ThemeMode.LIGHT -> binding.themeModeLight.isChecked = true
@@ -109,7 +122,8 @@ class UitlegVertoonFragment : Fragment() {
             cb.isChecked = value
             initialCheckboxes[cb.id] = value
         }
-
+        initialLockOnRestart = securityPrefs.lockOnRestart
+        binding.lockOnRestart.isChecked = initialLockOnRestart
         initialLayout = memberListPrefs.defLayout
         for (i in 0 until binding.layoutOpsies.count) {
             val item = binding.layoutOpsies.getItemAtPosition(i).toString()
@@ -140,6 +154,21 @@ class UitlegVertoonFragment : Fragment() {
         }
         initialCongregationIndicator = congregationPrefs.useCongregationIndicator
         binding.congregationIndicatorSwitch.isChecked = initialCongregationIndicator
+
+        // --- Load security preferences ---
+        initialSecurityEnabled = securityPrefs.biometricEnabled
+        initialTimeoutMs = securityPrefs.biometricTimeoutMs
+
+        binding.securityEnableSwitch.isChecked = initialSecurityEnabled
+
+        // Set radio button based on timeout
+        when (initialTimeoutMs) {
+            60000L -> binding.timeout1min.isChecked = true
+            300000L -> binding.timeout5min.isChecked = true
+            600000L -> binding.timeout10min.isChecked = true
+            1800000L -> binding.timeout30min.isChecked = true
+            else -> binding.timeoutNever.isChecked = true   // Long.MAX_VALUE or anything else
+        }
     }
 
     private fun setupListeners() {
@@ -169,6 +198,37 @@ class UitlegVertoonFragment : Fragment() {
 
         binding.uitlegStoor.setOnClickListener { saveDisplaySettings() }
         binding.saveColor.setOnClickListener { saveColorSettings() }
+
+        // --- Security listeners ---
+        binding.securityEnableSwitch.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                // Try to enable; if not allowed, revert
+                val activity = requireActivity() as? UitlegActivity
+                if (activity?.requestBiometricEnable() == false) {
+                    binding.securityEnableSwitch.isChecked = false
+                    return@setOnCheckedChangeListener
+                }
+            } else {
+                (requireActivity() as? UitlegActivity)?.requestBiometricDisable()
+            }
+            onSecurityChanged()
+        }
+
+        binding.timeoutOptions.setOnCheckedChangeListener { _, _ ->
+            onSecurityChanged()
+        }
+
+        binding.saveSecurity.setOnClickListener {
+            saveSecuritySettings()
+        }
+        binding.lockOnRestart.setOnCheckedChangeListener { _, _ -> onSecurityChanged() }
+    }
+
+    private fun onSecurityChanged() {
+        if (!isInitializing) {
+            isSecurityDirty = true
+            updateSaveButtonState()
+        }
     }
 
     private fun onDisplayChanged() {
@@ -188,12 +248,63 @@ class UitlegVertoonFragment : Fragment() {
     private fun updateSaveButtonState() {
         val displayEnabled = isDisplayDirty || isDisplaySettingChanged()
         val colorsEnabled = isColorsDirty || isColorSettingChanged()
+        val securityEnabled = isSecurityDirty || isSecuritySettingChanged()
 
         binding.uitlegStoor.isEnabled = displayEnabled
         binding.uitlegStoor.alpha = if (displayEnabled) 1.0f else 0.4f
 
         binding.saveColor.isEnabled = colorsEnabled
         binding.saveColor.alpha = if (colorsEnabled) 1.0f else 0.4f
+
+        binding.saveSecurity.isEnabled = securityEnabled
+        binding.saveSecurity.alpha = if (securityEnabled) 1.0f else 0.4f
+    }
+
+    private fun isSecuritySettingChanged(): Boolean {
+        val currentEnabled = binding.securityEnableSwitch.isChecked
+        val currentTimeout = getSelectedTimeoutMs()
+        val currentLockOnRestart = binding.lockOnRestart.isChecked
+        return currentEnabled != initialSecurityEnabled ||
+                currentTimeout != initialTimeoutMs ||
+                currentLockOnRestart != initialLockOnRestart
+    }
+
+    private fun getSelectedTimeoutMs(): Long {
+        return when (binding.timeoutOptions.checkedRadioButtonId) {
+            R.id.timeout_1min -> 60000L
+            R.id.timeout_5min -> 300000L
+            R.id.timeout_10min -> 600000L
+            R.id.timeout_30min -> 1800000L
+            else -> Long.MAX_VALUE   // "Never"
+        }
+    }
+
+    private fun saveSecuritySettings() {
+        val enabled = binding.securityEnableSwitch.isChecked
+        val timeout = getSelectedTimeoutMs()
+        val lockOnRestart = binding.lockOnRestart.isChecked
+
+        securityPrefs.biometricEnabled = enabled
+        securityPrefs.biometricTimeoutMs = timeout
+        securityPrefs.lockOnRestart = lockOnRestart
+
+        initialSecurityEnabled = enabled
+        initialTimeoutMs = timeout
+        initialLockOnRestart = lockOnRestart
+        isSecurityDirty = false
+        updateSaveButtonState()
+        Toast.makeText(requireContext(), "Sekuriteit-instellings gestoor", Toast.LENGTH_SHORT)
+            .show()
+    }
+
+
+    // Called by the activity when biometric is disabled externally (e.g., auth unavailable)
+    fun updateBiometricToggle(enabled: Boolean) {
+        binding.securityEnableSwitch.isChecked = enabled
+        // Also update initial state so that the save button doesn't think it's dirty
+        initialSecurityEnabled = enabled
+        isSecurityDirty = false
+        updateSaveButtonState()
     }
 
     private fun isDisplaySettingChanged(): Boolean {

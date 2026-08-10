@@ -99,7 +99,7 @@ object PermissionRationaleHelper {
             Manifest.permission.WRITE_CONTACTS -> R.string.rationale_contacts_title
 
             Manifest.permission.SEND_SMS,
-            Manifest.permission.READ_SMS -> R.string.rationale_sms_title
+                //Manifest.permission.READ_SMS -> R.string.rationale_sms_title
 
             Manifest.permission.READ_CALENDAR,
             Manifest.permission.WRITE_CALENDAR -> R.string.rationale_calendar_title
@@ -116,8 +116,8 @@ object PermissionRationaleHelper {
             Manifest.permission.READ_CONTACTS,
             Manifest.permission.WRITE_CONTACTS -> R.string.rationale_contacts_message
 
-            Manifest.permission.SEND_SMS,
-            Manifest.permission.READ_SMS -> R.string.rationale_sms_message
+            Manifest.permission.SEND_SMS -> R.string.rationale_sms_message //READ_SMS
+
 
             Manifest.permission.READ_CALENDAR,
             Manifest.permission.WRITE_CALENDAR -> R.string.rationale_calendar_message

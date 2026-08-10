@@ -205,7 +205,7 @@ object SQLiteStatementValidator {
         val matcher = keywordPattern.matcher(upperCleanedSql)
 
         while (matcher.find()) {
-            val keyword = matcher.group(1)
+            val keyword = matcher.group(1)!!
             val keywordEnd = matcher.end()
             if (keywordEnd < upperCleanedSql.length) {
                 var nextNonSpaceIndex = keywordEnd

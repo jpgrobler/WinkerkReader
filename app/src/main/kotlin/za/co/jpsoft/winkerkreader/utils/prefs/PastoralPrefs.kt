@@ -24,4 +24,12 @@ class PastoralPrefs(private val prefs: SharedPreferences) {
         }
         set(value) = prefs.edit().putLong(WinkerkContract.KEY_PASTORAL_CALENDAR_ID, value ?: -1L)
             .apply()
+
+    /** Timestamp the demo pastoral data was generated at, or null if never seeded / using real data. */
+    var demoDataAnchorUtc: Long?
+        get() {
+            val v = prefs.getLong("PASTORAL_DEMO_ANCHOR_UTC", -1L)
+            return if (v == -1L) null else v
+        }
+        set(value) = prefs.edit().putLong("PASTORAL_DEMO_ANCHOR_UTC", value ?: -1L).apply()
 }

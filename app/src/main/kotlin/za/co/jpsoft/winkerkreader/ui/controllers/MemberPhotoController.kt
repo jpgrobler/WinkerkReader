@@ -219,7 +219,7 @@ class MemberPhotoController(
         // Save full-size image to external directory (use original quality)
         val externalDir = activity.getExternalFilesDir(null)
         if (externalDir != null) {
-            val photoDir = File(externalDir, "Fotos")
+            val photoDir = File(externalDir, "fotos")
             if (!photoDir.exists()) photoDir.mkdirs()
             val photoFile = File(photoDir, "$guid.jpg")
             if (photoFile.exists()) photoFile.delete()

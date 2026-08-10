@@ -18,6 +18,12 @@ class AppearancePrefs(private val prefs: SharedPreferences) {
         }
         set(value) = prefs.edit().putString("theme_mode", value.name.lowercase()).apply()
 
+    var dynamicColorEnabled: Boolean
+        get() = prefs.getBoolean(
+            "dynamic_color_enabled",
+            true
+        ) // default ON, matches current behaviour
+        set(value) = prefs.edit().putBoolean("dynamic_color_enabled", value).apply()
     var whatsapp1: Boolean
         get() = prefs.getBoolean(WinkerkContract.KEY_WHATSAPP1, true)
         set(value) = prefs.edit().putBoolean(WinkerkContract.KEY_WHATSAPP1, value).apply()

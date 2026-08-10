@@ -69,6 +69,9 @@ interface PastoralNoteDao {
     @Query("DELETE FROM pastoral_notes WHERE noteId = :noteId")
     suspend fun deleteById(noteId: String)
 
+    @Query("DELETE FROM pastoral_notes WHERE createdAt = :createdAt")
+    suspend fun deleteByCreatedAt(createdAt: Long): Int
+
     // ── Link to reminder (set after reminder is created alongside the note) ───
 
     @Query(

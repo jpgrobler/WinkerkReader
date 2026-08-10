@@ -41,7 +41,6 @@ abstract class WinkerkDatabase : RoomDatabase() {
                 WinkerkDatabase::class.java,
                 WinkerkContract.winkerkEntry.WINKERK_DB
             )
-                .createFromAsset("WinkerkReader.sqlite")  // ← ADD THIS LINE
                 .addMigrations(MIGRATION_1_4)
                 .build()
         }

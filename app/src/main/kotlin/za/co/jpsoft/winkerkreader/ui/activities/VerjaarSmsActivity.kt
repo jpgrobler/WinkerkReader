@@ -8,7 +8,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.telephony.SmsManager
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.MenuItem
@@ -31,9 +30,7 @@ import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
 import dagger.hilt.android.AndroidEntryPoint
 import jakarta.inject.Inject
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.members.models.MemberItem
 import za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract
@@ -89,16 +86,8 @@ class VerjaarSmsActivity : AuthBaseActivity() {
     private var selectedHour = 8
     private var selectedMinute = 0
     private var isSending = false  // prevent multiple concurrent sends
-
-    // Permission launchers
-    private val smsPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (!isGranted) {
-            Snackbar.make(binding.root, "SMS permission required", Snackbar.LENGTH_LONG).show()
-        }
-    }
-
+    private var pendingQueue: List<Pair<MemberItem, String>> = emptyList()
+    private var queueIndex = 0
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { }
@@ -114,7 +103,7 @@ class VerjaarSmsActivity : AuthBaseActivity() {
             insets
         }
 
-        smsSender = BirthdaySmsSender(contentResolver)
+        smsSender = BirthdaySmsSender()
         prefs = getSharedPreferences("VerjaarSmsPrefs", MODE_PRIVATE)
 
         initializeComponents()
@@ -131,6 +120,11 @@ class VerjaarSmsActivity : AuthBaseActivity() {
                 binding.verjaarProgress.visibility = if (loading) View.VISIBLE else View.GONE
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (queueIndex in pendingQueue.indices) sendNextInQueue()
     }
 
     override fun onPause() {
@@ -170,11 +164,6 @@ class VerjaarSmsActivity : AuthBaseActivity() {
     }
 
     private fun requestPermissions() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS)
-            != PackageManager.PERMISSION_GRANTED
-        ) {
-            smsPermissionLauncher.launch(Manifest.permission.SEND_SMS)
-        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
             != PackageManager.PERMISSION_GRANTED
@@ -425,36 +414,39 @@ class VerjaarSmsActivity : AuthBaseActivity() {
             return
         }
 
-        val smsManager = getSystemService(SmsManager::class.java) ?: run {
-            Snackbar.make(binding.root, "SMS nie beskikbaar nie", Snackbar.LENGTH_SHORT).show()
-            return
-        }
-
         val members = memberListAdapter.getCurrentItems()
-        if (members.isEmpty()) {
+        val queue = smsSender.buildQueue(
+            members = members,
+            template = template,
+            shouldSend = { member -> member.tag == 1 || autoSms }
+        )
+        if (queue.isEmpty()) {
             Snackbar.make(binding.root, "Geen lede om te stuur nie", Snackbar.LENGTH_SHORT).show()
             return
         }
 
-        isSending = true
-        binding.verjaarProgress.visibility = View.VISIBLE
-        binding.verjaarSms.isEnabled = false
+        pendingQueue = queue
+        queueIndex = 0
+        sendNextInQueue()
+    }
 
-        lifecycleScope.launch {
-            val count = smsSender.sendToMembers(
-                members = members,
-                template = template,
-                smsManager = smsManager,
-                shouldSend = { member -> member.tag == 1 || autoSms }
-            )
-            withContext(Dispatchers.Main) {
-                isSending = false
-                binding.verjaarProgress.visibility = View.GONE
-                binding.verjaarSms.isEnabled = true
-                val message = if (count == 0) "Geen SMS'e gestuur" else "$count SMS'e gestuur"
-                Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
-            }
+    private fun sendNextInQueue() {
+        if (queueIndex >= pendingQueue.size) {
+            Snackbar.make(
+                binding.root,
+                "${pendingQueue.size} SMS'e voorberei",
+                Snackbar.LENGTH_SHORT
+            ).show()
+            return
         }
+        val (member, message) = pendingQueue[queueIndex]
+        val phone = fixphonenumber(member.cellphone) ?: run {
+            queueIndex++
+            sendNextInQueue()
+            return
+        }
+        smsSender.sendViaIntent(this, phone, message)
+        queueIndex++
     }
 
     // ------------------------------------------------------------------------
@@ -558,20 +550,14 @@ class VerjaarSmsActivity : AuthBaseActivity() {
         popup.show()
     }
 
-    // ------------------------------------------------------------------------
-    // Auto SMS & Back Press
-    // ------------------------------------------------------------------------
-
     private fun handleAutoSMS() {
         val prefs = getSharedPreferences(PREFS_USER_INFO, MODE_PRIVATE)
         autoSms = prefs.getBoolean("AUTO_SMS", false)
-        val fromMenu = prefs.getBoolean("FROM_MENU", false)
-        if (!fromMenu && autoSms) {
-            binding.verjaarSms.performClick()
-            prefs.edit { putBoolean("FROM_MENU", false) }
-            finish()
-        }
     }
+
+    // ------------------------------------------------------------------------
+    // Back Press
+    // ------------------------------------------------------------------------
 
     private fun handleBackPress() {
         val members = memberListAdapter.getCurrentItems()

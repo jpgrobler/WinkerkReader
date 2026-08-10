@@ -26,7 +26,7 @@ class ChurchInfoRepository @Inject constructor(
                 // Resolve live instance — Hilt must not keep a closed RoomDatabase after DB swap
                 val db = WinkerkDatabase.getInstance(context).openHelper.writableDatabase
                 val cursor: Cursor = db.query(
-                    "SELECT DISTINCT Gemeente, [Gemeente epos] FROM Members GROUP BY Gemeente, [Gemeente epos]"
+                    "SELECT DISTINCT [Gemeente], [Gemeente epos] FROM Members GROUP BY [Gemeente], [Gemeente epos]"
                 )
                 cursor.use {
                     val names = mutableListOf<String>()

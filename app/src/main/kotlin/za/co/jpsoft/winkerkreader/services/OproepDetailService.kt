@@ -26,7 +26,6 @@ import android.widget.TextView
 import androidx.core.app.NotificationCompat
 import androidx.core.content.edit
 import androidx.core.net.toUri
-import androidx.core.view.WindowInsetsCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -72,9 +71,26 @@ class OproepDetailService : Service() {
         private var lastProcessedNumber = ""
         private var lastProcessedTime = 0L
 
+        //        fun canProcessCall(number: String): Boolean {
+//            synchronized(this) {
+//                val now = System.currentTimeMillis()
+//                return if (lastProcessedNumber == number && now - lastProcessedTime < 500) {
+//                    false
+//                } else {
+//                    lastProcessedNumber = number
+//                    lastProcessedTime = now
+//                    true
+//                }
+//            }
+//        }
         fun canProcessCall(number: String): Boolean {
             synchronized(this) {
                 val now = System.currentTimeMillis()
+                // Reset or prune if stale (> 30 seconds old) to prevent memory accumulation or stuck states
+                if (now - lastProcessedTime > 30_000L) {
+                    lastProcessedNumber = ""
+                }
+
                 return if (lastProcessedNumber == number && now - lastProcessedTime < 500) {
                     false
                 } else {
@@ -82,6 +98,14 @@ class OproepDetailService : Service() {
                     lastProcessedTime = now
                     true
                 }
+            }
+        }
+
+        // Add a explicit reset utility if needed
+        fun resetTrackers() {
+            synchronized(this) {
+                lastProcessedNumber = ""
+                lastProcessedTime = 0L
             }
         }
 
@@ -161,7 +185,7 @@ class OproepDetailService : Service() {
                 }
                 is CallerInfoResult.Contact -> result.name
                 is CallerInfoResult.MultipleMembers -> {
-                    result.members.joinToString(", ") { member ->
+                    result.members.joinToString("\n") { member ->
                         buildString {
                             append(member.name)
                             if (!member.gemeente.isNullOrBlank()) {
@@ -197,6 +221,7 @@ class OproepDetailService : Service() {
         serviceScope.cancel()
         isOn = false
         serviceInstance = null
+        resetTrackers()
 
         if (::floatingView.isInitialized && viewAdded) {
             try {
@@ -280,21 +305,22 @@ class OproepDetailService : Service() {
     }
 
     private fun createFloatingWindow() {
-        // Anchor to top-centre so the overlay never covers answer/decline buttons
-        val statusBarHeight = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            windowManager.currentWindowMetrics.windowInsets
-                .getInsets(WindowInsetsCompat.Type.statusBars()).top
+        // Place in the upper-middle of the screen so we clear both:
+        // - top heads-up incoming-call controls (answer/decline)
+        // - bottom full-screen dialer answer/decline buttons
+        val screenHeight = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            windowManager.currentWindowMetrics.bounds.height()
         } else {
-            val resourceId = resources.getIdentifier("status_bar_height", "dimen", "android")
-            if (resourceId > 0) resources.getDimensionPixelSize(resourceId) else 0
+            @Suppress("DEPRECATION")
+            val metrics = android.util.DisplayMetrics()
+            windowManager.defaultDisplay.getMetrics(metrics)
+            metrics.heightPixels
         }
-
 
         val params = createWindowLayoutParams().apply {
             gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
             x = 0
-            y =
-                statusBarHeight    //80  // px from top — clears the status bar on virtually all devices
+            y = (screenHeight * 0.32f).toInt()
         }
         try {
             windowManager.addView(floatingView, params)
@@ -305,11 +331,14 @@ class OproepDetailService : Service() {
     }
 
     private fun createWindowLayoutParams(): WindowManager.LayoutParams {
+        // NOT_FOCUSABLE + NOT_TOUCH_MODAL: answer/decline stay usable.
+        // Touches on the popup still work; touches outside pass through to the dialer.
         return WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
             PixelFormat.TRANSLUCENT
         )
     }

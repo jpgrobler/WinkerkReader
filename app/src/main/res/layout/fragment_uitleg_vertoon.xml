@@ -38,7 +38,7 @@
                 android:id="@+id/uitleg_stoor"
                 style="@style/Widget.WinkerkReader.Button.Primary"
                 android:layout_width="wrap_content"
-                android:layout_height="36dp"
+                android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:enabled="false"
                 android:text="@string/stoor"
@@ -300,6 +300,116 @@
                             android:textColor="?attr/colorOnSurface" />
 
                     </RadioGroup>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- ===== NEW SECURITY CARD ===== -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardBackgroundColor="?attr/colorSurface"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="8dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="?attr/colorPrimary"
+                        android:padding="4dp"
+                        android:text="App Sekuriteit"
+                        android:textAlignment="center"
+                        android:textColor="?attr/colorOnPrimary"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/security_enable_switch"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Aktiveer app slot"
+                        android:textColor="?attr/colorOnSurface" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Sluit na tyd van onaktiwiteit:"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="14sp" />
+
+                        <RadioGroup
+                            android:id="@+id/timeout_options"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+
+                            <RadioButton
+                                android:id="@+id/timeout_1min"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="1 minuut"
+                                android:textColor="?attr/colorOnSurface" />
+
+                            <RadioButton
+                                android:id="@+id/timeout_5min"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="5 minute"
+                                android:textColor="?attr/colorOnSurface" />
+
+                            <RadioButton
+                                android:id="@+id/timeout_10min"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="10 minute"
+                                android:textColor="?attr/colorOnSurface" />
+
+                            <RadioButton
+                                android:id="@+id/timeout_30min"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="30 minute"
+                                android:textColor="?attr/colorOnSurface" />
+
+                            <RadioButton
+                                android:id="@+id/timeout_never"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Nooit (bly oop)"
+                                android:textColor="?attr/colorOnSurface" />
+                        </RadioGroup>
+
+                        <CheckBox
+                            android:id="@+id/lock_on_restart"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="Sluit op toestel herbegin"
+                            android:textColor="?attr/colorOnSurface" />
+                    </LinearLayout>
+
+                    <Button
+                        android:id="@+id/saveSecurity"
+                        style="@style/Widget.WinkerkReader.Button.Primary"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:enabled="false"
+                        android:text="@string/stoor"
+                        android:textColor="?attr/colorOnPrimary" />
+
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 

@@ -413,11 +413,11 @@
     <string name="permissions_intro">Gee asb toestemming vir die volgende permissions om al die app se funksies te kan gebruik</string>
     <string name="permissions_request_all">Toestemming vir alle permissions</string>
     <string name="uitleg_icons_title">Hooflys Icons</string>
-    <string name="uitleg_foto">Foto</string>
-    <string name="uitleg_epos">Epos</string>
+    <string name="uitleg_foto">👤 Foto</string>
+    <string name="uitleg_epos">✉️ Epos</string>
     <string name="uitleg_whatsapp">Whatsapp</string>
-    <string name="uitleg_verjaarsdag">Verjaarsdag</string>
-    <string name="uitleg_huweliksdatum">Huweliksdatum</string>
+    <string name="uitleg_verjaarsdag">🎂 Verjaarsdag</string>
+    <string name="uitleg_huweliksdatum">💍 Huweliksdatum</string>
     <string name="uitleg_widget_title">Verjaar Widget</string>
     <string name="uitleg_doopdatum">Doopdatum</string>
     <string name="uitleg_belydenisdatum">Belydenisdatum</string>
@@ -854,4 +854,25 @@
     <string name="wys_vinnige_aksies">Wys vinnige aksies</string>
     <string name="error_no_contacts_app">Geen Kontak App</string>
     <string name="swiep_instellings">👈👉 Swiep Instelling</string>
+    <string name="dynamic_colors">Dynamic Colors</string>
+
+    <!-- Biometric Setup Strings (Afrikaans) -->
+    <string name="biometric_setup_title">🔐 Opstel Apparaatsekuriteit</string>
+    <string name="biometric_setup_message">
+    Om jou pastorale gegewens te beskerm, moet jy eers jou Android-toestel se sekuriteit opstel.\n\nStel \'n vingerafdruk, gesigherkenning of PIN in, en kom terug na WinkerkReader.
+</string>
+    <string name="biometric_setup_go_to_settings">Gaan na Instellings</string>
+    <string name="biometric_setup_cancel">Kanselleer</string>
+
+    <string name="biometric_unavailable_title">🔐 Sekuriteit Onbeskikbaar</string>
+    <string name="biometric_unavailable_message">
+    Jou aparaat se sekuriteit is nie gekonfigureer nie.\n\nStel \'n vingerafdruk, gesigherkenning of PIN in om WinkerkReader se beveiligde slot te gebruik.
+</string>
+    <string name="biometric_unavailable_continue">Voortgaan Sonder Slot</string>
+
+    <string name="biometric_disabled_title">🔒 Sekuriteit Uitgeskakel</string>
+    <string name="biometric_disabled_message">
+    Jou apparaat se sekuriteit is nie gekonfigureer nie. WinkerkReader se beveiligde slot is om hierdie rede afgeskakel.
+</string>
+
 </resources>

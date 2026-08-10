@@ -11,8 +11,8 @@ android {
     defaultConfig {
         applicationId = "za.co.jpsoft.winkerkreader"
         minSdk = 28
-        versionCode = 124
-        versionName = "4.2 test r024"
+        versionCode = 130
+        versionName = "4.2 r030"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         targetSdk = 37
 
@@ -100,8 +100,11 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.hilt.common)
+    implementation(libs.androidx.hilt.work)
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
+    ksp(libs.androidx.hilt.compiler)
 
     implementation(libs.androidx.gridlayout)
 

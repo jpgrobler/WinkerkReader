@@ -6,6 +6,9 @@ class SecurityPrefs(
     private val prefs: SharedPreferences,
     private val securePrefs: SharedPreferences
 ) {
+    var lockOnRestart: Boolean
+        get() = securePrefs.getBoolean("app_lock_on_restart", true)   // default true
+        set(value) = securePrefs.edit().putBoolean("app_lock_on_restart", value).apply()
 
     var biometricEnabled: Boolean
         get() {

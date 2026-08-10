@@ -172,4 +172,7 @@ interface FollowUpReminderDao {
 
     @Query("DELETE FROM follow_up_reminders WHERE reminderId IN (:reminderIds)")
     suspend fun deleteAll(reminderIds: List<String>)
+
+    @Query("DELETE FROM follow_up_reminders WHERE createdAt = :createdAt")
+    suspend fun deleteByCreatedAt(createdAt: Long): Int
 }

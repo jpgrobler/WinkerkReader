@@ -30,9 +30,9 @@ class PermissionManager(private val context: Context) {
             val map = mapOf(
                 Manifest.permission.READ_CONTACTS to "Read Contacts",
                 Manifest.permission.WRITE_CONTACTS to "Write Contacts",
-                Manifest.permission.SEND_SMS to "Send SMS",
-                Manifest.permission.READ_SMS to "Read SMS",
-                Manifest.permission.READ_PHONE_STATE to "Phone State",
+                //Manifest.permission.SEND_SMS to "Send SMS",
+                //Manifest.permission.READ_SMS to "Read SMS",
+                //Manifest.permission.READ_PHONE_STATE to "Phone State",
                 Manifest.permission.READ_CALL_LOG to "Call Log",
                 Manifest.permission.READ_PHONE_NUMBERS to "Phone Numbers",
                 Manifest.permission.READ_CALENDAR to "Read Calendar",
@@ -60,8 +60,7 @@ class PermissionManager(private val context: Context) {
             Manifest.permission.WRITE_CONTACTS
         )
         val SMS_PERMISSIONS = arrayOf(
-            Manifest.permission.SEND_SMS,
-            Manifest.permission.READ_SMS
+            Manifest.permission.SEND_SMS
         )
         val PHONE_PERMISSIONS = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             arrayOf(
@@ -193,8 +192,9 @@ class PermissionManager(private val context: Context) {
         if (!isPermissionGranted(Manifest.permission.SEND_SMS)) count++
         if (!isPermissionGranted(Manifest.permission.READ_PHONE_STATE)) count++
         if (!isPermissionGranted(Manifest.permission.READ_CALL_LOG)) count++
-        if (!isPermissionGranted(Manifest.permission.READ_SMS)) count++
+        //if (!isPermissionGranted(Manifest.permission.READ_SMS)) count++
         if (!isPermissionGranted(Manifest.permission.READ_CALENDAR)) count++
+        //if (!isPermissionGranted(Manifest.permission.WRITE_SMS)) count++
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             !isPermissionGranted(Manifest.permission.POST_NOTIFICATIONS)
         ) count++

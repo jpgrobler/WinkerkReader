@@ -104,27 +104,38 @@ class LidmaatDetailActivity : AuthBaseActivity() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        photoController.pendingImageUri?.let { outState.putString(STATE_IMAGE_URI, it.toString()) }
+        // Guard against saving state if photoController hasn't initialized yet
+        if (::photoController.isInitialized) {
+            photoController.pendingImageUri?.let {
+                outState.putString(
+                    STATE_IMAGE_URI,
+                    it.toString()
+                )
+            }
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
+        // 1. Inflate binding first
         binding = LidmaatDetailBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        ViewCompat.setOnApplyWindowInsetsListener(binding.detailScroll) { view, insets ->
-            val navBar = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
-            view.updatePadding(bottom = navBar.bottom)
-            insets
-        }
 
+        // 2. Instantiate MemberPhotoController right here alongside binding inflation
         photoController = MemberPhotoController(
             activity = this,
             binding = binding,
             getMemberGuid = { mLidmaatGUID },
             getCurrentId = { current_id }
         )
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.detailScroll) { view, insets ->
+            val navBar = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+            view.updatePadding(bottom = navBar.bottom)
+            insets
+        }
 
         savedInstanceState?.getString(STATE_IMAGE_URI)?.let { uriString ->
             photoController.pendingImageUri = uriString.toUri()

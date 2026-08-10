@@ -29,7 +29,7 @@ object AppInitializer {
         databaseInitializer: DatabaseInitializer,
         workScheduler: WorkScheduler,
         callLogImporter: CallLogImporter,
-        autoStartEnabled: Boolean   // <-- added parameter
+        autoStartEnabled: Boolean
     ) {
         scope.launch {
             withContext(Dispatchers.IO) {
@@ -51,22 +51,25 @@ object AppInitializer {
                                 if (success) Log.d(TAG, "Database initialised")
                                 else Log.e(TAG, "Database initialisation failed")
                             }
-                            onComplete?.invoke(success)
-                            onReady?.invoke()
+
+                            if (success) {
+                                // Load church info sequentially right after DB initialization
+                                scope.launch(Dispatchers.IO) {
+                                    churchInfoRepo?.loadChurchInfo()
+                                    withContext(Dispatchers.Main) {
+                                        onComplete?.invoke(true)
+                                        onReady?.invoke()
+                                    }
+                                }
+                            } else {
+                                onComplete?.invoke(false)
+                            }
                         }
                     }
                 )
             }
 
-            // Load church info if repository is provided
-            churchInfoRepo?.let {
-                scope.launch {
-                    it.loadChurchInfo()
-                }
-            }
-
             withContext(Dispatchers.Main) {
-                // Use the passed autoStartEnabled flag instead of SettingsManager
                 if (autoStartEnabled) {
                     try {
                         val intent =
@@ -81,9 +84,6 @@ object AppInitializer {
                         )
                     }
                 }
-            }
-
-            withContext(Dispatchers.Main) {
                 workScheduler.scheduleAll()
             }
         }
@@ -96,7 +96,7 @@ object AppInitializer {
         databaseInitializer: DatabaseInitializer,
         workScheduler: WorkScheduler,
         callLogImporter: CallLogImporter,
-        autoStartEnabled: Boolean   // <-- added parameter
+        autoStartEnabled: Boolean
     ) {
         initialize(
             appContext,

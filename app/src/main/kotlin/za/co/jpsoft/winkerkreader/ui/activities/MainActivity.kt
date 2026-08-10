@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
+import za.co.jpsoft.winkerkreader.data.members.repository.ChurchInfoRepository
 import za.co.jpsoft.winkerkreader.data.members.setup.DatabaseInitializer
 import za.co.jpsoft.winkerkreader.databinding.ActivityMainBinding
 import za.co.jpsoft.winkerkreader.services.CallMonitoringService
@@ -88,6 +89,9 @@ class MainActivity : AuthBaseActivity() {
     @Inject
     lateinit var navigationController: MainNavigationController
 
+    @Inject
+    lateinit var churchInfoRepo: ChurchInfoRepository
+
     // ─── View Binding ──────────────────────────────────────────────────────
     lateinit var binding: ActivityMainBinding
 
@@ -126,7 +130,7 @@ class MainActivity : AuthBaseActivity() {
             insets
         }
 
-        // ─── Pass injected dependencies to initializer ───────────────────
+        // ─── Pass injected dependencies to initi
         initializer = MainActivityInitializer(
             activity = this,
             savedInstanceState = savedInstanceState,
@@ -142,7 +146,8 @@ class MainActivity : AuthBaseActivity() {
             databaseInitializer = databaseInitializer,
             callLogImporter = callLogImporter,
             navigationController = navigationController,
-            backupPrefs = backupPrefs
+            backupPrefs = backupPrefs,
+            churchInfoRepo = churchInfoRepo
         )
         initializer.setupPreAuth()
 

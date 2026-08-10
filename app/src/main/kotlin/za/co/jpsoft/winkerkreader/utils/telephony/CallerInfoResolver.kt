@@ -222,6 +222,7 @@ object CallerInfoResolver {
     ): List<CallerInfoResult.Member>? {
         val members = mutableListOf<CallerInfoResult.Member>()
         try {
+            @Suppress("UNCHECKED_CAST")
             val cursor = WinkerkDatabase.getInstance(context)
                 .memberDao()
                 .queryRaw(SimpleSQLiteQuery(fullQuery, args as Array<Any>?))

@@ -29,8 +29,10 @@ import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract
 import za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract.winkerkEntry
+import za.co.jpsoft.winkerkreader.data.members.repository.ChurchInfoRepository
 import za.co.jpsoft.winkerkreader.data.members.setup.WinkerkDatabase
 import za.co.jpsoft.winkerkreader.data.pastoral.PastoralDatabase
+import za.co.jpsoft.winkerkreader.data.pastoral.setup.PastoralDemoDataSeeder
 import za.co.jpsoft.winkerkreader.databinding.LaaidatabasisBinding
 import za.co.jpsoft.winkerkreader.ui.controllers.CollapsibleCardController
 import za.co.jpsoft.winkerkreader.ui.controllers.DatabaseImportController
@@ -93,8 +95,12 @@ class LaaiDatabasisActivity : BaseActivity() {
     private lateinit var dropboxController: DropboxDownloadController
     private lateinit var networkController: NetworkTransferController
 
+    @Inject
+    lateinit var churchInfoRepo: ChurchInfoRepository
     private val navigationController by lazy { MainNavigationController(this) }
 
+    @Inject
+    lateinit var pastoralDemoDataSeeder: PastoralDemoDataSeeder
     private var autoDl = false
     private var delete: Boolean = false
     private var syncPhotosAfterDb: Boolean = false
@@ -170,7 +176,15 @@ class LaaiDatabasisActivity : BaseActivity() {
         importController = DatabaseImportController(
             context = this,
             onError = { msg -> showError(msg) },
-            onReloadDone = { navigateBackToMain() }
+            onReloadDone = {
+                // Reload gemeente names and emails from the newly imported database
+                lifecycleScope.launch {
+                    churchInfoRepo.loadChurchInfo()
+                    congregationPrefs.ensureDefaultColors()
+                    pastoralDemoDataSeeder.clearDemoData()
+                    navigateBackToMain()
+                }
+            }
         )
 
         lifecycleScope.launch {

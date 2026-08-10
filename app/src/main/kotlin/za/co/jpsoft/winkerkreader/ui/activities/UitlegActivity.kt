@@ -7,7 +7,6 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.widget.ArrayAdapter
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -27,6 +26,8 @@ import za.co.jpsoft.winkerkreader.utils.CalendarManager
 import za.co.jpsoft.winkerkreader.utils.prefs.CalendarPrefs
 import za.co.jpsoft.winkerkreader.utils.prefs.CallMonitorPrefs
 import za.co.jpsoft.winkerkreader.utils.prefs.PastoralPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.SecurityPrefs
+import za.co.jpsoft.winkerkreader.utils.security.BiometricSetupHelper
 
 @AndroidEntryPoint
 class UitlegActivity : AuthBaseActivity(), UitlegCalendarSelectionListener {
@@ -41,7 +42,14 @@ class UitlegActivity : AuthBaseActivity(), UitlegCalendarSelectionListener {
 
     @Inject
     lateinit var callMonitorPrefs: CallMonitorPrefs
+
+    // 🆕 Biometric security setup
+    @Inject
+    override lateinit var securityPrefs: SecurityPrefs
+
     private lateinit var binding: ActivityUitlegBinding
+    private lateinit var biometricSetupHelper: BiometricSetupHelper
+
     private var availableCalendars: List<CalendarInfo> = emptyList()
 
     private var selectedCalendarId: Long? = -1L
@@ -55,6 +63,9 @@ class UitlegActivity : AuthBaseActivity(), UitlegCalendarSelectionListener {
         super.onCreate(savedInstanceState)
         binding = ActivityUitlegBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // 🆕 Initialize biometric setup helper
+        biometricSetupHelper = BiometricSetupHelper(this)
 
         selectedCalendarId = callMonitorPrefs.callCalendarId
         selectedPastoralCalendarId = pastoralPrefs.pastoralCalendarId
@@ -74,6 +85,75 @@ class UitlegActivity : AuthBaseActivity(), UitlegCalendarSelectionListener {
         }.attach()
 
         tryLoadCalendars()
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        // 🆕 Re-check biometric availability
+        // User might have gone to Settings and set up biometric/PIN
+        // Or they might have cleared security settings
+        if (securityPrefs.biometricEnabled) {
+            if (!biometricSetupHelper.reCheckAuthAvailability()) {
+                // Biometric was enabled but is NO LONGER available
+                // (user cleared security settings)
+                securityPrefs.biometricEnabled = false
+
+                if (BuildConfig.DEBUG) {
+                    Log.w("UitlegActivity", "Biometric was enabled but is now unavailable")
+                }
+
+                // Notify user
+                biometricSetupHelper.showInfoDialog(
+                    "🔒 Sekuriteit Uitgeskakel",
+                    "Jou aparaat se sekuriteit is nie meer gekonfigureer nie. " +
+                            "WinkerkReader se beveiligde slot is om hierdie rede afgeskakel."
+                )
+
+                // Update UI in fragment (see UitlegVertoonFragment.kt changes)
+                notifyBiometricStatusChanged(false)
+            }
+        }
+    }
+
+    /**
+     * Called by fragments when biometric toggle state changes.
+     * Validates that device auth is available before allowing enable.
+     */
+    fun requestBiometricEnable(): Boolean {
+        // Check if device has auth configured
+        if (!biometricSetupHelper.isAuthAvailable()) {
+            if (BuildConfig.DEBUG) {
+                Log.w("UitlegActivity", "Biometric enable requested but auth not available")
+            }
+
+            // Guide user to set up device security
+            biometricSetupHelper.checkAndPromptSetup()
+            return false  // Deny enable
+        }
+
+        // ✅ Auth is available – allow enable
+        securityPrefs.biometricEnabled = true
+        return true
+    }
+
+    /**
+     * Called by fragments when biometric toggle is disabled.
+     */
+    fun requestBiometricDisable() {
+        securityPrefs.biometricEnabled = false
+    }
+
+    /**
+     * Notifies fragments that biometric status has changed (for UI updates).
+     * Call this after changing biometric settings programmatically.
+     */
+    private fun notifyBiometricStatusChanged(enabled: Boolean) {
+        val vertoonFragment = supportFragmentManager.fragments
+            .filterIsInstance<UitlegVertoonFragment>()
+            .firstOrNull()
+
+        vertoonFragment?.updateBiometricToggle(enabled)
     }
 
     private fun tryLoadCalendars() {
@@ -232,7 +312,8 @@ class UitlegActivity : AuthBaseActivity(), UitlegCalendarSelectionListener {
     }
 }
 
-class UitlegPagerAdapter(activity: AppCompatActivity) : FragmentStateAdapter(activity) {
+class UitlegPagerAdapter(activity: androidx.appcompat.app.AppCompatActivity) :
+    FragmentStateAdapter(activity) {
     override fun getItemCount(): Int = 4
     override fun createFragment(position: Int): Fragment {
         return when (position) {

@@ -21,10 +21,10 @@ object ContactRepository {
      * Updates the set of WhatsApp contacts.
      */
     fun updateWhatsAppContacts(newContacts: Collection<String>) {
+        val copy = newContacts.toSet()
         _whatsappContacts.clear()
-        _whatsappContacts.addAll(newContacts)
-        // Emit a snapshot for observers
-        _contactsUpdateFlow.value = _whatsappContacts.toSet()
+        _whatsappContacts.addAll(copy)
+        _contactsUpdateFlow.value = copy
     }
 
     /**

@@ -85,4 +85,8 @@ class SyncPrefs(private val prefs: SharedPreferences) {
     var cardPhotoExpanded: Boolean
         get() = prefs.getBoolean("CARD_PHOTO_EXPANDED", true)
         set(value) = prefs.edit().putBoolean("CARD_PHOTO_EXPANDED", value).apply()
+
+    var photosCopiedFromAssets: Boolean
+        get() = prefs.getBoolean("photos_copied_from_assets", false)
+        set(value) = prefs.edit().putBoolean("photos_copied_from_assets", value).apply()
 }

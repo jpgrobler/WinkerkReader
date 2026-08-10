@@ -30,7 +30,7 @@
             android:padding="4dp"
             android:src="@drawable/ic_launcher_round" />
 
-        <!-- Primary text -->
+        <!-- Primary text (multi-line when several members share the number) -->
         <TextView
             android:id="@+id/oproepnommer"
             android:layout_width="wrap_content"
@@ -40,6 +40,7 @@
             android:text="@string/oproep_titel"
             android:textAppearance="?attr/textAppearanceBodyLarge"
             android:textColor="?attr/colorOnSurface"
+            android:maxLines="8"
             android:textStyle="bold" />
 
         <!-- Close button using ImageView instead of FAB -->

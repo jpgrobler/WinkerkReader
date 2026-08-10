@@ -92,25 +92,24 @@ object PermissionDefinitions {
         }
 
         // ── SMS ───────────────────────────────────────────────────────────────
-        add(
-            PermissionItem(
-                name = "Send SMS",
-                description = "Laat app toe om SMS te stuur",
-                permission = Manifest.permission.SEND_SMS,
-                type = PermissionType.RUNTIME,
-                context = context
-            )
-        )
-        add(
-            PermissionItem(
-                name = "Read SMS",
-                description = "Laat app toe om SMS'e te lees",
-                permission = Manifest.permission.READ_SMS,
-                type = PermissionType.RUNTIME,
-                context = context
-            )
-        )
-
+//        add(
+//            PermissionItem(
+//                name = "Send SMS",
+//                description = "Laat app toe om SMS te stuur",
+//                permission = Manifest.permission.SEND_SMS,
+//                type = PermissionType.RUNTIME,
+//                context = context
+//            )
+//        )
+//        add(
+//            PermissionItem(
+//                name = "Read SMS",
+//                description = "Laat app toe om SMS'e te lees",
+//                permission = Manifest.permission.READ_SMS,
+//                type = PermissionType.RUNTIME,
+//                context = context
+//            )
+//        )
         // ── Contacts ──────────────────────────────────────────────────────────
         add(
             PermissionItem(

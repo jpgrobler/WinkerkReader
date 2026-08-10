@@ -14,8 +14,11 @@ import androidx.paging.LoadState
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.BuildConfig
+import za.co.jpsoft.winkerkreader.data.members.repository.ChurchInfoRepository
 import za.co.jpsoft.winkerkreader.data.members.setup.DatabaseInitializer
 import za.co.jpsoft.winkerkreader.data.pastoral.PastoralDatabase
 import za.co.jpsoft.winkerkreader.databinding.ActivityMainBinding
@@ -61,7 +64,8 @@ class MainActivityInitializer(
     private val databaseInitializer: DatabaseInitializer,
     private val callLogImporter: CallLogImporter,
     private val navigationController: MainNavigationController,
-    private val backupPrefs: BackupPrefs
+    private val backupPrefs: BackupPrefs,
+    private val churchInfoRepo: ChurchInfoRepository
 ) {
     // ─── Dependencies ──────────────────────────────────────────────────────────
 
@@ -496,6 +500,14 @@ class MainActivityInitializer(
 
     private fun loadInitialData() {
         if (BuildConfig.DEBUG) Log.d("MainActivityInit", "loadInitialData: started")
+
+        // Reload church info to make sure preferences are populated if they were just seeded
+        lifecycleScope.launch(Dispatchers.IO) {
+            churchInfoRepo.loadChurchInfo()
+            withContext(Dispatchers.Main) {
+                chipController.setup() // Re-populate chips with newly loaded data
+            }
+        }
 
         if (::adapter.isInitialized && adapter.itemCount > 0) {
             val scrollState = MemberListScrollHelper.saveScrollState(binding.lidmaatList, adapter)

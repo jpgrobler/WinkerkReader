@@ -3,10 +3,14 @@ package za.co.jpsoft.winkerkreader.data.pastoral
 import android.content.Context
 import android.util.Log
 import androidx.room.RoomDatabase
+import androidx.room.withTransaction
 import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import za.co.jpsoft.winkerkreader.BuildConfig
+import za.co.jpsoft.winkerkreader.data.pastoral.PastoralDatabaseInitializer.Companion.seedMutex
 import za.co.jpsoft.winkerkreader.data.pastoral.entities.PastoralMetaEntity
 import za.co.jpsoft.winkerkreader.data.pastoral.entities.ReminderTemplateEntity
 import za.co.jpsoft.winkerkreader.data.pastoral.entities.TemplateStepEntity
@@ -18,38 +22,61 @@ import za.co.jpsoft.winkerkreader.utils.DeviceIdManager
  *
  * Invoked from [PastoralDatabase] via [RoomDatabase.Callback.onCreate] and an idempotent
  * post-build check so existing installs are not re-seeded.
+ *
+ * Guarded by [seedMutex] because [PastoralDatabase.getInstance] can be reached concurrently
+ * from more than one initialization path (DI resolution, demo-data seeding, asset photo
+ * copying) — without this guard, two overlapping first-run calls can both pass the
+ * "is it empty?" check before either has written anything, causing duplicate/racing writes
+ * against a database still mid-creation.
  */
 class PastoralDatabaseInitializer(private val context: Context) {
 
     suspend fun seedIfEmpty(database: PastoralDatabase) {
-        if (database.pastoralMetaDao().get() != null) {
-            return
+        seedMutex.withLock {
+            // Re-check inside the lock — another caller may have just finished seeding
+            // while this one was waiting for the lock.
+            if (database.pastoralMetaDao().get() != null) {
+                if (BuildConfig.DEBUG) Log.d(TAG, "Pastoral DB already seeded — skipping")
+                return
+            }
+            seed(database)
         }
-        seed(database)
     }
 
     suspend fun seed(database: PastoralDatabase) {
         val now = System.currentTimeMillis()
-        val templateDao = database.reminderTemplateDao()
-        val metaDao = database.pastoralMetaDao()
 
-        metaDao.upsert(
-            PastoralMetaEntity(
-                deviceId = DeviceIdManager.getDeviceId(context),
-                congregationName = null,
-                lastBackupUtc = null
+        // All-or-nothing: if this is interrupted partway (e.g. process death), a retry
+        // won't find a half-seeded pastoral_meta row that would make seedIfEmpty()
+        // wrongly think seeding already happened.
+        database.withTransaction {
+            val templateDao = database.reminderTemplateDao()
+            val metaDao = database.pastoralMetaDao()
+
+            metaDao.upsert(
+                PastoralMetaEntity(
+                    deviceId = DeviceIdManager.getDeviceId(context),
+                    congregationName = null,
+                    lastBackupUtc = null
+                )
             )
-        )
 
-        val templates = buildSystemTemplates(now)
-        templateDao.insertTemplates(templates.map { it.template })
-        templateDao.insertSteps(templates.flatMap { it.steps })
+            val templates = buildSystemTemplates(now)
+            templateDao.insertTemplates(templates.map { it.template })
+            templateDao.insertSteps(templates.flatMap { it.steps })
 
-        if (BuildConfig.DEBUG) Log.i(TAG, "Seeded ${templates.size} pastoral reminder templates")
+            if (BuildConfig.DEBUG) Log.i(
+                TAG,
+                "Seeded ${templates.size} pastoral reminder templates"
+            )
+        }
     }
 
     companion object {
         private const val TAG = "PastoralDbInitializer"
+
+        /** Serializes first-run seeding across all callers/threads. */
+        private val seedMutex = Mutex()
 
         private const val TEMPLATE_ID_NA_STERF = "sys-NA_STERF"
         private const val TEMPLATE_ID_OPERASIE = "sys-OPERASIE"
@@ -81,6 +108,11 @@ class PastoralDatabaseInitializer(private val context: Context) {
                 ?.steps
         }
 
+        /**
+         * Blocking convenience wrapper for call sites that can't be suspend
+         * (e.g. Room's synchronous [RoomDatabase.Callback]). Safe to call from
+         * multiple threads — [seedIfEmpty]'s internal mutex serializes them.
+         */
         fun seedIfEmptyBlocking(context: Context, database: PastoralDatabase) {
             runBlocking(Dispatchers.IO) {
                 PastoralDatabaseInitializer(context.applicationContext).seedIfEmpty(database)
@@ -177,8 +209,6 @@ class PastoralDatabaseInitializer(private val context: Context) {
                     step("sys-SIEKTE", 4, 14, "2 weke na siekte")
                 )
             ),
-
-            // ===== NEW: TRAUMA =====
             SeedTemplate(
                 template = ReminderTemplateEntity(
                     templateId = "sys-TRAUMA",

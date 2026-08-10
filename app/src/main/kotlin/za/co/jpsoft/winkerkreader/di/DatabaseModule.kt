@@ -15,10 +15,21 @@ import za.co.jpsoft.winkerkreader.data.members.dao.MemberDao
 import za.co.jpsoft.winkerkreader.data.members.setup.WinkerkDatabase
 import za.co.jpsoft.winkerkreader.data.pastoral.PastoralDatabase
 import za.co.jpsoft.winkerkreader.data.pastoral.dao.FollowUpReminderDao
-
+import za.co.jpsoft.winkerkreader.data.pastoral.dao.PastoralNoteDao
+import za.co.jpsoft.winkerkreader.data.pastoral.dao.ReminderTemplateDao
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
+
+    @Provides
+    @Singleton
+    fun providePastoralNoteDao(database: PastoralDatabase): PastoralNoteDao =
+        database.pastoralNoteDao()
+
+    @Provides
+    @Singleton
+    fun provideReminderTemplateDao(database: PastoralDatabase): ReminderTemplateDao =
+        database.reminderTemplateDao()
 
     @Provides
     @Singleton

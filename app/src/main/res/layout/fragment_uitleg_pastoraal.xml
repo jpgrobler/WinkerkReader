@@ -155,7 +155,8 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/tasks_deel_elke_keer"
-                            android:textColor="?attr/colorOnSurface" />
+                            android:textColor="?attr/colorOnSurface"
+                            android:visibility="gone" />
 
                     </RadioGroup>
 

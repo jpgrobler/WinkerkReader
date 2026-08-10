@@ -553,7 +553,7 @@ object WinkerkContract {
 
         @JvmStatic
         fun getFotoDir(context: Context): String {
-            val dir = File(getWkrDir(context), "Fotos")
+            val dir = File(getWkrDir(context), "fotos")
             if (!dir.exists()) dir.mkdirs()
             return dir.absolutePath + "/"
         }

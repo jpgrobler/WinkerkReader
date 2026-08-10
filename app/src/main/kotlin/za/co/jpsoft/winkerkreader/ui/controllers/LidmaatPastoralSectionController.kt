@@ -16,6 +16,7 @@ import za.co.jpsoft.winkerkreader.data.pastoral.entities.PastoralNoteEntity
 import za.co.jpsoft.winkerkreader.data.pastoral.model.TemplateContext
 import za.co.jpsoft.winkerkreader.data.pastoral.repository.PastoralNoteRepository
 import za.co.jpsoft.winkerkreader.databinding.LidmaatDetailBinding
+import za.co.jpsoft.winkerkreader.ui.activities.AuthBaseActivity
 import za.co.jpsoft.winkerkreader.ui.adapters.PastoralNoteAdapter
 import za.co.jpsoft.winkerkreader.ui.adapters.PendingReminderMiniAdapter
 import za.co.jpsoft.winkerkreader.ui.bottomsheets.StelHerinneringBottomSheet
@@ -51,13 +52,17 @@ class LidmaatPastoralSectionController(
 
     // ─── Dependencies ─────────────────────────────────────────────────────────
     private val noteRepo = PastoralNoteRepository(activity)
-    private val authManager = NoteAuthManager(activity)
+    private val authManager = NoteAuthManager(activity) { intent, callback ->
+        (activity as? AuthBaseActivity)?.launchDeviceCredential(intent, callback)
+    }
 
     // ─── Adapters ────────────────────────────────────────────────────────────
     private val miniAdapter = PendingReminderMiniAdapter(
         onComplete = { reminderId -> pastoralViewModel.completeReminder(reminderId) },
         onClick = { reminderId -> showReminderDetailsDialog(reminderId) }   // passes ID
     )
+
+    // In main/kotlin/za/co/jpsoft/winkerkreader/ui/controllers/LidmaatPastoralSectionController.kt
 
     private val notaAdapter = PastoralNoteAdapter(
         onEdit = { note ->
@@ -79,10 +84,12 @@ class LidmaatPastoralSectionController(
                 .show()
         },
         onConfidentialTap = { note ->
-            if (!NoteAuthManager.isAuthAvailable(activity)) {
-                revealNoteTemporarily(note.noteId)
+            // 1. If the note is already revealed temporarily, do nothing or re-secure it
+            if (note.noteId in autoHideTokens) { // or check adapter state
                 return@PastoralNoteAdapter
             }
+
+            // 2. Force strict check
             authManager.authenticate(
                 onSuccess = { revealNoteTemporarily(note.noteId) },
                 onFailure = { reason ->

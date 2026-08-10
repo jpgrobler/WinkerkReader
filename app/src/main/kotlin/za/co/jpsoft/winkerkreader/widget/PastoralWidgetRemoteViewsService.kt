@@ -19,7 +19,6 @@ import za.co.jpsoft.winkerkreader.data.members.setup.WinkerkDatabase
 import za.co.jpsoft.winkerkreader.data.pastoral.PastoralDatabase
 import za.co.jpsoft.winkerkreader.data.pastoral.entities.FollowUpReminderEntity
 import za.co.jpsoft.winkerkreader.utils.Utils.toLocalDateSafe
-import za.co.jpsoft.winkerkreader.utils.widget.PastoralWidgetDependencies
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -141,9 +140,14 @@ class PastoralWidgetRemoteViewsService : RemoteViewsService() {
             views.setInt(R.id.widget_pastoral_item_root, "setBackgroundColor", bgColor)
 
             // ─── Congregation colour indicator ────────────────────────────────
-            // Use injected CongregationPrefs via the static holder
+            // ✅ Obtain CongregationPrefs safely via Hilt EntryPoint
+            val entryPoint = dagger.hilt.android.EntryPointAccessors.fromApplication(
+                context,
+                za.co.jpsoft.winkerkreader.di.CongregationPrefsEntryPoint::class.java
+            )
+            val congregationPrefs = entryPoint.congregationPrefs()
+
             val congregationName = getMemberCongregationCached(reminder.memberGuid, context)
-            val congregationPrefs = PastoralWidgetDependencies.congregationPrefs
             val congregationColor = when (congregationName) {
                 congregationPrefs.gemeenteNaam -> congregationPrefs.gemeenteKleur
                 congregationPrefs.gemeente2Naam -> congregationPrefs.gemeente2Kleur

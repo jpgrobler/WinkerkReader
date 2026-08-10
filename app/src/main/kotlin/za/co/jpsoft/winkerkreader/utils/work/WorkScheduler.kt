@@ -13,6 +13,7 @@ import za.co.jpsoft.winkerkreader.utils.prefs.BirthdaySmsPrefs
 import za.co.jpsoft.winkerkreader.utils.prefs.MemberListPrefs
 import za.co.jpsoft.winkerkreader.utils.prefs.SyncPrefs
 import za.co.jpsoft.winkerkreader.workers.PastoralBackupWorker
+import za.co.jpsoft.winkerkreader.workers.PastoralDemoSeedWorker
 import za.co.jpsoft.winkerkreader.workers.WidgetRefreshWorker
 import java.util.concurrent.TimeUnit
 
@@ -89,5 +90,18 @@ class WorkScheduler @Inject constructor(
         } else {
             PastoralBackupWorker.cancel(context)
         }
+    }
+
+    fun schedulePastoralDemoSeed(initialDelay: Long = 15, unit: TimeUnit = TimeUnit.SECONDS) {
+        val request = OneTimeWorkRequestBuilder<PastoralDemoSeedWorker>()
+            .setInitialDelay(initialDelay, unit)
+            .build()
+        WorkManager.getInstance(context).enqueueUniqueWork(
+            "pastoral_demo_seed_work",
+            // REPLACE so a prior FAILURE (e.g. missing Hilt worker factory) can be retried
+            // when DatabaseInitializer schedules again after a fresh demo install.
+            ExistingWorkPolicy.REPLACE,
+            request
+        )
     }
 }

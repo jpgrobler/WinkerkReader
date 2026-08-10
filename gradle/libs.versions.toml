@@ -55,6 +55,8 @@ espresso = "3.7.0"
 testRules = "1.7.0"
 testRunner = "1.7.0"
 uiautomator = "2.4.0"
+hiltCommon = "1.4.0"
+hiltWork = "1.4.0"
 
 [libraries]
 # Core Android
@@ -140,6 +142,9 @@ androidx-test-espresso-accessibility = { group = "androidx.test.espresso", name 
 androidx-test-rules = { group = "androidx.test", name = "rules", version.ref = "testRules" }
 androidx-test-runner = { group = "androidx.test", name = "runner", version.ref = "testRunner" }
 androidx-test-uiautomator = { group = "androidx.test.uiautomator", name = "uiautomator", version.ref = "uiautomator" }
+androidx-hilt-common = { group = "androidx.hilt", name = "hilt-common", version.ref = "hiltCommon" }
+androidx-hilt-work = { group = "androidx.hilt", name = "hilt-work", version.ref = "hiltWork" }
+androidx-hilt-compiler = { group = "androidx.hilt", name = "hilt-compiler", version.ref = "hiltWork" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

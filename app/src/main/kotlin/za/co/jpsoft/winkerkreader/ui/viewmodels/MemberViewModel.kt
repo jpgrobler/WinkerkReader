@@ -128,6 +128,7 @@ class MemberViewModel @Inject constructor(
                     _congregationFilter
                 )
             ) { args ->
+                @Suppress("UNCHECKED_CAST")
                 PagingParams(
                     sort = args[0] as String,
                     search = args[1] as String,
@@ -306,6 +307,7 @@ class MemberViewModel @Inject constructor(
             _filterList, _eventType, _congregationFilter, _refreshTrigger
         )
     ) { args ->
+        @Suppress("UNCHECKED_CAST")
         PagingParams(
             sort = args[0] as String,
             search = args[1] as String,
