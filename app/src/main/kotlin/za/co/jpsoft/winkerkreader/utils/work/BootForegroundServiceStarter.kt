@@ -61,11 +61,6 @@ class BootForegroundServiceStarter : Service() {
                 CallMonitoringService::class.java
             )
 
-            // Start Keep Alive Service (if not already running)
-            ServiceUtils.startServiceIfNotRunning(
-                this,
-                ServiceKeepAlive::class.java
-            )
 
             if (BuildConfig.DEBUG) {
                 Log.d(TAG, "✅ Monitoring services started/verified")

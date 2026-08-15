@@ -146,7 +146,7 @@
                                 android:gravity="center_vertical"
                                 android:orientation="horizontal">
 
-                                <Button
+                                <com.google.android.material.button.MaterialButton
                                     android:id="@+id/laai_laai"
                                     style="@style/Widget.Material3.Button"
                                     android:layout_width="0dp"
@@ -156,7 +156,7 @@
                                     android:text="@string/laai_button"
                                     ns2:visibility="gone" />
 
-                                <Button
+                                <com.google.android.material.button.MaterialButton
                                     android:id="@+id/laai_picker"
                                     style="@style/Widget.Material3.Button"
                                     android:layout_width="wrap_content"
@@ -292,7 +292,7 @@
                                         android:textSize="13sp" />
                                 </com.google.android.material.textfield.TextInputLayout>
 
-                                <Button
+                                <com.google.android.material.button.MaterialButton
                                     android:id="@+id/dbLinkButton"
                                     style="@style/Widget.Material3.Button"
                                     android:layout_width="wrap_content"
@@ -465,7 +465,7 @@
                                     android:orientation="vertical"
                                     android:paddingLeft="8dp">
 
-                                    <Button
+                                    <com.google.android.material.button.MaterialButton
                                         android:id="@+id/laai_socket"
                                         style="@style/Widget.Material3.Button"
                                         android:layout_width="wrap_content"
@@ -473,7 +473,7 @@
                                         android:layout_marginBottom="4dp"
                                         android:text="@string/laai_wifi" />
 
-                                    <Button
+                                    <com.google.android.material.button.MaterialButton
                                         android:id="@+id/laai_USB"
                                         style="@style/Widget.Material3.Button"
                                         android:layout_width="wrap_content"
@@ -579,7 +579,7 @@
                                     android:textColor="?attr/colorOnSurfaceVariant" />
                             </LinearLayout>
 
-                            <Button
+                            <com.google.android.material.button.MaterialButton
                                 android:id="@+id/start_photo_sync"
                                 style="@style/Widget.Material3.Button"
                                 android:layout_width="wrap_content"

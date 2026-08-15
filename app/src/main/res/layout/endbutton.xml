@@ -5,7 +5,7 @@
     android:background="?attr/colorSurface"
     android:orientation="horizontal">
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/end_call"
         style="@style/Widget.WinkerkReader.Button.Primary"
         android:layout_width="wrap_content"

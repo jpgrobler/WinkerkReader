@@ -133,7 +133,7 @@ class MemberPhotoController(
 
                 Glide.with(binding.detailKontakFoto)
                     .load(file)
-                    .override(pixels, pixels)
+                    .override(200, 200)
                     .centerCrop()
                     .placeholder(R.drawable.kontak)
                     .error(R.drawable.kontak)
@@ -149,10 +149,7 @@ class MemberPhotoController(
     }
 
     private fun setDefaultPhoto() {
-        val pixels = photoPixels(50)
-        binding.detailKontakFoto.layoutParams.height = pixels
-        binding.detailKontakFoto.layoutParams.width = pixels
-        binding.detailKontakFoto.requestLayout()
+        // Remove dynamic layout changes here as well
         binding.detailKontakFoto.setImageResource(R.drawable.kontak)
         binding.detailKontakFoto.tag = "default"
     }

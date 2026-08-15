@@ -175,13 +175,13 @@
 
 
             <!-- Progress Bar -->
-            <ProgressBar
+            <com.google.android.material.progressindicator.LinearProgressIndicator
                 android:id="@+id/verjaar_progress"
-                style="?android:attr/progressBarStyleHorizontal"
                 android:layout_width="match_parent"
                 android:layout_height="4dp"
-                android:progressTint="?attr/colorPrimary"
-                android:visibility="gone" />
+                android:indeterminate="true"
+                android:visibility="gone"
+                app:indicatorColor="?attr/colorPrimary" />
 
             <!-- RecyclerView for Member List -->
             <androidx.recyclerview.widget.RecyclerView

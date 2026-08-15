@@ -8,7 +8,6 @@ import android.util.Log
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.services.BootForegroundServiceStarter
 import za.co.jpsoft.winkerkreader.services.CallMonitoringService
-import za.co.jpsoft.winkerkreader.services.ServiceKeepAlive
 import za.co.jpsoft.winkerkreader.services.WhatsAppNotificationService
 
 object ServiceUtils {
@@ -28,10 +27,6 @@ object ServiceUtils {
 
                 CallMonitoringService::class.java -> {
                     CallMonitoringService.isRunning()
-                }
-
-                ServiceKeepAlive::class.java -> {
-                    ServiceKeepAlive.isRunning()
                 }
 
                 BootForegroundServiceStarter::class.java -> {
@@ -162,7 +157,6 @@ object ServiceUtils {
         val ourServices = listOf(
             WhatsAppNotificationService::class.java,
             CallMonitoringService::class.java,
-            ServiceKeepAlive::class.java,
             BootForegroundServiceStarter::class.java
         )
         return isAnyServiceRunning(context, ourServices)

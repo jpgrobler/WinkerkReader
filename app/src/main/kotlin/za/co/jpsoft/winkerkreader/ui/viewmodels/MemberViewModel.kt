@@ -60,7 +60,8 @@ class MemberViewModel @Inject constructor(
     private val sortOrderFlow = savedStateHandle.getStateFlow(KEY_SORT_ORDER, "VAN")
     private val soekFlow = savedStateHandle.getStateFlow(KEY_SOEK, "")
     private val recordStatusFlow = savedStateHandle.getStateFlow(KEY_RECORD_STATUS, "0")
-
+    private val _noteGuids = MutableStateFlow<Set<String>?>(null)
+    private val _reminderGuids = MutableStateFlow<Set<String>?>(null)
     var sortOrder: String
         get() = savedStateHandle[KEY_SORT_ORDER] ?: "VAN"
         set(value) {
@@ -101,7 +102,7 @@ class MemberViewModel @Inject constructor(
 
     // ─── Paging‑driving StateFlows ──────────────────────────────────────────
     private val _filterList = MutableStateFlow<ArrayList<FilterBox>?>(null)
-    private val _eventType = MutableStateFlow("LIDMAAT_DATA")
+    val _eventType = MutableStateFlow("LIDMAAT_DATA")
 
     private val _totalCount = MutableStateFlow(0)
     val totalCount: StateFlow<Int> = _totalCount.asStateFlow()
@@ -297,14 +298,17 @@ class MemberViewModel @Inject constructor(
         val status: String,
         val filters: ArrayList<FilterBox>?,
         val eventType: String,
-        val congregations: Set<String>
+        val congregations: Set<String>,
+        val noteGuids: Set<String>? = null,
+        val reminderGuids: Set<String>? = null
     )
 
     // ─── Paging flow — use initialKey for birthday sort ─────────────────────────
     private val pagingDataFlow = combine(
         listOf(
             sortOrderFlow, soekFlow, recordStatusFlow,
-            _filterList, _eventType, _congregationFilter, _refreshTrigger
+            _filterList, _eventType, _congregationFilter, _refreshTrigger,
+            _noteGuids, _reminderGuids
         )
     ) { args ->
         @Suppress("UNCHECKED_CAST")
@@ -314,7 +318,9 @@ class MemberViewModel @Inject constructor(
             status = args[2] as String,
             filters = args[3] as ArrayList<FilterBox>?,
             eventType = args[4] as String,
-            congregations = args[5] as Set<String>
+            congregations = args[5] as Set<String>,
+            noteGuids = args[7] as Set<String>?,
+            reminderGuids = args[8] as Set<String>?
         )
     }.flatMapLatest { params ->
         if (params.eventType != "LIDMAAT_DATA_VERJAAR") {
@@ -346,7 +352,9 @@ class MemberViewModel @Inject constructor(
         filterList = params.filters,
         sortOrder = params.sort,
         congregations = params.congregations.toList(),
-        pageSize = 50
+        pageSize = 50,
+        noteGuids = params.noteGuids,
+        reminderGuids = params.reminderGuids
     )
 
 // ─── New public method for birthday sort ────────────────────────────────────
@@ -424,7 +432,7 @@ class MemberViewModel @Inject constructor(
         _eventType.value = eventTypeFor(sortOrder)
     }
 
-    private fun eventTypeFor(sort: String): String = when (sort) {
+    fun eventTypeFor(sort: String): String = when (sort) {
         "ADRES" -> "LIDMAAT_DATA_ADRES"
         "GESINNE" -> "GESINNE_DATA"
         "WYK" -> "LIDMAAT_DATA_WYK"
@@ -507,5 +515,15 @@ class MemberViewModel @Inject constructor(
             todayDay = day,
             congregations = _congregationFilter.value.toList()
         )
+    }
+
+    fun updateNoteGuids(guids: Set<String>) {
+        _noteGuids.value = guids
+        refresh()
+    }
+
+    fun updateReminderGuids(guids: Set<String>) {
+        _reminderGuids.value = guids
+        refresh()
     }
 }

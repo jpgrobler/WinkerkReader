@@ -7,19 +7,34 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.materialswitch.MaterialSwitch
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
+import dagger.hilt.android.AndroidEntryPoint
+import jakarta.inject.Inject
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.models.FilterBox
+import za.co.jpsoft.winkerkreader.data.pastoral.dao.FollowUpReminderDao
+import za.co.jpsoft.winkerkreader.data.pastoral.repository.PastoralNoteRepository
 import za.co.jpsoft.winkerkreader.databinding.FragmentFilterBinding
 import za.co.jpsoft.winkerkreader.ui.activities.MainActivity
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel
 
+@AndroidEntryPoint
 class FilterBottomSheet : BottomSheetDialogFragment() {
+
+    @Inject
+    lateinit var pastoralNoteRepository: PastoralNoteRepository
+
+    @Inject
+    lateinit var followUpReminderDao: FollowUpReminderDao
 
     private var _binding: FragmentFilterBinding? = null
     private val binding get() = _binding!!
@@ -74,11 +89,8 @@ class FilterBottomSheet : BottomSheetDialogFragment() {
 
         if (BuildConfig.DEBUG) {
             Log.d(TAG, "Original sort order: $originalSortOrder")
-            if (BuildConfig.DEBUG) Log.d(TAG, "Original record status: $originalRecordStatus")
-            if (BuildConfig.DEBUG) Log.d(
-                TAG,
-                "Original filter list size: ${originalFilterList?.size ?: 0}"
-            )
+            Log.d(TAG, "Original record status: $originalRecordStatus")
+            Log.d(TAG, "Original filter list size: ${originalFilterList?.size ?: 0}")
         }
 
         setupAutoCompleteTextViews()
@@ -194,6 +206,8 @@ class FilterBottomSheet : BottomSheetDialogFragment() {
                     binding.filterOuderdom1.setText(filter.text1)
                     binding.filterOuderdom2.setText(filter.text2)
                 }
+                "Note" -> binding.filterNota.isChecked = filter.checked
+                "Reminder" -> binding.filterHerinnering.isChecked = filter.checked
             }
         }
     }
@@ -265,6 +279,8 @@ class FilterBottomSheet : BottomSheetDialogFragment() {
         addSwitchFilter("Landlyn", binding.filterLandlyn, filterList)
         addSwitchFilter("E-pos", binding.filterEpos, filterList)
         addSwitchFilter("Gesinshoof", binding.filterGesinshoof, filterList)
+        addSwitchFilter("Note", binding.filterNota, filterList)
+        addSwitchFilter("Reminder", binding.filterHerinnering, filterList)
 
         // 3. Complex filters (select list)
         addComplexFilter("Geslag", binding.filterGeslagCheck, binding.filterGeslagOpsies.text.toString(), filterList)
@@ -296,13 +312,38 @@ class FilterBottomSheet : BottomSheetDialogFragment() {
         val hasActiveFilter = filterList.any { it.checked }
         val activity = activity as? MainActivity
 
-        if (hasActiveFilter) {
-            // Apply via coordinator
-            activity?.searchFilterCoordinator?.applyFilterResult(ArrayList(filterList), viewModel.sortOrder)
-            activity?.searchFilterCoordinator?.updateSummaryView()
-        } else {
-            // No filters → clear everything and restore original sort
-            activity?.searchFilterCoordinator?.clearAndRestore()
+        // ─── NEW: Update note/reminder GUIDs in ViewModel ──────────
+        lifecycleScope.launch {
+            val noteGuids = if (binding.filterNota.isChecked) {
+                withContext(Dispatchers.IO) {
+                    pastoralNoteRepository.getMemberGuidsWithNotes().toSet()
+                }
+            } else {
+                emptySet()
+            }
+            viewModel.updateNoteGuids(noteGuids)
+
+            val reminderGuids = if (binding.filterHerinnering.isChecked) {
+                withContext(Dispatchers.IO) {
+                    followUpReminderDao.getAllPending()
+                        .mapNotNull { it.memberGuid?.takeIf { guid -> guid.isNotBlank() } }
+                        .distinct()
+                        .toSet()
+                }
+            } else {
+                emptySet()
+            }
+            viewModel.updateReminderGuids(reminderGuids)
+
+            if (hasActiveFilter) {
+                activity?.searchFilterCoordinator?.applyFilterResult(
+                    ArrayList(filterList),
+                    viewModel.sortOrder
+                )
+                activity?.searchFilterCoordinator?.updateSummaryView()
+            } else {
+                activity?.searchFilterCoordinator?.clearAndRestore()
+            }
         }
 
         // Dismiss is handled by the button click listener
@@ -363,7 +404,9 @@ class FilterBottomSheet : BottomSheetDialogFragment() {
             binding.filterNoemnaamCheck,
             binding.filterNooiensvanCheck,
             binding.filterWykCheck,
-            binding.filterOuderdomCheck
+            binding.filterOuderdomCheck,
+            binding.filterNota,
+            binding.filterHerinnering
         ).forEach { it.isChecked = false }
 
         // Clear EditTexts
@@ -388,6 +431,10 @@ class FilterBottomSheet : BottomSheetDialogFragment() {
 
         // Re‑enable/disable fields accordingly
         setupListeners()
+
+        // ─── NEW: Clear GUIDs in ViewModel ──────────
+        viewModel.updateNoteGuids(emptySet())
+        viewModel.updateReminderGuids(emptySet())
     }
 
     private fun resetAutoCompleteTextView(view: MaterialAutoCompleteTextView, defaultText: String) {

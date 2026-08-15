@@ -1,6 +1,7 @@
 package za.co.jpsoft.winkerkreader
 
 import android.app.Application
+import android.content.Context
 import android.os.Build
 import android.util.Log
 import androidx.appcompat.app.AppCompatDelegate
@@ -24,6 +25,8 @@ import za.co.jpsoft.winkerkreader.data.members.setup.DatabaseInitializer
 import za.co.jpsoft.winkerkreader.utils.AppInitializer
 import za.co.jpsoft.winkerkreader.utils.AssetPhotoCopier
 import za.co.jpsoft.winkerkreader.utils.CallLogImporter
+import za.co.jpsoft.winkerkreader.utils.CrashRecovery
+import za.co.jpsoft.winkerkreader.utils.LocaleHelper
 import za.co.jpsoft.winkerkreader.utils.db.PastoralDatabaseBackup
 import za.co.jpsoft.winkerkreader.utils.prefs.AppearancePrefs
 import za.co.jpsoft.winkerkreader.utils.prefs.AppearancePrefs.ThemeMode
@@ -33,6 +36,7 @@ import za.co.jpsoft.winkerkreader.utils.prefs.CongregationPrefs
 import za.co.jpsoft.winkerkreader.utils.prefs.SyncPrefs
 import za.co.jpsoft.winkerkreader.utils.prefs.WidgetPrefs
 import za.co.jpsoft.winkerkreader.utils.security.AppAuthState
+import za.co.jpsoft.winkerkreader.utils.security.EncryptedPrefsManager
 import za.co.jpsoft.winkerkreader.utils.widget.PastoralWidgetDependencies
 import za.co.jpsoft.winkerkreader.utils.work.WorkScheduler
 import za.co.jpsoft.winkerkreader.widget.WidgetDataRepository
@@ -89,7 +93,19 @@ open class WinkerkReader : Application(), Configuration.Provider {
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     override fun onCreate() {
+        if (CrashRecovery.shouldForce60Hz(this)) {
+            // Skakel 60Hz aan en herstel instellings
+            getSharedPreferences("WinkerkReader_UserInfo", MODE_PRIVATE)
+                .edit().putBoolean("force_60hz", true).apply()
+            // Teller reset sodat die app kan herstel
+            CrashRecovery.recordSuccess(this)
+        }
+        CrashRecovery.recordStart(this)
         super.onCreate()
+
+        // Optional: Migrate encrypted prefs from old EncryptedSharedPreferences to SafeBox
+        // (Only runs once; safe to leave in permanently. Remove if data loss is acceptable.)
+        // EncryptedPrefsManager.attemptMigration(this)
 
         // Force WorkManager to use our Hilt factory – overrides any early default init
         try {
@@ -157,6 +173,11 @@ open class WinkerkReader : Application(), Configuration.Provider {
         scheduleWidgetRefreshWithDelay()
     }
 
+    override fun attachBaseContext(base: Context) {
+        val languageCode = LocaleHelper.getPersistedLanguage(base)
+        val context = LocaleHelper.setLocale(base, languageCode)
+        super.attachBaseContext(context)
+    }
     protected open fun createLeakCanaryHelper(): LeakCanaryHelper {
         return NoOpLeakCanaryHelper()
     }

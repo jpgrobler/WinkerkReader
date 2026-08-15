@@ -34,11 +34,12 @@ class PermissionManager(private val context: Context) {
                 //Manifest.permission.READ_SMS to "Read SMS",
                 //Manifest.permission.READ_PHONE_STATE to "Phone State",
                 Manifest.permission.READ_CALL_LOG to "Call Log",
-                Manifest.permission.READ_PHONE_NUMBERS to "Phone Numbers",
+                //Manifest.permission.READ_PHONE_NUMBERS to "Phone Numbers",
                 Manifest.permission.READ_CALENDAR to "Read Calendar",
                 Manifest.permission.WRITE_CALENDAR to "Write Calendar",
                 Manifest.permission.POST_NOTIFICATIONS to "Notifications",
-                Manifest.permission.SCHEDULE_EXACT_ALARM to "Exact Alarms"
+                Manifest.permission.SCHEDULE_EXACT_ALARM to "Exact Alarms",
+                Manifest.permission.RECORD_AUDIO to "Audio Recording"
             )
             return map[permission] ?: permission.substringAfterLast('.')
         }
@@ -52,6 +53,7 @@ class PermissionManager(private val context: Context) {
         const val RC_CALENDAR = 1006
         const val RC_NOTIFICATIONS = 1007
         const val RC_EXACT_ALARM = 1008
+        const val RC_AUDIO = 1009
         const val RC_OVERLAY = 1010
 
         // Permission groups
@@ -59,14 +61,18 @@ class PermissionManager(private val context: Context) {
             Manifest.permission.READ_CONTACTS,
             Manifest.permission.WRITE_CONTACTS
         )
-        val SMS_PERMISSIONS = arrayOf(
-            Manifest.permission.SEND_SMS
+
+        //        val SMS_PERMISSIONS = arrayOf(
+//            Manifest.permission.SEND_SMS
+//        )
+        val AUDIO_PERMISSIONS = arrayOf(
+            Manifest.permission.RECORD_AUDIO
         )
         val PHONE_PERMISSIONS = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             arrayOf(
                 Manifest.permission.READ_PHONE_STATE,
-                Manifest.permission.READ_CALL_LOG,
-                Manifest.permission.READ_PHONE_NUMBERS
+                Manifest.permission.READ_CALL_LOG
+                //Manifest.permission.READ_PHONE_NUMBERS
             )
         } else {
             arrayOf(
@@ -92,9 +98,10 @@ class PermissionManager(private val context: Context) {
         /** All runtime permissions that the app needs (excluding special ones). */
         val ALL_RUNTIME_PERMISSIONS = mutableListOf<String>().apply {
             addAll(CONTACT_PERMISSIONS)
-            addAll(SMS_PERMISSIONS)
+            //addAll(SMS_PERMISSIONS)
             addAll(PHONE_PERMISSIONS)
             addAll(CALENDAR_PERMISSIONS)
+            addAll(AUDIO_PERMISSIONS)
             addAll(NOTIFICATION_PERMISSIONS)
             addAll(EXACT_ALARM_PERMISSIONS)
         }.toTypedArray()
@@ -203,9 +210,10 @@ class PermissionManager(private val context: Context) {
 
     fun hasEssentialPermissions(): Boolean {
         return arePermissionsGranted(CONTACT_PERMISSIONS) &&
-                arePermissionsGranted(SMS_PERMISSIONS) &&
+                //arePermissionsGranted(SMS_PERMISSIONS) &&
                 arePermissionsGranted(PHONE_PERMISSIONS) &&
                 arePermissionsGranted(CALENDAR_PERMISSIONS) &&
+                arePermissionsGranted(AUDIO_PERMISSIONS) &&
                 (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || isPermissionGranted(
                     Manifest.permission.POST_NOTIFICATIONS
                 ))
@@ -253,15 +261,15 @@ class PermissionManager(private val context: Context) {
         )
     }
 
-    fun requestSmsPermissions(activity: Activity) {
-        requestWithRationale(
-            activity,
-            SMS_PERMISSIONS,
-            RC_SMS,
-            R.string.rationale_sms_title,
-            R.string.rationale_sms_message
-        )
-    }
+//    fun requestSmsPermissions(activity: Activity) {
+//        requestWithRationale(
+//            activity,
+//            SMS_PERMISSIONS,
+//            RC_SMS,
+//            R.string.rationale_sms_title,
+//            R.string.rationale_sms_message
+//        )
+//    }
 
     fun requestCalendarPermissions(activity: Activity) {
         requestWithRationale(
@@ -270,6 +278,16 @@ class PermissionManager(private val context: Context) {
             RC_CALENDAR,
             R.string.rationale_calendar_title,
             R.string.rationale_calendar_message
+        )
+    }
+
+    fun requestAudioPermissions(activity: Activity) {
+        requestWithRationale(
+            activity,
+            AUDIO_PERMISSIONS,
+            RC_AUDIO,
+            R.string.permission_audio_title,
+            R.string.permission_audio_rationale
         )
     }
 

@@ -1,9 +1,9 @@
-// StelHerinneringBottomSheet.kt
 package za.co.jpsoft.winkerkreader.ui.bottomsheets
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -19,6 +19,7 @@ import com.google.android.material.tabs.TabLayout
 import dagger.hilt.android.AndroidEntryPoint
 import jakarta.inject.Inject
 import kotlinx.coroutines.launch
+import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.pastoral.model.FamilyMember
 import za.co.jpsoft.winkerkreader.data.pastoral.model.ScheduleType
@@ -29,6 +30,7 @@ import za.co.jpsoft.winkerkreader.ui.adapters.ReminderPreviewAdapter
 import za.co.jpsoft.winkerkreader.ui.adapters.TemplatePickerAdapter
 import za.co.jpsoft.winkerkreader.ui.bottomsheets.controllers.FamilyMemberSpinnerController
 import za.co.jpsoft.winkerkreader.ui.bottomsheets.controllers.TemplateContextFormBuilder
+import za.co.jpsoft.winkerkreader.ui.utils.VoiceNoteHelper
 import za.co.jpsoft.winkerkreader.ui.viewmodels.LidmaatDetailPastoralViewModel
 import za.co.jpsoft.winkerkreader.ui.viewmodels.LidmaatDetailPastoralViewModelFactory
 import java.time.LocalDate
@@ -64,6 +66,9 @@ class StelHerinneringBottomSheet : BottomSheetDialogFragment() {
     private var isTimedMode = false
     private var currentPreviewItems: List<LidmaatDetailPastoralViewModel.PreviewItem> = emptyList()
 
+    // 👇 Single helper – no separate speech recognizer
+    private var voiceHelper: VoiceNoteHelper? = null
+
     private val dateFormatter = DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault())
 
     enum class Mode { TEMPLATE, ADHOC }
@@ -92,9 +97,7 @@ class StelHerinneringBottomSheet : BottomSheetDialogFragment() {
             container = binding.layoutContextFields,
             onMemberSelected = { member: FamilyMember? ->
                 if (member != null) {
-                    // Fill the 'deceasedName' text field if it exists
                     formBuilder.getTextField("deceasedName")?.setText(member.displayName)
-                    // Set the 'deceasedDob' date button if it exists
                     formBuilder.getDateButton("deceasedDob")?.let { btn ->
                         val label = btn.text.toString().substringBefore(':').trim()
                         val formatted = member.birthday.takeIf { it.isNotBlank() }?.let {
@@ -107,7 +110,6 @@ class StelHerinneringBottomSheet : BottomSheetDialogFragment() {
                         btn.text = if (formatted.isNotEmpty()) "$label: $formatted" else label
                     }
                 } else {
-                    // Clear fields
                     formBuilder.getTextField("deceasedName")?.setText("")
                     formBuilder.getDateButton("deceasedDob")?.let { btn ->
                         val label = btn.text.toString().substringBefore(':').trim()
@@ -121,6 +123,7 @@ class StelHerinneringBottomSheet : BottomSheetDialogFragment() {
         setupTemplatePanel()
         setupAdHocPanel()
         setupConfirmButton()
+        setupVoiceInput()   // ✅ Voice integration via helper
         observeViewModel()
 
         // Window insets
@@ -140,8 +143,10 @@ class StelHerinneringBottomSheet : BottomSheetDialogFragment() {
     }
 
     override fun onDestroyView() {
-        super.onDestroyView()
+        voiceHelper?.destroy()
+        voiceHelper = null
         _binding = null
+        super.onDestroyView()
     }
 
     // -------------------------------------------------------------------------
@@ -196,7 +201,7 @@ class StelHerinneringBottomSheet : BottomSheetDialogFragment() {
         binding.rvTemplates.apply {
             adapter = templateAdapter
             layoutManager = LinearLayoutManager(requireContext())
-            setHasFixedSize(false)
+            setHasFixedSize(true)
             isNestedScrollingEnabled = false
         }
 
@@ -207,7 +212,7 @@ class StelHerinneringBottomSheet : BottomSheetDialogFragment() {
         binding.rvPreview.apply {
             adapter = previewAdapter
             layoutManager = LinearLayoutManager(requireContext())
-            setHasFixedSize(false)
+            setHasFixedSize(true)
         }
 
         binding.btnAnchorDate.text = anchorDate.format(dateFormatter)
@@ -271,16 +276,16 @@ class StelHerinneringBottomSheet : BottomSheetDialogFragment() {
     // -------------------------------------------------------------------------
 
     private fun onTemplateSelected(templateCode: String) {
-        // Build the context fields from schema
+        spinnerController.remove()
         formBuilder.buildFor(templateCode)
-
-        // If the template is "NA_STERF", load family members via ViewModel
+        if (BuildConfig.DEBUG) Log.d(
+            "StelHerinnering",
+            "Template code: $templateCode, fields: ${TemplateContextSchema.fieldsFor(templateCode)}"
+        )
         if (templateCode == "NA_STERF") {
             val memberGuid = requireArguments().getString(ARG_MEMBER_GUID) ?: return
             val familyHeadGuid = requireArguments().getString(ARG_FAMILY_HEAD_GUID)
             viewModel.loadFamilyMembers(memberGuid, familyHeadGuid)
-        } else {
-            spinnerController.remove()
         }
     }
 
@@ -345,6 +350,7 @@ class StelHerinneringBottomSheet : BottomSheetDialogFragment() {
                 Mode.TEMPLATE -> {
                     val templateId = selectedTemplateId ?: return@setOnClickListener
                     val templateCode = selectedTemplateCode ?: ""
+                    val customNote = binding.etNote.text?.toString()?.trim()?.ifBlank { null }
 
                     val textValues = formBuilder.getTextValues()
                     val dateValues = formBuilder.getDateValues()
@@ -361,7 +367,8 @@ class StelHerinneringBottomSheet : BottomSheetDialogFragment() {
                         selectedItems = currentPreviewItems,
                         contextJson = if (TemplateContextSchema.hasContext(templateCode))
                             context.toJson()
-                        else null
+                        else null,
+                        note = customNote
                     )
                     dismiss()
                 }
@@ -417,16 +424,47 @@ class StelHerinneringBottomSheet : BottomSheetDialogFragment() {
             }
         }
 
-        // Observe family members and update the spinner
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.familyMembers.collect { members ->
                 if (members.isNotEmpty()) {
                     spinnerController.show(members)
-                } else {
-                    spinnerController.remove()
                 }
             }
         }
+    }
+
+    // -------------------------------------------------------------------------
+    // Voice Input (helper)
+    // -------------------------------------------------------------------------
+
+    private fun setupVoiceInput() {
+        voiceHelper = VoiceNoteHelper(
+            fragment = this,
+            tilField = binding.tilNote,
+            voiceStatusContainer = binding.voiceStatusContainer,
+            tvStatus = binding.tvVoiceStatus,
+            waveformView = binding.waveformView,
+            stopButton = binding.btnStopVoice,
+            onVoiceResult = { text ->
+                appendToNoteText(text)
+            }
+        )
+    }
+
+    private fun appendToNoteText(text: String) {
+        val currentText = binding.etNote.text?.toString() ?: ""
+        val newText = if (currentText.isEmpty()) text else "$currentText\n$text"
+        binding.etNote.setText(newText)
+        binding.etNote.setSelection(newText.length)
+        updateConfirmButton()
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        voiceHelper?.handlePermissionResult(requestCode, grantResults)
     }
 
     // -------------------------------------------------------------------------

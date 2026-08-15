@@ -84,13 +84,18 @@
             android:textColor="?attr/colorOnSurface"
             tools:text="25 Jun 2026" />
 
-        <!-- Note text -->
+        <!-- Note text with microphone icon -->
         <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilNotaTeks"
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            android:hint="@string/nota_teks_wenk">
+            android:hint="@string/nota_teks_wenk"
+            app:endIconContentDescription="@string/nota_dikteer"
+            app:endIconDrawable="@drawable/ic_microphone"
+            app:endIconMode="custom"
+            app:endIconTint="?attr/colorPrimary">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etNotaTeks"
@@ -103,6 +108,58 @@
                 android:textColor="?attr/colorOnSurface" />
 
         </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Voice input status indicator (hidden by default) -->
+        <LinearLayout
+            android:id="@+id/voiceStatusContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/bg_voice_status"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="12dp"
+            android:visibility="gone">
+
+            <com.google.android.material.progressindicator.CircularProgressIndicator
+                android:id="@+id/voiceProgressBar"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="12dp"
+                android:indeterminate="true"
+                app:indicatorColor="?attr/colorPrimary"
+                app:trackCornerRadius="12dp" />
+
+            <za.co.jpsoft.winkerkreader.ui.views.WaveformView
+                android:id="@+id/waveformView"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="12dp"
+                android:layout_weight="1"
+                android:background="?attr/colorSurfaceVariant"
+                android:padding="4dp" />
+
+            <TextView
+                android:id="@+id/tvVoiceStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="12dp"
+                android:text="@string/nota_luister"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?attr/colorOnSurface" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnStopVoice"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                android:text="@string/kanselleer"
+                android:textSize="12sp" />
+        </LinearLayout>
 
         <!-- Confidential toggle -->
         <com.google.android.material.materialswitch.MaterialSwitch
@@ -149,11 +206,12 @@
 
         </LinearLayout>
 
-        <ProgressBar
+        <com.google.android.material.progressindicator.LinearProgressIndicator
             android:id="@+id/saveProgress"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:progressTint="?attr/colorPrimary"
-            android:visibility="gone" />
+            android:indeterminate="true"
+            android:visibility="gone"
+            app:indicatorColor="?attr/colorPrimary" />
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

@@ -42,7 +42,7 @@
                     android:text="Laaste rugsteun: Geen"
                     android:textAppearance="?attr/textAppearanceBodyMedium" />
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnCreateBackup"
                     style="@style/Widget.Material3.Button"
                     android:layout_width="match_parent"
@@ -50,7 +50,7 @@
                     android:layout_marginTop="16dp"
                     android:text="Skep Rugsteun" />
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnShareBackup"
                     style="@style/Widget.Material3.Button.OutlinedButton"
                     android:layout_width="match_parent"
@@ -101,14 +101,14 @@
                     android:layout_marginTop="8dp"
                     android:nestedScrollingEnabled="false" />
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnPruneOld"
                     style="@style/Widget.Material3.Button.TextButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Verwyder ouer as 7 dae" />
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnRestore"
                     style="@style/Widget.Material3.Button"
                     android:layout_width="match_parent"
@@ -127,13 +127,13 @@
                     android:textColor="?attr/colorError" />
 
                 <!-- ProgressBar vir herstel -->
-                <ProgressBar
+                <com.google.android.material.progressindicator.LinearProgressIndicator
                     android:id="@+id/restoreProgress"
-                    style="?android:attr/progressBarStyleHorizontal"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:visibility="gone" />
+                    android:layout_height="4dp"
+                    android:indeterminate="true"
+                    android:visibility="gone"
+                    app:indicatorColor="?attr/colorPrimary" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
     </LinearLayout>

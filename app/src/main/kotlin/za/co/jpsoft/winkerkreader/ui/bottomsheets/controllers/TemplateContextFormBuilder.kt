@@ -2,12 +2,13 @@ package za.co.jpsoft.winkerkreader.ui.bottomsheets.controllers
 
 import android.app.DatePickerDialog
 import android.content.Context
+import android.text.InputType
 import android.widget.LinearLayout
 import androidx.core.view.isVisible
+import com.google.android.material.R
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
-import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.data.pastoral.model.TemplateContextSchema
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -48,8 +49,8 @@ class TemplateContextFormBuilder(
             ).apply { topMargin = dpToPx(12) }
         }
         val et = TextInputEditText(context).apply {
-            inputType = android.text.InputType.TYPE_CLASS_TEXT or
-                    android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS
+            inputType = InputType.TYPE_CLASS_TEXT or
+                    InputType.TYPE_TEXT_FLAG_CAP_WORDS
             tag = field.key
         }
         til.addView(et)
@@ -61,7 +62,7 @@ class TemplateContextFormBuilder(
         val btn = MaterialButton(
             context,
             null,
-            com.google.android.material.R.attr.materialButtonOutlinedStyle
+            R.attr.materialButtonOutlinedStyle
         ).apply {
             text = field.labelAfr
             tag = field.key

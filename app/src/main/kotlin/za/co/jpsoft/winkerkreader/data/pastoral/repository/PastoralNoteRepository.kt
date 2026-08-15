@@ -22,7 +22,9 @@ class PastoralNoteRepository(context: Context) {
         dao.observeAll()
 
     // ── Read ──────────────────────────────────────────────────────────────────
-
+    suspend fun getMemberGuidsWithNotes(): List<String> {
+        return dao.getDistinctMemberGuids()
+    }
     suspend fun getForMember(memberGuid: String): List<PastoralNoteEntity> =
         dao.getForMember(memberGuid)
 

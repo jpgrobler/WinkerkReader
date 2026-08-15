@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/colorSurface"
@@ -7,57 +8,57 @@
     android:orientation="vertical"
     android:paddingTop="?attr/actionBarSize">
 
-    <ProgressBar
+    <com.google.android.material.progressindicator.LinearProgressIndicator
         android:id="@+id/argief_progress"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:progressTint="?attr/colorPrimary"
-        android:visibility="gone" />
+        android:indeterminate="true"
+        android:visibility="gone"
+        app:indicatorColor="?attr/colorPrimary" />
 
-    <LinearLayout
+    <!-- M3 Segmented Button Group replacing RadioGroup -->
+    <com.google.android.material.button.MaterialButtonToggleGroup
+        android:id="@+id/argief_sort_group"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="8dp"
-        android:orientation="horizontal">
+        android:layout_margin="8dp"
+        app:selectionRequired="true"
+        app:singleSelection="true">
 
-        <RadioGroup
-            android:id="@+id/argief_sort"
-            android:layout_width="match_parent"
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/argief_sort_van"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:layout_weight="1"
+            android:text="@string/mainmenu_sort_van" />
 
-            <RadioButton
-                android:id="@+id/argief_sort_van"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/mainmenu_sort_van"
-                android:textColor="?attr/colorOnSurface" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/argief_sort_datum"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/argief_datum" />
 
-            <RadioButton
-                android:id="@+id/argief_sort_datum"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/argief_datum"
-                android:textColor="?attr/colorOnSurface" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/argief_sort_rede"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/argief_rede" />
 
-            <RadioButton
-                android:id="@+id/argief_sort_rede"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/argief_rede"
-                android:textColor="?attr/colorOnSurface" />
+    </com.google.android.material.button.MaterialButtonToggleGroup>
 
-        </RadioGroup>
-
-    </LinearLayout>
-
-    <ListView
-        android:id="@+id/argief_list"
+    <!-- RecyclerView replacing ListView -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/argief_recycler_view"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:clipToPadding="false"
-        android:background="?attr/colorSurface" />
+        android:background="?attr/colorSurface"
+        android:scrollbars="vertical" />
 
 </LinearLayout>

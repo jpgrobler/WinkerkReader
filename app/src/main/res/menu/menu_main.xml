@@ -14,6 +14,9 @@
         app:actionViewClass="androidx.appcompat.widget.SearchView"
         app:showAsAction="collapseActionView" />
     <item
+        android:id="@+id/menu_lock_app_now"
+        android:title="@string/lock_app_now" />
+    <item
         android:id="@+id/filter_options"
         android:title="@string/mainmenu_filter"></item>
     <item

@@ -77,7 +77,7 @@ class PastoralBackupActivity : BaseActivity() {
         binding.rvBackups.apply {
             adapter = backupAdapter
             layoutManager = LinearLayoutManager(this@PastoralBackupActivity)
-            setHasFixedSize(false)
+            setHasFixedSize(true)
         }
     }
 

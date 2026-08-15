@@ -160,9 +160,9 @@
     <string name="mylpaal_gemeente">%1$s\n</string>
     <string name="list_naam">Naam</string>
     <string name="list_van">Van</string>
-    <string name="list_selfoon">Selfoon</string>
-    <string name="list_telefoon">Telefoon</string>
-    <string name="list_wyk">Wyk</string>
+    <string name="list_selfoon">📱 Selfoon</string>
+    <string name="list_telefoon">☎️ Telefoon</string>
+    <string name="list_wyk">🏘️ Wyk</string>
     <string name="list_voorname">Voorname</string>
     <string name="list_geboortedatum">Geboortedatum</string>
     <string name="list_verjaar">dd-mm</string>
@@ -264,12 +264,12 @@
     <string name="filter_epos">E-pos</string>
     <string name="filter_lidmaatskap">Lidmaatskap</string>
     <string name="filter_gesinshoof">Gesinshoof</string>
-    <string name="filter_wyk">Wyk</string>
-    <string name="filter_selfoon">Selfoon</string>
-    <string name="filter_landlyn">Landlyn</string>
-    <string name="filter_ouderdom">Ouderdom</string>
+    <string name="filter_wyk">🏘 Wyk</string>
+    <string name="filter_selfoon">📱 Selfoon</string>
+    <string name="filter_landlyn">☎️ Landlyn</string>
+    <string name="filter_ouderdom">📅 Ouderdom</string>
     <string name="filter_geslag">Geslag</string>
-    <string name="filter_huwelikstatus">Huwelikstatus</string>
+    <string name="filter_huwelikstatus">💍 Huwelikstatus</string>
     <string name="filter_van">Van</string>
     <string name="filter_nooiensvan">Nooiensvan</string>
     <string name="filter_noemnaam">Noemnaam</string>
@@ -454,7 +454,7 @@
     <string name="laai_syncing_photos">🔄 Sinkroniseer 📸 fotos…</string>
     <string name="call_log_header">📋 Volledige oproep geskiedenis</string>
     <string name="call_log_clear_button">Vee Oproeplog uit</string>
-    <string name="argief_datum">datum</string>
+    <string name="argief_datum">⇵📅 Datum</string>
     <string name="list_separator_placeholder">New Text</string>
     <string name="argief_separator_placeholder">New Text</string>
     <string name="verjaar_option_verjaar">Verjaar</string>
@@ -753,6 +753,12 @@
     <string name="rationale_generic_message">Om hierdie funksie te gebruik, benodig WinkerkReader die volgende toestemming: %1$s</string>
     <string name="rationale_ok">OK</string>
     <string name="rationale_deny">Weier</string>
+
+
+    <string name="permission_audio_title">Oudio-opname</string>
+    <string name="permission_audio_rationale">Toelating vir oudio-opname word benodig om pastoral-notas per stem in te voer.</string>
+
+
     <string name="nuwe_databasis_reeds_op_foon">Nuwe databasis is reeds op foon</string>
     <string name="widget_last_updated_placeholder">Laas opgedateer: %1$s</string>
     <string name="rugsteun_ook_oproeplog">Rugsteun ook oproeplog</string>
@@ -808,7 +814,7 @@
     <string name="verjaar_sms_sent">%d SMS\'e is gestuur!</string>
     <string name="verjaar_member_selected">%s gekies vir SMS</string>
     <string name="verjaar_member_deselected">%s verwyder van SMS lys</string>
-    <string name="verjaar_detail">Detail van %s %s</string>
+    <string name="verjaar_detail" formatted="false">Detail van %s %s</string>
     <string name="verjaar_call">Skakel %s</string>
     <string name="verjaar_text">Teks %s</string>
     <string name="verjaar_call_phone">Skakel %s</string>
@@ -874,5 +880,57 @@
     <string name="biometric_disabled_message">
     Jou apparaat se sekuriteit is nie gekonfigureer nie. WinkerkReader se beveiligde slot is om hierdie rede afgeskakel.
 </string>
+
+    <!-- Voice Input Feature Strings (Afrikaans) -->
+
+    <!-- Microphone button content description -->
+    <string name="nota_dikteer">Dikteer nota met mikrofoon</string>
+
+    <!-- Voice status messages -->
+    <string name="nota_luister">Luister na u stem...</string>
+    <string name="nota_luister_klaar">Spraak verwerk...</string>
+
+    <!-- Error messages -->
+    <string name="nota_audio_error">Oudioprobleem - kan nie opname maak nie</string>
+    <string name="nota_no_match_error">Kon nie spraak verstaan nie - probeer asseblief weer</string>
+    <string name="nota_permission_needed">Toelating vir oudio-opname word benodig vir stemherkenning</string>
+    <string name="nota_permission_denied">Toelating geweier - spraak-herkenning uitgeskakel</string>
+    <string name="nota_speech_not_available">Spraak-herkenning is nie op hierdie toestel beskikbaar nie</string>
+
+    <!-- Info messages -->
+    <string name="nota_voice_tip">Tik die mikrofoonikon om u nota dikteerend op te neem</string>
+    <string name="nota_voice_append">Erkende teks word by u nota gevoeg</string>
+
+    <!-- Accessibility -->
+    <string name="nota_voice_recording">Spraakopname in proses</string>
+    <string name="nota_voice_stop">Staak spraakopname</string>
+
+    <string name="language_selection_title">Taal</string>
+    <string name="language_afrikaans">Afrikaans</string>
+    <string name="language_english">Engels</string>
+    <string name="language_change_restart_hint">Herbegin die app om die nuwe taal toe te pas</string>
+    <string name="save_language">Stoor Taal</string>
+    <string name="forseer_60hz_verminder_jitter">Forseer 60Hz (verminder jitter)</string>
+    <string name="close_filter">Sluit</string>
+
+    <string name="pref_oproep_timeout">oproep_timeout</string>
+    <string name="pref_oproep_timeout_default">5</string>
+    <string name="soek_lidmaat">Soek lidmaat</string>
+    <string name="nota2">Nota</string>
+    <string name="nota_icon">📝</string>
+    <string name="lock_app_now">🔐 Lock App Now</string>
+    <string-array name="oproep_timeout_entries">
+        <item>Immediately (0 sec)</item>
+        <item>5 seconds</item>
+        <item>10 seconds</item>
+        <item>15 seconds</item>
+    </string-array>
+    <string-array name="oproep_timeout_values">
+        <item>0</item>
+        <item>5</item>
+        <item>10</item>
+        <item>15</item>
+    </string-array>
+
 
 </resources>

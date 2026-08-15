@@ -17,6 +17,8 @@ import za.co.jpsoft.winkerkreader.data.pastoral.PastoralDatabase
 import za.co.jpsoft.winkerkreader.data.pastoral.dao.FollowUpReminderDao
 import za.co.jpsoft.winkerkreader.data.pastoral.dao.PastoralNoteDao
 import za.co.jpsoft.winkerkreader.data.pastoral.dao.ReminderTemplateDao
+import za.co.jpsoft.winkerkreader.data.pastoral.repository.PastoralNoteRepository
+
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
@@ -63,4 +65,9 @@ object DatabaseModule {
     @Provides
     fun provideWinkerkDatabase(@ApplicationContext context: Context): WinkerkDatabase =
         WinkerkDatabase.getInstance(context)
+
+    @Provides
+    @Singleton
+    fun providePastoralNoteRepository(@ApplicationContext context: Context): PastoralNoteRepository =
+        PastoralNoteRepository(context)
 }

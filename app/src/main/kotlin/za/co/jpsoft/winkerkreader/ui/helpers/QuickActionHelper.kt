@@ -137,18 +137,25 @@ class QuickActionHelper(
             else -> 0 // disabled
         }
 
-        if (quickActionPrefs.quickActionWhatsApp && hasPhone && whatsappMethod != 0) {
+        if (quickActionPrefs.quickActionWhatsApp && hasPhone && whatsappMethod != 0) { //&& whatsappMethod
             val formattedPhone = Utils.fixphonenumber(item.cellphone) ?: item.cellphone
-            if (ContactRepository.isWhatsAppContact(formattedPhone)) {
+            //if (ContactRepository.isWhatsAppContact(formattedPhone)) {
                 addActionButton(
                     iconDrawableRes = R.drawable.whatsapp,
                     label = "WhatsApp",
                     onClick = {
-                        handleQuickAction(R.id.stuur_whatsapp, item, message, whatsappMethod)
+                        val message2 = buildString {
+//                            append(item.name)
+                            if (message.isNullOrBlank()) {
+                                append(item.name)
+                                append(" ")
+                            } else append(message)
+                        }
+                        handleQuickAction(R.id.stuur_whatsapp, item, message2, whatsappMethod)
                         dismiss()
                     }
                 )
-            }
+            // }
         }
 
         // 3. Call – default color

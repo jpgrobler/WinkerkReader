@@ -5,18 +5,15 @@ import android.database.Cursor
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.view.LayoutInflater
-import android.view.Menu
-import android.view.MenuItem
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
-import androidx.cursoradapter.widget.CursorAdapter
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.databinding.ArgiefBinding
 import za.co.jpsoft.winkerkreader.databinding.ArgiefItemBinding
@@ -27,70 +24,65 @@ import za.co.jpsoft.winkerkreader.utils.db.getStringOrNull
 class ArgiefListActivity : AuthBaseActivity() {
 
     private lateinit var binding: ArgiefBinding
-    private lateinit var mCursorAdapter: ArgiefLysAdapter
+    private lateinit var adapter: ArgiefRecyclerAdapter
     private lateinit var viewModel: ArgiefViewModel
     private val searchHandler = Handler(Looper.getMainLooper())
     private var searchRunnable: Runnable? = null
     private var keuse: String = "Van"
-    private var isObserving = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ArgiefBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        ViewCompat.setOnApplyWindowInsetsListener(binding.argiefList) { view, insets ->
+
+        // Apply insets to RecyclerView
+        ViewCompat.setOnApplyWindowInsetsListener(binding.argiefRecyclerView) { view, insets ->
             val navBar = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
             view.updatePadding(bottom = navBar.bottom)
             insets
         }
-        mCursorAdapter = ArgiefLysAdapter(this, null)
-        mCursorAdapter.keuse = keuse
-        binding.argiefList.adapter = mCursorAdapter
-        //binding.argiefList.isFastScrollEnabled = true
-        binding.argiefList.isClickable = true
+
+        // Set up RecyclerView
+        adapter = ArgiefRecyclerAdapter(this)
+        binding.argiefRecyclerView.layoutManager = LinearLayoutManager(this)
+        binding.argiefRecyclerView.adapter = adapter
 
         viewModel = ViewModelProvider(this)[ArgiefViewModel::class.java]
 
-        // FIX: Attach observer BEFORE loading data
+        // Observe cursor changes
         viewModel.archiveCursor.observe(this, Observer { newCursor ->
-            if (!isObserving) {
-                isObserving = true
-                // Swap cursor but DON'T close the old one here
-                // The ViewModel will handle closing after a delay
-                mCursorAdapter.swapCursor(newCursor)
-                isObserving = false
-            }
+            adapter.swapCursor(newCursor)
         })
 
-        setupSortRadioGroup()
-
-        // FIX: Load data AFTER observer is attached
-        viewModel.loadArchive(keuse)
+        // Observe loading state
         viewModel.isLoading.observe(this) { loading ->
             binding.argiefProgress.visibility = if (loading) View.VISIBLE else View.GONE
         }
+
+        setupSortToggleGroup()
+        viewModel.loadArchive(keuse)
     }
 
-    private fun setupSortRadioGroup() {
+    private fun setupSortToggleGroup() {
+        // Set initial checked button
         when (keuse) {
             "Van" -> binding.argiefSortVan.isChecked = true
-            "Rede" -> binding.argiefSortRede.isChecked = true
             "Datum" -> binding.argiefSortDatum.isChecked = true
-            else -> {
-                binding.argiefSortVan.isChecked = true
-                keuse = "Van"
-            }
+            "Rede" -> binding.argiefSortRede.isChecked = true
+            else -> binding.argiefSortVan.isChecked = true
         }
 
-        binding.argiefSort.setOnCheckedChangeListener { _, checkedId ->
-            keuse = when (checkedId) {
-                R.id.argief_sort_van -> "Van"
-                R.id.argief_sort_datum -> "Datum"
-                R.id.argief_sort_rede -> "Rede"
-                else -> "Van"
+        binding.argiefSortGroup.addOnButtonCheckedListener { group, checkedId, isChecked ->
+            if (isChecked) {
+                keuse = when (checkedId) {
+                    R.id.argief_sort_van -> "Van"
+                    R.id.argief_sort_datum -> "Datum"
+                    R.id.argief_sort_rede -> "Rede"
+                    else -> "Van"
+                }
+                adapter.setSortKey(keuse)
+                viewModel.loadArchive(keuse)
             }
-            mCursorAdapter.keuse = keuse
-            viewModel.loadArchive(keuse)
         }
     }
 
@@ -104,17 +96,14 @@ class ArgiefListActivity : AuthBaseActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.argiefmenu, menu)
-
         val searchItem = menu.findItem(R.id.argief_action_search)
         searchItem.setShowAsActionFlags(
             MenuItem.SHOW_AS_ACTION_IF_ROOM or MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW
         )
-
         val searchView = searchItem.actionView as SearchView
         searchView.apply {
             setSubmitButtonEnabled(false)
             queryHint = "Soek"
-
             setOnQueryTextListener(
                 object : SearchView.OnQueryTextListener {
                     override fun onQueryTextSubmit(query: String): Boolean {
@@ -132,7 +121,6 @@ class ArgiefListActivity : AuthBaseActivity() {
                 }
             )
         }
-
         return true
     }
 
@@ -152,49 +140,70 @@ class ArgiefListActivity : AuthBaseActivity() {
 
     override fun onDestroy() {
         searchRunnable?.let { searchHandler.removeCallbacks(it) }
-        mCursorAdapter.swapCursor(null)?.close()
+        adapter.swapCursor(null) // adapter will close old cursor internally if needed
         super.onDestroy()
     }
 }
 
 // ----------------------------------------------------------------------------
-// Adapter with null-safety
+// RecyclerView Adapter with Cursor support and separators
 // ----------------------------------------------------------------------------
 
-class ArgiefLysAdapter(context: Context, cursor: Cursor?) : CursorAdapter(context, cursor, 0) {
+class ArgiefRecyclerAdapter(private val context: Context) :
+    RecyclerView.Adapter<ArgiefRecyclerAdapter.ViewHolder>() {
 
-    var keuse: String = "Van"
+    private var cursor: Cursor? = null
+    private var sortKey: String = "Van"
 
-    class ViewHolder2(val binding: ArgiefItemBinding)
-
-    override fun swapCursor(newCursor: Cursor?): Cursor? {
-        // Don't swap if it's the same cursor object
+    fun swapCursor(newCursor: Cursor?) {
         val oldCursor = cursor
-        if (oldCursor === newCursor) {
-            return oldCursor
-        }
-        return super.swapCursor(newCursor)
+        if (oldCursor === newCursor) return
+        cursor = newCursor
+        // Optionally close old cursor if not managed by ViewModel
+        oldCursor?.close()
+        notifyDataSetChanged()
     }
 
-    override fun newView(context: Context, cursor: Cursor, parent: ViewGroup): View {
-        val inflater = LayoutInflater.from(context)
-        val binding = ArgiefItemBinding.inflate(inflater, parent, false)
-        val viewHolder = ViewHolder2(binding)
-        binding.root.tag = viewHolder
-        return binding.root
+    fun setSortKey(key: String) {
+        sortKey = key
+        // We don't reload data here; just update for separator logic
+        notifyDataSetChanged()
     }
 
-    override fun bindView(view: View, context: Context, cursor: Cursor) {
-        // Safety check - ensure cursor is valid
-        if (cursor.isClosed) {
-            android.util.Log.e("ArgiefLysAdapter", "Attempted to bind with closed cursor")
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val binding = ArgiefItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        return ViewHolder(binding)
+    }
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val cursor = cursor
+        if (cursor == null || cursor.isClosed || !cursor.moveToPosition(position)) {
+            // If cursor is invalid, clear views
+            holder.bind(null, sortKey, position)
             return
         }
+        holder.bind(cursor, sortKey, position)
+    }
 
-        try {
-            val viewHolder = view.tag as ViewHolder2
-            val itemBinding = viewHolder.binding
+    override fun getItemCount(): Int = cursor?.count ?: 0
 
+    inner class ViewHolder(private val binding: ArgiefItemBinding) :
+        RecyclerView.ViewHolder(binding.root) {
+
+        fun bind(cursor: Cursor?, sortKey: String, position: Int) {
+            if (cursor == null || cursor.isClosed) {
+                // Clear everything
+                binding.argiefListSeparator.visibility = View.GONE
+                binding.argiefVan.text = ""
+                binding.argiefGeboortedatum.text = ""
+                binding.argiefName.text = ""
+                binding.argiefRede.text = ""
+                binding.argiefVertrekdatum.text = ""
+                binding.argiefBestemming.text = ""
+                return
+            }
+
+            // Read values
             val lidNaam = cursor.getStringOrEmpty("Name")
             val lidVan = cursor.getStringOrEmpty("Surname")
             val lidGeboortedatum = cursor.getStringOrEmpty("DateOfBirth")
@@ -202,45 +211,46 @@ class ArgiefLysAdapter(context: Context, cursor: Cursor?) : CursorAdapter(contex
             val bestemming = cursor.getStringOrEmpty("DepartureTo")
             val vertrekDatum = cursor.getStringOrEmpty("DepartureDate")
 
-            itemBinding.argiefName.text = lidNaam
-            itemBinding.argiefVan.text = lidVan
-            itemBinding.argiefGeboortedatum.text = lidGeboortedatum
-            itemBinding.argiefRede.text = rede
-            itemBinding.argiefBestemming.text = bestemming
-            itemBinding.argiefVertrekdatum.text = vertrekDatum
-            itemBinding.argiefListSeparator.text = keuse
-            itemBinding.argiefListSeparator.visibility = View.GONE
+            // Set data
+            binding.argiefVan.text = lidVan
+            binding.argiefGeboortedatum.text = lidGeboortedatum
+            binding.argiefName.text = lidNaam
+            binding.argiefRede.text = rede
+            binding.argiefVertrekdatum.text = vertrekDatum
+            binding.argiefBestemming.text = bestemming
 
-            val position = cursor.position
-            val current = when (keuse) {
+            // Separator logic
+            val current = when (sortKey) {
                 "Van" -> cursor.getStringOrNull("Surname")
                 "Rede" -> cursor.getStringOrNull("Reason")
                 "Datum" -> cursor.getStringOrNull("DepartureDate")
-                else -> ""
+                else -> null
             }
 
-            if (position == 0) {
-                itemBinding.argiefListSeparator.visibility = View.VISIBLE
-                itemBinding.argiefListSeparator.text =
-                    context.getString(R.string.separator_format, keuse, current)
-            } else {
+            if (position == 0 && current != null) {
+                binding.argiefListSeparator.visibility = View.VISIBLE
+                binding.argiefListSeparator.text =
+                    context.getString(R.string.separator_format, sortKey, current)
+            } else if (position > 0) {
                 cursor.moveToPosition(position - 1)
-                val previous = when (keuse) {
+                val previous = when (sortKey) {
                     "Van" -> cursor.getStringOrNull("Surname")
                     "Rede" -> cursor.getStringOrNull("Reason")
                     "Datum" -> cursor.getStringOrNull("DepartureDate")
-                    else -> ""
+                    else -> null
                 }
-                cursor.moveToPosition(position)
+                cursor.moveToPosition(position) // move back
 
                 if (previous != null && current != null && previous != current) {
-                    itemBinding.argiefListSeparator.visibility = View.VISIBLE
-                    itemBinding.argiefListSeparator.text =
-                        context.getString(R.string.separator_format, keuse, current)
+                    binding.argiefListSeparator.visibility = View.VISIBLE
+                    binding.argiefListSeparator.text =
+                        context.getString(R.string.separator_format, sortKey, current)
+                } else {
+                    binding.argiefListSeparator.visibility = View.GONE
                 }
+            } else {
+                binding.argiefListSeparator.visibility = View.GONE
             }
-        } catch (e: Exception) {
-            android.util.Log.e("ArgiefLysAdapter", "Error binding view: ${e.message}", e)
         }
     }
 }

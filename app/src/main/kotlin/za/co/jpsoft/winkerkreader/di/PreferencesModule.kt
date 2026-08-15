@@ -16,6 +16,7 @@ import za.co.jpsoft.winkerkreader.utils.prefs.BirthdaySmsPrefs
 import za.co.jpsoft.winkerkreader.utils.prefs.CalendarPrefs
 import za.co.jpsoft.winkerkreader.utils.prefs.CallMonitorPrefs
 import za.co.jpsoft.winkerkreader.utils.prefs.CongregationPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.LanguagePrefs
 import za.co.jpsoft.winkerkreader.utils.prefs.MemberListPrefs
 import za.co.jpsoft.winkerkreader.utils.prefs.PastoralPrefs
 import za.co.jpsoft.winkerkreader.utils.prefs.QuickActionPrefs
@@ -43,7 +44,10 @@ annotation class SecurePrefs
 object PreferencesModule {
 
     // ─── SharedPreferences providers ────────────────────────────────────────
-
+    @Provides
+    @Singleton
+    fun provideLanguagePrefs(@UserPrefs prefs: SharedPreferences): LanguagePrefs =
+        LanguagePrefs(prefs)
     @Provides
     @Singleton
     @UserPrefs

@@ -27,6 +27,7 @@ sealed class CallerInfoResult {
         val phone: String? = null,
         val memberType: String? = null,
         val gemeente: String? = null,
+        val familyHeadGuid: String? = null
     ) : CallerInfoResult()
 
     /**

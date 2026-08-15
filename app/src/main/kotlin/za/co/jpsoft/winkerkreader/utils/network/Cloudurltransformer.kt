@@ -23,7 +23,11 @@ object CloudUrlTransformer {
         url.contains("www.dropbox.com") -> transformDropbox(url)
         url.contains("1drv.ms") -> transformOneDrive(url)
         url.contains("drive.google.com") -> transformGoogleDrive(url)
-        url.contains("sharepoint.com") -> transformSharePoint(url)
+        // For SharePoint, only add download=1 if it doesn't already have it
+        url.contains("sharepoint.com") -> {
+            if (url.contains("download=1") || url.contains("&download=1")) url
+            else transformSharePoint(url)
+        }
         else -> url
     }
 
@@ -65,7 +69,8 @@ object CloudUrlTransformer {
      * removing the existing query string and appending `?download=1`.
      */
     fun transformSharePoint(url: String): String {
-        val lastIndex = url.lastIndexOf("?")
-        return if (lastIndex < 0) url else url.substring(0, lastIndex) + "?download=1"
+        if (url.contains("download=1")) return url
+        val questionIndex = url.indexOf('?')
+        return if (questionIndex < 0) "$url?download=1" else "$url&download=1"
     }
 }

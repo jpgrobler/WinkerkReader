@@ -11,40 +11,16 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import androidx.lifecycle.LifecycleCoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract.winkerkEntry.WINKERK_DB
 import java.io.File
+import java.io.FileOutputStream
+import java.net.HttpURLConnection
+import java.net.URL
 
-/**
- * Manages cloud/Dropbox database downloads via [DownloadManager].
- *
- * Extracted from LaaiDatabasisActivity. Owns:
- *  - [BroadcastReceiver] registration/unregistration
- *  - Progress polling via [Handler]
- *  - Delegating the completed download Uri to [onFileReady]
- *
- * ── Wiring ───────────────────────────────────────────────────────────────────
- *
- *   dropboxController = DropboxDownloadController(
- *       context         = this,
- *       lifecycleScope  = lifecycleScope,
- *       onFileReady     = { uri -> importController.processDownloadedFile(uri) },
- *       onError         = { msg -> showError(msg) },
- *       onProgress      = { bytes, total ->
- *           binding.laaiBoodskap.text = "$bytes / $total bytes"
- *       }
- *   )
- *
- *   // In handleDropboxDownload():
- *   dropboxController.startDownload(url)
- *
- *   // In cancelOngoingDownloads():
- *   dropboxController.cancel()
- *
- *   // In onDestroy():
- *   dropboxController.cancel()
- */
 class DropboxDownloadController(
     private val context: Context,
     private val lifecycleScope: LifecycleCoroutineScope,
@@ -58,32 +34,130 @@ class DropboxDownloadController(
     private var isReceiverRegistered = false
     private var downloadId = 0L
     private var tempFile: File? = null
+    private var httpDownloadJob: kotlinx.coroutines.Job? = null
 
     private val pollingHandler = Handler(Looper.getMainLooper())
     private var pollingRunnable: Runnable? = null
     private var isPolling = false
 
-    // ── Public API ────────────────────────────────────────────────────────────
+    val isActive: Boolean get() = downloadId != 0L || httpDownloadJob?.isActive == true
 
-    /** True when a download is in progress. */
-    val isActive: Boolean get() = downloadId != 0L
-
-    /**
-     * Starts a DownloadManager download for [url], registers the completion
-     * receiver, and begins progress polling.
-     *
-     * Was [LaaiDatabasisActivity.downloadFromDropBoxUrl].
-     */
     fun startDownload(url: String) {
         if (context.isFinishing()) return
-
-        cancel() // clean up any previous download
+        cancel() // clean up previous downloads
 
         val externalDir = context.getExternalFilesDir(null) ?: run {
             onError("Geen eksterne berging beskikbaar nie")
             return
         }
         tempFile = File(externalDir, "WinkerkReader_temp.db").also { it.parentFile?.mkdirs() }
+        if (BuildConfig.DEBUG) {
+            Log.d(tag, "Temp file will be saved to: ${tempFile?.absolutePath}")
+        }
+
+        // ─── Attempt HTTP download first ──────────────────────────────────────
+        httpDownloadJob = lifecycleScope.launch {
+            val success = tryHttpDownload(url)
+            if (success) {
+                // HTTP download succeeded – pass the temp file to import
+                val file = tempFile ?: return@launch
+                val uri = Uri.fromFile(file)
+                if (BuildConfig.DEBUG) Log.d(tag, "HTTP download succeeded, calling onFileReady")
+                onFileReady(uri)
+            } else {
+                // HTTP failed (HTML or error) – fallback to DownloadManager
+                if (BuildConfig.DEBUG) Log.d(
+                    tag,
+                    "HTTP download failed, falling back to DownloadManager"
+                )
+                startDownloadManager(url)
+            }
+        }
+    }
+
+    /**
+     * Attempts to download the file directly using HttpURLConnection.
+     * Returns true if the download succeeded and the file is a valid binary (not HTML).
+     */
+    private suspend fun tryHttpDownload(url: String): Boolean = withContext(Dispatchers.IO) {
+        val tempFile = tempFile ?: return@withContext false
+        try {
+            val connection = URL(url).openConnection() as HttpURLConnection
+            connection.apply {
+                // ─── Browser-like headers ─────────────────────────────────────
+                setRequestProperty(
+                    "User-Agent",
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                )
+                setRequestProperty(
+                    "Accept",
+                    "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
+                )
+                setRequestProperty("Accept-Language", "en-US,en;q=0.9")
+                setRequestProperty("Referer", url)  // send the original URL as referer
+                setRequestProperty("Accept-Encoding", "identity") // avoid compression
+                connectTimeout = 15000
+                readTimeout = 30000
+                instanceFollowRedirects = true // automatically follow redirects
+            }
+
+            val responseCode = connection.responseCode
+            if (responseCode != HttpURLConnection.HTTP_OK) {
+                if (BuildConfig.DEBUG) Log.e(tag, "HTTP error: $responseCode")
+                return@withContext false
+            }
+
+            // ─── Check content type ───────────────────────────────────────────
+            val contentType = connection.contentType ?: ""
+            if (contentType.contains("text/html") || contentType.contains("text/plain")) {
+                if (BuildConfig.DEBUG) Log.e(
+                    tag,
+                    "HTML/plain response (likely a login page), aborting"
+                )
+                return@withContext false
+            }
+
+            val contentLength = connection.contentLength.toLong()
+            if (contentLength < 512) {
+                if (BuildConfig.DEBUG) Log.e(tag, "File too small ($contentLength bytes), aborting")
+                return@withContext false
+            }
+
+            // ─── Download and write to temp file ─────────────────────────────
+            val input = connection.inputStream
+            val output = FileOutputStream(tempFile)
+            val buffer = ByteArray(8192)
+            var bytesRead: Int
+            var totalRead = 0L
+            while (input.read(buffer).also { bytesRead = it } != -1) {
+                output.write(buffer, 0, bytesRead)
+                totalRead += bytesRead
+                onProgress?.invoke(totalRead, contentLength)
+            }
+            output.close()
+            input.close()
+
+            if (BuildConfig.DEBUG) {
+                Log.d(tag, "HTTP download complete: ${tempFile.length()} bytes")
+            }
+            true
+        } catch (e: Exception) {
+            if (BuildConfig.DEBUG) Log.e(tag, "HTTP download failed", e)
+            tempFile.delete()
+            false
+        }
+    }
+
+    /**
+     * Original DownloadManager-based download (fallback).
+     */
+    private fun startDownloadManager(url: String) {
+        if (context.isFinishing()) return
+
+        val tempFile = tempFile ?: run {
+            onError("Geen tydelike lêer beskikbaar")
+            return
+        }
 
         registerReceiver()
 
@@ -94,8 +168,7 @@ class DropboxDownloadController(
             setDestinationUri(Uri.fromFile(tempFile))
             addRequestHeader(
                 "User-Agent",
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-                        "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
             )
             setAllowedOverMetered(true)
             setAllowedOverRoaming(true)
@@ -110,15 +183,13 @@ class DropboxDownloadController(
             return
         }
 
-        if (BuildConfig.DEBUG) Log.d(tag, "Download enqueued ID=$downloadId")
+        if (BuildConfig.DEBUG) Log.d(tag, "DownloadManager enqueued ID=$downloadId")
         startPolling(downloadId)
     }
 
-    /**
-     * Cancels any active download, unregisters the receiver, and stops polling.
-     * Safe to call when idle.
-     */
     fun cancel() {
+        httpDownloadJob?.cancel()
+        httpDownloadJob = null
         stopPolling()
         if (downloadId != 0L) {
             (context.getSystemService(Context.DOWNLOAD_SERVICE) as? DownloadManager)
@@ -130,15 +201,15 @@ class DropboxDownloadController(
         tempFile = null
     }
 
-    // ── Receiver ──────────────────────────────────────────────────────────────
+    // ─── DownloadManager receiver (unchanged, but now only used as fallback) ──
 
     private fun registerReceiver() {
         val filter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
         receiver = object : BroadcastReceiver() {
             override fun onReceive(ctx: Context, intent: Intent) {
                 if (BuildConfig.DEBUG) Log.d(tag, "BroadcastReceiver triggered")
-                val manager = ctx.getSystemService(Context.DOWNLOAD_SERVICE) as? DownloadManager
-                    ?: return
+                val manager =
+                    ctx.getSystemService(Context.DOWNLOAD_SERVICE) as? DownloadManager ?: return
                 val ref = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
                 if (downloadId != ref) return
 
@@ -151,9 +222,8 @@ class DropboxDownloadController(
                         cleanup()
                         return
                     }
-                    val status = cursor.getInt(
-                        cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS)
-                    )
+                    val status =
+                        cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS))
                     if (status != DownloadManager.STATUS_SUCCESSFUL) {
                         val reason = try {
                             cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON))
@@ -174,6 +244,15 @@ class DropboxDownloadController(
                         cleanup()
                         return
                     }
+                    if (BuildConfig.DEBUG) {
+                        Log.d(tag, "DownloadManager URI: $uri")
+                        val file = File(uri.path ?: "")
+                        if (file.exists()) {
+                            Log.d(tag, "File exists: ${file.absolutePath}, size: ${file.length()}")
+                        } else {
+                            Log.e(tag, "File does NOT exist at URI path: ${uri.path}")
+                        }
+                    }
                     val capturedId = downloadId
                     downloadId = 0L
                     lifecycleScope.launch {
@@ -184,8 +263,11 @@ class DropboxDownloadController(
             }
         }
 
-        val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-            Context.RECEIVER_NOT_EXPORTED else 0
+        val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Context.RECEIVER_EXPORTED
+        } else {
+            0
+        }
         context.registerReceiver(receiver, filter, flags)
         isReceiverRegistered = true
     }
@@ -201,14 +283,6 @@ class DropboxDownloadController(
         }
     }
 
-    // ── Polling ───────────────────────────────────────────────────────────────
-
-    /**
-     * Polls DownloadManager every 2 s and updates [onProgress].
-     * Stops automatically on success or failure (BroadcastReceiver takes over on success).
-     *
-     * Was [LaaiDatabasisActivity.startProgressPolling].
-     */
     private fun startPolling(id: Long) {
         stopPolling()
         isPolling = true
@@ -224,28 +298,23 @@ class DropboxDownloadController(
                         isPolling = false; return
                     }
 
-                    val status = cursor.getInt(
-                        cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS)
-                    )
-                    val bytes = cursor.getLong(
-                        cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR)
-                    )
-                    val total = cursor.getLong(
-                        cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES)
-                    )
+                    val status =
+                        cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS))
+                    val bytes =
+                        cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
+                    val total =
+                        cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
                     onProgress?.invoke(bytes, total)
 
                     when (status) {
                         DownloadManager.STATUS_SUCCESSFUL -> {
                             isPolling = false
-                            // BroadcastReceiver handles the success path
+                            // Receiver will handle success
                         }
-
                         DownloadManager.STATUS_FAILED -> {
                             isPolling = false
                             onError("Aflaai misluk")
                         }
-
                         else -> pollingHandler.postDelayed(this, 2000)
                     }
                 }
@@ -268,7 +337,6 @@ class DropboxDownloadController(
         unregisterReceiver()
     }
 
-    /** Logs current download status — debug only. Was [LaaiDatabasisActivity.checkDownloadStatus]. */
     private fun logStatus(id: Long) {
         if (!BuildConfig.DEBUG) return
         val manager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
@@ -298,7 +366,6 @@ class DropboxDownloadController(
         }
     }
 
-    // Helper: Context doesn't have isFinishing(), route through Activity
     private fun Context.isFinishing(): Boolean =
         (this as? android.app.Activity)?.isFinishing == true ||
                 (this as? android.app.Activity)?.isDestroyed == true

@@ -103,12 +103,38 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
-                android:columnCount="2">
+                android:columnCount="2"
+                android:columnOrderPreserved="true"
+                android:rowCount="3"
+                android:useDefaultMargins="true">
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/filter_nota"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:minHeight="48dp"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:text="Notas"
+                    android:textColor="?attr/colorOnSurface" />
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/filter_herinnering"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:minHeight="48dp"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:text="Aktiewe Herinneringe"
+                    android:textColor="?attr/colorOnSurface" />
 
                 <com.google.android.material.materialswitch.MaterialSwitch
                     android:id="@+id/filter_selfoon"
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
                     android:minHeight="48dp"
                     android:paddingStart="8dp"
                     android:paddingEnd="8dp"
@@ -117,8 +143,9 @@
 
                 <com.google.android.material.materialswitch.MaterialSwitch
                     android:id="@+id/filter_landlyn"
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
                     android:minHeight="48dp"
                     android:paddingStart="8dp"
                     android:paddingEnd="8dp"
@@ -127,8 +154,9 @@
 
                 <com.google.android.material.materialswitch.MaterialSwitch
                     android:id="@+id/filter_epos"
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
                     android:minHeight="48dp"
                     android:paddingStart="8dp"
                     android:paddingEnd="8dp"
@@ -137,8 +165,9 @@
 
                 <com.google.android.material.materialswitch.MaterialSwitch
                     android:id="@+id/filter_gesinshoof"
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
                     android:minHeight="48dp"
                     android:paddingStart="8dp"
                     android:paddingEnd="8dp"

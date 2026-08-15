@@ -90,7 +90,15 @@ object PermissionDefinitions {
                 )
             )
         }
-
+        add(
+            PermissionItem(
+                name = "Microphone",
+                description = "Laat app toe om stemnotas op te neem",
+                permission = Manifest.permission.RECORD_AUDIO,
+                type = PermissionType.RUNTIME,
+                context = context
+            )
+        )
         // ── SMS ───────────────────────────────────────────────────────────────
 //        add(
 //            PermissionItem(

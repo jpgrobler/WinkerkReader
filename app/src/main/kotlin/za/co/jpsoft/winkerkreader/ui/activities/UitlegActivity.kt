@@ -110,7 +110,7 @@ class UitlegActivity : AuthBaseActivity(), UitlegCalendarSelectionListener {
                             "WinkerkReader se beveiligde slot is om hierdie rede afgeskakel."
                 )
 
-                // Update UI in fragment (see UitlegVertoonFragment.kt changes)
+                // Update UI in Funksies fragment where security settings now live
                 notifyBiometricStatusChanged(false)
             }
         }
@@ -149,11 +149,11 @@ class UitlegActivity : AuthBaseActivity(), UitlegCalendarSelectionListener {
      * Call this after changing biometric settings programmatically.
      */
     private fun notifyBiometricStatusChanged(enabled: Boolean) {
-        val vertoonFragment = supportFragmentManager.fragments
-            .filterIsInstance<UitlegVertoonFragment>()
+        val funksiesFragment = supportFragmentManager.fragments
+            .filterIsInstance<UitlegFunksiesFragment>()
             .firstOrNull()
 
-        vertoonFragment?.updateBiometricToggle(enabled)
+        funksiesFragment?.updateBiometricToggle(enabled)
     }
 
     private fun tryLoadCalendars() {

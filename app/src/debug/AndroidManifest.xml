@@ -5,6 +5,25 @@
 
     <application
         android:name=".DebugWinkerkReader"
-        tools:replace="android:name" />
+        tools:replace="android:name">
+
+        <!-- Remove AndroidX Startup provider -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            tools:node="remove" />
+
+        <!-- Remove the default WorkManager initializer -->
+        <provider
+            android:name="androidx.work.impl.WorkManagerInitializer"
+            android:authorities="${applicationId}.workmanager-init"
+            tools:node="remove" />
+
+        <!-- Remove any meta-data that might trigger the initializer -->
+        <meta-data
+            android:name="androidx.work.WorkManagerInitializer"
+            tools:node="remove" />
+
+    </application>
 
 </manifest>

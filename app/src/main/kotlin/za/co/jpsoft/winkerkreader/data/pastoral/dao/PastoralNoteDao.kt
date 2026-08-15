@@ -12,7 +12,8 @@ import za.co.jpsoft.winkerkreader.data.pastoral.entities.PastoralNoteEntity
 interface PastoralNoteDao {
 
     // ── Observe (Flow) ────────────────────────────────────────────────────────
-
+    @Query("SELECT DISTINCT memberGuid FROM pastoral_notes")
+    suspend fun getDistinctMemberGuids(): List<String>
     @Query(
         """
         SELECT * FROM pastoral_notes

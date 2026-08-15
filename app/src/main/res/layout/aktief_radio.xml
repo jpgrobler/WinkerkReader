@@ -5,32 +5,28 @@
     android:orientation="vertical"
     android:padding="0dp">
 
-    <CheckBox
+    <com.google.android.material.checkbox.MaterialCheckBox
         android:id="@+id/filter_aktief2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="0dp"
-
-        android:layout_marginBottom="0dp"
-        android:minHeight="0dp"
-        android:paddingStart="4dp"
+        android:minHeight="36dp"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
         android:paddingTop="2dp"
-        android:paddingEnd="4dp"
         android:paddingBottom="2dp"
-        android:text="@string/filter_aktief_text" />
+        android:text="@string/filter_aktief_text"
+        android:textAppearance="?attr/textAppearanceBodyMedium" />
 
-    <CheckBox
+    <com.google.android.material.checkbox.MaterialCheckBox
         android:id="@+id/filter_onaktief2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="-4dp"
-
-        android:layout_marginBottom="0dp"
-        android:minHeight="0dp"
-        android:paddingStart="4dp"
+        android:minHeight="36dp"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
         android:paddingTop="2dp"
-        android:paddingEnd="4dp"
         android:paddingBottom="2dp"
-        android:text="@string/filter_onaktief_text" />
+        android:text="@string/filter_onaktief_text"
+        android:textAppearance="?attr/textAppearanceBodyMedium" />
 
 </LinearLayout>

@@ -12,7 +12,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?attr/colorSurface"
-        android:fitsSystemWindows="true"
         app:elevation="0dp">
 
         <LinearLayout
@@ -30,43 +29,41 @@
                 android:background="?attr/colorSurface"
                 android:visibility="gone">
 
-                <TextView
-                    android:id="@+id/search_text"
+                <HorizontalScrollView
+                    android:id="@+id/search_scroll"
                     android:layout_width="match_parent"
                     android:layout_height="30dp"
                     android:layout_alignParentStart="true"
                     android:layout_centerVertical="true"
                     android:layout_toStartOf="@+id/main_search_text_close"
-                    android:background="?attr/colorSurfaceVariant"
-                    android:ellipsize="marquee"
-                    android:marqueeRepeatLimit="marquee_forever"
-                    android:maxLines="1"
-                    android:paddingStart="10dp"
                     android:paddingEnd="0dp"
-                    android:text="@string/main_soek"
-                    android:textAlignment="center"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textStyle="bold" />
+                    android:scrollbars="none">
+
+                    <TextView
+                        android:id="@+id/search_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:gravity="center_vertical"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="0dp"
+                        android:singleLine="true"
+                        android:text="@string/main_soek"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textStyle="bold" />
+                </HorizontalScrollView>
 
                 <ImageView
                     android:id="@+id/main_search_text_close"
                     android:layout_width="30dp"
                     android:layout_height="30dp"
                     android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
                     android:contentDescription="@string/close_search_description"
                     android:padding="4dp"
                     android:src="@drawable/ic_close2"
                     android:visibility="gone" />
-            </RelativeLayout>
 
-            <!-- Progress Bar -->
-            <ProgressBar
-                android:id="@+id/indeterminateBar"
-                style="?android:attr/progressBarStyleHorizontal"
-                android:layout_width="match_parent"
-                android:layout_height="4dp"
-                android:progressTint="?attr/colorPrimary"
-                android:visibility="gone" />
+            </RelativeLayout>
 
             <!-- Chip bar + Count + Sort -->
             <LinearLayout
@@ -78,44 +75,34 @@
                 android:orientation="horizontal">
 
                 <!-- Chip bar – takes remaining space -->
-                <HorizontalScrollView
-                    android:id="@+id/chip_scroll_view"
+                <LinearLayout
+                    android:id="@+id/chip_container"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="48dp"
                     android:layout_weight="1"
+                    android:clipChildren="false"
+                    android:clipToPadding="false"
+                    android:gravity="center_vertical"
                     android:paddingStart="8dp"
-                    android:paddingTop="4dp"
                     android:paddingEnd="8dp"
-                    android:paddingBottom="4dp"
-                    android:scrollbars="none">
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal">
-
-                        <com.google.android.material.chip.ChipGroup
-                            android:id="@+id/congregationChipGroup"
-                            style="@style/Widget.WinkerkReader.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            app:chipSpacing="4dp"
-                            app:selectionRequired="false"
-                            app:singleSelection="false" />
-                    </LinearLayout>
-                </HorizontalScrollView>
+                    android:orientation="horizontal"
+                    android:weightSum="3">
+                    <!-- Chips will be added programmatically here -->
+                </LinearLayout>
 
                 <!-- Count + Sort labels -->
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:minWidth="60dp"
                     android:gravity="center_vertical"
                     android:orientation="vertical">
 
                     <TextView
                         android:id="@+id/totalCount"
-                        android:layout_width="wrap_content"
+                        android:layout_width="50dp"
                         android:layout_height="wrap_content"
+                        android:gravity="end|center_vertical"
                         android:paddingStart="2dp"
                         android:paddingEnd="2dp"
                         android:text="@string/_0"
@@ -143,6 +130,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="?attr/colorSurface"
+        android:clipToPadding="false"
         android:scrollbars="vertical"
         app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 

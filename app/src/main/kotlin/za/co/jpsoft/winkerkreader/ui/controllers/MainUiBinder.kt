@@ -10,6 +10,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.paging.LoadState
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.members.repository.ContactRepository
@@ -77,8 +78,7 @@ class MainUiBinder(
             lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 adapter.loadStateFlow.collect { loadStates ->
                     val isLoading = loadStates.refresh is LoadState.Loading
-                    binding.indeterminateBar.visibility =
-                        if (isLoading) View.VISIBLE else View.GONE
+                    //binding.indeterminateBar.visibility = if (isLoading) View.VISIBLE else View.GONE
 
                     if (loadStates.refresh is LoadState.Error) {
                         val error = (loadStates.refresh as LoadState.Error).error

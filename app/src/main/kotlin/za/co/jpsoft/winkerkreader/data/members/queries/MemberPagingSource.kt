@@ -19,7 +19,9 @@ class MemberPagingSource(
     private val soek: String,
     private val filterList: ArrayList<FilterBox>?,
     private val sortOrder: String,
-    private val congregations: List<String>?,  // ✅ ADD THIS
+    private val congregations: List<String>?,
+    private val noteGuids: Set<String>? = null,
+    private val reminderGuids: Set<String>? = null,
     private val pageSize: Int = 50
 ) : PagingSource<Int, MemberItem>() {
     private val TAG = "MemberPagingSource"
@@ -32,7 +34,6 @@ class MemberPagingSource(
     }
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, MemberItem> {
-        // Force all database operations onto the IO dispatcher
         return withContext(Dispatchers.IO) {
             val position = params.key ?: 0
             val limit = params.loadSize.coerceAtMost(pageSize)
@@ -43,7 +44,9 @@ class MemberPagingSource(
                 soek = soek,
                 filterList = filterList,
                 sortOrder = sortOrder,
-                congregations = congregations  // ✅ PASS congregations to query builder
+                congregations = congregations,
+                noteGuids = noteGuids,
+                reminderGuids = reminderGuids
             ) ?: return@withContext LoadResult.Error(IllegalStateException("Invalid query"))
 
             if (BuildConfig.DEBUG) Log.d(TAG, "🔍 SQL: ${sqlRequest.sql}")

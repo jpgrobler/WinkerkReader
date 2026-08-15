@@ -1,9 +1,12 @@
 package za.co.jpsoft.winkerkreader.ui.bottomsheets.controllers
 
+import android.R
 import android.content.Context
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.LinearLayout
 import android.widget.Spinner
@@ -30,7 +33,7 @@ class FamilyMemberSpinnerController(
         // Label
         label = TextView(context).apply {
             text = "Kies gesinslid of tik naam van oorledene"
-            setTextAppearance(android.R.style.TextAppearance_Small)
+            setTextAppearance(R.style.TextAppearance_Small)
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -44,7 +47,7 @@ class FamilyMemberSpinnerController(
 
         val adapter = object : ArrayAdapter<String>(
             context,
-            android.R.layout.simple_spinner_item,
+            R.layout.simple_spinner_item,
             displayItems
         ) {
             override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
@@ -81,15 +84,15 @@ class FamilyMemberSpinnerController(
                 return view
             }
         }
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        adapter.setDropDownViewResource(R.layout.simple_spinner_dropdown_item)
 
         spinner = Spinner(context).apply {
             this.adapter = adapter
             setSelection(0, false)
 
-            onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+            onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                 override fun onItemSelected(
-                    parent: android.widget.AdapterView<*>?,
+                    parent: AdapterView<*>?,
                     view: View?,
                     position: Int,
                     id: Long
@@ -101,9 +104,9 @@ class FamilyMemberSpinnerController(
                     onMemberSelected(members[position - 1])
                 }
 
-                override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {}
+                override fun onNothingSelected(parent: AdapterView<*>?) {}
             }
-            backgroundTintList = android.content.res.ColorStateList.valueOf(
+            backgroundTintList = ColorStateList.valueOf(
                 MaterialColors.getColor(
                     this,
                     com.google.android.material.R.attr.colorSurfaceVariant,

@@ -15,12 +15,14 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.members.repository.ChurchInfoRepository
 import za.co.jpsoft.winkerkreader.data.members.setup.DatabaseInitializer
 import za.co.jpsoft.winkerkreader.data.pastoral.PastoralDatabase
+import za.co.jpsoft.winkerkreader.data.pastoral.repository.PastoralNoteRepository
 import za.co.jpsoft.winkerkreader.databinding.ActivityMainBinding
 import za.co.jpsoft.winkerkreader.ui.activities.MainActivity
 import za.co.jpsoft.winkerkreader.ui.adapters.MemberListAdapter
@@ -175,7 +177,7 @@ class MainActivityInitializer(
         restoreInstanceState()
         setupScrollRestorationObserver()
         sortController.syncWithSettings(false)
-        loadInitialData()
+        //loadInitialData()
         initState = InitState.Ready
         activity.invalidateOptionsMenu()
     }
@@ -211,8 +213,9 @@ class MainActivityInitializer(
         binding.lidmaatList.apply {
             layoutManager = LinearLayoutManager(activity)
             adapter = this@MainActivityInitializer.adapter
-            setHasFixedSize(false)
-            itemAnimator = null
+            setHasFixedSize(true) // 👈 Prevents unnecessary layout recalculations on scroll
+            setItemViewCacheSize(20) // 👈 Improves recycling cache hit rates
+            itemAnimator = null // 👈 Disables layout animations during scroll to prevent jank
         }
         adapter.stateRestorationPolicy = RecyclerView.Adapter.StateRestorationPolicy.ALLOW
     }
@@ -220,8 +223,7 @@ class MainActivityInitializer(
     private fun setupChipController() {
         chipController = CongregationChipController(
             context = activity,
-            chipGroup = binding.congregationChipGroup,
-            loadingBar = binding.indeterminateBar,
+            chipContainer = binding.chipContainer,
             congregationPrefs = congregationPrefs,
             onFilterChanged = { selected ->
                 viewModel.setCongregationFilter(selected)
@@ -230,6 +232,21 @@ class MainActivityInitializer(
             }
         )
         chipController.setup()
+        binding.chipContainer.post {
+            if (BuildConfig.DEBUG) Log.d(
+                "ChipDebug",
+                "post: width=${binding.chipContainer.width}, height=${binding.chipContainer.height}"
+            )
+            if (BuildConfig.DEBUG) Log.d(
+                "ChipDebug",
+                "post: visibility=${binding.chipContainer.visibility}, childCount=${binding.chipContainer.childCount}"
+            )
+        }
+        // Also log immediately – this will show 0 children, but that's expected before post runs.
+        if (BuildConfig.DEBUG) Log.d(
+            "ChipDebug",
+            "immediate: childCount=${binding.chipContainer.childCount}"
+        )
     }
 
     private fun setupSortController() {
@@ -251,8 +268,10 @@ class MainActivityInitializer(
         searchFilterCoordinator = MainSearchFilterCoordinator(
             tag = "MainActivity",
             viewModel = viewModel,
-            binding = binding,
             memberListAdapter = adapter,
+            memberListPrefs = memberListPrefs,        // add
+            congregationPrefs = congregationPrefs,    // add
+            binding = binding,
             findSearchView = { activity.findSearchView() },
             hideFilterPanel = {},
             onUpdateSortOrder = { sortController.update(it) },
@@ -351,11 +370,13 @@ class MainActivityInitializer(
 
     private fun setupPastoralBadgeController() {
         val dao = PastoralDatabase.getInstance(activity).followUpReminderDao()
+        val noteRepo = PastoralNoteRepository(activity) // or inject via constructor
         pastoralBadgeController = PastoralReminderBadgeController(
             activity = activity,
             followUpReminderDao = dao,
             memberViewModel = viewModel,
-            mainViewModel = mainViewModel
+            mainViewModel = mainViewModel,
+            pastoralNoteRepository = noteRepo
         )
         pastoralBadgeController.setup()
     }
@@ -365,7 +386,7 @@ class MainActivityInitializer(
             override fun checkAndRequestPermissions() {
                 permissionManager.requestPhonePermissions(activity)
                 permissionManager.requestContactsPermissions(activity)
-                permissionManager.requestSmsPermissions(activity)
+                //permissionManager.requestSmsPermissions(activity)
                 permissionManager.requestCalendarPermissions(activity)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     permissionManager.requestNotificationPermissions(activity)
@@ -470,11 +491,12 @@ class MainActivityInitializer(
 
     private fun setupScrollRestorationObserver() {
         lifecycleScope.launch {
-            adapter.loadStateFlow.collect { loadStates ->
-                if (loadStates.refresh is LoadState.NotLoading && savedScrollStateWithSort != null) {
-                    restoreListScrollIfNeeded()
+            adapter.loadStateFlow
+                .collect { loadStates ->
+                    if (loadStates.refresh is LoadState.NotLoading && savedScrollStateWithSort != null) {
+                        restoreListScrollIfNeeded()
+                    }
                 }
-            }
         }
     }
 
@@ -501,13 +523,13 @@ class MainActivityInitializer(
     private fun loadInitialData() {
         if (BuildConfig.DEBUG) Log.d("MainActivityInit", "loadInitialData: started")
 
-        // Reload church info to make sure preferences are populated if they were just seeded
-        lifecycleScope.launch(Dispatchers.IO) {
-            churchInfoRepo.loadChurchInfo()
-            withContext(Dispatchers.Main) {
-                chipController.setup() // Re-populate chips with newly loaded data
-            }
-        }
+        chipController.refresh()        // Reload church info to make sure preferences are populated if they were just seeded\
+//        lifecycleScope.launch(Dispatchers.IO) {
+//            churchInfoRepo.loadChurchInfo()
+//            withContext(Dispatchers.Main) {
+//                chipController.setup() // Re-populate chips with newly loaded data
+//            }
+//        }
 
         if (::adapter.isInitialized && adapter.itemCount > 0) {
             val scrollState = MemberListScrollHelper.saveScrollState(binding.lidmaatList, adapter)
@@ -576,8 +598,8 @@ class MainActivityInitializer(
             pastoralBadgeController.refresh()
             searchFilterCoordinator.updateSummaryView()
             sortController.syncWithSettings(initState == InitState.Ready)
+            chipController.refresh()
             viewModel.refresh()
-            // ❌ Remove or guard loadInitialData() here
             binding.lidmaatList.post { restoreListScrollIfNeeded() }
         }
     }

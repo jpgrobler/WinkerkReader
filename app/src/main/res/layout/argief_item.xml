@@ -1,133 +1,106 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/argief_itemmain"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="?attr/colorSurface"
-    android:fitsSystemWindows="true"
     android:orientation="vertical"
-    android:padding="4dp">
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp">
 
-    <!-- Separator -->
+    <!-- Separator (section header) -->
     <TextView
         android:id="@+id/argief_list_separator"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/colorPrimary"
-        android:padding="3dp"
-        android:text="@string/argief_separator_placeholder"
-        android:textColor="?attr/colorOnPrimary"
-        android:textSize="14sp"
-        android:textStyle="bold"
-        android:visibility="gone" />
+        android:background="?attr/colorPrimaryContainer"
+        android:padding="8dp"
+        android:textAppearance="?attr/textAppearanceLabelLarge"
+        android:textColor="?attr/colorOnPrimaryContainer"
+        android:visibility="gone"
+        tools:text="Van: Smith" />
 
-    <!-- Content -->
-    <RelativeLayout
-        android:id="@+id/argief_main"
+    <!-- Content container -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="4dp"
-        android:paddingBottom="4dp">
+        android:minHeight="?attr/listPreferredItemHeightSmall"
+        android:orientation="vertical"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp">
 
-        <!-- Top row: Surname + Date of Birth -->
-        <RelativeLayout
-            android:id="@+id/topRow"
+        <!-- Surname and Date of Birth (top row) -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_alignParentTop="true"
             android:orientation="horizontal">
 
             <TextView
                 android:id="@+id/argief_van"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_centerVertical="true"
-                android:ellipsize="none"
-                android:fontFamily="sans-serif-medium"
-                android:paddingEnd="8dp"
-                android:scrollHorizontally="false"
-                android:singleLine="false"
-                android:textAppearance="?android:textAppearanceMedium"
+                android:layout_weight="1"
+                android:textAppearance="?attr/textAppearanceTitleMedium"
                 android:textColor="?attr/colorOnSurface"
-                tools:text="@string/argief_van" />
+                tools:text="Smith" />
 
             <TextView
                 android:id="@+id/argief_geboortedatum"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:layout_gravity="bottom|end"
-                android:fontFamily="sans-serif-medium"
-                android:paddingEnd="8dp"
-                android:textAppearance="?android:textAppearanceSmall"
+                android:textAppearance="?attr/textAppearanceBodySmall"
                 android:textColor="?attr/colorOnSurfaceVariant"
-                tools:text="@string/argief_geboorte" />
-        </RelativeLayout>
+                tools:text="1980-01-01" />
+        </LinearLayout>
 
-        <!-- Middle row: Name -->
-        <RelativeLayout
-            android:id="@+id/middleRow"
+        <!-- Name (middle row) -->
+        <TextView
+            android:id="@+id/argief_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/topRow">
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorPrimary"
+            tools:text="John" />
 
-            <TextView
-                android:id="@+id/argief_name"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerVertical="true"
-                android:fontFamily="sans-serif-medium"
-                android:paddingEnd="8dp"
-                android:textAppearance="@style/TextAppearance.AppCompat.Small"
-                android:textColor="?attr/colorPrimary"
-                tools:text="@string/argief_naam" />
-        </RelativeLayout>
-
-        <!-- Bottom row: Reason + Departure date + Destination -->
-        <RelativeLayout
-            android:id="@+id/bottomRow"
+        <!-- Reason, Departure date, Destination (bottom row) -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/middleRow">
+            android:orientation="horizontal">
 
             <TextView
                 android:id="@+id/argief_rede"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
-                android:layout_gravity="center_vertical"
-                android:fontFamily="sans-serif"
-                android:paddingStart="4dp"
-                android:paddingEnd="4dp"
-                android:textAppearance="?android:textAppearanceSmall"
+                android:layout_weight="1"
+                android:textAppearance="?attr/textAppearanceBodySmall"
                 android:textColor="?attr/colorPrimary"
-                tools:text="@string/argief_rede" />
+                tools:text="Verhuis" />
 
             <TextView
                 android:id="@+id/argief_vertrekdatum"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:layout_toEndOf="@+id/argief_rede"
-                android:fontFamily="sans-serif"
-                android:paddingStart="8dp"
-                android:textAppearance="?android:textAppearanceSmall"
+                android:layout_marginEnd="12dp"
+                android:textAppearance="?attr/textAppearanceBodySmall"
                 android:textColor="?attr/colorOnSurface"
-                tools:text="@string/argief_vertrek" />
+                tools:text="2025-03-15" />
 
             <TextView
                 android:id="@+id/argief_bestemming"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:layout_gravity="bottom|end"
-                android:fontFamily="sans-serif"
-                android:paddingStart="4dp"
-                android:textAppearance="?android:textAppearanceSmall"
+                android:textAppearance="?attr/textAppearanceBodySmall"
                 android:textColor="?attr/colorSecondary"
-                tools:text="@string/argief_bestemming" />
-        </RelativeLayout>
+                tools:text="Kaapstad" />
+        </LinearLayout>
 
-    </RelativeLayout>
+    </LinearLayout>
+
+    <!-- Divider line between items (optional, using a View) -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="?attr/colorOutlineVariant" />
+
 </LinearLayout>

@@ -1,7 +1,8 @@
 package za.co.jpsoft.winkerkreader.ui.controllers
 
 import android.widget.Button
-import android.widget.ProgressBar
+import com.google.android.material.progressindicator.CircularProgressIndicator
+import com.google.android.material.progressindicator.LinearProgressIndicator
 import android.widget.TextView
 import android.widget.Toast
 import androidx.lifecycle.LifecycleOwner
@@ -40,7 +41,7 @@ class PhotoSyncController(
     private val lifecycleOwner: LifecycleOwner,
     private val workManager: WorkManager,
     private val syncPrefs: SyncPrefs,
-    private val progressBar: ProgressBar,
+    private val progressBar: LinearProgressIndicator,
     private val statusLabel: TextView,
     private val syncButton: Button,
     private val forceSyncCheck: () -> Boolean,

@@ -26,11 +26,11 @@
             ns1:title="" />
 
 
-        <ProgressBar
+        <com.google.android.material.progressindicator.CircularProgressIndicator
             android:id="@+id/detail_indeterminateBar"
-            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_height="wrap_content"
             android:layout_width="match_parent"
-            android:layout_height="3dp"
+            android:indeterminate="true"
             android:progressTint="?attr/colorPrimary"
             android:visibility="visible" />
 
@@ -73,11 +73,9 @@
                     android:paddingTop="16dp"
                     android:paddingBottom="16dp">
 
-
                     <FrameLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content">
-
 
                         <com.google.android.material.imageview.ShapeableImageView
                             android:id="@+id/detail_kontak_foto"
@@ -88,7 +86,6 @@
                             android:src="@drawable/kontak"
                             android:tag="default"
                             ns1:shapeAppearanceOverlay="@style/CircleImageStyle" />
-
 
                         <ImageView
                             android:layout_width="28dp"
@@ -123,8 +120,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
-                        android:ellipsize="marquee"
-                        android:marqueeRepeatLimit="marquee_forever"
+                        android:ellipsize="end"
                         android:maxLines="1"
                         android:text="@string/detail_gemeente"
                         android:textAppearance="?attr/textAppearanceBodyMedium"
@@ -989,11 +985,12 @@
             </com.google.android.material.card.MaterialCardView>
 
 
-            <ProgressBar
+            <com.google.android.material.progressindicator.CircularProgressIndicator
                 android:id="@+id/detail_indeterminateBar2"
-                style="?android:attr/progressBarStyleHorizontal"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:indeterminate="true"
                 android:visibility="gone" />
 
 

@@ -172,7 +172,7 @@
                 android:src="@drawable/whatsapps" />
 
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_voltooi"
                 style="@style/Widget.Material3.Button.TonalButton"
                 android:layout_width="0dp"

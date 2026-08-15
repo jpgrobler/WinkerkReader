@@ -70,6 +70,7 @@ androidx-recyclerview = { group = "androidx.recyclerview", name = "recyclerview"
 androidx-gridlayout = { group = "androidx.gridlayout", name = "gridlayout", version.ref = "gridlayout" }
 androidx-swiperefreshlayout = { group = "androidx.swiperefreshlayout", name = "swiperefreshlayout", version.ref = "swiperefreshlayout" }
 androidx-localbroadcastmanager = { group = "androidx.localbroadcastmanager", name = "localbroadcastmanager", version.ref = "localbroadcastmanager" }
+safebox = "io.github.harrytmthy:safebox:1.3.0"
 
 # Lifecycle
 androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycle" }

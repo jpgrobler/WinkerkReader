@@ -23,6 +23,7 @@ import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.DecodeFormat
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.RequestOptions
 import za.co.jpsoft.winkerkreader.BuildConfig
@@ -59,6 +60,7 @@ class MemberListAdapter(
     private var sortOrder: String = "VAN"
 
     private var pendingReminderGuids: Set<String> = emptySet()
+    private var pendingNoteGuids: Set<String> = emptySet()
 
     // Collapse state: key = "$sortOrder:$groupValue" -> true = collapsed
     private val collapsedGroups = mutableSetOf<String>()
@@ -87,7 +89,8 @@ class MemberListAdapter(
         private val PHOTO_OPTIONS = RequestOptions()
             .centerCrop()
             .skipMemoryCache(false)
-            .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
+            .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
+            .format(DecodeFormat.PREFER_RGB_565)
             .timeout(5000)
     }
 
@@ -243,14 +246,12 @@ class MemberListAdapter(
     ) {
         if (BuildConfig.DEBUG) Log.d(
             TAG,
-            "updateState called: sortOrder=$sortOrder, listView=$listView"
+            "updateState called: sortOrder=$sortOrder, listView=$listView, soekList=$soekList"
         )
 
         // Clear highlight cache when search changes
         if (this.soek != soek) {
-            synchronized(spannableCache) {
-                spannableCache.clear()
-            }
+            synchronized(spannableCache) { spannableCache.clear() }
         }
 
         // Clear collapse state when sort order changes
@@ -258,26 +259,32 @@ class MemberListAdapter(
             clearCollapseState()
         }
 
+        // Update local fields
         this.sortOrder = sortOrder
         this.soekList = soekList
         this.soek = soek
         this.recordStatus = recordStatus
+        this.listView = listView
+        this.useCongregationIndicator = useCongregationIndicator
 
-        // ✅ Only update local fields – do NOT modify SettingsManager here
-        if (this.listView != listView) {
-            this.listView = listView
-            if (itemCount > 0) notifyItemRangeChanged(0, itemCount)
+        // Force a refresh of all visible items so they pick up the new state
+        if (itemCount > 0) {
+            notifyItemRangeChanged(0, itemCount)
         }
-        if (this.useCongregationIndicator != useCongregationIndicator) {
-            this.useCongregationIndicator = useCongregationIndicator
-            if (itemCount > 0) notifyItemRangeChanged(0, itemCount)
-        }
+        notifyDataSetChanged()
     }
 
     fun updatePendingReminderGuids(guids: Set<String>) {
         if (BuildConfig.DEBUG) Log.d(TAG, "📢 Adapter updating GUIDs: $guids")
         if (pendingReminderGuids != guids) {
             pendingReminderGuids = guids
+        }
+    }
+
+    fun updatePendingNoteGuids(guids: Set<String>) {
+        if (pendingNoteGuids != guids) {
+            pendingNoteGuids = guids
+            notifyItemRangeChanged(0, itemCount)
         }
     }
 
@@ -330,7 +337,7 @@ class MemberListAdapter(
         abstract val updownContainer: View
         abstract val updownIcon: ImageView
         abstract val cardView: com.google.android.material.card.MaterialCardView
-
+        abstract val listNoteIcon: ImageView?
         private fun getContrastColorForBg(bgColor: Int): Int {
             if (bgColor == Color.TRANSPARENT) {
                 val typedValue = android.util.TypedValue()
@@ -380,30 +387,25 @@ class MemberListAdapter(
             val isSectionCollapsed = collapsedGroups.contains(key)
 
             // ============================================================
-            // Handle visibility based on collapse state
+            // COLLAPSE CHECK - Determine if this section is collapsed
             // ============================================================
             if (item.showSeparator) {
+                // Separator rows are always visible (they are the headers)
                 itemView.layoutParams = itemView.layoutParams.apply {
                     height = ViewGroup.LayoutParams.WRAP_CONTENT
                 }
                 itemView.visibility = View.VISIBLE
-
-                if (sortOrder == "WYK") {
-                    if (BuildConfig.DEBUG) {
-                        Log.d(
-                            TAG,
-                            "WYK separator at position $position: ward=${item.ward}, showSeparator=${item.showSeparator}, showSeparator2=${item.showSeparator2}"
-                        )
-                    }
-                }
             } else {
-                if (isSectionCollapsed) {
+                // In search mode, we never collapse – show everything
+                if (!soekList && isSectionCollapsed) {
+                    // Collapse: hide this item
                     itemView.layoutParams = itemView.layoutParams.apply {
                         height = 0
                     }
                     itemView.visibility = View.GONE
-                    return
+                    return // skip binding for this item
                 } else {
+                    // Show normally
                     itemView.layoutParams = itemView.layoutParams.apply {
                         height = ViewGroup.LayoutParams.WRAP_CONTENT
                     }
@@ -504,7 +506,7 @@ class MemberListAdapter(
             // ADDRESS MAP CLICK
             // ------------------------------------------------------------
             val isAddressSort = sortOrder == "ADRES" || sortOrder == "GESINNE" || sortOrder == "WYK"
-            if (isAddressSort && (item.showSeparator || item.showSeparator2) && item.address.isNotEmpty()) {
+            if ((isAddressSort || soekList) && (item.showSeparator || item.showSeparator2) && item.address.isNotEmpty()) {
                 separatorBlock.setOnClickListener { view ->
                     try {
                         val encodedAddress = Uri.encode(item.address)
@@ -572,6 +574,8 @@ class MemberListAdapter(
             itemView.setOnLongClickListener { onItemLongClick(item, bindingAdapterPosition) }
 
             listBediening.visibility = if (hasPending) View.VISIBLE else View.GONE
+            val hasNote = pendingNoteGuids.contains(item.guid)
+            listNoteIcon?.visibility = if (hasNote) View.VISIBLE else View.GONE
 
             // ---- Ring on photo ----
             if (useCongregationIndicator && congregationColor != Int.MIN_VALUE) {
@@ -617,8 +621,9 @@ class MemberListAdapter(
         }
 
         private fun bindPhotoData(item: MemberItem, view: View, useRing: Boolean, textColor: Int) {
+            val context = view.context
             val density = view.context.resources.displayMetrics.density
-            val sizeDp = if (listView == VIEW_TYPE_DETAILED) 50 else 30
+            val sizeDp = 50
             val imageSizePx = (sizeDp * density + 0.5f).toInt()
             val strokeWidthPx = (RING_STROKE_WIDTH_DP * density + 0.5f).toInt()
             val totalSizePx = if (useRing) imageSizePx + strokeWidthPx else imageSizePx
@@ -636,25 +641,35 @@ class MemberListAdapter(
             }
 
             val defaultDrawable = when (item.gender) {
-                "Manlik" -> ContextCompat.getDrawable(view.context, R.drawable.gender_male)
-                else -> ContextCompat.getDrawable(view.context, R.drawable.gender_female)
-            } ?: ContextCompat.getDrawable(view.context, R.drawable.gender_male)
+                "Manlik" -> ContextCompat.getDrawable(context, R.drawable.gender_male)
+                else -> ContextCompat.getDrawable(context, R.drawable.gender_female)
+            } ?: ContextCompat.getDrawable(context, R.drawable.gender_male)
 
-            val photoFile = PhotoHelper.getSyncedPhotoFile(view.context, item.guid)
+            val photoFile = PhotoHelper.getSyncedPhotoFile(context, item.guid)
 
             if (photoFile != null && photoFile.exists()) {
                 fotoImageView.clearColorFilter()
                 fotoImageView.imageTintList = null
+                val density = view.context.resources.displayMetrics.density
+                val avatarSizePx = (50 * density + 0.5f).toInt()   // fixed 50dp
+
                 Glide.with(view)
                     .load(photoFile)
                     .apply(PHOTO_OPTIONS)
                     .placeholder(defaultDrawable)
                     .error(defaultDrawable)
-                    .override(totalSizePx, totalSizePx)
+                    .override(avatarSizePx, avatarSizePx)
+                    .centerCrop()
                     .into(fotoImageView)
+
+                fotoImageView.tag = "synced"
             } else {
+                // Clear any ongoing Glide request to prevent ghosting/flicker on recycling
+                Glide.with(view).clear(fotoImageView)
+
                 fotoImageView.setImageDrawable(defaultDrawable)
                 fotoImageView.imageTintList = android.content.res.ColorStateList.valueOf(textColor)
+                fotoImageView.tag = "default"
             }
         }
 
@@ -740,30 +755,95 @@ class MemberListAdapter(
                 if (item.email.isNotEmpty() && memberListPrefs.isListEpos) View.VISIBLE else View.GONE
         }
 
+        //        private fun bindSeparator(item: MemberItem) {
+//            val hasSeparator = item.showSeparator || item.showSeparator2
+//            val hasText =
+//                item.separatorLabel.isNotBlank() || item.separatorWykLabel.isNotBlank()
+//
+//            if (hasSeparator && hasText) {
+//                separatorTextView.text = item.separatorLabel
+//                separatorWykTextView.text = item.separatorWykLabel
+//
+//                if (sortOrder == "WYK") {
+//                    separatorWykTextView.visibility = View.GONE`
+//                } else {
+//                    separatorWykTextView.visibility = View.VISIBLE
+//                }
+//
+//                separatorBlock.visibility = View.VISIBLE
+//                if (soekList) item.address = item.address
+//                    .replace("\r\n", ", ")
+//                    .replace("\r", ", ")
+//                    .replace("\n", ", ")
+//                    .replace(Regex(",{2,}"), ", ")   // Collapse multiple commas
+//                    .trim()
+//                val isAddressSort = sortOrder == "ADRES" || sortOrder == "GESINNE"
+//                if ((isAddressSort || soekList) && item.address.isNotEmpty()) {
+//                    separatorTextView.setOnClickListener { view ->
+//                        openMaps(view, item.address)
+//                    }
+//                    separatorWykTextView.setOnClickListener { view ->
+//                        openMaps(view, item.address)
+//                    }
+//                } else {
+//                    separatorTextView.setOnClickListener(null)
+//                    separatorWykTextView.setOnClickListener(null)
+//                }
+//            } else {
+//                separatorBlock.visibility = View.GONE
+//                separatorTextView.setOnClickListener(null)
+//                separatorWykTextView.setOnClickListener(null)
+//            }
+//        }
         private fun bindSeparator(item: MemberItem) {
             val hasSeparator = item.showSeparator || item.showSeparator2
-            val hasText =
-                item.separatorLabel.isNotBlank() || item.separatorWykLabel.isNotBlank()
+            val hasText = item.separatorLabel.isNotBlank() || item.separatorWykLabel.isNotBlank()
 
-            if (hasSeparator && hasText) {
-                separatorTextView.text = item.separatorLabel
-                separatorWykTextView.text = item.separatorWykLabel
+            // When searching, show the separator block for every item that has an address.
+            // Otherwise, only show it when there is a separator or text.
+            val shouldShowSeparator = if (soekList) {
+                item.address.isNotEmpty()
+            } else {
+                hasSeparator && hasText
+            }
 
-                if (sortOrder == "WYK") {
+            if (shouldShowSeparator) {
+                // Normalise the address (replace newlines with commas)
+                val normalisedAddress = item.address
+                    .replace("\r\n", ", ")
+                    .replace("\r", ", ")
+                    .replace("\n", ", ")
+                    .replace(Regex(",{2,}"), ", ")
+                    .trim()
+
+                if (soekList) {
+                    // Show the address in the separator label
+                    separatorTextView.text = normalisedAddress
+                    // Hide the second label to avoid clutter
                     separatorWykTextView.visibility = View.GONE
                 } else {
-                    separatorWykTextView.visibility = View.VISIBLE
+                    // Normal (non‑search) display
+                    separatorTextView.text = item.separatorLabel
+                    separatorWykTextView.text = item.separatorWykLabel
+                    separatorWykTextView.visibility =
+                        if (sortOrder == "WYK") View.GONE else View.VISIBLE
                 }
 
                 separatorBlock.visibility = View.VISIBLE
 
-                val isAddressSort = sortOrder == "ADRES" || sortOrder == "GESINNE"
-                if (isAddressSort && item.address.isNotEmpty()) {
+                // Set map click listener if address is non‑empty
+                if (item.address.isNotEmpty()) {
                     separatorTextView.setOnClickListener { view ->
-                        openMaps(view, item.address)
+                        openMaps(
+                            view,
+                            normalisedAddress
+                        )
                     }
                     separatorWykTextView.setOnClickListener { view ->
-                        openMaps(view, item.address)
+                        openMaps(
+                            view,
+                            normalisedAddress
+                        )
                     }
                 } else {
                     separatorTextView.setOnClickListener(null)
@@ -775,7 +855,6 @@ class MemberListAdapter(
                 separatorWykTextView.setOnClickListener(null)
             }
         }
-
         /**
          * Collapses all groups if any are expanded, otherwise expands all groups.
          */
@@ -901,6 +980,7 @@ class MemberListAdapter(
         override val updownIcon: ImageView = binding.updown
         override val cardView: com.google.android.material.card.MaterialCardView =
             binding.listCardView
+        override val listNoteIcon: ImageView = binding.listNoteIcon
     }
 
     private inner class DetailedViewHolder(val binding: ListItem2Binding) :
@@ -931,5 +1011,6 @@ class MemberListAdapter(
         override val updownIcon: ImageView = binding.updown
         override val cardView: com.google.android.material.card.MaterialCardView =
             binding.listCardView
+        override val listNoteIcon: ImageView = binding.listNoteIcon
     }
 }

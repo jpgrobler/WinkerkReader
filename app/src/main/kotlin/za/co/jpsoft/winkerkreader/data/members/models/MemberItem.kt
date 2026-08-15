@@ -22,7 +22,7 @@ data class MemberItem(
     val landline: String = "",
     val email: String = "",
     val ward: String = "",
-    val address: String = "",
+    var address: String = "",
     val birthday: String = "",
     val weddingDate: String = "",
     val picturePath: String = "",

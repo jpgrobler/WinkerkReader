@@ -1,5 +1,3 @@
-// File: MemberQueryBuilder.kt - FIXED VERSION
-
 package za.co.jpsoft.winkerkreader.data.members.queries
 
 import za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract.col
@@ -16,7 +14,9 @@ object MemberQueryBuilder {
         soek: String,
         filterList: ArrayList<FilterBox>?,
         sortOrder: String,
-        congregations: List<String>? = null
+        congregations: List<String>? = null,
+        noteGuids: Set<String>? = null,
+        reminderGuids: Set<String>? = null
     ): SqlRequest? = when (eventType) {
         "GESINNE_DATA", "FILTER_DATA", "LIDMAAT_DATA", "LIDMAAT_DATA_WYK",
         "SOEK_DATA", "LIDMAAT_DATA_VERJAAR", "OUDERDOM_DATA", "LIDMAAT_DATA_ADRES",
@@ -26,9 +26,10 @@ object MemberQueryBuilder {
             soek,
             filterList,
             sortOrder,
-            congregations
+            congregations,
+            noteGuids,
+            reminderGuids
         )
-
         else -> null
     }
 
@@ -38,7 +39,9 @@ object MemberQueryBuilder {
         soek: String,
         filterList: ArrayList<FilterBox>?,
         sortOrder: String,
-        congregations: List<String>?
+        congregations: List<String>?,
+        noteGuids: Set<String>?,
+        reminderGuids: Set<String>?
     ): SqlRequest {
         val selectionBase = winkerkEntry.SELECTION_LIDMAAT_INFO
         val where = StringBuilder()
@@ -72,7 +75,7 @@ object MemberQueryBuilder {
             where.append(")")
         }
 
-        appendWhereClause(eventType, where, argsList, soek, filterList)
+        appendWhereClause(eventType, where, argsList, soek, filterList, noteGuids, reminderGuids)
         appendOrderByClause(eventType, sortOrderBuilder, sortOrder)
 
         val finalFrom =
@@ -98,7 +101,9 @@ object MemberQueryBuilder {
         where: StringBuilder,
         argsList: MutableList<String>,
         soek: String,
-        filterList: ArrayList<FilterBox>?
+        filterList: ArrayList<FilterBox>?,
+        noteGuids: Set<String>?,
+        reminderGuids: Set<String>?
     ) {
         when (eventType) {
             "HUWELIK_DATA" -> where.append(" AND ").append(winkerkEntry.SELECTION_HUWELIK_WHERE)
@@ -150,25 +155,21 @@ object MemberQueryBuilder {
                                             argsList.add(filter.text1)
                                             argsList.add(filter.text1)
                                         }
-
                                         "is nie", "nie gelyk aan" -> {
                                             where.append("($colNoem != ? AND $colNaam != ?)")
                                             argsList.add(filter.text1)
                                             argsList.add(filter.text1)
                                         }
-
                                         "begin met" -> {
                                             where.append("($colNoem LIKE ? OR $colNaam LIKE ?)")
                                             argsList.add("${filter.text1}%")
                                             argsList.add("${filter.text1}%")
                                         }
-
                                         "eindig met" -> {
                                             where.append("($colNoem LIKE ? OR $colNaam LIKE ?)")
                                             argsList.add("%${filter.text1}")
                                             argsList.add("%${filter.text1}")
                                         }
-
                                         "leeg" -> {
                                             where.append("($colNoem IS NULL AND $colNaam IS NULL)")
                                         }
@@ -179,22 +180,18 @@ object MemberQueryBuilder {
                                     where.append(col(filter.title)).append(" = ?")
                                     argsList.add(filter.text1)
                                 }
-
                                 toets == "is nie" || toets == "nie gelyk aan" -> {
                                     where.append(col(filter.title)).append(" != ?")
                                     argsList.add(filter.text1)
                                 }
-
                                 toets == "begin met" -> {
                                     where.append(col(filter.title)).append(" LIKE ?")
                                     argsList.add("${filter.text1}%")
                                 }
-
                                 toets == "eindig met" -> {
                                     where.append(col(filter.title)).append(" LIKE ?")
                                     argsList.add("%${filter.text1}")
                                 }
-
                                 toets == "leeg" -> where.append(col(filter.title))
                                     .append(" IS NULL ")
 
@@ -202,28 +199,47 @@ object MemberQueryBuilder {
                                     where.append("((strftime('%Y', 'now') - strftime('%Y', $birthdateExpr)) - (strftime('%m-%d', 'now') < strftime('%m-%d', $birthdateExpr))) < CAST(? AS INTEGER)")
                                     argsList.add(filter.text1)
                                 }
-
                                 toets == "groter as" -> {
                                     where.append("((strftime('%Y', 'now') - strftime('%Y', $birthdateExpr)) - (strftime('%m-%d', 'now') < strftime('%m-%d', $birthdateExpr))) > CAST(? AS INTEGER)")
                                     argsList.add(filter.text1)
                                 }
-
                                 toets == "tussen" && filter.title == "Ouderdom" -> {
                                     where.append(" ( ((strftime('%Y', 'now') - strftime('%Y', $birthdateExpr)) - (strftime('%m-%d', 'now') < strftime('%m-%d', $birthdateExpr))) >= CAST(? AS INTEGER) ) AND ( ((strftime('%Y', 'now') - strftime('%Y', $birthdateExpr)) - (strftime('%m-%d', 'now') < strftime('%m-%d', $birthdateExpr))) <= CAST(? AS INTEGER) )")
                                     argsList.add(filter.text1)
                                     argsList.add(filter.text2)
                                 }
-
                                 toets == "gelyk" && filter.title == "Ouderdom" -> {
                                     where.append("((strftime('%Y', 'now') - strftime('%Y', $birthdateExpr)) - (strftime('%m-%d', 'now') < strftime('%m-%d', $birthdateExpr))) = CAST(? AS INTEGER)")
                                     argsList.add(filter.text1)
+                                }
+
+                                // ─── NEW: Note and Reminder filters ──────────
+                                filter.title == "Note" -> {
+                                    val guids = noteGuids ?: emptySet()
+                                    if (guids.isNotEmpty()) {
+                                        where.append(" [${winkerkEntry.LIDMATE_LIDMAATGUID}] IN (")
+                                        where.append(guids.joinToString(",") { "'$it'" })
+                                        where.append(") ")
+                                    } else {
+                                        where.append(" 1=0 ") // exclude all if no GUIDs
+                                    }
+                                }
+
+                                filter.title == "Reminder" -> {
+                                    val guids = reminderGuids ?: emptySet()
+                                    if (guids.isNotEmpty()) {
+                                        where.append(" [${winkerkEntry.LIDMATE_LIDMAATGUID}] IN (")
+                                        where.append(guids.joinToString(",") { "'$it'" })
+                                        where.append(") ")
+                                    } else {
+                                        where.append(" 1=0 ")
+                                    }
                                 }
 
                                 filter.title == "Geslag" -> {
                                     where.append(col(winkerkEntry.LIDMATE_GESLAG)).append(" = ?")
                                     argsList.add(if (toets == "manlik") "Manlik" else "Vroulik")
                                 }
-
                                 filter.title == "Selfoon" -> where.append(" ( ")
                                     .append(col(winkerkEntry.LIDMATE_SELFOON))
                                     .append(" IS NOT NULL AND ")
@@ -244,7 +260,6 @@ object MemberQueryBuilder {
                                         .append(" = ?")
                                     argsList.add(filter.text3)
                                 }
-
                                 filter.title == "Lidmaatskap" -> {
                                     if (filter.text3 == "Belydend") {
                                         where.append(col(winkerkEntry.LIDMATE_LIDMAATSTATUS))
@@ -256,7 +271,6 @@ object MemberQueryBuilder {
                                         argsList.add(filter.text3)
                                     }
                                 }
-
                                 filter.title == "Gesinshoof" -> where.append(" quote(")
                                     .append(col(winkerkEntry.LIDMATE_GESINSHOOFGUID))
                                     .append(") = quote(")
@@ -396,7 +410,9 @@ object MemberQueryBuilder {
         soek: String,
         filterList: ArrayList<FilterBox>?,
         sortOrder: String,
-        congregations: List<String>? = null
+        congregations: List<String>? = null,
+        noteGuids: Set<String>? = null,
+        reminderGuids: Set<String>? = null
     ): Pair<String, Array<String>> {
         val where = StringBuilder()
         val argsList = mutableListOf<String>()
@@ -428,7 +444,8 @@ object MemberQueryBuilder {
             where.append(")")
         }
 
-        appendWhereClause(eventType, where, argsList, soek, filterList)
+        appendWhereClause(eventType, where, argsList, soek, filterList, noteGuids, reminderGuids)
+
 
         val fromClause =
             if (eventType == "GESINNE_DATA" || eventType == "LIDMAAT_DATA_WYK" || eventType == "LIDMAAT_DATA_ADRES") {
@@ -492,7 +509,7 @@ object MemberQueryBuilder {
         }
 
         // Add other filters (search, filters, etc.)
-        appendWhereClause(eventType, where, argsList, soek, filterList)
+        appendWhereClause(eventType, where, argsList, soek, filterList, null, null)
 
         // Add the birthday condition - members with birthday BEFORE today
         val birthdayColumn =

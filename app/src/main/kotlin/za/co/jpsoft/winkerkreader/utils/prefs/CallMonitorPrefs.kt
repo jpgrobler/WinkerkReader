@@ -5,6 +5,10 @@ import za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract
 
 class CallMonitorPrefs(private val prefs: SharedPreferences) {
 
+    var oproepTimeoutSeconds: Int
+        get() = prefs.getString("oproep_timeout", "5")?.toIntOrNull() ?: 5
+        set(value) = prefs.edit().putString("oproep_timeout", value.toString()).apply()
+
     var callMonitorEnabled: Boolean
         get() = prefs.getBoolean(WinkerkContract.KEY_OPROEPMONITOR, false)
         set(value) = prefs.edit().putBoolean(WinkerkContract.KEY_OPROEPMONITOR, value).apply()

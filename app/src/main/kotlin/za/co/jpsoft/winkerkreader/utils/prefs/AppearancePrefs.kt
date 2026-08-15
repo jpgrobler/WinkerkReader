@@ -17,7 +17,9 @@ class AppearancePrefs(private val prefs: SharedPreferences) {
             }
         }
         set(value) = prefs.edit().putString("theme_mode", value.name.lowercase()).apply()
-
+    var force60Hz: Boolean
+        get() = prefs.getBoolean("force_60hz", false)   // standaard af
+        set(value) = prefs.edit().putBoolean("force_60hz", value).apply()
     var dynamicColorEnabled: Boolean
         get() = prefs.getBoolean(
             "dynamic_color_enabled",

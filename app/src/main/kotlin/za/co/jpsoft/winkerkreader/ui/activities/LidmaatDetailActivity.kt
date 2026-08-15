@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Outline
+import android.net.Uri
 import android.os.Bundle
 import android.provider.CalendarContract
 import android.text.Html
@@ -768,18 +769,25 @@ class LidmaatDetailActivity : AuthBaseActivity() {
     private fun wysigLidmaatData(item: MemberDetailItem) {
         val id = item.id
         val values = ContentValues()
-        var emailText = ""
-        var emailHtml = "<html>"
 
         val subject = "Opdateer asb Winkerkdata van Lidmaat: ${item.fullNames} ${item.surname}"
-        emailHtml += "<p>Wyk: ${item.ward}<br>Geboortedatum: ${item.birthday}</p>"
-        emailText = "$subject\r\nWyk: ${item.ward}\r\nGeboortedatum: ${item.birthday}"
+
+        val messageBuilder = StringBuilder().apply {
+            append("Goeiedag,\n\n")
+            append("Dateer asseblief die volgende gewysigde inligting op vir:\n")
+            append("Lidmaat: ${item.fullNames} ${item.surname} (${item.ward.ifEmpty { "Geen wyk" }})\n")
+            append("----------------------------------------\n")
+        }
+
+        var changesCount = 0
 
         fun checkAndPut(column: String, currentValue: String, originalValue: String) {
             if (currentValue != originalValue) {
                 values.put(column, currentValue)
-                emailHtml += "\r\n<p>$column : <b><font color='red'>$currentValue</font></b></p>"
-                emailText += "\r\n$column : $currentValue"
+                messageBuilder.append("• $column:\n")
+                messageBuilder.append("  Oud: '$originalValue'\n")
+                messageBuilder.append("  Nuwe: '$currentValue'\n\n")
+                changesCount++
             }
         }
 
@@ -788,7 +796,11 @@ class LidmaatDetailActivity : AuthBaseActivity() {
             binding.detailNoemnaam.text.toString(),
             item.name
         )
-        checkAndPut(winkerkEntry.LIDMATE_VAN, binding.detailVan.text.toString(), item.surname)
+        checkAndPut(
+            winkerkEntry.LIDMATE_VAN,
+            binding.detailVan.text.toString(),
+            item.surname
+        )
         checkAndPut(
             winkerkEntry.LIDMATE_VOORNAME,
             binding.detailVollename.text.toString(),
@@ -804,7 +816,11 @@ class LidmaatDetailActivity : AuthBaseActivity() {
             binding.detailTelefoon.text.toString(),
             item.landline
         )
-        checkAndPut(winkerkEntry.LIDMATE_WYK, binding.detailWyk.text.toString(), item.ward)
+        checkAndPut(
+            winkerkEntry.LIDMATE_WYK,
+            binding.detailWyk.text.toString(),
+            item.ward
+        )
         checkAndPut(
             winkerkEntry.LIDMATE_LIDMAATSTATUS,
             binding.detailLidmaatstatus.text.toString()
@@ -819,7 +835,11 @@ class LidmaatDetailActivity : AuthBaseActivity() {
             binding.detailGeboortedatum.text.toString(),
             item.birthday
         )
-        checkAndPut(winkerkEntry.LIDMATE_EPOS, binding.detailEpos.text.toString(), item.email)
+        checkAndPut(
+            winkerkEntry.LIDMATE_EPOS,
+            binding.detailEpos.text.toString(),
+            item.email
+        )
         checkAndPut(
             winkerkEntry.LIDMATE_NOOIENSVAN,
             binding.detailNooiensvan.text.toString(),
@@ -839,48 +859,65 @@ class LidmaatDetailActivity : AuthBaseActivity() {
         val newStraat = binding.detailStraatadres.text.toString()
         if (newStraat != mStraatAdres) {
             values.put(winkerkEntry.LIDMATE_STRAATADRES, newStraat)
-            emailHtml += "\r\n<p>${winkerkEntry.LIDMATE_STRAATADRES} : <b><font color='red'>$newStraat</font></b></p>"
-            emailText += "\r\n${winkerkEntry.LIDMATE_STRAATADRES} : $newStraat"
+            messageBuilder.append("• ${winkerkEntry.LIDMATE_STRAATADRES}:\n")
+            messageBuilder.append("  Oud: '$mStraatAdres'\n")
+            messageBuilder.append("  Nuwe: '$newStraat'\n\n")
+            changesCount++
         }
 
         val newPos = binding.detailPosadres.text.toString()
         if (newPos != mPosAdres) {
             values.put(winkerkEntry.LIDMATE_POSADRES, newPos)
-            emailHtml += "\r\n<p>${winkerkEntry.LIDMATE_POSADRES} : <b><font color='red'>$newPos</font></b></p>"
-            emailText += "\r\n${winkerkEntry.LIDMATE_POSADRES} : $newPos"
+            messageBuilder.append("• ${winkerkEntry.LIDMATE_POSADRES}:\n")
+            messageBuilder.append("  Oud: '$mPosAdres'\n")
+            messageBuilder.append("  Nuwe: '$newPos'\n\n")
+            changesCount++
         }
 
         val huwPos = binding.huwelikstatus.selectedItemPosition
-        val newHuwelik = huwelikStatusArray[huwPos]
-        if (newHuwelik != item.marriageStatus) {
-            values.put(winkerkEntry.LIDMATE_HUWELIKSTATUS, newHuwelik)
-            emailHtml += "\r\n<p>${winkerkEntry.LIDMATE_HUWELIKSTATUS} : <b><font color='red'>$newHuwelik</font></b></p>"
-            emailText += "\r\n${winkerkEntry.LIDMATE_HUWELIKSTATUS} : $newHuwelik"
+        if (huwPos in huwelikStatusArray.indices) {
+            val newHuwelik = huwelikStatusArray[huwPos]
+            if (newHuwelik != item.marriageStatus) {
+                values.put(winkerkEntry.LIDMATE_HUWELIKSTATUS, newHuwelik)
+                messageBuilder.append("• ${winkerkEntry.LIDMATE_HUWELIKSTATUS}:\n")
+                messageBuilder.append("  Oud: '${item.marriageStatus}'\n")
+                messageBuilder.append("  Nuwe: '$newHuwelik'\n\n")
+                changesCount++
+            }
         }
 
         val geslagPos = binding.geslag.selectedItemPosition
-        val newGeslag = geslagteArray[geslagPos]
-        if (newGeslag != mGeslagB) {
-            values.put(winkerkEntry.LIDMATE_GESLAG, newGeslag)
-            emailHtml += "\r\n<p>${winkerkEntry.LIDMATE_GESLAG} : <b><font color='red'>$newGeslag</font></b></p>"
-            emailText += "\r\n${winkerkEntry.LIDMATE_GESLAG} : $newGeslag"
+        if (geslagPos in geslagteArray.indices) {
+            val newGeslag = geslagteArray[geslagPos]
+            if (newGeslag != mGeslagB) {
+                values.put(winkerkEntry.LIDMATE_GESLAG, newGeslag)
+                messageBuilder.append("• ${winkerkEntry.LIDMATE_GESLAG}:\n")
+                messageBuilder.append("  Oud: '$mGeslagB'\n")
+                messageBuilder.append("  Nuwe: '$newGeslag'\n\n")
+                changesCount++
+            }
         }
 
-        // ─── Record status (Aktief / Onaktief) ──────────────────────────────────
+        // Record status (Aktief / Onaktief)
         if (recordStatus != mRecordStatus) {
-            val statusLabel = if (recordStatus == "0") "Aktief" else "Onaktief"
+            val oldStatusLabel = if (mRecordStatus == "0") "Aktief" else "Onaktief"
+            val newStatusLabel = if (recordStatus == "0") "Aktief" else "Onaktief"
             values.put(KEY_RECORD_STATUS, recordStatus.toInt())
-            emailHtml += "\r\n<p>Rekordstatus : <b><font color='red'>$statusLabel</font></b></p>"
-            emailText += "\r\nRekordstatus : $statusLabel"
+            messageBuilder.append("• Rekordstatus:\n")
+            messageBuilder.append("  Oud: '$oldStatusLabel'\n")
+            messageBuilder.append("  Nuwe: '$newStatusLabel'\n\n")
+            changesCount++
         }
 
-        emailHtml += "</html>"
-
-        if (values.size() == 0) {
-            // No fields changed — leave edit mode without opening an email composer
+        if (changesCount == 0) {
+            Toast.makeText(this, "Geen veranderinge gemaak nie", Toast.LENGTH_SHORT).show()
             return
         }
 
+        messageBuilder.append("----------------------------------------\n")
+        messageBuilder.append("Vriendelike groete,\nWinkerkReader")
+
+        // Persist changes to local DB via ContentResolver
         val uri = ContentUris.withAppendedId(winkerkEntry.CONTENT_URI, id.toLong())
         contentResolver.update(
             uri,
@@ -889,34 +926,180 @@ class LidmaatDetailActivity : AuthBaseActivity() {
             arrayOf(id.toString())
         )
 
-        var emailUrl = ""
-        val gemeente = item.gemeente
-        emailUrl = when (gemeente) {
+        // Resolve church email target destination
+        val emailUrl = when (item.gemeente) {
             congregationPrefs.gemeenteNaam -> congregationPrefs.gemeenteEpos
             congregationPrefs.gemeente2Naam -> congregationPrefs.gemeente2Epos
             congregationPrefs.gemeente3Naam -> congregationPrefs.gemeente3Epos
-            else -> ""
+            else -> congregationPrefs.gemeenteEpos.ifBlank { "" }
         }
 
-        val eposHtmlEnabled = appearancePrefs.eposHtml
-        val sendIntent = Intent(Intent.ACTION_SENDTO).apply {
-            data = "mailto:".toUri()
-            putExtra(Intent.EXTRA_SUBJECT, subject)
-            putExtra(Intent.EXTRA_EMAIL, arrayOf(emailUrl))
-            if (eposHtmlEnabled) {
-                val html: Spanned = Html.fromHtml(emailHtml, Html.FROM_HTML_MODE_LEGACY)
-                putExtra(Intent.EXTRA_TEXT, html)
-            } else {
-                putExtra(Intent.EXTRA_TEXT, emailText)
-            }
-        }
+        // Safely encode components for standard mailto URI compatibility across all clients (Gmail, Outlook, etc.)
+        val encodedSubject = Uri.encode(subject)
+        val encodedBody = Uri.encode(messageBuilder.toString())
+        val mailtoUri = "mailto:$emailUrl?subject=$encodedSubject&body=$encodedBody".toUri()
+
+        val sendIntent = Intent(Intent.ACTION_SENDTO, mailtoUri)
 
         try {
             startActivity(sendIntent)
         } catch (e: Exception) {
             if (BuildConfig.DEBUG) Log.e(TAG, "Email intent failed", e)
+            Toast.makeText(this, "Kon nie e-pos toepassing oopmaak nie", Toast.LENGTH_SHORT).show()
         }
     }
+//    private fun wysigLidmaatData(item: MemberDetailItem) {
+//        val id = item.id
+//        val values = ContentValues()
+//        var emailText = ""
+//        var emailHtml = "<html>"
+//
+//        val subject = "Opdateer asb Winkerkdata van Lidmaat: ${item.fullNames} ${item.surname}"
+//        emailHtml += "<p>Wyk: ${item.ward}<br>Geboortedatum: ${item.birthday}</p>"
+//        emailText = "$subject\r\nWyk: ${item.ward}\r\nGeboortedatum: ${item.birthday}"
+//
+//        fun checkAndPut(column: String, currentValue: String, originalValue: String) {
+//            if (currentValue != originalValue) {
+//                values.put(column, currentValue)
+//                emailHtml += "\r\n<p>$column : <b><font color='red'>$currentValue</font></b></p>"
+//                emailText += "\r\n$column : $currentValue"
+//            }
+//        }
+//
+//        checkAndPut(
+//            winkerkEntry.LIDMATE_NOEMNAAM,
+//            binding.detailNoemnaam.text.toString(),
+//            item.name
+//        )
+//        checkAndPut(winkerkEntry.LIDMATE_VAN, binding.detailVan.text.toString(), item.surname)
+//        checkAndPut(
+//            winkerkEntry.LIDMATE_VOORNAME,
+//            binding.detailVollename.text.toString(),
+//            item.fullNames
+//        )
+//        checkAndPut(
+//            winkerkEntry.LIDMATE_SELFOON,
+//            binding.detailSelfoon.text.toString(),
+//            item.cellphone
+//        )
+//        checkAndPut(
+//            winkerkEntry.LIDMATE_LANDLYN,
+//            binding.detailTelefoon.text.toString(),
+//            item.landline
+//        )
+//        checkAndPut(winkerkEntry.LIDMATE_WYK, binding.detailWyk.text.toString(), item.ward)
+//        checkAndPut(
+//            winkerkEntry.LIDMATE_LIDMAATSTATUS,
+//            binding.detailLidmaatstatus.text.toString()
+//                .removePrefix("✓ ")
+//                .removePrefix("⏳ ")
+//                .removePrefix("✕ ")
+//                .removePrefix("? "),
+//            item.memberStatus
+//        )
+//        checkAndPut(
+//            winkerkEntry.LIDMATE_GEBOORTEDATUM,
+//            binding.detailGeboortedatum.text.toString(),
+//            item.birthday
+//        )
+//        checkAndPut(winkerkEntry.LIDMATE_EPOS, binding.detailEpos.text.toString(), item.email)
+//        checkAndPut(
+//            winkerkEntry.LIDMATE_NOOIENSVAN,
+//            binding.detailNooiensvan.text.toString(),
+//            item.maidenName
+//        )
+//        checkAndPut(
+//            winkerkEntry.LIDMATE_BEROEP,
+//            binding.detailBeroep.text.toString(),
+//            item.profession
+//        )
+//        checkAndPut(
+//            winkerkEntry.LIDMATE_WERKGEWER,
+//            binding.detailWerkgewer.text.toString(),
+//            item.employer
+//        )
+//
+//        val newStraat = binding.detailStraatadres.text.toString()
+//        if (newStraat != mStraatAdres) {
+//            values.put(winkerkEntry.LIDMATE_STRAATADRES, newStraat)
+//            emailHtml += "\r\n<p>${winkerkEntry.LIDMATE_STRAATADRES} : <b><font color='red'>$newStraat</font></b></p>"
+//            emailText += "\r\n${winkerkEntry.LIDMATE_STRAATADRES} : $newStraat"
+//        }
+//
+//        val newPos = binding.detailPosadres.text.toString()
+//        if (newPos != mPosAdres) {
+//            values.put(winkerkEntry.LIDMATE_POSADRES, newPos)
+//            emailHtml += "\r\n<p>${winkerkEntry.LIDMATE_POSADRES} : <b><font color='red'>$newPos</font></b></p>"
+//            emailText += "\r\n${winkerkEntry.LIDMATE_POSADRES} : $newPos"
+//        }
+//
+//        val huwPos = binding.huwelikstatus.selectedItemPosition
+//        val newHuwelik = huwelikStatusArray[huwPos]
+//        if (newHuwelik != item.marriageStatus) {
+//            values.put(winkerkEntry.LIDMATE_HUWELIKSTATUS, newHuwelik)
+//            emailHtml += "\r\n<p>${winkerkEntry.LIDMATE_HUWELIKSTATUS} : <b><font color='red'>$newHuwelik</font></b></p>"
+//            emailText += "\r\n${winkerkEntry.LIDMATE_HUWELIKSTATUS} : $newHuwelik"
+//        }
+//
+//        val geslagPos = binding.geslag.selectedItemPosition
+//        val newGeslag = geslagteArray[geslagPos]
+//        if (newGeslag != mGeslagB) {
+//            values.put(winkerkEntry.LIDMATE_GESLAG, newGeslag)
+//            emailHtml += "\r\n<p>${winkerkEntry.LIDMATE_GESLAG} : <b><font color='red'>$newGeslag</font></b></p>"
+//            emailText += "\r\n${winkerkEntry.LIDMATE_GESLAG} : $newGeslag"
+//        }
+//
+//        // ─── Record status (Aktief / Onaktief) ──────────────────────────────────
+//        if (recordStatus != mRecordStatus) {
+//            val statusLabel = if (recordStatus == "0") "Aktief" else "Onaktief"
+//            values.put(KEY_RECORD_STATUS, recordStatus.toInt())
+//            emailHtml += "\r\n<p>Rekordstatus : <b><font color='red'>$statusLabel</font></b></p>"
+//            emailText += "\r\nRekordstatus : $statusLabel"
+//        }
+//
+//        emailHtml += "</html>"
+//
+//        if (values.size() == 0) {
+//            // No fields changed — leave edit mode without opening an email composer
+//            return
+//        }
+//
+//        val uri = ContentUris.withAppendedId(winkerkEntry.CONTENT_URI, id.toLong())
+//        contentResolver.update(
+//            uri,
+//            values,
+//            "${winkerkEntry.LIDMATE_TABLE_NAME}._rowid_ = ?",
+//            arrayOf(id.toString())
+//        )
+//
+//        var emailUrl = ""
+//        val gemeente = item.gemeente
+//        emailUrl = when (gemeente) {
+//            congregationPrefs.gemeenteNaam -> congregationPrefs.gemeenteEpos
+//            congregationPrefs.gemeente2Naam -> congregationPrefs.gemeente2Epos
+//            congregationPrefs.gemeente3Naam -> congregationPrefs.gemeente3Epos
+//            else -> ""
+//        }
+//
+//        val eposHtmlEnabled = appearancePrefs.eposHtml
+//        val sendIntent = Intent(Intent.ACTION_SENDTO).apply {
+//            data = "mailto:".toUri()
+//            putExtra(Intent.EXTRA_SUBJECT, subject)
+//            putExtra(Intent.EXTRA_EMAIL, arrayOf(emailUrl))
+//            if (eposHtmlEnabled) {
+//                val html: Spanned = Html.fromHtml(emailHtml, Html.FROM_HTML_MODE_LEGACY)
+//                putExtra(Intent.EXTRA_TEXT, html)
+//            } else {
+//                putExtra(Intent.EXTRA_TEXT, emailText)
+//            }
+//        }
+//
+//        try {
+//            startActivity(sendIntent)
+//        } catch (e: Exception) {
+//            if (BuildConfig.DEBUG) Log.e(TAG, "Email intent failed", e)
+//        }
+//    }
 
     // ─── Record-status helpers ───────────────────────────────────────────────
 

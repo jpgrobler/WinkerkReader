@@ -44,7 +44,8 @@ class ReminderCrudRepository(
         anchorDate: LocalDate,
         customTitle: String? = null,
         contextJson: String? = null,
-        stepOverrides: Map<String, LocalDate>? = null
+        stepOverrides: Map<String, LocalDate>? = null,
+        customNote: String? = null
     ): List<String> = withContext(Dispatchers.IO) {
         val member = requireMember(memberGuid)
         val template = templateDao.getTemplateById(templateId)
@@ -70,7 +71,8 @@ class ReminderCrudRepository(
                 titleOverride = customTitle,
                 contextJson = contextJson,
                 now = now,
-                dueDateOverride = stepOverrides?.get(step.stepId)
+                dueDateOverride = stepOverrides?.get(step.stepId),
+                customNote = customNote
             )
         }
 
@@ -241,7 +243,8 @@ class ReminderCrudRepository(
         titleOverride: String?,
         contextJson: String?,
         now: Long,
-        dueDateOverride: LocalDate? = null
+        dueDateOverride: LocalDate? = null,
+        customNote: String? = null
     ): FollowUpReminderEntity {
         val dueDate = dueDateOverride ?: PastoralReminderDates.expandDueDate(anchorDate, step)
         val scheduleType = ScheduleType.fromStored(step.scheduleType)
@@ -253,7 +256,7 @@ class ReminderCrudRepository(
             defaultMinute = step.defaultMinute,
             zoneId = zoneId
         )
-
+        val note = customNote?.takeIf { it.isNotBlank() } ?: step.defaultNoteAf
         return FollowUpReminderEntity(
             reminderId = UUID.randomUUID().toString(),
             memberGuid = member.guid,
@@ -263,7 +266,7 @@ class ReminderCrudRepository(
             symbol = templateSymbol,
             anchorDateUtc = PastoralReminderDates.anchorDateUtc(anchorDate, zoneId),
             title = titleOverride?.trim()?.ifBlank { null } ?: step.defaultTitleAf,
-            note = step.defaultNoteAf,
+            note = note,
             contextJson = contextJson,
             scheduleType = scheduleType.name,
             dueDateUtc = dueDateUtc,

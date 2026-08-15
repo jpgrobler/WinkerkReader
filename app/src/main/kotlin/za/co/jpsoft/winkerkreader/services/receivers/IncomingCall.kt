@@ -1,18 +1,22 @@
 package za.co.jpsoft.winkerkreader.services.receivers
 
+import android.app.ForegroundServiceStartNotAllowedException
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.telephony.TelephonyManager
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.core.content.edit
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract.KEY_OPROEPMONITOR
 import za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract.PREFS_USER_INFO
 import za.co.jpsoft.winkerkreader.services.CallMonitoringService
 import za.co.jpsoft.winkerkreader.services.OproepDetailService
+
 
 class IncomingCall : BroadcastReceiver() {
     private fun String?.safeNumber(): String? {
@@ -21,6 +25,7 @@ class IncomingCall : BroadcastReceiver() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.S)
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != TelephonyManager.ACTION_PHONE_STATE_CHANGED) {
             return
@@ -48,7 +53,11 @@ class IncomingCall : BroadcastReceiver() {
 
             TelephonyManager.EXTRA_STATE_IDLE -> {
                 if (OproepDetailService.isOn) {
-                    scheduleServiceStop(context)
+                    // Instead of stopping directly, send an intent to the service
+                    val intent = Intent(context, OproepDetailService::class.java).apply {
+                        action = OproepDetailService.ACTION_CALL_ENDED
+                    }
+                    context.startService(intent)
                 }
             }
         }
@@ -71,22 +80,37 @@ class IncomingCall : BroadcastReceiver() {
      * If the service is not yet running this is a no-op because the number is already stored in
      * SharedPreferences and [startCallerIdentificationService] will start the service fresh.
      */
+    @RequiresApi(Build.VERSION_CODES.S)
     private fun forwardNumberToCallMonitoringService(context: Context, number: String) {
         if (CallMonitoringService.isServiceRunning(context)) {
+            val intent = Intent(context, CallMonitoringService::class.java).apply {
+                putExtra("incoming_number", number)
+            }
+
             try {
-                val intent = Intent(context, CallMonitoringService::class.java)
-                    .putExtra("incoming_number", number)
-                context.startForegroundService(intent)
-                if (BuildConfig.DEBUG) Log.d(
-                    TAG,
-                    "Forwarded incoming number to running CallMonitoringService: $number"
-                )
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    context.startForegroundService(intent)
+                } else {
+                    context.startService(intent)
+                }
+                if (BuildConfig.DEBUG) {
+                    Log.d(TAG, "Forwarded incoming number to CallMonitoringService: $number")
+                }
+            } catch (e: ForegroundServiceStartNotAllowedException) {
+                // Android 12+ (API 31+): Background execution restriction prevents startForegroundService.
+                // Catching this prevents an immediate fatal crash. The underlying
+                // PhoneStateListener inside CallMonitoringService will still catch the call natively.
+                if (BuildConfig.DEBUG) {
+                    Log.w(
+                        TAG,
+                        "Cannot start foreground service from background; falling back to state listener",
+                        e
+                    )
+                }
             } catch (e: Exception) {
-                if (BuildConfig.DEBUG) Log.e(
-                    TAG,
-                    "Failed to forward number to CallMonitoringService",
-                    e
-                )
+                if (BuildConfig.DEBUG) {
+                    Log.e(TAG, "Unexpected error forwarding number", e)
+                }
             }
         }
     }

@@ -241,6 +241,9 @@ object CallerInfoResolver {
                     val gemeente =
                         it.getString(it.getColumnIndexOrThrow(winkerkEntry.LIDMATE_GEMEENTE)) ?: ""
                     val displayName = buildMemberDisplayName(noemnaam, surname)
+                    val familyHeadGuid =
+                        it.getString(it.getColumnIndexOrThrow(winkerkEntry.LIDMATE_GESINSHOOFGUID))
+                            ?: ""
                     members.add(
                         CallerInfoResult.Member(
                             name = displayName,
@@ -249,7 +252,8 @@ object CallerInfoResolver {
                             firstName = noemnaam,
                             phone = phone,
                             memberType = "Lidmaat",
-                            gemeente = gemeente
+                            gemeente = gemeente,
+                            familyHeadGuid = familyHeadGuid
                         )
                     )
                 }

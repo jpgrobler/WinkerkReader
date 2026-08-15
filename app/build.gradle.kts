@@ -11,8 +11,8 @@ android {
     defaultConfig {
         applicationId = "za.co.jpsoft.winkerkreader"
         minSdk = 28
-        versionCode = 130
-        versionName = "4.2 r030"
+        versionCode = 141
+        versionName = "4.3"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         targetSdk = 37
 
@@ -100,6 +100,9 @@ android {
 }
 
 dependencies {
+    // Security - SafeBox (replaces deprecated androidx.security.crypto)
+    implementation(libs.safebox)
+
     implementation(libs.androidx.hilt.common)
     implementation(libs.androidx.hilt.work)
     implementation(libs.hilt.android)
@@ -143,7 +146,6 @@ dependencies {
 
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.preference.ktx)
-    implementation(libs.androidx.security.crypto)
 
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
     implementation(libs.sqliteassethelper)

@@ -33,6 +33,7 @@ import za.co.jpsoft.winkerkreader.ui.controllers.MainSearchFilterCoordinator
 import za.co.jpsoft.winkerkreader.ui.controllers.SortOrderController
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MainViewModel
 import za.co.jpsoft.winkerkreader.utils.CallLogImporter
+import za.co.jpsoft.winkerkreader.utils.CrashRecovery
 import za.co.jpsoft.winkerkreader.utils.PastoralNotificationHelper
 import za.co.jpsoft.winkerkreader.utils.messaging.WhatsAppContactLoader
 import za.co.jpsoft.winkerkreader.utils.permissions.PermissionManager
@@ -51,6 +52,13 @@ import za.co.jpsoft.winkerkreader.utils.ui.MainNavigationController
 import za.co.jpsoft.winkerkreader.utils.ui.MenuItemHandler
 import za.co.jpsoft.winkerkreader.utils.work.BatteryOptimizationHelper
 import za.co.jpsoft.winkerkreader.utils.work.WorkScheduler
+import android.content.BroadcastReceiver
+import android.content.IntentFilter
+import android.os.Build
+import za.co.jpsoft.winkerkreader.services.OproepDetailService
+import za.co.jpsoft.winkerkreader.ui.bottomsheets.VoegNotaByBottomSheet
+import za.co.jpsoft.winkerkreader.ui.bottomsheets.StelHerinneringBottomSheet
+import za.co.jpsoft.winkerkreader.ui.helpers.QuickLockManager
 
 @AndroidEntryPoint
 class MainActivity : AuthBaseActivity() {
@@ -91,7 +99,7 @@ class MainActivity : AuthBaseActivity() {
 
     @Inject
     lateinit var churchInfoRepo: ChurchInfoRepository
-
+    private lateinit var quickLockManager: QuickLockManager
     // ─── View Binding ──────────────────────────────────────────────────────
     lateinit var binding: ActivityMainBinding
 
@@ -108,10 +116,18 @@ class MainActivity : AuthBaseActivity() {
         get() = initializer.sortController
 
     // ─── Lifecycle ──────────────────────────────────────────────────────────
+    override fun onBackPressed() {
+        val searchView = findSearchView()
+        if (searchView != null && !searchView.isIconified) {
+            searchView.isIconified = true  // triggers the close listener
+            return
+        }
+        super.onBackPressed()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        CrashRecovery.recordSuccess(this)
         // ─── Use injected prefs ──────────────────────────────────────────
         val dailyEnabled = backupPrefs.dailyBackupEnabled
         val exportToDownloads = backupPrefs.backupExportToDownloads
@@ -178,6 +194,8 @@ class MainActivity : AuthBaseActivity() {
                 }
             }
         }
+        quickLockManager = QuickLockManager(this, appAuthGuard, securityPrefs)
+        handleSearchIntent(intent)
     }
 
     override fun onStart() {
@@ -193,13 +211,6 @@ class MainActivity : AuthBaseActivity() {
         }
     }
 
-    override fun onPause() {
-        super.onPause()
-        if (::initializer.isInitialized) {
-            initializer.onPause()
-        }
-    }
-
     override fun onDestroy() {
         super.onDestroy()
         if (::initializer.isInitialized) {
@@ -208,11 +219,20 @@ class MainActivity : AuthBaseActivity() {
         WhatsAppContactLoader.reset()
     }
 
+    override fun onPause() {
+        super.onPause()
+        appAuthGuard.markBackgrounded()
+        if (::initializer.isInitialized) {
+            initializer.onPause()
+        }
+    }
     // ─── Options Menu ────────────────────────────────────────────────────────
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         return if (::initializer.isInitialized && initializer.isReady) {
             initializer.menuController.onCreateOptionsMenu(menu)
+            quickLockManager.setupQuickLockMenuItem(menu)
+            true
         } else {
             false
         }
@@ -222,6 +242,8 @@ class MainActivity : AuthBaseActivity() {
         if (!::initializer.isInitialized || !initializer.isReady) {
             return super.onOptionsItemSelected(item)
         }
+
+        if (quickLockManager.onMenuItemSelected(item)) return true
 
         if (item.itemId == R.id.filter_options) {
             FilterBottomSheet().show(supportFragmentManager, "filter")
@@ -239,11 +261,28 @@ class MainActivity : AuthBaseActivity() {
         ).handleMenuItem(item) || super.onOptionsItemSelected(item)
     }
 
+
     override fun onPrepareOptionsMenu(menu: Menu): Boolean {
         if (!::initializer.isInitialized || !initializer.isReady) return false
         return super.onPrepareOptionsMenu(menu)
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleSearchIntent(intent)
+    }
+
+    private fun handleSearchIntent(intent: Intent?) {
+        val query = intent?.getStringExtra("search_query") ?: return
+        if (query.isNotBlank()) {
+            // Perform search via the search filter coordinator
+            searchFilterCoordinator.performSearch(query)
+            // Optionally open the search view
+            val searchView = findSearchView()
+            searchView?.setQuery(query, false)
+            searchView?.isIconified = false
+        }
+    }
     // ─── Helper methods ──────────────────────────────────────────────────────
 
     fun startMonitoringServiceIfEnabled() {

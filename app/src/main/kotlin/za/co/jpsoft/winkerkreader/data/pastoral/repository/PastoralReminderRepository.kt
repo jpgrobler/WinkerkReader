@@ -38,9 +38,10 @@ class PastoralReminderRepository(
         anchorDate: LocalDate,
         customTitle: String? = null,
         contextJson: String? = null,
-        stepOverrides: Map<String, LocalDate>? = null
+        stepOverrides: Map<String, LocalDate>? = null,
+        customNote: String? = null
     ): List<String> = crud.createFromTemplate(
-        memberGuid, templateId, anchorDate, customTitle, contextJson, stepOverrides
+        memberGuid, templateId, anchorDate, customTitle, contextJson, stepOverrides, customNote
     )
 
     suspend fun createAdHocReminder(

@@ -2,13 +2,16 @@ package za.co.jpsoft.winkerkreader.ui.controllers
 
 import android.util.Log
 import androidx.lifecycle.lifecycleScope
+import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract.winkerkEntry
 import za.co.jpsoft.winkerkreader.data.pastoral.dao.FollowUpReminderDao
+import za.co.jpsoft.winkerkreader.data.pastoral.repository.PastoralNoteRepository
 import za.co.jpsoft.winkerkreader.ui.activities.MainActivity
+import za.co.jpsoft.winkerkreader.ui.adapters.MemberListAdapter
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MainViewModel
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel
 import za.co.jpsoft.winkerkreader.utils.ReminderEventBus
@@ -21,7 +24,8 @@ class PastoralReminderBadgeController(
     private val activity: MainActivity,
     private val followUpReminderDao: FollowUpReminderDao,
     private val memberViewModel: MemberViewModel,
-    private val mainViewModel: MainViewModel
+    private val mainViewModel: MainViewModel,
+    private val pastoralNoteRepository: PastoralNoteRepository
 ) {
 
     var badgeCount: Int = 0
@@ -54,41 +58,43 @@ class PastoralReminderBadgeController(
         if (BuildConfig.DEBUG) Log.d("PastoralBadgeCtrl", "loadPendingReminderGuids called")
         activity.lifecycleScope.launch(Dispatchers.IO) {
             try {
+                // Load reminder GUIDs
                 val allPending = followUpReminderDao.getAllPending()
-                val guids = allPending.mapNotNull { reminder ->
+                val reminderGuids = allPending.mapNotNull { reminder ->
                     var guid = reminder.memberGuid?.takeIf { it.isNotBlank() }
                     if (guid == null) {
                         val name = reminder.memberDisplayNameCache
                         if (!name.isNullOrBlank()) {
                             guid = resolveMemberGuidByName(name)
-                            if (guid != null && BuildConfig.DEBUG) {
-                                Log.d("PastoralBadgeCtrl", "Resolved GUID '$guid' for name '$name'")
-                            }
                         }
                     }
                     guid
                 }.distinct()
 
-                if (BuildConfig.DEBUG) {
-                    Log.d(
-                        "PastoralBadgeCtrl",
-                        "📌 Found ${guids.size} distinct member GUIDs with pending reminders: $guids"
-                    )
-                }
+                // Load note GUIDs
+                val noteGuids = pastoralNoteRepository.getMemberGuidsWithNotes().toSet()
 
                 withContext(Dispatchers.Main) {
-                    memberViewModel.updatePendingRemindersSet(guids.toSet())
+                    memberViewModel.updatePendingRemindersSet(reminderGuids.toSet())
+                    // Update the adapter with note GUIDs – we need to get the adapter from the activity
+                    activity.binding.lidmaatList.adapter?.let { adapter ->
+                        if (adapter is MemberListAdapter) {
+                            adapter.updatePendingNoteGuids(noteGuids)
+                        }
+                    }
                 }
             } catch (e: Exception) {
-                if (BuildConfig.DEBUG) Log.e(
-                    "PastoralBadgeCtrl",
-                    "Failed to load pending reminder guids",
-                    e
-                )
+                if (BuildConfig.DEBUG) Log.e("PastoralBadgeCtrl", "Failed to load pending guids", e)
             }
+
         }
     }
 
+    private suspend fun getMemberGuidsWithNotes(): Set<String> {
+        return withContext(Dispatchers.IO) {
+            pastoralNoteRepository.getMemberGuidsWithNotes().toSet()
+        }
+    }
     /**
      * Resolves a member GUID by matching the display name (format "FirstName LastName").
      * Returns null if no match is found.

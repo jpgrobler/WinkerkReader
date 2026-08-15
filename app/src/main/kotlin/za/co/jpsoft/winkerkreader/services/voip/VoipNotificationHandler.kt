@@ -92,6 +92,7 @@ class VoipNotificationHandler(
                 )
                 unifiedMonitor.onCallEnded(tracked.callId, endTime)
             }
+            stopOproepOverlay()
         }
     }
 
@@ -239,6 +240,7 @@ class VoipNotificationHandler(
                 unifiedMonitor.onCallEnded(missedCallId, System.currentTimeMillis())
             }
         }
+        stopOproepOverlay()
     }
 
     private fun handleEnded(
@@ -271,6 +273,7 @@ class VoipNotificationHandler(
             // Could be an outgoing call that we already logged; just ignore.
             if (BuildConfig.DEBUG) Log.d(TAG, "ENDED state without matching tracked call, ignoring")
         }
+        stopOproepOverlay()
     }
 
     private fun fallbackTextProcessing(sbn: StatusBarNotification, appName: String) {
@@ -320,5 +323,16 @@ class VoipNotificationHandler(
      */
     suspend fun reconcileStaleActiveCalls() {
         unifiedMonitor.endActiveVoipCallsFromOtherSources()
+    }
+
+    private fun stopOproepOverlay() {
+        val intent = Intent(context, OproepDetailService::class.java).apply {
+            action = OproepDetailService.ACTION_CALL_ENDED
+        }
+        try {
+            context.startService(intent) // foreground or background is fine – it's already running
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to send ACTION_CALL_ENDED to OproepDetailService", e)
+        }
     }
 }

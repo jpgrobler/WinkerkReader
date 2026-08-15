@@ -69,7 +69,8 @@ class LidmaatDetailPastoralViewModel(
         templateId: String,
         anchorDate: LocalDate,
         selectedItems: List<PreviewItem>,
-        contextJson: String? = null
+        contextJson: String? = null,
+        note: String? = null
     ) {
         val selectedDates = selectedItems
             .filter { it.isSelected }
@@ -87,7 +88,8 @@ class LidmaatDetailPastoralViewModel(
                     templateId = templateId,
                     anchorDate = anchorDate,
                     contextJson = contextJson,
-                    stepOverrides = selectedDates
+                    stepOverrides = selectedDates,
+                    customNote = note
                 )
                 _created.tryEmit(ids.size)
             } catch (e: Exception) {

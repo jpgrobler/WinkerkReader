@@ -92,6 +92,7 @@ class CallLogActivity : AuthBaseActivity() {
 
     private fun setupRecyclerView() {
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
+        binding.recyclerView.setHasFixedSize(true) // 👈 Prevents jank
         callLogAdapter = CallLogAdapter(emptyList())
         binding.recyclerView.adapter = callLogAdapter
     }

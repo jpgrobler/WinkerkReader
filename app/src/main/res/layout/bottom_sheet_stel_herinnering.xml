@@ -37,12 +37,15 @@
                 android:textAppearance="?attr/textAppearanceTitleMedium"
                 android:textColor="?attr/colorOnSurface" />
 
-            <ProgressBar
+            <com.google.android.material.progressindicator.CircularProgressIndicator
                 android:id="@+id/progressBar"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:visibility="gone" />
+                android:indeterminate="true"
+                android:visibility="gone"
+                app:indicatorColor="?attr/colorPrimary" />
+
             <!-- Mode toggle -->
             <com.google.android.material.tabs.TabLayout
                 android:id="@+id/tab_mode"
@@ -62,12 +65,15 @@
                 android:orientation="vertical"
                 android:visibility="visible">
 
-                <ProgressBar
+                <com.google.android.material.progressindicator.CircularProgressIndicator
                     android:id="@+id/templateProgress"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:visibility="gone" />
+                    android:indeterminate="true"
+                    android:visibility="gone"
+                    app:indicatorColor="?attr/colorPrimary" />
+
                 <!-- Template picker -->
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rv_templates"
@@ -169,22 +175,6 @@
                         android:inputType="textCapSentences" />
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/til_note"
-                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:hint="@string/herinnering_nota">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/et_note"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="textMultiLine|textCapSentences"
-                        android:minLines="2" />
-                </com.google.android.material.textfield.TextInputLayout>
-
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_due_date"
                     style="@style/Widget.Material3.Button.OutlinedButton"
@@ -209,6 +199,82 @@
                     android:text="@string/herinnering_kies_tyd"
                     android:visibility="gone" />
 
+            </LinearLayout>
+
+            <!-- ===== SHARED NOTE FIELD (Always Visible) ===== -->
+            <!-- ===== SHARED NOTE FIELD (Always Visible) ===== -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_note"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="24dp"
+                android:layout_marginTop="12dp"
+                android:hint="@string/herinnering_nota"
+                app:endIconContentDescription="@string/nota_dikteer"
+                app:endIconDrawable="@drawable/ic_microphone"
+                app:endIconMode="custom"
+                app:endIconTint="?attr/colorPrimary">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_note"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textMultiLine|textCapSentences"
+                    android:minLines="2" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Voice input status container (hidden by default) -->
+            <LinearLayout
+                android:id="@+id/voice_status_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="24dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_voice_status"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="12dp"
+                android:visibility="gone">
+
+                <com.google.android.material.progressindicator.CircularProgressIndicator
+                    android:id="@+id/voice_progress_bar"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginEnd="12dp"
+                    android:indeterminate="true"
+                    app:indicatorColor="?attr/colorPrimary"
+                    app:trackCornerRadius="12dp" />
+
+                <za.co.jpsoft.winkerkreader.ui.views.WaveformView
+                    android:id="@+id/waveform_view"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_marginEnd="12dp"
+                    android:layout_weight="1"
+                    android:background="?attr/colorSurfaceVariant"
+                    android:padding="4dp" />
+
+                <TextView
+                    android:id="@+id/tv_voice_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="12dp"
+                    android:text="@string/nota_luister"
+                    android:textAppearance="?attr/textAppearanceBodyMedium"
+                    android:textColor="?attr/colorOnSurface" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_stop_voice"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minWidth="0dp"
+                    android:minHeight="0dp"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="4dp"
+                    android:text="@string/kanselleer"
+                    android:textSize="12sp" />
             </LinearLayout>
 
             <!-- ===== CONFIRM BUTTON ===== -->

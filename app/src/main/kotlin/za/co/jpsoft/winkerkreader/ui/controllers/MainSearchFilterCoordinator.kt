@@ -9,13 +9,16 @@ import za.co.jpsoft.winkerkreader.databinding.ActivityMainBinding
 import za.co.jpsoft.winkerkreader.ui.adapters.MemberListAdapter
 import za.co.jpsoft.winkerkreader.ui.models.MainQueryMode
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MemberViewModel
+import za.co.jpsoft.winkerkreader.utils.prefs.CongregationPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.MemberListPrefs
 
 class MainSearchFilterCoordinator(
     private val tag: String,
     private val viewModel: MemberViewModel,
-    // settingsManager removed – was unused
     private val binding: ActivityMainBinding,
     private val memberListAdapter: MemberListAdapter,
+    private val memberListPrefs: MemberListPrefs,
+    private val congregationPrefs: CongregationPrefs,
     private val findSearchView: () -> SearchView?,
     private val hideFilterPanel: () -> Unit,
     private val onUpdateSortOrder: (String) -> Unit,
@@ -31,6 +34,17 @@ class MainSearchFilterCoordinator(
     var onFilterRestored: (() -> Unit)? = null
     var onFilterCancelled: (() -> Unit)? = null
 
+    private fun updateAdapterState() {
+        memberListAdapter.updateState(
+            listView = memberListPrefs.listView,
+            soekList = viewModel.soekList,
+            soek = viewModel.soek,
+            recordStatus = viewModel.recordStatus,
+            sortOrder = viewModel.sortOrder,
+            useCongregationIndicator = congregationPrefs.useCongregationIndicator
+        )
+    }
+
     fun applyFilterResult(list: ArrayList<FilterBox>, currentSortOrder: String) {
         if (BuildConfig.DEBUG) Log.d(tag, "applyFilterResult: list size=${list.size}, currentSortOrder=$currentSortOrder")
         filterList = list
@@ -41,6 +55,7 @@ class MainSearchFilterCoordinator(
         }
         viewModel.updateFilter(list)
         viewModel.refresh()
+        updateAdapterState()
         onRecomputeBirthdayOffset()
         updateSummaryView()
     }
@@ -84,53 +99,40 @@ class MainSearchFilterCoordinator(
     }
 
     fun onSearchClosed() {
-        val restoreSort =
-            if (originalLayoutBeforeSearch.isNotEmpty()) originalLayoutBeforeSearch else "VAN"
-        viewModel.resetToSort(restoreSort)
-        originalLayoutBeforeSearch = ""
-        viewModel.clearFilterSummary()
-        refresh()
-        updateSummaryView()
-        selectAllChips()
-    }
+        // Restore from search (clears the saved original sort)
+        restoreFromSearch(clearOriginalSort = true)
 
-    fun performSearch(query: String) {
-        if (query.isBlank()) {
-            if (!viewModel.soekList) return
-            val restoreSort =
-                if (originalLayoutBeforeSearch.isNotEmpty()) originalLayoutBeforeSearch else "VAN"
-            viewModel.resetToSort(restoreSort)
-            originalLayoutBeforeSearch = ""
-            viewModel.clearFilterSummary()
+        // Re‑apply filters if they were active before search
+        if (originalLayoutBeforeFilter.isNotEmpty() && filterList != null && filterList!!.any { it.checked }) {
+            viewModel.updateFilter(filterList!!)
+            viewModel.sortOrder = originalLayoutBeforeFilter
+            viewModel._eventType.value = viewModel.eventTypeFor(originalLayoutBeforeFilter)
             viewModel.refresh()
-            updateSummaryView()
-        } else {
-            if (originalLayoutBeforeSearch.isEmpty() && originalLayoutBeforeFilter.isEmpty()) {
-                originalLayoutBeforeSearch = viewModel.sortOrder
-            } else if (originalLayoutBeforeFilter.isNotEmpty() && originalLayoutBeforeSearch.isEmpty()) {
-                originalLayoutBeforeSearch = "Filter"
-            }
-            viewModel.updateSearch(query.trim())
-            onRecomputeBirthdayOffset()
+            updateAdapterState()
             updateSummaryView()
         }
     }
 
-    fun refresh() {
+    fun performSearch(query: String) {
+        if (query.isBlank()) {
+            // Clear search state without changing sort
+            restoreFromSearch(clearOriginalSort = false)
+            return
+        }
+
+        // First non‑empty query – save the current sort order
+        if (originalLayoutBeforeSearch.isEmpty()) {
+            originalLayoutBeforeSearch = viewModel.sortOrder
+        }
+        viewModel.updateSearch(query.trim())
         viewModel.refresh()
+        updateAdapterState()
+        updateSummaryView()
     }
 
-    fun resolveQueryMode(layout: String): MainQueryMode = when (layout) {
-        "SOEK_DATA" -> MainQueryMode.Search
-        "FILTER_DATA" -> MainQueryMode.Filter(filterList ?: arrayListOf())
-        "ADRES" -> MainQueryMode.Address
-        "GESINNE" -> MainQueryMode.Family
-        "HUWELIK" -> MainQueryMode.Wedding
-        "OUDERDOM" -> MainQueryMode.Age
-        "VAN" -> MainQueryMode.Surname
-        "VERJAAR" -> MainQueryMode.Birthday
-        "WYK" -> MainQueryMode.Ward
-        else -> MainQueryMode.Raw(layout)
+    fun refresh() {
+        viewModel.refresh()
+        updateAdapterState()
     }
 
     fun updateSummaryView() {
@@ -217,6 +219,7 @@ class MainSearchFilterCoordinator(
         viewModel.clearFilterSummary()
         onUpdateSortOrder(restoreSort)
         viewModel.refresh()
+        updateAdapterState()
         onFilterRestored?.invoke()
         updateSummaryView()
     }
@@ -239,6 +242,7 @@ class MainSearchFilterCoordinator(
         deselectChips()
         onFilterCancelled?.invoke()
         viewModel.refresh()
+        updateAdapterState()
         updateSummaryView()
     }
 
@@ -260,8 +264,26 @@ class MainSearchFilterCoordinator(
         filterList = null
         viewModel.clearFilterSummary()
         viewModel.refresh()
+        updateAdapterState()
         onRecomputeBirthdayOffset()
         updateSummaryView()
         if (BuildConfig.DEBUG) Log.d(tag, "restoreOriginalState completed, sort=$restoreSort")
+    }
+
+    private fun restoreFromSearch(clearOriginalSort: Boolean) {
+        if (originalLayoutBeforeSearch.isNotEmpty()) {
+            // A real search happened – restore the sort that was active before it
+            viewModel.resetToSort(originalLayoutBeforeSearch)
+            if (clearOriginalSort) {
+                originalLayoutBeforeSearch = ""
+            }
+        } else {
+            // No search was ever performed; just clear search flags without changing sort
+            viewModel.soekList = false
+            viewModel.soek = ""
+        }
+        viewModel.refresh()
+        updateAdapterState()
+        updateSummaryView()
     }
 }

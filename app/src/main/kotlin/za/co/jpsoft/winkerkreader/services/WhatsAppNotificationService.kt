@@ -32,8 +32,10 @@ import za.co.jpsoft.winkerkreader.utils.prefs.CallMonitorPrefs
 import za.co.jpsoft.winkerkreader.utils.telephony.CallNotificationDiagnostics
 import za.co.jpsoft.winkerkreader.utils.telephony.UnifiedCallMonitor
 import za.co.jpsoft.winkerkreader.utils.telephony.VoipDiagnosticHelper
+import za.co.jpsoft.winkerkreader.utils.work.ForegroundServiceHelper
+import za.co.jpsoft.winkerkreader.utils.work.ForegroundServiceType
 import java.util.concurrent.TimeUnit
-
+import android.content.pm.ServiceInfo
 @AndroidEntryPoint
 class WhatsAppNotificationService : NotificationListenerService() {
 
@@ -64,7 +66,27 @@ class WhatsAppNotificationService : NotificationListenerService() {
 
         initialize()
         createNotificationChannel()
-        startForeground(NOTIFICATION_ID, createForegroundNotification())
+
+        // 🛡️ FIX: Wrap startForeground to prevent ForegroundServiceStartNotAllowedException crash
+        try {
+            ForegroundServiceHelper.startForeground(
+                service = this,
+                id = NOTIFICATION_ID,
+                notification = createForegroundNotification(),
+                type = ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL
+            )
+        } catch (e: Exception) {
+            if (BuildConfig.DEBUG) {
+                Log.e(
+                    TAG,
+                    "Failed to start foreground service from background, running un-foregrounded",
+                    e
+                )
+            }
+            // On Android 14+, if background start restrictions block this, catching
+            // prevents a fatal crash. The system may eventually kill or restrict
+            // the service, but it avoids an immediate app termination.
+        }
 
         pruneHandler.post(pruneRunnable)
     }

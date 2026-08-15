@@ -90,8 +90,8 @@ class MainStartupCoordinator(
                 scope = lifecycleScope,
                 onProgress = { progress ->
                     lifecycleScope.launch(Dispatchers.Main) {
-                        binding.indeterminateBar.progress = progress
-                        binding.indeterminateBar.isIndeterminate = false
+                        //binding.indeterminateBar.progress = progress
+                        //binding.indeterminateBar.isIndeterminate = false
                     }
                 },
                 onComplete = { success ->
@@ -129,6 +129,6 @@ class MainStartupCoordinator(
     }
 
     private fun setProgressVisible(visibility: Int) {
-        binding.indeterminateBar.visibility = visibility
+        //binding.indeterminateBar.visibility = visibility
     }
 }

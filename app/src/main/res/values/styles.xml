@@ -339,4 +339,14 @@
         <item name="android:layout_marginBottom">@dimen/margin_small</item>
     </style>
 
+
+    <style name="Theme.WinkerkReader.Translucent" parent="Theme.WinkerkReader.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:backgroundDimEnabled">false</item>
+    </style>
+
+
 </resources>

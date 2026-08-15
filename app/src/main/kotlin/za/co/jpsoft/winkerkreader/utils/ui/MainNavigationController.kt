@@ -1,6 +1,5 @@
 // File: utils/MainNavigationController.kt
 package za.co.jpsoft.winkerkreader.utils.ui
-
 import android.app.Activity
 import android.content.ContentUris
 import android.content.Context
@@ -16,7 +15,6 @@ import jakarta.inject.Inject
 import jakarta.inject.Singleton
 import za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract
 import za.co.jpsoft.winkerkreader.services.CallMonitoringService
-import za.co.jpsoft.winkerkreader.services.ServiceKeepAlive
 import za.co.jpsoft.winkerkreader.services.WhatsAppNotificationService
 import za.co.jpsoft.winkerkreader.ui.activities.ArgiefListActivity
 import za.co.jpsoft.winkerkreader.ui.activities.BedieningActivity
@@ -330,56 +328,6 @@ class MainNavigationController @Inject constructor(
             } catch (e2: Exception) {
                 // Log or handle error
             }
-        }
-    }
-
-    // ============================================================
-    // Service Management
-    // ============================================================
-
-    fun startCallMonitoringService() {
-        try {
-            val intent = Intent(
-                context,
-                CallMonitoringService::class.java
-            )
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(intent)
-            } else {
-                context.startService(intent)
-            }
-        } catch (e: Exception) {
-            // Log or handle error
-        }
-    }
-
-    fun startWhatsAppNotificationService() {
-        try {
-            val intent = Intent(
-                context,
-                WhatsAppNotificationService::class.java
-            )
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(intent)
-            } else {
-                context.startService(intent)
-            }
-        } catch (e: Exception) {
-            // Log or handle error
-        }
-    }
-
-    fun startKeepAliveService() {
-        try {
-            val intent =
-                Intent(context, ServiceKeepAlive::class.java)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(intent)
-            } else {
-                context.startService(intent)
-            }
-        } catch (e: Exception) {
-            // Log or handle error
         }
     }
 }

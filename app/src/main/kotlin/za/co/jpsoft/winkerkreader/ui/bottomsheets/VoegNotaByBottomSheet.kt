@@ -24,6 +24,7 @@ import za.co.jpsoft.winkerkreader.data.pastoral.entities.PastoralNoteEntity
 import za.co.jpsoft.winkerkreader.data.pastoral.model.NoteCategory
 import za.co.jpsoft.winkerkreader.data.pastoral.repository.PastoralNoteRepository
 import za.co.jpsoft.winkerkreader.databinding.BottomSheetVoegNotaByBinding
+import za.co.jpsoft.winkerkreader.ui.utils.VoiceNoteHelper
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -45,6 +46,10 @@ class VoegNotaByBottomSheet : BottomSheetDialogFragment() {
 
     private val isEditMode get() = existingNote != null
     private var isSaving = false
+
+    // 👇 Single helper – no separate speech recognizer
+    private var voiceHelper: VoiceNoteHelper? = null
+
     // ── Lifecycle ──────────────────────────────────────────────────────────
 
     override fun onCreateView(
@@ -63,6 +68,7 @@ class VoegNotaByBottomSheet : BottomSheetDialogFragment() {
         setupCategoryChips()
         setupDateButton()
         setupNoteText()
+        setupVoiceInput()   // ✅ Voice integration via helper
         setupSaveButton()
         loadExistingNoteIfEditing()
 
@@ -79,12 +85,13 @@ class VoegNotaByBottomSheet : BottomSheetDialogFragment() {
             insets
         }
         ViewCompat.requestApplyInsets(binding.contentContainer)
-
     }
 
     override fun onDestroyView() {
-        super.onDestroyView()
+        voiceHelper?.destroy()
+        voiceHelper = null
         _binding = null
+        super.onDestroyView()
     }
 
     // ── Header ─────────────────────────────────────────────────────────────
@@ -104,27 +111,21 @@ class VoegNotaByBottomSheet : BottomSheetDialogFragment() {
             val note = withContext(Dispatchers.IO) { repo.getById(noteId) } ?: return@launch
             existingNote = note
 
-            // Update title
             binding.tvNotaSheetTitle.text = "Redigeer nota"
             binding.btnStoorNota.text = "Stoor wysigings"
 
-            // Pre-populate fields
             binding.etNotaTeks.setText(note.noteText)
 
-            // Date
             noteDate = Instant.ofEpochMilli(note.noteDateUtc)
                 .atZone(ZoneId.systemDefault())
                 .toLocalDate()
             binding.btnNotaDatum.text = noteDate.format(dateFormatter)
 
-            // Category
             selectedCategory = NoteCategory.fromStored(note.category)
             refreshChipSelection()
 
-            // Confidential
             binding.switchVertroulik.isChecked = note.isConfidential
 
-            // Hide "stel herinnering" checkbox when editing
             binding.checkStelHerinnering.visibility = View.GONE
 
             updateSaveButton()
@@ -187,6 +188,38 @@ class VoegNotaByBottomSheet : BottomSheetDialogFragment() {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         })
+    }
+
+    // ── Voice Input (helper) ─────────────────────────────────────────────
+
+    private fun setupVoiceInput() {
+        voiceHelper = VoiceNoteHelper(
+            fragment = this,
+            tilField = binding.tilNotaTeks,
+            voiceStatusContainer = binding.voiceStatusContainer,
+            tvStatus = binding.tvVoiceStatus,
+            waveformView = binding.waveformView,
+            stopButton = binding.btnStopVoice,
+            onVoiceResult = { text ->
+                appendToNoteText(text)
+            }
+        )
+    }
+
+    private fun appendToNoteText(text: String) {
+        val currentText = binding.etNotaTeks.text?.toString() ?: ""
+        val newText = if (currentText.isEmpty()) text else "$currentText\n$text"
+        binding.etNotaTeks.setText(newText)
+        binding.etNotaTeks.setSelection(newText.length)
+        updateSaveButton()
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        voiceHelper?.handlePermissionResult(requestCode, grantResults)
     }
 
     // ── Save button ────────────────────────────────────────────────────────
@@ -294,7 +327,6 @@ class VoegNotaByBottomSheet : BottomSheetDialogFragment() {
                     getString(R.string.nota_stoor_fout),
                     Toast.LENGTH_SHORT
                 ).show()
-
             } finally {
                 isSaving = false
                 binding.saveProgress.visibility = View.GONE

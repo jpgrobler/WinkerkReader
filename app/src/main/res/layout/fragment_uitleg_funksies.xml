@@ -34,7 +34,7 @@
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/funksoie_Stoor"
                 style="@style/Widget.WinkerkReader.Button.Primary"
                 android:layout_width="wrap_content"
@@ -84,28 +84,28 @@
                         android:textStyle="bold"
                         android:textSize="16dp"/>
 
-                    <CheckBox
+                    <com.google.android.material.checkbox.MaterialCheckBox
                         android:id="@+id/autoStartSwitch"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="@string/uitleg_autostart_monitor"
                         android:textColor="?attr/colorOnSurface" />
 
-                    <CheckBox
+                    <com.google.android.material.checkbox.MaterialCheckBox
                         android:id="@+id/uitleg_Monitor_Oproepe"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="@string/uitleg_monitor_oproepe"
                         android:textColor="?attr/colorOnSurface" />
 
-                    <CheckBox
+                    <com.google.android.material.checkbox.MaterialCheckBox
                         android:id="@+id/uitleg_Log_Oproepe"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="@string/uitleg_log_tel_oproepe"
                         android:textColor="?attr/colorOnSurface" />
 
-                    <CheckBox
+                    <com.google.android.material.checkbox.MaterialCheckBox
                         android:id="@+id/uitleg_Log_VOIP"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -129,6 +129,23 @@
                         android:backgroundTint="?attr/colorPrimary"
                         android:minHeight="48dp" />
 
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="Floater timeout after missed call"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <Spinner
+                        android:id="@+id/oproepTimeoutSpinner"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
+                        android:backgroundTint="?attr/colorPrimary"
+                        android:entries="@array/oproep_timeout_entries"
+                        android:minHeight="48dp" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -173,7 +190,7 @@
                         android:textStyle="bold"
                         android:textSize="16dp"/>
 
-                    <CheckBox
+                    <com.google.android.material.checkbox.MaterialCheckBox
                         android:id="@+id/uitleg_show_quick_actions"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -186,72 +203,72 @@
                         android:padding="2dp"
                         app:columnCount="2"
                         app:rowCount="6"
-                        app:useDefaultMargins="true">
+                        app:useDefaultMargins="true">CheckBox
 
-                        <CheckBox
+                        <com.google.android.material.checkbox.MaterialCheckBox
                             android:id="@+id/qa_detail"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:text="@string/qa_detail"
                             app:layout_columnWeight="1" />
 
-                        <CheckBox
+                        <com.google.android.material.checkbox.MaterialCheckBox
                             android:id="@+id/qa_sms"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:text="@string/qa_sms"
                             app:layout_columnWeight="1" />
 
-                        <CheckBox
+                        <com.google.android.material.checkbox.MaterialCheckBox
                             android:id="@+id/qa_whatsapp"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:text="@string/qa_whatsapp"
                             app:layout_columnWeight="1" />
 
-                        <CheckBox
+                        <com.google.android.material.checkbox.MaterialCheckBox
                             android:id="@+id/qa_call"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:text="@string/qa_call"
                             app:layout_columnWeight="1" />
 
-                        <CheckBox
+                        <com.google.android.material.checkbox.MaterialCheckBox
                             android:id="@+id/qa_email"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:text="@string/qa_email"
                             app:layout_columnWeight="1" />
 
-                        <CheckBox
+                        <com.google.android.material.checkbox.MaterialCheckBox
                             android:id="@+id/qa_landline"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:text="@string/qa_landline"
                             app:layout_columnWeight="1" />
 
-                        <CheckBox
+                        <com.google.android.material.checkbox.MaterialCheckBox
                             android:id="@+id/qa_note"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:text="@string/qa_note"
                             app:layout_columnWeight="1" />
 
-                        <CheckBox
+                        <com.google.android.material.checkbox.MaterialCheckBox
                             android:id="@+id/qa_reminder"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:text="@string/qa_reminder"
                             app:layout_columnWeight="1" />
 
-                        <CheckBox
+                        <com.google.android.material.checkbox.MaterialCheckBox
                             android:id="@+id/qa_copy"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:text="@string/qa_copy"
                             app:layout_columnWeight="1" />
 
-                        <CheckBox
+                        <com.google.android.material.checkbox.MaterialCheckBox
                             android:id="@+id/qa_copy_contacts"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
@@ -283,7 +300,7 @@
                         android:textStyle="bold"
                         android:textSize="16dp"/>
 
-                    <CheckBox
+                    <com.google.android.material.checkbox.MaterialCheckBox
                         android:id="@+id/uitleg_biometric_lock"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -352,21 +369,21 @@
                         android:orientation="horizontal"
                         android:padding="4dp">
 
-                        <CheckBox
+                        <com.google.android.material.checkbox.MaterialCheckBox
                             android:id="@+id/uitleg_w1"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/uitleg_whatsapp_method_1"
                             android:textColor="?attr/colorOnSurface" />
 
-                        <CheckBox
+                        <com.google.android.material.checkbox.MaterialCheckBox
                             android:id="@+id/uitleg_w2"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/uitleg_whatsapp_method_2"
                             android:textColor="?attr/colorOnSurface" />
 
-                        <CheckBox
+                        <com.google.android.material.checkbox.MaterialCheckBox
                             android:id="@+id/uitleg_w3"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -384,7 +401,7 @@
                         android:textSize="16sp"
                         android:textStyle="bold" />
 
-                    <CheckBox
+                    <com.google.android.material.checkbox.MaterialCheckBox
                         android:id="@+id/uitleg_html"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"

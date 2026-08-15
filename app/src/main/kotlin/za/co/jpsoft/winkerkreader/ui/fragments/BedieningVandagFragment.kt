@@ -80,7 +80,7 @@ class BedieningVandagFragment : Fragment() {
         binding.rvBedieningReminders.apply {
             adapter = this@BedieningVandagFragment.adapter
             layoutManager = LinearLayoutManager(requireContext())
-            setHasFixedSize(false)
+            setHasFixedSize(true)
         }
     }
 

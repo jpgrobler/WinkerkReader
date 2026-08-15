@@ -1,11 +1,13 @@
 package za.co.jpsoft.winkerkreader.ui.controllers
 
 import android.content.Context
+import android.content.SharedPreferences
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
-import android.view.View
+import android.widget.LinearLayout
 import androidx.core.content.ContextCompat
 import com.google.android.material.chip.Chip
-import com.google.android.material.chip.ChipGroup
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.utils.prefs.CongregationPrefs
@@ -13,46 +15,106 @@ import za.co.jpsoft.winkerkreader.utils.ui.ColorUtils
 
 class CongregationChipController(
     private val context: Context,
-    private val chipGroup: ChipGroup,
-    private val loadingBar: View,
+    private val chipContainer: LinearLayout,
     private val congregationPrefs: CongregationPrefs,
     private val onFilterChanged: (selected: Set<String>) -> Unit
 ) {
 
-    private var isUpdating = false
-    fun refresh() {
-        setup()
-    }
-    fun setup() {
-        chipGroup.removeAllViews()
-        chipGroup.isSingleSelection = false
-        chipGroup.isSelectionRequired = false
+    private val prefs: SharedPreferences =
+        context.getSharedPreferences("congregation_filter", Context.MODE_PRIVATE)
+    private val SELECTED_KEY = "selected_congregations"
 
-        val congregations = listOfNotNull(
+    private val selectedCongregations = mutableSetOf<String>()
+    private var isUpdating = false
+
+    // ─── Debounce handler ───────────────────────────────────────────────
+    private val filterHandler = Handler(Looper.getMainLooper())
+    private var filterRunnable: Runnable? = null
+    private var isSetup = false
+    private var lastCongregations: List<String>? = null
+    // ─── Public API ──────────────────────────────────────────────────────
+
+    fun refresh() {
+        // Check if congregations have changed before refreshing
+        val current = listOfNotNull(
             congregationPrefs.gemeenteNaam.takeIf { it.isNotBlank() },
             congregationPrefs.gemeente2Naam.takeIf { it.isNotBlank() },
             congregationPrefs.gemeente3Naam.takeIf { it.isNotBlank() }
         )
-
-        if (BuildConfig.DEBUG) Log.d("ChipController", "Loaded congregations: $congregations")
-
-        congregations.forEach { name ->
-            val color = congregationColor(name)
-            chipGroup.addView(buildChip(name, color))
+        if (current == lastCongregations && isSetup) {
+            if (BuildConfig.DEBUG) Log.d(
+                "ChipController",
+                "Refresh skipped – no congregation changes"
+            )
+            return
         }
-
-        loadingBar.post { loadingBar.visibility = View.GONE }
+        // Force a full setup if changed
+        setup()
     }
 
-    /**
-     * Select all chips and apply filter with all congregations.
-     */
+    fun setup() {
+        chipContainer.post {
+            isUpdating = true
+            chipContainer.removeAllViews()
+            selectedCongregations.clear()
+
+            val allCongregations = listOfNotNull(
+                congregationPrefs.gemeenteNaam.takeIf { it.isNotBlank() },
+                congregationPrefs.gemeente2Naam.takeIf { it.isNotBlank() },
+                congregationPrefs.gemeente3Naam.takeIf { it.isNotBlank() }
+            )
+
+            if (allCongregations.isEmpty()) {
+                isUpdating = false
+                return@post
+            }
+            if (isSetup && allCongregations == lastCongregations) {
+                if (BuildConfig.DEBUG) Log.d("ChipController", "Skipping setup – no changes")
+                return@post
+            }
+            val savedSelection = loadSavedSelection(allCongregations)
+            chipContainer.weightSum = allCongregations.size.toFloat()
+
+            allCongregations.forEach { name ->
+                val color = congregationColor(name)
+                val chip = buildChip(name, color)
+
+                val isInitiallyChecked = savedSelection.contains(name)
+                chip.isChecked = isInitiallyChecked
+                if (isInitiallyChecked) {
+                    selectedCongregations.add(name)
+                    chip.applyCheckedStyle(color)
+                } else {
+                    chip.applyUncheckedStyle()
+                }
+
+                val params = LinearLayout.LayoutParams(
+                    0,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    weight = 1f
+                    marginStart = 4.dpToPx()
+                    marginEnd = 4.dpToPx()
+                }
+                chipContainer.addView(chip, params)
+            }
+
+            isUpdating = false
+            applyFilter() // debounced
+            if (BuildConfig.DEBUG) Log.d(
+                "ChipController",
+                "Found ${allCongregations.size} congregations: $allCongregations"
+            )
+        }
+    }
+
     fun selectAll() {
         isUpdating = true
-        for (i in 0 until chipGroup.childCount) {
-            val chip = chipGroup.getChildAt(i) as? Chip ?: continue
-            chip.isChecked = true
+        for (i in 0 until chipContainer.childCount) {
+            val chip = chipContainer.getChildAt(i) as? Chip ?: continue
             val name = chip.text.toString()
+            chip.isChecked = true
+            selectedCongregations.add(name)
             val color = congregationColor(name)
             chip.applyCheckedStyle(color)
         }
@@ -60,21 +122,20 @@ class CongregationChipController(
         applyFilter()
     }
 
-    /**
-     * Deselect all chips (clear congregation filter).
-     */
     fun deselectAll() {
         isUpdating = true
-        for (i in 0 until chipGroup.childCount) {
-            val chip = chipGroup.getChildAt(i) as? Chip ?: continue
+        for (i in 0 until chipContainer.childCount) {
+            val chip = chipContainer.getChildAt(i) as? Chip ?: continue
+            val name = chip.text.toString()
             chip.isChecked = false
+            selectedCongregations.remove(name)
             chip.applyUncheckedStyle()
         }
         isUpdating = false
         applyFilter()
     }
 
-    // ── Private helpers ───────────────────────────────────────────────────────
+    // ─── Private helpers ───────────────────────────────────────────────
 
     private fun congregationColor(name: String): Int = when (name) {
         congregationPrefs.gemeenteNaam -> congregationPrefs.gemeenteKleur
@@ -87,24 +148,30 @@ class CongregationChipController(
         text = name
         isCheckable = true
         textSize = 12f
-        isChecked = true
 
-        applyCheckedStyle(color)
-
-        setOnCheckedChangeListener { _, isChecked ->
-            if (!isUpdating) {
-                if (isChecked) applyCheckedStyle(color) else applyUncheckedStyle()
-                applyFilter()
+        setOnClickListener {
+            if (isUpdating) return@setOnClickListener
+            // ✅ CHIP CLICK FIX: use the already‑toggled state
+            if (isChecked) {
+                selectedCongregations.add(name)
+                applyCheckedStyle(color)
+            } else {
+                selectedCongregations.remove(name)
+                applyUncheckedStyle()
             }
+            applyFilter() // debounced
         }
     }
 
     private fun Chip.applyCheckedStyle(color: Int) {
-        setChipBackgroundColor(android.content.res.ColorStateList.valueOf(color))
-        setTextColor(ColorUtils.contrastingTextColor(color))
+        val validColor = if (color == Int.MIN_VALUE) {
+            ContextCompat.getColor(context, R.color.md_theme_primary)
+        } else color
+        setChipBackgroundColor(android.content.res.ColorStateList.valueOf(validColor))
+        setTextColor(ColorUtils.contrastingTextColor(validColor))
         chipStrokeWidth = 2f
         chipStrokeColor = android.content.res.ColorStateList.valueOf(
-            ColorUtils.contrastingTextColor(color)
+            ColorUtils.contrastingTextColor(validColor)
         )
     }
 
@@ -118,16 +185,44 @@ class CongregationChipController(
         chipStrokeWidth = 0f
     }
 
-    private fun getSelected(): Set<String> {
-        val selected = mutableSetOf<String>()
-        for (i in 0 until chipGroup.childCount) {
-            val chip = chipGroup.getChildAt(i) as? Chip
-            if (chip?.isChecked == true) selected.add(chip.text.toString())
-        }
-        return selected
+    // ─── Persistence ────────────────────────────────────────────────────
+
+    private fun saveSelection(selected: Set<String>) {
+        val joined = selected.joinToString(",")
+        prefs.edit().putString(SELECTED_KEY, joined).apply()
+        if (BuildConfig.DEBUG) Log.d("ChipController", "Saved selection: $joined")
     }
 
-    private fun applyFilter() {
-        onFilterChanged(getSelected())
+    private fun loadSavedSelection(allCongregations: List<String>): Set<String> {
+        val saved = prefs.getString(SELECTED_KEY, null)
+        return if (saved.isNullOrBlank()) {
+            allCongregations.toSet()
+        } else {
+            val selected = saved.split(",")
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+                .toSet()
+                .intersect(allCongregations.toSet())
+            // If none of the saved congregations match the current list,
+            // default to selecting all congregations.
+            if (selected.isEmpty()) allCongregations.toSet() else selected
+        }
     }
+
+    // ─── Debounced filter ──────────────────────────────────────────────
+
+    private fun applyFilter() {
+        // Cancel pending runnable
+        filterRunnable?.let { filterHandler.removeCallbacks(it) }
+        filterRunnable = Runnable {
+            saveSelection(selectedCongregations)
+            onFilterChanged(selectedCongregations.toSet())
+        }
+        // Schedule new one with 300ms debounce
+        filterRunnable?.let { filterHandler.postDelayed(it, 300) }
+    }
+
+    // ─── Utility ────────────────────────────────────────────────────────
+
+    private fun Int.dpToPx(): Int = (this * context.resources.displayMetrics.density).toInt()
 }

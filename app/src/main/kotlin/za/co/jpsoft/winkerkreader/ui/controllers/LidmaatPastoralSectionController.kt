@@ -124,7 +124,7 @@ class LidmaatPastoralSectionController(
         binding.detailPendingReminders.apply {
             adapter = miniAdapter
             layoutManager = LinearLayoutManager(activity)
-            setHasFixedSize(false)
+            setHasFixedSize(true)
         }
     }
 
@@ -132,7 +132,7 @@ class LidmaatPastoralSectionController(
         binding.rvDetailNotas.apply {
             adapter = notaAdapter
             layoutManager = LinearLayoutManager(activity)
-            setHasFixedSize(false)
+            setHasFixedSize(true)
             isNestedScrollingEnabled = false
         }
         binding.layoutDetailNotasInhoud.visibility = View.GONE
@@ -303,7 +303,7 @@ class LidmaatPastoralSectionController(
                 }
                 val contextLine = TemplateContext.from(reminder.contextJson).toDisplayLine()
                 if (contextLine != null) {
-                    append("\n\nKontekst: $contextLine")
+                    append("\n\nKonteks: $contextLine")
                 }
                 append("\n\nSkema: ${reminder.scheduleType}")
                 append("\nStatus: ${reminder.status}")

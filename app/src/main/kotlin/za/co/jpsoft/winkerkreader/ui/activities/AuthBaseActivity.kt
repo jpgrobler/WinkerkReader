@@ -6,6 +6,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import dagger.hilt.android.AndroidEntryPoint
 import jakarta.inject.Inject
+import za.co.jpsoft.winkerkreader.ui.helpers.QuickLockManager
 import za.co.jpsoft.winkerkreader.utils.prefs.SecurityPrefs
 import za.co.jpsoft.winkerkreader.utils.security.AppAuthGuard
 import za.co.jpsoft.winkerkreader.utils.security.AppAuthState
@@ -15,7 +16,7 @@ abstract class AuthBaseActivity : BaseActivity() {
 
     @Inject
     open lateinit var securityPrefs: SecurityPrefs
-
+    private lateinit var quickLockManager: QuickLockManager
     private var credentialCallback: ((Boolean) -> Unit)? = null
 
     // Register safely during activity creation phase
@@ -49,6 +50,7 @@ abstract class AuthBaseActivity : BaseActivity() {
         if (savedInstanceState == null && securityPrefs.lockOnRestart) {
             AppAuthState.resetForFreshLaunch()
         }
+        quickLockManager = QuickLockManager(this, appAuthGuard, securityPrefs)
     }
 
     override fun onResume() {
