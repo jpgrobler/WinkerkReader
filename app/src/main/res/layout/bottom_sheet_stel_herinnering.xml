@@ -202,9 +202,8 @@
             </LinearLayout>
 
             <!-- ===== SHARED NOTE FIELD (Always Visible) ===== -->
-            <!-- ===== SHARED NOTE FIELD (Always Visible) ===== -->
             <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/til_note"
+                android:id="@+id/til_voice_input"
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -217,7 +216,7 @@
                 app:endIconTint="?attr/colorPrimary">
 
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/et_note"
+                    android:id="@+id/et_voice_input"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="textMultiLine|textCapSentences"

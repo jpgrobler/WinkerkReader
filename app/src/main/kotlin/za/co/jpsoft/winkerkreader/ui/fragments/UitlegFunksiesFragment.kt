@@ -10,20 +10,22 @@ import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Toast
-import androidx.core.content.edit
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import dagger.hilt.android.AndroidEntryPoint
 import jakarta.inject.Inject
-import za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract.PREFS_USER_INFO
+import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.databinding.FragmentUitlegFunksiesBinding
 import za.co.jpsoft.winkerkreader.di.UserPrefs
 import za.co.jpsoft.winkerkreader.ui.activities.UitlegActivity
 import za.co.jpsoft.winkerkreader.ui.activities.UitlegCalendarSelectionListener
-import za.co.jpsoft.winkerkreader.utils.prefs.*
-import za.co.jpsoft.winkerkreader.R
+import za.co.jpsoft.winkerkreader.utils.prefs.AppearancePrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.CalendarPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.CallMonitorPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.QuickActionPrefs
+import za.co.jpsoft.winkerkreader.utils.prefs.SecurityPrefs
 
 @AndroidEntryPoint
 class UitlegFunksiesFragment : Fragment() {
@@ -39,6 +41,7 @@ class UitlegFunksiesFragment : Fragment() {
     @Inject
     @UserPrefs
     lateinit var calendarPrefs: CalendarPrefs
+
     private var _binding: FragmentUitlegFunksiesBinding? = null
     private val binding get() = _binding!!
     private var listener: UitlegCalendarSelectionListener? = null
@@ -71,6 +74,7 @@ class UitlegFunksiesFragment : Fragment() {
     private var isInitializing = true
     private var isDirty = false
     private var initialOproepTimeout = "5" // default value
+    private var initialNicknameMatching = false
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -184,6 +188,11 @@ class UitlegFunksiesFragment : Fragment() {
         val valuesArray = resources.getStringArray(R.array.oproep_timeout_values)
         val position = valuesArray.indexOf(timeoutSeconds.toString()).takeIf { it >= 0 } ?: 1
         binding.oproepTimeoutSpinner.setSelection(position)
+
+        initialNicknameMatching = callMonitorPrefs.nicknameMatchingEnabled
+        binding.uitlegNicknameMatching.isChecked = initialNicknameMatching
+
+
     }
 
     private fun setupListeners() {
@@ -351,7 +360,7 @@ class UitlegFunksiesFragment : Fragment() {
         val currentTimeout =
             resources.getStringArray(R.array.oproep_timeout_values)[binding.oproepTimeoutSpinner.selectedItemPosition]
         if (currentTimeout != initialOproepTimeout) return true
-
+        if (binding.uitlegNicknameMatching.isChecked != initialNicknameMatching) return true
         return false
     }
 
@@ -415,6 +424,8 @@ class UitlegFunksiesFragment : Fragment() {
             resources.getStringArray(R.array.oproep_timeout_values)[binding.oproepTimeoutSpinner.selectedItemPosition].toInt()
         callMonitorPrefs.oproepTimeoutSeconds = timeoutValue
         initialOproepTimeout = timeoutValue.toString()
+        callMonitorPrefs.nicknameMatchingEnabled = binding.uitlegNicknameMatching.isChecked
+        initialNicknameMatching = binding.uitlegNicknameMatching.isChecked
 
         isDirty = false
         activity?.invalidateOptionsMenu()

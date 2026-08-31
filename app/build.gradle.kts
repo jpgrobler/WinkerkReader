@@ -11,8 +11,8 @@ android {
     defaultConfig {
         applicationId = "za.co.jpsoft.winkerkreader"
         minSdk = 28
-        versionCode = 141
-        versionName = "4.3"
+        versionCode = 143
+        versionName = "4.3r02"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         targetSdk = 37
 
@@ -106,6 +106,7 @@ dependencies {
     implementation(libs.androidx.hilt.common)
     implementation(libs.androidx.hilt.work)
     implementation(libs.hilt.android)
+    implementation(libs.play.services.maps3d)
     ksp(libs.hilt.compiler)
     ksp(libs.androidx.hilt.compiler)
 

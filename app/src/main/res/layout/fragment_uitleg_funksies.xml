@@ -112,6 +112,13 @@
                         android:text="@string/uitleg_log_voip_oproepe"
                         android:textColor="?attr/colorOnSurface" />
 
+                    <com.google.android.material.checkbox.MaterialCheckBox
+                        android:id="@+id/uitleg_nickname_matching"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Slim bynaam-herkenning (bv. Piet vir Petrus)"
+                        android:textColor="?attr/colorOnSurface" />
+
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -203,7 +210,7 @@
                         android:padding="2dp"
                         app:columnCount="2"
                         app:rowCount="6"
-                        app:useDefaultMargins="true">CheckBox
+                        app:useDefaultMargins="true">
 
                         <com.google.android.material.checkbox.MaterialCheckBox
                             android:id="@+id/qa_detail"

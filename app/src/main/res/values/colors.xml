@@ -64,4 +64,10 @@
     <color name="divider_color">?attr/colorOutlineVariant</color>
     <color name="whatsapp_green">#25D366</color>
     <color name="sms_green">#4CAF50</color>
+
+    <!-- Link Specific -->
+    <color name="md3_link">#1e40af</color>
+    <color name="md3_link_visited">#7c3aed</color>
+    <color name="md3_link_pressed">#1e3a8a</color>
+
 </resources>

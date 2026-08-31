@@ -5,7 +5,11 @@ import android.database.Cursor
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.view.*
+import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -29,6 +33,7 @@ class ArgiefListActivity : AuthBaseActivity() {
     private val searchHandler = Handler(Looper.getMainLooper())
     private var searchRunnable: Runnable? = null
     private var keuse: String = "Van"
+    private var searchView: SearchView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,6 +57,7 @@ class ArgiefListActivity : AuthBaseActivity() {
         // Observe cursor changes
         viewModel.archiveCursor.observe(this, Observer { newCursor ->
             adapter.swapCursor(newCursor)
+            updateEmptyState()
         })
 
         // Observe loading state
@@ -61,6 +67,27 @@ class ArgiefListActivity : AuthBaseActivity() {
 
         setupSortToggleGroup()
         viewModel.loadArchive(keuse)
+    }
+
+    private fun updateEmptyState() {
+        val cursor = adapter.cursor
+        val isEmpty = cursor == null || cursor.count == 0
+        if (isEmpty) {
+            binding.argiefEmptyState.showEmptyState()
+            binding.argiefEmptyState.setIcon(R.drawable.ic_archive)
+            binding.argiefEmptyState.setTitle("Geen argiefitems")
+            binding.argiefEmptyState.setSubtitle("Pas jou soekopdrag aan of laai 'n nuwe databasis")
+            binding.argiefEmptyState.setActionText("Herlaai")
+            binding.argiefEmptyState.setActionListener {
+                // Clear search using the stored SearchView reference
+                searchView?.setQuery("", false)
+                viewModel.loadArchive(keuse)
+            }
+            binding.argiefRecyclerView.visibility = View.GONE
+        } else {
+            binding.argiefEmptyState.hideEmptyState()
+            binding.argiefRecyclerView.visibility = View.VISIBLE
+        }
     }
 
     private fun setupSortToggleGroup() {
@@ -100,8 +127,8 @@ class ArgiefListActivity : AuthBaseActivity() {
         searchItem.setShowAsActionFlags(
             MenuItem.SHOW_AS_ACTION_IF_ROOM or MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW
         )
-        val searchView = searchItem.actionView as SearchView
-        searchView.apply {
+        searchView = searchItem.actionView as SearchView
+        searchView?.apply {
             setSubmitButtonEnabled(false)
             queryHint = "Soek"
             setOnQueryTextListener(
@@ -152,21 +179,19 @@ class ArgiefListActivity : AuthBaseActivity() {
 class ArgiefRecyclerAdapter(private val context: Context) :
     RecyclerView.Adapter<ArgiefRecyclerAdapter.ViewHolder>() {
 
-    private var cursor: Cursor? = null
+    var cursor: Cursor? = null
     private var sortKey: String = "Van"
 
     fun swapCursor(newCursor: Cursor?) {
         val oldCursor = cursor
         if (oldCursor === newCursor) return
         cursor = newCursor
-        // Optionally close old cursor if not managed by ViewModel
         oldCursor?.close()
         notifyDataSetChanged()
     }
 
     fun setSortKey(key: String) {
         sortKey = key
-        // We don't reload data here; just update for separator logic
         notifyDataSetChanged()
     }
 
@@ -178,7 +203,6 @@ class ArgiefRecyclerAdapter(private val context: Context) :
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val cursor = cursor
         if (cursor == null || cursor.isClosed || !cursor.moveToPosition(position)) {
-            // If cursor is invalid, clear views
             holder.bind(null, sortKey, position)
             return
         }

@@ -133,10 +133,29 @@ class VoipCallInfoExtractor {
     }
 
     fun cleanExtractedName(name: String): String {
-        return name.replace(Regex("[📞📹☎️📱🎥]+"), "")
-            .replace("\\s+".toRegex(), " ")
+        // 1. Remove emojis and special symbols
+        val noEmojis = name.replace(Regex("[📞📹☎️📱🎥💬🔔⚠️†🏥💊✨]+"), "")
+
+        // 2. Remove common titles (Afrikaans & English)
+        val titlesPattern =
+            Regex("(?i)\\b(mnr\\.?|mev\\.?|me\\.?|dr\\.?|ds\\.?|prof\\.?|rev\\.?|mr\\.?|mrs\\.?|ms\\.?|pastoor|kol\\.?|genl\\.?)\\b")
+        val noTitles = noEmojis.replace(titlesPattern, "")
+
+        // 3. Normalize whitespace and split into words to remove adjacent duplicates (e.g. "Hendrieka ... Hendrieka")
+        val words = noTitles.replace(Regex("[^\\p{L}\\p{N}]+"), " ")
             .trim()
-            .takeIf { it.length > 1 } ?: ""
+            .split(Regex("\\s+"))
+            .filter { it.length > 1 || it.all { char -> char.isDigit() } } // filter out single orphan punctuation/chars
+
+        val uniqueWords = mutableListOf<String>()
+        for (word in words) {
+            // Avoid immediate adjacent duplicates like "Hendrieka Hendrieka"
+            if (uniqueWords.isEmpty() || !uniqueWords.last().equals(word, ignoreCase = true)) {
+                uniqueWords.add(word)
+            }
+        }
+
+        return uniqueWords.joinToString(" ").trim().takeIf { it.length > 1 } ?: ""
     }
 
     fun extractSimpleNameFromText(text: String): String {

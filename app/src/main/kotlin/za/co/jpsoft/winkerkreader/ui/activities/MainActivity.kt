@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.ViewCompat
@@ -31,6 +32,7 @@ import za.co.jpsoft.winkerkreader.ui.bottomsheets.FilterBottomSheet
 import za.co.jpsoft.winkerkreader.ui.controllers.MainActivityInitializer
 import za.co.jpsoft.winkerkreader.ui.controllers.MainSearchFilterCoordinator
 import za.co.jpsoft.winkerkreader.ui.controllers.SortOrderController
+import za.co.jpsoft.winkerkreader.ui.helpers.QuickLockManager
 import za.co.jpsoft.winkerkreader.ui.viewmodels.MainViewModel
 import za.co.jpsoft.winkerkreader.utils.CallLogImporter
 import za.co.jpsoft.winkerkreader.utils.CrashRecovery
@@ -52,13 +54,6 @@ import za.co.jpsoft.winkerkreader.utils.ui.MainNavigationController
 import za.co.jpsoft.winkerkreader.utils.ui.MenuItemHandler
 import za.co.jpsoft.winkerkreader.utils.work.BatteryOptimizationHelper
 import za.co.jpsoft.winkerkreader.utils.work.WorkScheduler
-import android.content.BroadcastReceiver
-import android.content.IntentFilter
-import android.os.Build
-import za.co.jpsoft.winkerkreader.services.OproepDetailService
-import za.co.jpsoft.winkerkreader.ui.bottomsheets.VoegNotaByBottomSheet
-import za.co.jpsoft.winkerkreader.ui.bottomsheets.StelHerinneringBottomSheet
-import za.co.jpsoft.winkerkreader.ui.helpers.QuickLockManager
 
 @AndroidEntryPoint
 class MainActivity : AuthBaseActivity() {
@@ -109,11 +104,10 @@ class MainActivity : AuthBaseActivity() {
     // ─── Controller ────────────────────────────────────────────────────────
     private lateinit var initializer: MainActivityInitializer
 
-    val searchFilterCoordinator: MainSearchFilterCoordinator
-        get() = initializer.searchFilterCoordinator
-
-    val sortController: SortOrderController
-        get() = initializer.sortController
+    val searchFilterCoordinator: MainSearchFilterCoordinator by lazy { initializer.searchFilterCoordinator }
+    val sortController: SortOrderController by lazy { initializer.sortController }
+    val adapter by lazy { initializer.adapter }
+    val viewModel by lazy { initializer.viewModel }
 
     // ─── Lifecycle ──────────────────────────────────────────────────────────
     override fun onBackPressed() {
@@ -284,7 +278,32 @@ class MainActivity : AuthBaseActivity() {
         }
     }
     // ─── Helper methods ──────────────────────────────────────────────────────
-
+    fun refreshEmptyState() {
+        val isEmpty = adapter.itemCount == 0
+        val isSearchOrFilter =
+            viewModel.soekList || viewModel.getCurrentFilterList()?.any { it.checked } == true
+        if (isEmpty) {
+            binding.emptyState.showEmptyState()
+            binding.emptyState.setIcon(if (isSearchOrFilter) R.drawable.ic_search_off else R.drawable.ic_empty_state)
+            binding.emptyState.setTitle(if (isSearchOrFilter) "Geen resultate" else "Geen lidmate")
+            binding.emptyState.setSubtitle(
+                if (isSearchOrFilter) "Probeer jou filters verander of soek weer"
+                else "Voeg lidmate by of laai 'n databasis"
+            )
+            binding.emptyState.setActionText(if (isSearchOrFilter) "Herstel filters" else "Laai databasis")
+            binding.emptyState.setActionListener {
+                if (isSearchOrFilter) {
+                    searchFilterCoordinator.resetAllFiltersAndSearch()
+                } else {
+                    navigationController.navigateToLaaiDatabasis(extras = null)
+                }
+            }
+            binding.lidmaatList.visibility = View.GONE
+        } else {
+            binding.emptyState.hideEmptyState()
+            binding.lidmaatList.visibility = View.VISIBLE
+        }
+    }
     fun startMonitoringServiceIfEnabled() {
         if (callMonitorPrefs.autoStartEnabled && !CallMonitoringService.isServiceRunning(this)) {
             try {
@@ -330,6 +349,7 @@ class MainActivity : AuthBaseActivity() {
         val notificationManager = getSystemService(NotificationManager::class.java)
         notificationManager?.createNotificationChannel(serviceChannel)
     }
+
 
     // ─── Companion ───────────────────────────────────────────────────────────
 

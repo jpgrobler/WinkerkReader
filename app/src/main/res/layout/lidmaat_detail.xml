@@ -24,17 +24,6 @@
             ns1:navigationIcon="@drawable/ic_close"
             ns1:navigationIconTint="?attr/colorOnSurface"
             ns1:title="" />
-
-
-        <com.google.android.material.progressindicator.CircularProgressIndicator
-            android:id="@+id/detail_indeterminateBar"
-            android:layout_height="wrap_content"
-            android:layout_width="match_parent"
-            android:indeterminate="true"
-            android:progressTint="?attr/colorPrimary"
-            android:visibility="visible" />
-
-
     </com.google.android.material.appbar.AppBarLayout>
 
 
@@ -881,6 +870,7 @@
                 style="@style/Widget.WinkerkReader.Card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:visibility="gone"
                 ns1:cardBackgroundColor="?attr/colorSurfaceContainerLow">
 
 
@@ -984,21 +974,13 @@
 
             </com.google.android.material.card.MaterialCardView>
 
-
-            <com.google.android.material.progressindicator.CircularProgressIndicator
-                android:id="@+id/detail_indeterminateBar2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:indeterminate="true"
-                android:visibility="gone" />
-
-
             <com.google.android.material.card.MaterialCardView
                 style="@style/Widget.WinkerkReader.Card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginVertical="0dp"
                 ns1:cardBackgroundColor="?attr/colorSurfaceContainerHigh"
+                ns1:contentPadding="4dp"
                 ns1:strokeWidth="0dp">
 
 
@@ -1007,7 +989,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:paddingVertical="8dp">
+                    android:paddingVertical="0dp">
 
 
                     <LinearLayout
@@ -1015,7 +997,8 @@
                         android:layout_height="wrap_content"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
-                        android:paddingHorizontal="16dp">
+                        android:paddingHorizontal="8dp"
+                        android:paddingVertical="0dp">
 
 
                         <ImageView
@@ -1024,26 +1007,18 @@
                             android:contentDescription="Bediening"
                             android:src="@drawable/ic_bediening" />
 
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
-                            android:layout_weight="1"
-                            android:text="@string/detail_bediening"
-                            android:textAppearance="?attr/textAppearanceTitleSmall"
-                            android:textColor="?attr/colorOnTertiaryContainer" />
-
-
                         <TextView
                             android:id="@+id/detail_herinnering_count"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_gravity="center_horizontal|center_vertical"
                             android:layout_marginEnd="8dp"
                             android:alpha="0.7"
+                            android:paddingLeft="4dp"
+                            android:text="@string/detail_bediening"
                             android:textAppearance="?attr/textAppearanceLabelSmall"
                             android:textColor="?attr/colorOnTertiaryContainer"
-                            android:visibility="gone" />
+                            android:visibility="visible" />
 
 
                         <com.google.android.material.button.MaterialButton
@@ -1051,6 +1026,8 @@
                             style="@style/Widget.Material3.Button.TonalButton"
                             android:layout_width="wrap_content"
                             android:layout_height="40dp"
+                            android:layout_gravity="right|center_vertical"
+                            android:minHeight="0dp"
                             android:text="@string/detail_stel_herinnering"
                             android:textSize="12sp" />
 
@@ -1063,9 +1040,9 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:nestedScrollingEnabled="false"
-                        android:paddingHorizontal="16dp"
-                        android:paddingTop="4dp"
-                        android:visibility="gone" />
+                        android:paddingHorizontal="8dp"
+                        android:paddingTop="0dp"
+                        android:visibility="visible" />
 
 
                     <com.google.android.material.button.MaterialButton
@@ -1076,7 +1053,7 @@
                         android:layout_marginStart="12dp"
                         android:text="@string/wys_meer_herinneringe"
                         android:textSize="12sp"
-                        android:visibility="gone" />
+                        android:visibility="visible" />
 
 
                 </LinearLayout>

@@ -5,6 +5,13 @@ import za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract
 
 class CallMonitorPrefs(private val prefs: SharedPreferences) {
 
+    var nicknameMatchingEnabled: Boolean
+        get() = prefs.getBoolean(
+            "pref_nickname_matching_enabled",
+            false
+        ) // Default to false/safe, or true if preferred
+        set(value) = prefs.edit().putBoolean("pref_nickname_matching_enabled", value).apply()
+
     var oproepTimeoutSeconds: Int
         get() = prefs.getString("oproep_timeout", "5")?.toIntOrNull() ?: 5
         set(value) = prefs.edit().putString("oproep_timeout", value.toString()).apply()

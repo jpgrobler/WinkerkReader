@@ -1,6 +1,7 @@
 package za.co.jpsoft.winkerkreader.utils.security
 
 import android.content.Intent
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -8,6 +9,7 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.fragment.app.FragmentActivity
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.R
 import za.co.jpsoft.winkerkreader.utils.prefs.SecurityPrefs
 
@@ -86,6 +88,8 @@ class AppAuthGuard(
      * If away > 10s but timeout not expired, still allow (with tolerance).
      * If timeout expired OR force-lock requested, re-prompt.
      */
+    // In za.co.jpsoft.winkerkreader.utils.security.AppAuthGuard.kt
+
     fun checkOnResume(onAuthenticated: () -> Unit) {
         AppAuthState.backgroundTimeoutMs = securityPrefs.biometricTimeoutMs
 
@@ -95,7 +99,6 @@ class AppAuthGuard(
         }
 
         if (overlayView != null) {
-            // Already showing auth overlay; don't re-trigger
             return
         }
 
@@ -104,19 +107,79 @@ class AppAuthGuard(
             return
         }
 
-        // Notify session of foreground activity
         AppAuthState.onAppForegrounded()
 
-        // Check if still valid (grace period + timeout logic)
+        // 🌟 Check if we are inside the forgiving grace window (< 10s app-switch)
+        if (AppAuthState.isInGracePeriod()) {
+            if (BuildConfig.DEBUG) {
+                Log.d(
+                    "AppAuthGuard",
+                    "Within grace period (${AppAuthState.getRemainingGraceMs()}ms left) — bypassing strict re-auth"
+                )
+            }
+            onAuthenticated()
+            return
+        }
+
         val stillValid = AppAuthState.checkBackgroundTimeout()
         if (!stillValid) {
-            showOverlay()
+            showOverlayAnimated() // 👈 Use animated version
             promptAuth(onAuthenticated)
         } else {
             onAuthenticated()
         }
     }
 
+    // Add these replacement methods inside AppAuthGuard.kt
+
+    private fun showOverlayAnimated() {
+        if (overlayView != null) return
+
+        val root = activity.window.decorView
+            .findViewById<ViewGroup>(android.R.id.content) ?: return
+
+        val overlay = LayoutInflater.from(activity)
+            .inflate(R.layout.overlay_app_auth, root, false) ?: return
+
+        root.addView(overlay)
+        overlayView = overlay
+
+        // 🌟 Modern banking-style smooth fade-in animation
+        overlay.alpha = 0f
+        overlay.animate()
+            .alpha(1f)
+            .setDuration(250)
+            .setInterpolator(android.view.animation.DecelerateInterpolator())
+            .start()
+
+        val retryButton = overlay.findViewById<Button>(R.id.btnAuthRetry)
+        retryButton?.setOnClickListener {
+            promptAuth {}
+        }
+
+        retryButton?.setOnLongClickListener {
+            AppAuthState.markAuthenticated()
+            dismissOverlayAnimated()
+            true
+        }
+    }
+
+    private fun dismissOverlayAnimated() {
+        val overlay = overlayView ?: return
+
+        // 🌟 Smooth fade-out animation before clearing view hierarchy
+        overlay.animate()
+            .alpha(0f)
+            .setDuration(200)
+            .setInterpolator(android.view.animation.AccelerateInterpolator())
+            .withEndAction {
+                val root = activity.window.decorView
+                    .findViewById<ViewGroup>(android.R.id.content)
+                root?.removeView(overlay)
+                overlayView = null
+            }
+            .start()
+    }
     /**
      * Called when app is paused (onPause, onStop).
      * Records the background timestamp for grace/timeout calculation.

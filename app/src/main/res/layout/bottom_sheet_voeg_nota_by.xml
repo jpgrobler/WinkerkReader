@@ -86,27 +86,24 @@
 
         <!-- Note text with microphone icon -->
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tilNotaTeks"
+            android:id="@+id/til_voice_input"
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:hint="@string/nota_teks_wenk"
+            android:layout_marginHorizontal="24dp"
+            android:layout_marginTop="12dp"
+            android:hint="@string/herinnering_nota"
             app:endIconContentDescription="@string/nota_dikteer"
             app:endIconDrawable="@drawable/ic_microphone"
             app:endIconMode="custom"
             app:endIconTint="?attr/colorPrimary">
 
             <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etNotaTeks"
+                android:id="@+id/et_voice_input"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="top|start"
                 android:inputType="textMultiLine|textCapSentences"
-                android:maxLines="8"
-                android:minLines="4"
-                android:textColor="?attr/colorOnSurface" />
-
+                android:minLines="2" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Voice input status indicator (hidden by default) -->

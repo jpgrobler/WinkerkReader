@@ -10,6 +10,7 @@ import dagger.hilt.components.SingletonComponent
 import jakarta.inject.Singleton
 import za.co.jpsoft.winkerkreader.data.calllog.dao.CallLogDao
 import za.co.jpsoft.winkerkreader.data.calllog.setup.CallLogDatabase
+import za.co.jpsoft.winkerkreader.data.members.dao.ArgiefDao
 import za.co.jpsoft.winkerkreader.data.members.dao.LiveMemberDao
 import za.co.jpsoft.winkerkreader.data.members.dao.MemberDao
 import za.co.jpsoft.winkerkreader.data.members.setup.WinkerkDatabase
@@ -22,6 +23,9 @@ import za.co.jpsoft.winkerkreader.data.pastoral.repository.PastoralNoteRepositor
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
+    @Provides
+    @Singleton
+    fun provideArgiefDao(database: WinkerkDatabase): ArgiefDao = database.argiefDao()
 
     @Provides
     @Singleton

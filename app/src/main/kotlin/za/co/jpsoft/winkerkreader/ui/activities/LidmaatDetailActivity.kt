@@ -11,8 +11,6 @@ import android.graphics.Outline
 import android.net.Uri
 import android.os.Bundle
 import android.provider.CalendarContract
-import android.text.Html
-import android.text.Spanned
 import android.util.Log
 import android.view.Gravity
 import android.view.Menu
@@ -142,8 +140,8 @@ class LidmaatDetailActivity : AuthBaseActivity() {
             photoController.pendingImageUri = uriString.toUri()
         }
 
-        binding.detailIndeterminateBar.visibility = View.GONE
-        binding.detailIndeterminateBar2.visibility = View.GONE
+        // binding.detailIndeterminateBar.visibility = View.GONE
+        // binding.detailIndeterminateBar2.visibility = View.GONE
 
         binding.detailMylpaleBlock2.visibility = View.GONE
         binding.detailGroepBlockm.visibility = View.GONE
@@ -154,7 +152,10 @@ class LidmaatDetailActivity : AuthBaseActivity() {
         recordStatus = intent.getStringExtra("RECORD_STATUS") ?: "0"
 
         // ── Create pastoral ViewModel with the factory ──────────────────────
-        val guid = intent.getStringExtra(EXTRA_MEMBER_GUID) ?: intent.getStringExtra("MEMBER_GUID")
+        val guid = intent.getStringExtra(EXTRA_MEMBER_GUID)
+            ?: intent.getStringExtra("MEMBER_GUID")
+            ?: intent.getStringExtra("member_guid")
+            ?: intent.getStringExtra("memberGUID")
         if (!guid.isNullOrEmpty()) {
             pastoralViewModel = ViewModelProvider(
                 this,
@@ -178,9 +179,9 @@ class LidmaatDetailActivity : AuthBaseActivity() {
             )
         }
 
-        viewModel.isLoading.observe(this) { loading ->
-            binding.detailIndeterminateBar.visibility = if (loading) View.VISIBLE else View.GONE
-        }
+//        viewModel.isLoading.observe(this) { loading ->
+//            binding.detailIndeterminateBar.visibility = if (loading) View.VISIBLE else View.GONE
+//        }
 
         viewModel.memberDetail.observe(this) { item ->
             if (item != null) {
@@ -190,15 +191,22 @@ class LidmaatDetailActivity : AuthBaseActivity() {
                 }
 
                 if (!::pastoralSectionController.isInitialized) {
+                    // ─── Recreate pastoral ViewModel with the correct member guid ───
+                    // (The intent guid may differ from the actual database member guid)
+                    pastoralViewModel = ViewModelProvider(
+                        this,
+                        pastoralViewModelFactory.create(item.guid)
+                    ).get(LidmaatDetailPastoralViewModel::class.java)
+
                     pastoralSectionController = LidmaatPastoralSectionController(
                         activity = this,
                         binding = binding,
-                        memberGuid = mLidmaatGUID ?: "",
+                        memberGuid = item.guid,  // ← Use the actual loaded member guid
                         familyHeadGuid = item.familyHeadGuid.ifBlank { null },
                         memberDisplayName = "${item.name} ${item.surname}".trim(),
                         memberSurname = item.surname.ifBlank { null },
                         memberGivenName = item.name.ifBlank { null },
-                        pastoralViewModel = pastoralViewModel
+                        pastoralViewModel = pastoralViewModel  // ← Now with correct guid
                     )
                     pastoralSectionController.setup()
                 }
@@ -222,6 +230,16 @@ class LidmaatDetailActivity : AuthBaseActivity() {
                 }
             }
         )
+        binding.detailPendingReminders.post {
+            android.util.Log.d(
+                "DetailActivity",
+                "RecyclerView height after post: ${binding.detailPendingReminders.height}"
+            )
+            android.util.Log.d(
+                "DetailActivity",
+                "RecyclerView visibility after post: ${binding.detailPendingReminders.visibility}"
+            )
+        }
     }
 
     override fun onDestroy() {

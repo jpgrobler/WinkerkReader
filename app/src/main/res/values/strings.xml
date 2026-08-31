@@ -931,6 +931,7 @@
         <item>10</item>
         <item>15</item>
     </string-array>
-
-
+    <string name="download_pc_link"><a href="http://www.jpsoft.co.za">Nuutste omskakel app vir PC</a></string>
+    <string name="whatsapp" translatable="false">Whatsapp</string>
 </resources>
+

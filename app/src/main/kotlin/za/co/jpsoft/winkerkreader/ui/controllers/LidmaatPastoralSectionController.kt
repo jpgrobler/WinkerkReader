@@ -7,7 +7,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import za.co.jpsoft.winkerkreader.R
@@ -124,7 +123,8 @@ class LidmaatPastoralSectionController(
         binding.detailPendingReminders.apply {
             adapter = miniAdapter
             layoutManager = LinearLayoutManager(activity)
-            setHasFixedSize(true)
+            setHasFixedSize(false)  // ← CHANGE TRUE to FALSE
+            isNestedScrollingEnabled = false
         }
     }
 
@@ -194,15 +194,41 @@ class LidmaatPastoralSectionController(
         // Pending reminders → map to UI items
         scope.launch {
             pastoralViewModel.pendingReminders
-                .map { entities -> entities.map { ReminderUiMapper.toUiItem(it) } }
-                .collect { uiItems ->
+                .collect { entities ->
+                    android.util.Log.d(TAG, "🔵 Raw entities from ViewModel: ${entities.size}")
+
+                    val uiItems = entities.map { ReminderUiMapper.toUiItem(it) }
+                    android.util.Log.d(TAG, "🟢 UI items mapped: ${uiItems.size}")
+
                     allPendingUiItems = uiItems
                     val showAll = binding.btnWysAlHerinneringe.tag == "expanded"
                     val toDisplay = if (showAll) uiItems else uiItems.take(3)
+
+                    android.util.Log.d(
+                        TAG,
+                        "🟡 Items to display (showAll=$showAll): ${toDisplay.size}"
+                    )
+                    android.util.Log.d(
+                        TAG,
+                        "🟡 First item: ${toDisplay.firstOrNull()?.title ?: "NONE"}"
+                    )
+
+                    // THIS IS THE KEY CALL
                     miniAdapter.submitList(toDisplay)
+                    android.util.Log.d(TAG, "🟡 Called miniAdapter.submitList()")
 
                     binding.detailPendingReminders.visibility =
                         if (uiItems.isEmpty()) View.GONE else View.VISIBLE
+
+                    android.util.Log.d(
+                        TAG,
+                        "🟣 RecyclerView visibility: ${binding.detailPendingReminders.visibility} (GONE=8, VISIBLE=0)"
+                    )
+                    android.util.Log.d(
+                        TAG,
+                        "🟣 RecyclerView height: ${binding.detailPendingReminders.height}px"
+                    )
+                    android.util.Log.d(TAG, "🟣 RecyclerView itemCount: ${miniAdapter.itemCount}")
 
                     binding.btnWysAlHerinneringe.visibility =
                         if (!showAll && uiItems.size > 3) View.VISIBLE else View.GONE
@@ -217,6 +243,8 @@ class LidmaatPastoralSectionController(
                             uiItems.size,
                             uiItems.size
                         )
+
+                    android.util.Log.d(TAG, "✅ Observer complete")
                 }
         }
 

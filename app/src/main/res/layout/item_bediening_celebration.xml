@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="16dp"
+    android:layout_marginTop="8dp"
+    android:layout_marginEnd="16dp"
+    android:layout_marginBottom="8dp"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="2dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="12dp">
+
+        <!-- Member photo (same as reminder item) -->
+        <ImageView
+            android:id="@+id/iv_celebration_photo"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:contentDescription="@null"
+            android:focusable="true"
+            android:scaleType="fitCenter"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Celebration title (event emoji + name) -->
+        <TextView
+            android:id="@+id/tvCelebrationTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            android:textColor="?attr/colorOnSurface"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/iv_celebration_photo"
+            app:layout_constraintTop_toTopOf="@id/iv_celebration_photo" />
+
+        <!-- Celebration detail (e.g., "Verjaar (45 jaar)") -->
+        <TextView
+            android:id="@+id/tvCelebrationDetail"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="2dp"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/iv_celebration_photo"
+            app:layout_constraintTop_toBottomOf="@id/tvCelebrationTitle" />
+
+        <!-- Context line (optional, e.g., extra info) -->
+        <TextView
+            android:id="@+id/tv_context_line"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="2dp"
+            android:alpha="0.7"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textAppearance="?attr/textAppearanceLabelSmall"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textStyle="italic"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/iv_celebration_photo"
+            app:layout_constraintTop_toBottomOf="@id/tvCelebrationDetail" />
+
+        <!-- Divider -->
+        <View
+            android:id="@+id/action_divider"
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_marginTop="10dp"
+            android:background="?attr/dividerColor"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_context_line" />
+
+        <!-- Action buttons row -->
+        <LinearLayout
+            android:id="@+id/actionButtons"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:gravity="center"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/action_divider">
+
+            <!-- WhatsApp -->
+            <ImageButton
+                android:id="@+id/btn_whatsapp"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/herinnering_whatsapp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/whatsapps" />
+
+            <!-- Call -->
+            <ImageButton
+                android:id="@+id/btnCall"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/herinnering_bel"
+                android:src="@android:drawable/ic_menu_call"
+                app:tint="?attr/colorOnSurfaceVariant" />
+
+            <!-- SMS -->
+            <ImageButton
+                android:id="@+id/btnSms"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/verjaar_send_sms"
+                android:src="@android:drawable/ic_menu_send"
+                app:tint="?attr/colorOnSurfaceVariant" />
+
+            <!-- Add Note -->
+            <ImageButton
+                android:id="@+id/btnAddNote"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/voeg_nota_by"
+                android:src="@drawable/ic_note"
+                app:tint="?attr/colorOnSurfaceVariant" />
+
+            <!-- Set Reminder -->
+            <ImageButton
+                android:id="@+id/btnSetReminder"
+                android:layout_width="0dp"
+                android:layout_height="28dp"
+                android:layout_weight="1"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/stel_herinnering"
+                android:padding="0dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_bediening" />
+
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.cardview.widget.CardView>

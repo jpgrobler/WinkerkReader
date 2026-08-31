@@ -1,10 +1,16 @@
 package za.co.jpsoft.winkerkreader.ui.viewmodels
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.util.Log
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,48 +19,79 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.drop
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeoutOrNull
 import za.co.jpsoft.winkerkreader.BuildConfig
 import za.co.jpsoft.winkerkreader.data.pastoral.model.ReminderWithMember
+import za.co.jpsoft.winkerkreader.data.pastoral.model.VandagAllesItem
+import za.co.jpsoft.winkerkreader.data.pastoral.model.VandagAllesSection
+import za.co.jpsoft.winkerkreader.data.pastoral.repository.BedieningRepository
 import za.co.jpsoft.winkerkreader.data.pastoral.repository.PastoralReminderRepository
+import za.co.jpsoft.winkerkreader.utils.EventMessageStore
+import za.co.jpsoft.winkerkreader.utils.messaging.WhatsAppMessageSender
 import za.co.jpsoft.winkerkreader.utils.prefs.TasksPrefs
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
-import kotlin.time.Duration.Companion.milliseconds
 
 @HiltViewModel
 class BedieningViewModel @Inject constructor(
-    private val repository: PastoralReminderRepository,
-    private val tasksPrefs: TasksPrefs
+    private val bedieningRepo: BedieningRepository,   // for combined "Alles" tab
+    private val pastoralRepo: PastoralReminderRepository, // for reminder-only tab and CRUD
+    private val tasksPrefs: TasksPrefs,
+    private val savedStateHandle: SavedStateHandle,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
-    // -------------------------------------------------------------------------
-    // Filter state
-    // -------------------------------------------------------------------------
+    // =========================================================================
+    // Tab 1: "Vandag (Alles)" - Combined celebrations + reminders
+    // =========================================================================
 
-    enum class Filter { VANDAG, AGTERSTALLIG, HIERDIE_WEEK, ALS }
+    private val _allesItems = MutableStateFlow<List<VandagAllesSection>>(emptyList())
+    val allesItems: StateFlow<List<VandagAllesSection>> = _allesItems.asStateFlow()
+
+    private val _loadingState = MutableStateFlow<LoadingState>(LoadingState.Idle)
+    val loadingState: StateFlow<LoadingState> = _loadingState.asStateFlow()
+
+    private val _navigationEvent = MutableSharedFlow<NavigationEvent>(extraBufferCapacity = 1)
+    val navigationEvent: SharedFlow<NavigationEvent> = _navigationEvent.asSharedFlow()
+
+    private val _errorEvent = MutableSharedFlow<String>(extraBufferCapacity = 1)
+    val errorEvent: SharedFlow<String> = _errorEvent.asSharedFlow()
+
+    init {
+        // Load combined data for Tab 1
+        viewModelScope.launch {
+            bedieningRepo.observeVandagAllesItems()
+                .onStart { _loadingState.value = LoadingState.Loading }
+                .onEach { sections ->
+                    _allesItems.value = sections
+                    _loadingState.value = LoadingState.Success
+                }
+                .catch { e ->
+                    _loadingState.value = LoadingState.Error(e.message ?: "Unknown error")
+                }
+                .collect()
+        }
+    }
+
+    // =========================================================================
+    // Tab 2: "Vandag (Herinnerings)" - Existing reminder-only view
+    // =========================================================================
 
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    private val _activeFilter = MutableStateFlow(Filter.VANDAG)
-    val activeFilter: StateFlow<Filter> = _activeFilter.asStateFlow()
-
-    fun setFilter(filter: Filter) {
-        _activeFilter.value = filter
-    }
-
-    // -------------------------------------------------------------------------
-    // Day bounds
-    // -------------------------------------------------------------------------
+    // Use pastoralRepo for reminder flows
+    private val dashboard = pastoralRepo.observeVandagDashboard()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     private val zoneId = ZoneId.systemDefault()
     private val today = LocalDate.now(zoneId)
@@ -62,22 +99,24 @@ class BedieningViewModel @Inject constructor(
     private val endOfTodayUtc =
         today.plusDays(1).atStartOfDay(zoneId).toInstant().toEpochMilli() - 1
     private val endOfWeekUtc = today.plusDays(7).atStartOfDay(zoneId).toInstant().toEpochMilli() - 1
-    private val nowUtc get() = System.currentTimeMillis()
-
-    // -------------------------------------------------------------------------
-    // Dashboard (infinite flow)
-    // -------------------------------------------------------------------------
-
-    private val dashboard = repository.observeVandagDashboard()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     private val hierDieWeekItems: Flow<List<ReminderWithMember>> =
-        repository.observeDueThisWeek(endOfTodayUtc, endOfWeekUtc)
-            .flowOn(kotlinx.coroutines.Dispatchers.IO)
+        pastoralRepo.observeDueThisWeek(endOfTodayUtc, endOfWeekUtc)
+            .flowOn(Dispatchers.IO)
 
     private val alsItems: Flow<List<ReminderWithMember>> =
-        repository.observeFromToday()
-            .flowOn(kotlinx.coroutines.Dispatchers.IO)
+        pastoralRepo.observeFromToday()
+            .flowOn(Dispatchers.IO)
+
+    // Filter state
+    enum class Filter { VANDAG, AGTERSTALLIG, HIERDIE_WEEK, ALS }
+
+    private val _activeFilter = MutableStateFlow(Filter.VANDAG)
+    val activeFilter: StateFlow<Filter> = _activeFilter.asStateFlow()
+
+    fun setFilter(filter: Filter) {
+        _activeFilter.value = filter
+    }
 
     val displayItems: StateFlow<List<ReminderWithMember>> = combine(
         _activeFilter,
@@ -116,36 +155,16 @@ class BedieningViewModel @Inject constructor(
         _scrollToReminderId.tryEmit(reminderId)
     }
 
-    // -------------------------------------------------------------------------
-    // Loading state control
-    // -------------------------------------------------------------------------
-
-    init {
-        viewModelScope.launch {
-            _isLoading.value = true
-            try {
-                // Wait for first real emission (skip initial placeholder) with timeout
-                withTimeoutOrNull(2000L.milliseconds) {
-                    displayItems.drop(1).first()
-                }
-            } catch (e: Exception) {
-                // Ignore – we hide the spinner anyway
-            } finally {
-                _isLoading.value = false
-            }
-        }
-    }
-
-    // -------------------------------------------------------------------------
-    // Actions
-    // -------------------------------------------------------------------------
+    // =========================================================================
+    // Actions (delegated to pastoralRepo)
+    // =========================================================================
 
     fun completeReminder(reminderId: String) {
         viewModelScope.launch {
             try {
-                repository.completeReminder(reminderId)
+                pastoralRepo.completeReminder(reminderId)
             } catch (e: Exception) {
-                _error.tryEmit("Kon nie herinnering voltooi nie")
+                _errorEvent.tryEmit("Kon nie herinnering voltooi nie")
             }
         }
     }
@@ -159,9 +178,9 @@ class BedieningViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                repository.snoozeReminder(reminderId, until)
+                pastoralRepo.snoozeReminder(reminderId, until)
             } catch (e: Exception) {
-                _error.tryEmit("Kon nie herinnering uitstel nie")
+                _errorEvent.tryEmit("Kon nie herinnering uitstel nie")
             }
         }
     }
@@ -169,9 +188,9 @@ class BedieningViewModel @Inject constructor(
     fun addToCalendar(reminderId: String) {
         viewModelScope.launch {
             try {
-                repository.syncToCalendar(reminderId)
+                pastoralRepo.syncToCalendar(reminderId)
             } catch (e: Exception) {
-                _error.tryEmit("Kon nie by kalender voeg nie")
+                _errorEvent.tryEmit("Kon nie by kalender voeg nie")
             }
         }
     }
@@ -182,27 +201,22 @@ class BedieningViewModel @Inject constructor(
                 val url = tasksPrefs.tasksScriptUrl
                 val secret = tasksPrefs.tasksScriptSecret
                 if (BuildConfig.DEBUG) Log.d("Tasks", "URL: $url, Secret: $secret")
-                val pushed = repository.syncToGoogleTasksViaScript(reminderId)
+                val pushed = pastoralRepo.syncToGoogleTasksViaScript(reminderId)
                 if (!pushed) {
-                    _error.tryEmit("Taak is reeds gesinkroniseer of Apps Script is nie opgestel nie")
+                    _errorEvent.tryEmit("Taak is reeds gesinkroniseer of Apps Script is nie opgestel nie")
                 }
             } catch (e: Exception) {
-                _error.tryEmit("Kon nie taak stuur nie: ${e.message}")
+                _errorEvent.tryEmit("Kon nie taak stuur nie: ${e.message}")
             }
         }
     }
 
-    private val _error = MutableSharedFlow<String>(extraBufferCapacity = 1)
-    val error: SharedFlow<String> = _error.asSharedFlow()
-
-    enum class SnoozeOption { TOMORROW, THREE_DAYS, ONE_WEEK }
-
     fun deleteReminder(reminderId: String) {
         viewModelScope.launch {
             try {
-                repository.deleteReminder(reminderId)
+                pastoralRepo.deleteReminder(reminderId)
             } catch (e: Exception) {
-                _error.tryEmit("Kon nie herinnering verwyder nie")
+                _errorEvent.tryEmit("Kon nie herinnering verwyder nie")
             }
         }
     }
@@ -210,10 +224,116 @@ class BedieningViewModel @Inject constructor(
     fun deleteSeries(reminderId: String) {
         viewModelScope.launch {
             try {
-                repository.deleteSeries(reminderId)
+                pastoralRepo.deleteSeries(reminderId)
             } catch (e: Exception) {
-                _error.tryEmit("Kon nie reeks verwyder nie")
+                _errorEvent.tryEmit("Kon nie reeks verwyder nie")
             }
         }
     }
+
+    // =========================================================================
+    // Tab persistence
+    // =========================================================================
+
+    private val _lastViewedTab = MutableStateFlow(savedStateHandle.get<Int>("last_tab") ?: 0)
+    val lastViewedTab: StateFlow<Int> = _lastViewedTab.asStateFlow()
+
+    fun saveViewedTab(tabPosition: Int) {
+        _lastViewedTab.value = tabPosition
+        savedStateHandle["last_tab"] = tabPosition
+    }
+
+    // =========================================================================
+    // Navigation events (shared)
+    // =========================================================================
+
+    fun callMember(memberGuid: String, phoneNumber: String) {
+        viewModelScope.launch(Dispatchers.Main) {
+            try {
+                val intent = Intent(Intent.ACTION_CALL, Uri.parse("tel:$phoneNumber"))
+                _navigationEvent.emit(NavigationEvent.Call(intent))
+            } catch (e: Exception) {
+                _errorEvent.tryEmit("Kon nie bel nie: ${e.message}")
+            }
+        }
+    }
+
+    fun sendSms(memberGuid: String, phoneNumber: String) {
+        viewModelScope.launch(Dispatchers.Main) {
+            _navigationEvent.emit(NavigationEvent.SendSms(phoneNumber))
+        }
+    }
+
+    fun addNote(memberGuid: String, memberName: String) {
+        viewModelScope.launch(Dispatchers.Main) {
+            _navigationEvent.emit(NavigationEvent.OpenNoteDialog(memberGuid, memberName))
+        }
+    }
+
+    fun setReminder(memberGuid: String) {
+        viewModelScope.launch(Dispatchers.Main) {
+            _navigationEvent.emit(NavigationEvent.OpenReminderDialog(memberGuid))
+        }
+    }
+
+    fun sendWhatsApp(
+        memberGuid: String,
+        phoneNumber: String,
+        eventType: VandagAllesItem.CelebrationType,
+        memberName: String
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            // Map celebration type to event type string used in EventMessageStore
+            val eventKey = when (eventType) {
+                VandagAllesItem.CelebrationType.BIRTHDAY -> "Verjaar"
+                VandagAllesItem.CelebrationType.BAPTISM -> "Doop"
+                VandagAllesItem.CelebrationType.WEDDING -> "Huwelik"
+                VandagAllesItem.CelebrationType.DEATH -> null // no template for death
+            }
+            if (eventKey == null) {
+                _errorEvent.tryEmit("Geen boodskap vir hierdie gebeurtenis")
+                return@launch
+            }
+
+            val prefs = context.getSharedPreferences("VerjaarSmsPrefs", Context.MODE_PRIVATE)
+            val template = EventMessageStore.load(prefs, eventKey)
+            val personalizedMessage = template.replace("<<<naam>>>", memberName)
+
+            // Send WhatsApp
+            val success = WhatsAppMessageSender.send(
+                context,  // now using injected context
+                phoneNumber,
+                method = 1, // or read from preferences if needed
+                message = personalizedMessage
+            )
+            if (!success) {
+                _errorEvent.tryEmit("WhatsApp kon nie gestuur word nie")
+            }
+        }
+    }
+
+    fun emitError(message: String) {
+        _errorEvent.tryEmit(message)
+    }
+    // =========================================================================
+    // Sealed classes
+    // =========================================================================
+
+    sealed class LoadingState {
+        object Idle : LoadingState()
+        object Loading : LoadingState()
+        object Success : LoadingState()
+        data class Error(val message: String) : LoadingState()
+    }
+
+    sealed class NavigationEvent {
+        data class Call(val intent: Intent) : NavigationEvent()
+        data class SendSms(val phoneNumber: String) : NavigationEvent()
+        data class OpenNoteDialog(val memberGuid: String, val memberName: String) :
+            NavigationEvent()
+
+        data class OpenReminderDialog(val memberGuid: String) : NavigationEvent()
+    }
+
+    enum class SnoozeOption { TOMORROW, THREE_DAYS, ONE_WEEK }
 }

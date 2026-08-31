@@ -24,7 +24,7 @@ import za.co.jpsoft.winkerkreader.data.pastoral.entities.PastoralNoteEntity
 import za.co.jpsoft.winkerkreader.data.pastoral.model.NoteCategory
 import za.co.jpsoft.winkerkreader.data.pastoral.repository.PastoralNoteRepository
 import za.co.jpsoft.winkerkreader.databinding.BottomSheetVoegNotaByBinding
-import za.co.jpsoft.winkerkreader.ui.utils.VoiceNoteHelper
+import za.co.jpsoft.winkerkreader.ui.utils.VoiceRecorderController
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -47,8 +47,7 @@ class VoegNotaByBottomSheet : BottomSheetDialogFragment() {
     private val isEditMode get() = existingNote != null
     private var isSaving = false
 
-    // 👇 Single helper – no separate speech recognizer
-    private var voiceHelper: VoiceNoteHelper? = null
+    private var voiceRecorderController: VoiceRecorderController? = null
 
     // ── Lifecycle ──────────────────────────────────────────────────────────
 
@@ -58,6 +57,15 @@ class VoegNotaByBottomSheet : BottomSheetDialogFragment() {
     ): View {
         _binding = BottomSheetVoegNotaByBinding.inflate(inflater, container, false)
         dialog?.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+
+        voiceRecorderController = VoiceRecorderController(
+            fragment = this,
+            onVoiceResult = { text ->
+                appendToNoteText(text)
+            }
+        )
+        voiceRecorderController?.setup(binding.root)
+
         return binding.root
     }
 
@@ -68,7 +76,6 @@ class VoegNotaByBottomSheet : BottomSheetDialogFragment() {
         setupCategoryChips()
         setupDateButton()
         setupNoteText()
-        setupVoiceInput()   // ✅ Voice integration via helper
         setupSaveButton()
         loadExistingNoteIfEditing()
 
@@ -88,8 +95,8 @@ class VoegNotaByBottomSheet : BottomSheetDialogFragment() {
     }
 
     override fun onDestroyView() {
-        voiceHelper?.destroy()
-        voiceHelper = null
+        voiceRecorderController?.destroy()
+        voiceRecorderController = null
         _binding = null
         super.onDestroyView()
     }
@@ -114,7 +121,7 @@ class VoegNotaByBottomSheet : BottomSheetDialogFragment() {
             binding.tvNotaSheetTitle.text = "Redigeer nota"
             binding.btnStoorNota.text = "Stoor wysigings"
 
-            binding.etNotaTeks.setText(note.noteText)
+            binding.etVoiceInput.setText(note.noteText)
 
             noteDate = Instant.ofEpochMilli(note.noteDateUtc)
                 .atZone(ZoneId.systemDefault())
@@ -183,34 +190,20 @@ class VoegNotaByBottomSheet : BottomSheetDialogFragment() {
     // ── Note text ──────────────────────────────────────────────────────────
 
     private fun setupNoteText() {
-        binding.etNotaTeks.addTextChangedListener(object : TextWatcher {
+        binding.etVoiceInput.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) = updateSaveButton()
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         })
     }
 
-    // ── Voice Input (helper) ─────────────────────────────────────────────
-
-    private fun setupVoiceInput() {
-        voiceHelper = VoiceNoteHelper(
-            fragment = this,
-            tilField = binding.tilNotaTeks,
-            voiceStatusContainer = binding.voiceStatusContainer,
-            tvStatus = binding.tvVoiceStatus,
-            waveformView = binding.waveformView,
-            stopButton = binding.btnStopVoice,
-            onVoiceResult = { text ->
-                appendToNoteText(text)
-            }
-        )
-    }
+    // ── Voice Input helpers ──────────────────────────────────────────────
 
     private fun appendToNoteText(text: String) {
-        val currentText = binding.etNotaTeks.text?.toString() ?: ""
+        val currentText = binding.etVoiceInput.text?.toString() ?: ""
         val newText = if (currentText.isEmpty()) text else "$currentText\n$text"
-        binding.etNotaTeks.setText(newText)
-        binding.etNotaTeks.setSelection(newText.length)
+        binding.etVoiceInput.setText(newText)
+        binding.etVoiceInput.setSelection(newText.length)
         updateSaveButton()
     }
 
@@ -219,7 +212,7 @@ class VoegNotaByBottomSheet : BottomSheetDialogFragment() {
         permissions: Array<out String>,
         grantResults: IntArray
     ) {
-        voiceHelper?.handlePermissionResult(requestCode, grantResults)
+        voiceRecorderController?.handlePermissionResult(requestCode, grantResults)
     }
 
     // ── Save button ────────────────────────────────────────────────────────
@@ -228,7 +221,7 @@ class VoegNotaByBottomSheet : BottomSheetDialogFragment() {
         updateSaveButton()
 
         binding.btnStoorNota.setOnClickListener {
-            val noteText = binding.etNotaTeks.text?.toString()?.trim()
+            val noteText = binding.etVoiceInput.text?.toString()?.trim()
             if (noteText.isNullOrBlank()) return@setOnClickListener
 
             if (isEditMode) saveEdit(noteText) else saveNew(noteText)
@@ -336,7 +329,7 @@ class VoegNotaByBottomSheet : BottomSheetDialogFragment() {
     }
 
     private fun updateSaveButton() {
-        binding.btnStoorNota.isEnabled = !binding.etNotaTeks.text.isNullOrBlank()
+        binding.btnStoorNota.isEnabled = !binding.etVoiceInput.text.isNullOrBlank()
     }
 
     // ── Companion ──────────────────────────────────────────────────────────

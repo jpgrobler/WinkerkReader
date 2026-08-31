@@ -42,6 +42,13 @@
                         android:padding="8dp">
 
                         <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:autoLink="web"
+                            android:linksClickable="true"
+                            android:text="@string/download_pc_link"
+                            android:textColor="@color/md3_link" />
+                        <TextView
                             android:id="@+id/datadate"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"

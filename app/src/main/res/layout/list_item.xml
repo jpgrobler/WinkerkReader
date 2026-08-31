@@ -17,16 +17,16 @@
             android:id="@+id/separator_content"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="8dp"
-            android:layout_marginRight="8dp"
+            android:layout_marginLeft="6dp"
+            android:layout_marginRight="6dp"
             android:background="@drawable/separator_border"
             android:clickable="true"
             android:focusable="true"
             android:foreground="?attr/selectableItemBackground"
             android:minHeight="36dp"
-            android:padding="6dp"
-            android:paddingStart="16dp"
-            android:paddingEnd="8dp">
+            android:padding="3dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="4dp">
 
             <TextView
                 android:id="@+id/list_separator"
@@ -93,9 +93,9 @@
         android:id="@+id/list_card_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
+        android:layout_marginStart="4dp"
         android:layout_marginTop="2dp"
-        android:layout_marginEnd="8dp"
+        android:layout_marginEnd="4dp"
         android:layout_marginBottom="2dp"
         android:foreground="?attr/selectableItemBackground"
         app:cardBackgroundColor="?attr/colorSurface"
@@ -106,9 +106,8 @@
             android:id="@+id/item_content"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="8dp">
+            android:padding="4dp">
 
-            <!-- In both list_item.xml and list_item_2.xml -->
             <FrameLayout
                 android:id="@+id/kontak_frame"
                 android:layout_width="50dp"
@@ -161,15 +160,6 @@
                 android:orientation="horizontal"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
-
-                <ImageView
-                    android:id="@+id/list_bday"
-                    android:layout_width="20dp"
-                    android:layout_height="24dp"
-                    android:layout_marginEnd="4dp"
-                    android:contentDescription="Verjaarsag"
-                    android:scaleType="centerInside"
-                    android:src="@drawable/bday" />
 
                 <TextView
                     android:id="@+id/list_verjaar"
@@ -256,14 +246,43 @@
 
             </LinearLayout>
 
+            <!-- All three blocks aligned to right edge -->
             <LinearLayout
                 android:id="@+id/list_huwelikblok"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                app:layout_constraintBottom_toBottomOf="@id/list_cellBlock"
+                android:gravity="center_vertical|end"
+                android:paddingTop="2dp"
+                android:paddingBottom="2dp"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@id/list_cellBlock">
+                app:layout_constraintTop_toBottomOf="@id/list_van">
+
+                <ImageView
+                    android:id="@+id/list_note_icon"
+                    android:layout_width="20dp"
+                    android:layout_height="18dp"
+                    android:layout_marginEnd="2dp"
+                    android:contentDescription="Nota"
+                    android:src="@drawable/ic_note"
+                    app:tint="?attr/colorOnSurfaceVariant" />
+
+                <ImageView
+                    android:id="@+id/list_bediening"
+                    android:layout_width="20dp"
+                    android:layout_height="18dp"
+                    android:layout_marginEnd="2dp"
+                    android:contentDescription="Bediening"
+                    android:src="@drawable/ic_bediening" />
+
+                <ImageView
+                    android:id="@+id/list_bday"
+                    android:layout_width="20dp"
+                    android:layout_height="24dp"
+                    android:layout_marginEnd="2dp"
+                    android:contentDescription="Verjaarsdag"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/bday" />
 
                 <ImageView
                     android:id="@+id/list_ring"
@@ -287,33 +306,17 @@
                 android:id="@+id/list_wykblok"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:gravity="center_vertical"
+                android:gravity="center_vertical|end"
                 android:orientation="horizontal"
-                app:layout_constraintBottom_toBottomOf="@id/list_telBlock"
+                android:paddingTop="2dp"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@id/list_telBlock">
-
-                <ImageView
-                    android:id="@+id/list_note_icon"
-                    android:layout_width="20dp"
-                    android:layout_height="18dp"
-                    android:layout_marginEnd="4dp"
-                    android:contentDescription="Nota"
-                    android:src="@drawable/ic_note"
-                    app:tint="?attr/colorOnSurfaceVariant" />
-                <ImageView
-                    android:id="@+id/list_bediening"
-                    android:layout_width="20dp"
-                    android:layout_height="18dp"
-                    android:layout_marginEnd="8dp"
-                    android:contentDescription="Bediening"
-                    android:src="@drawable/ic_bediening" />
+                app:layout_constraintTop_toBottomOf="@id/list_huwelikblok">
 
                 <ImageView
                     android:id="@+id/list_whatsapp"
                     android:layout_width="20dp"
                     android:layout_height="18dp"
-                    android:layout_marginEnd="8dp"
+                    android:layout_marginEnd="2dp"
                     android:contentDescription="Whatsapp"
                     android:src="@drawable/whatsapp" />
 
@@ -321,7 +324,7 @@
                     android:id="@+id/list_epos"
                     android:layout_width="20dp"
                     android:layout_height="18dp"
-                    android:layout_marginEnd="8dp"
+                    android:layout_marginEnd="2dp"
                     android:contentDescription="E-pos"
                     android:src="@drawable/email2"
                     app:tint="?attr/colorOnSurface" />
@@ -330,7 +333,7 @@
                     android:id="@+id/list_wyk"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginStart="2dp"
                     android:fontFamily="sans-serif"
                     android:textAppearance="?android:textAppearanceSmallInverse"
                     android:textColor="?attr/colorOnTertiary" />

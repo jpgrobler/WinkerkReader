@@ -30,7 +30,7 @@ import za.co.jpsoft.winkerkreader.ui.adapters.ReminderPreviewAdapter
 import za.co.jpsoft.winkerkreader.ui.adapters.TemplatePickerAdapter
 import za.co.jpsoft.winkerkreader.ui.bottomsheets.controllers.FamilyMemberSpinnerController
 import za.co.jpsoft.winkerkreader.ui.bottomsheets.controllers.TemplateContextFormBuilder
-import za.co.jpsoft.winkerkreader.ui.utils.VoiceNoteHelper
+import za.co.jpsoft.winkerkreader.ui.utils.VoiceRecorderController
 import za.co.jpsoft.winkerkreader.ui.viewmodels.LidmaatDetailPastoralViewModel
 import za.co.jpsoft.winkerkreader.ui.viewmodels.LidmaatDetailPastoralViewModelFactory
 import java.time.LocalDate
@@ -66,8 +66,7 @@ class StelHerinneringBottomSheet : BottomSheetDialogFragment() {
     private var isTimedMode = false
     private var currentPreviewItems: List<LidmaatDetailPastoralViewModel.PreviewItem> = emptyList()
 
-    // 👇 Single helper – no separate speech recognizer
-    private var voiceHelper: VoiceNoteHelper? = null
+    private var voiceRecorderController: VoiceRecorderController? = null
 
     private val dateFormatter = DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault())
 
@@ -84,6 +83,15 @@ class StelHerinneringBottomSheet : BottomSheetDialogFragment() {
     ): View {
         _binding = BottomSheetStelHerinneringBinding.inflate(inflater, container, false)
         dialog?.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+
+        voiceRecorderController = VoiceRecorderController(
+            fragment = this,
+            onVoiceResult = { text ->
+                appendToNoteText(text)
+            }
+        )
+        voiceRecorderController?.setup(binding.root)
+
         return binding.root
     }
 
@@ -123,7 +131,6 @@ class StelHerinneringBottomSheet : BottomSheetDialogFragment() {
         setupTemplatePanel()
         setupAdHocPanel()
         setupConfirmButton()
-        setupVoiceInput()   // ✅ Voice integration via helper
         observeViewModel()
 
         // Window insets
@@ -143,8 +150,7 @@ class StelHerinneringBottomSheet : BottomSheetDialogFragment() {
     }
 
     override fun onDestroyView() {
-        voiceHelper?.destroy()
-        voiceHelper = null
+        voiceRecorderController?.destroy()
         _binding = null
         super.onDestroyView()
     }
@@ -350,7 +356,7 @@ class StelHerinneringBottomSheet : BottomSheetDialogFragment() {
                 Mode.TEMPLATE -> {
                     val templateId = selectedTemplateId ?: return@setOnClickListener
                     val templateCode = selectedTemplateCode ?: ""
-                    val customNote = binding.etNote.text?.toString()?.trim()?.ifBlank { null }
+                    val customNote = binding.etVoiceInput.text?.toString()?.trim()?.ifBlank { null }
 
                     val textValues = formBuilder.getTextValues()
                     val dateValues = formBuilder.getDateValues()
@@ -378,7 +384,7 @@ class StelHerinneringBottomSheet : BottomSheetDialogFragment() {
                     if (title.isNullOrBlank()) return@setOnClickListener
                     viewModel.createAdHoc(
                         title = title,
-                        note = binding.etNote.text?.toString()?.trim()?.ifBlank { null },
+                        note = binding.etVoiceInput.text?.toString()?.trim()?.ifBlank { null },
                         dueDate = dueDate,
                         scheduleType = if (isTimedMode) ScheduleType.TIMED else ScheduleType.DATE_ONLY,
                         dueTime = dueTime
@@ -434,28 +440,14 @@ class StelHerinneringBottomSheet : BottomSheetDialogFragment() {
     }
 
     // -------------------------------------------------------------------------
-    // Voice Input (helper)
+    // Voice Input helpers
     // -------------------------------------------------------------------------
 
-    private fun setupVoiceInput() {
-        voiceHelper = VoiceNoteHelper(
-            fragment = this,
-            tilField = binding.tilNote,
-            voiceStatusContainer = binding.voiceStatusContainer,
-            tvStatus = binding.tvVoiceStatus,
-            waveformView = binding.waveformView,
-            stopButton = binding.btnStopVoice,
-            onVoiceResult = { text ->
-                appendToNoteText(text)
-            }
-        )
-    }
-
     private fun appendToNoteText(text: String) {
-        val currentText = binding.etNote.text?.toString() ?: ""
+        val currentText = binding.etVoiceInput.text?.toString() ?: ""
         val newText = if (currentText.isEmpty()) text else "$currentText\n$text"
-        binding.etNote.setText(newText)
-        binding.etNote.setSelection(newText.length)
+        binding.etVoiceInput.setText(newText)
+        binding.etVoiceInput.setSelection(newText.length)
         updateConfirmButton()
     }
 
@@ -464,7 +456,7 @@ class StelHerinneringBottomSheet : BottomSheetDialogFragment() {
         permissions: Array<out String>,
         grantResults: IntArray
     ) {
-        voiceHelper?.handlePermissionResult(requestCode, grantResults)
+        voiceRecorderController?.handlePermissionResult(requestCode, grantResults)
     }
 
     // -------------------------------------------------------------------------

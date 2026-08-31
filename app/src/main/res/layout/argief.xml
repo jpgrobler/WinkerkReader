@@ -52,13 +52,25 @@
     </com.google.android.material.button.MaterialButtonToggleGroup>
 
     <!-- RecyclerView replacing ListView -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/argief_recycler_view"
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:clipToPadding="false"
-        android:background="?attr/colorSurface"
-        android:scrollbars="vertical" />
+        android:layout_weight="1">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/argief_recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="?attr/colorSurface"
+            android:clipToPadding="false"
+            android:scrollbars="vertical" />
+
+        <za.co.jpsoft.winkerkreader.ui.views.EmptyStateView
+            android:id="@+id/argief_empty_state"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone" />
+
+    </FrameLayout>
 
 </LinearLayout>

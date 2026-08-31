@@ -7,6 +7,8 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import jakarta.inject.Singleton
+import za.co.jpsoft.winkerkreader.data.pastoral.repository.CongregationMemberGuidResolver
+import za.co.jpsoft.winkerkreader.data.pastoral.repository.MemberGuidResolver
 import za.co.jpsoft.winkerkreader.data.pastoral.repository.PastoralReminderRepository
 import za.co.jpsoft.winkerkreader.data.pastoral.repository.ReminderBackupHelper
 import za.co.jpsoft.winkerkreader.utils.db.PastoralDatabaseBackup
@@ -16,7 +18,11 @@ import za.co.jpsoft.winkerkreader.utils.prefs.TasksPrefs
 @Module
 @InstallIn(SingletonComponent::class)
 object PastoralRepositoryModule {
-
+    @Provides
+    @Singleton
+    fun provideMemberGuidResolver(@ApplicationContext context: Context): MemberGuidResolver {
+        return CongregationMemberGuidResolver(context)
+    }
     @Provides
     @Singleton
     fun provideReminderBackupHelper(

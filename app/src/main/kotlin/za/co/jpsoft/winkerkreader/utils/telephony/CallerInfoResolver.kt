@@ -6,8 +6,13 @@ import android.provider.ContactsContract
 import android.util.Log
 import androidx.sqlite.db.SimpleSQLiteQuery
 import za.co.jpsoft.winkerkreader.BuildConfig
+import za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract
 import za.co.jpsoft.winkerkreader.data.members.provider.WinkerkContract.winkerkEntry
 import za.co.jpsoft.winkerkreader.data.members.setup.WinkerkDatabase
+import za.co.jpsoft.winkerkreader.services.voip.VoipCallInfoExtractor
+import za.co.jpsoft.winkerkreader.utils.AfrikaansNameAliases
+import za.co.jpsoft.winkerkreader.utils.db.getStringOrEmpty
+import java.util.Locale
 
 object CallerInfoResolver {
 
@@ -84,50 +89,100 @@ object CallerInfoResolver {
      * [context] replaces the former [android.content.ContentResolver] parameter.
      */
     fun resolveByName(displayName: String, context: Context): CallerInfoResult {
-        val name = displayName.trim()
-        if (name.isEmpty() || name == "Unknown Contact" || name == "Unknown") {
+        val cleanedName = VoipCallInfoExtractor().cleanExtractedName(displayName)
+        if (cleanedName.isEmpty() || cleanedName.equals("Unknown Contact", ignoreCase = true)) {
             return CallerInfoResult.Unknown
         }
 
+        // Read user preference safely
+        val prefs =
+            context.getSharedPreferences(WinkerkContract.PREFS_USER_INFO, Context.MODE_PRIVATE)
+        val useNicknames = prefs.getBoolean("pref_nickname_matching_enabled", false)
+
+        val queryTokens = cleanedName.lowercase(Locale.ROOT).split(" ").filter { it.isNotBlank() }
+        if (queryTokens.isEmpty()) return CallerInfoResult.Unknown
+
         try {
-            // 1. Exact match on concatenated names (Noemnaam + Van) or (Voorname + Van)
-            val exactWhere =
-                "(${winkerkEntry.LIDMATE_NOEMNAAM} || ' ' || ${winkerkEntry.LIDMATE_VAN}) = ? " +
-                        "OR (${winkerkEntry.LIDMATE_VOORNAME} || ' ' || ${winkerkEntry.LIDMATE_VAN}) = ? " +
-                        "OR (${winkerkEntry.LIDMATE_NOEMNAAM} = ? AND ${winkerkEntry.LIDMATE_VAN} IS NULL)"
-            val exactQuery = "SELECT * FROM Members WHERE $exactWhere"
-            val exactArgs = arrayOf(name, name, name)
+            val db = WinkerkDatabase.getInstance(context)
+            val cursor = db.memberDao().queryRaw(
+                SimpleSQLiteQuery("SELECT * FROM Members WHERE Rekordstatus = '0'")
+            )
 
-            val exactMembers = queryMembers(exactQuery, exactArgs, context)
-            if (!exactMembers.isNullOrEmpty()) {
-                return when (exactMembers.size) {
-                    1 -> exactMembers.first()
-                    else -> CallerInfoResult.MultipleMembers(exactMembers)
-                }
-            }
+            val scoredMembers = mutableListOf<Pair<Int, CallerInfoResult.Member>>()
 
-            // 2. Split name: first and last word matching Noemnaam/Van
-            val parts = name.split(Regex("\\s+"))
-            if (parts.size >= 2) {
-                val firstName = parts.first()
-                val lastName = parts.last()
-                val splitWhere =
-                    "(${winkerkEntry.LIDMATE_NOEMNAAM} LIKE ? AND ${winkerkEntry.LIDMATE_VAN} LIKE ?) " +
-                            "OR (${winkerkEntry.LIDMATE_VOORNAME} LIKE ? AND ${winkerkEntry.LIDMATE_VAN} LIKE ?)"
-                val splitQuery = "SELECT * FROM Members WHERE $splitWhere"
-                val splitArgs =
-                    arrayOf("%$firstName%", "%$lastName%", "%$firstName%", "%$lastName%")
+            cursor.use { c ->
+                while (c.moveToNext()) {
+                    val surname =
+                        c.getStringOrEmpty(winkerkEntry.LIDMATE_VAN).lowercase(Locale.ROOT)
+                    val noemnaam =
+                        c.getStringOrEmpty(winkerkEntry.LIDMATE_NOEMNAAM).lowercase(Locale.ROOT)
+                    val voorname =
+                        c.getStringOrEmpty(winkerkEntry.LIDMATE_VOORNAME).lowercase(Locale.ROOT)
 
-                val splitMembers = queryMembers(splitQuery, splitArgs, context)
-                if (!splitMembers.isNullOrEmpty()) {
-                    return when (splitMembers.size) {
-                        1 -> splitMembers.first()
-                        else -> CallerInfoResult.MultipleMembers(splitMembers)
+                    val memberTokens = listOf(surname, noemnaam, voorname)
+                        .flatMap { it.split(Regex("\\s+")) }
+                        .filter { it.isNotBlank() }
+                        .toSet()
+
+                    if (memberTokens.isEmpty()) continue
+
+                    var matchScore = 0
+                    for (qToken in queryTokens) {
+                        val hasMatch = memberTokens.any { mToken ->
+                            mToken.contains(qToken) ||
+                                    qToken.contains(mToken) ||
+                                    (useNicknames && AfrikaansNameAliases.areNamesEquivalent(
+                                        qToken,
+                                        mToken
+                                    ))
+                        }
+
+                        if (hasMatch) {
+                            matchScore++
+                        }
+                    }
+
+                    if (matchScore > 0) {
+                        val realSurname = c.getStringOrEmpty(winkerkEntry.LIDMATE_VAN)
+                        val realNoemnaam = c.getStringOrEmpty(winkerkEntry.LIDMATE_NOEMNAAM)
+                        val guid = c.getStringOrEmpty(winkerkEntry.LIDMATE_LIDMAATGUID)
+                        val phone = c.getStringOrEmpty(winkerkEntry.LIDMATE_SELFOON)
+                        val gemeente = c.getStringOrEmpty(winkerkEntry.LIDMATE_GEMEENTE)
+                        val familyHeadGuid = c.getStringOrEmpty(winkerkEntry.LIDMATE_GESINSHOOFGUID)
+
+                        val memberObj = CallerInfoResult.Member(
+                            name = buildMemberDisplayName(realNoemnaam, realSurname),
+                            guid = guid,
+                            surname = realSurname,
+                            firstName = realNoemnaam,
+                            phone = phone,
+                            memberType = "Lidmaat",
+                            gemeente = gemeente,
+                            familyHeadGuid = familyHeadGuid
+                        )
+                        scoredMembers.add(matchScore to memberObj)
                     }
                 }
             }
+
+            if (scoredMembers.isEmpty()) return CallerInfoResult.Unknown
+
+            scoredMembers.sortByDescending { it.first }
+            val highestScore = scoredMembers.first().first
+
+            val topMatches =
+                scoredMembers.filter { it.first >= highestScore && it.first >= queryTokens.size / 2 }
+                    .map { it.second }
+                    .distinctBy { it.guid }
+
+            return when {
+                topMatches.isEmpty() -> CallerInfoResult.Unknown
+                topMatches.size == 1 -> topMatches.first()
+                else -> CallerInfoResult.MultipleMembers(topMatches.take(5))
+            }
+
         } catch (e: Exception) {
-            if (BuildConfig.DEBUG) Log.e(TAG, "Error resolving member by name", e)
+            if (BuildConfig.DEBUG) Log.e(TAG, "Error resolving member by scored name matcher", e)
         }
         return CallerInfoResult.Unknown
     }

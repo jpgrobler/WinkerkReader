@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.view.ViewCompat
@@ -30,6 +31,7 @@ import za.co.jpsoft.winkerkreader.databinding.ActivityCallLogBinding
 import za.co.jpsoft.winkerkreader.ui.adapters.CallLogAdapter
 import za.co.jpsoft.winkerkreader.utils.telephony.CallLogExporter
 import za.co.jpsoft.winkerkreader.utils.telephony.UnifiedCallMonitor
+import za.co.jpsoft.winkerkreader.utils.ui.MainNavigationController
 
 @AndroidEntryPoint
 class CallLogActivity : AuthBaseActivity() {
@@ -37,6 +39,8 @@ class CallLogActivity : AuthBaseActivity() {
     @Inject
     lateinit var unifiedCallMonitor: UnifiedCallMonitor
 
+    @Inject
+    lateinit var navigationController: MainNavigationController
     private lateinit var binding: ActivityCallLogBinding
     private lateinit var callLogAdapter: CallLogAdapter
     private lateinit var callLogDao: CallLogDao   // was: private lateinit var databaseHelper: DatabaseHelper
@@ -282,5 +286,23 @@ class CallLogActivity : AuthBaseActivity() {
         super.onResume()
         // Reload when returning to the screen
         loadCallLogs()
+    }
+
+    private fun updateEmptyState() {
+        val isEmpty = currentCallLogs.isEmpty()
+        if (isEmpty) {
+            binding.emptyState.showEmptyState()
+            binding.emptyState.setIcon(R.drawable.ic_phone)
+            binding.emptyState.setTitle("Geen oproepe aangeteken")
+            binding.emptyState.setSubtitle("Aktiveer oproepmonitering om oproepe te begin log")
+            binding.emptyState.setActionText("Gaan na instellings")
+            binding.emptyState.setActionListener {
+                navigationController.navigateToUitleg()
+            }
+            binding.recyclerView.visibility = View.GONE
+        } else {
+            binding.emptyState.hideEmptyState()
+            binding.recyclerView.visibility = View.VISIBLE
+        }
     }
 }
